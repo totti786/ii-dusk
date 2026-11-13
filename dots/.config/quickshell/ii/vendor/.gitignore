@@ -1,3 +1,3 @@
-# Prebuilt bundles from private projects; rebuild with scripts/build-*.sh
 mediator-rs
 books.pyz
+books-rs
