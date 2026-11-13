@@ -1,0 +1,344 @@
+--- a/internal/voice/session.go
++++ b/internal/voice/session.go
+@@ -89,6 +89,8 @@
+ 	session atomic.Pointer[voice.Session]
+ 	// playback plays while a voice channel is joined, and capture captures while the user is not muted in it.
+ 	playback, capture *malgo.Device
++	// engine is the audio engine process, if there is one. It plays and captures in place of playback and capture.
++	engine *engine
+ 
+ 	stateMu  sync.Mutex
+ 	status   Status
+@@ -182,6 +184,9 @@
+ 		s.status = status
+ 		clear(s.speaking)
+ 		clear(s.speakers)
++		if s.engine != nil {
++			s.engine.reset()
++		}
+ 		return true
+ 	})
+ }
+@@ -211,6 +216,11 @@
+ 
+ // setDevices captures what the user says unless mute, and plays what is said unless deafen.
+ func (s *Session) setDevices(mute, deafen bool) error {
++	if s.engine != nil {
++		err := errors.Join(s.engine.setMuted(mute), s.engine.setDeaf(deafen))
++		return err
++	}
++
+ 	err := errors.Join(
+ 		setDevice(&s.capture, !mute, malgo.Capture, func(_, input []byte) { s.queue(bytes.Clone(input)) }),
+ 		setDevice(&s.playback, !deafen, malgo.Playback, s.mix),
+@@ -248,6 +258,9 @@
+ }
+ 
+ func (s *Session) join(channelID discord.ChannelID) error {
++	// Before the goroutines below, which read it.
++	s.startEngine()
++
+ 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+ 	defer cancel()
+ 
+@@ -315,7 +328,7 @@
+ 		return nil
+ 	}
+ 
+-	mute, deafen := deafen || s.capture != nil, deafen && s.playback != nil
++	mute, deafen := deafen || s.capturing(), deafen && s.playing()
+ 	if err := s.setDevices(mute, deafen); err != nil {
+ 		return err
+ 	}
+@@ -331,6 +344,43 @@
+ 	})
+ }
+ 
++// capturing and playing report whether the microphone is on and whether what is said is played.
++func (s *Session) capturing() bool {
++	if s.engine != nil {
++		return !s.engine.isMuted()
++	}
++
++	return s.capture != nil
++}
++
++func (s *Session) playing() bool {
++	if s.engine != nil {
++		return !s.engine.isDeaf()
++	}
++
++	return s.playback != nil
++}
++
++// startEngine starts the audio engine if there is one, once.
++func (s *Session) startEngine() {
++	path := engineBinary()
++	if s.engine != nil || path == "" {
++		return
++	}
++
++	engine, err := startEngine(path, s.threshold, func(speaking bool) {
++		if me, _ := s.state.Cabinet.Me(); me != nil {
++			s.setSpeaking(me.ID, speaking)
++		}
++	})
++	if err != nil {
++		slog.Error("failed to start the audio engine; using the built-in audio", "err", err)
++		return
++	}
++
++	s.engine = engine
++}
++
+ // queue queues what was captured to be sent, in place of the oldest if what is queued is not being sent fast enough, for what is said not to be sent ever later.
+ func (s *Session) queue(pcm []byte) {
+ 	for {
+@@ -384,6 +434,12 @@
+ 			continue
+ 		}
+ 
++		if s.engine != nil {
++			s.engine.packet(packet.SSRC(), packet.Sequence(), packet.Opus)
++			s.setSpeaking(session.User(packet.SSRC()), string(packet.Opus) != voice.Silence)
++			continue
++		}
++
+ 		speaker, err := s.speaker(packet.SSRC(), packet.Sequence())
+ 		if err != nil {
+ 			slog.Error("failed to create Opus decoder", "err", err)
+@@ -418,6 +474,16 @@
+ 
+ // send sends what the microphone captures to the voice channels that session joins, while it is loud enough.
+ func (s *Session) send(session *voice.Session) {
++	if s.engine != nil {
++		for packet := range s.engine.mic {
++			if _, err := session.Write(packet); err != nil {
++				slog.Debug("failed to send voice packet", "err", err)
++			}
++		}
++
++		return
++	}
++
+ 	encoder, err := opus.NewEncoder(opus.EncoderConfig{SampleRate: sampleRate, Channels: channels})
+ 	if err != nil {
+ 		slog.Error("failed to create Opus encoder", "err", err)
+--- /dev/null
++++ b/internal/voice/engine.go
+@@ -0,0 +1,215 @@
++//go:build !no_voice
++
++package voice
++
++import (
++	"bufio"
++	"encoding/binary"
++	"io"
++	"log/slog"
++	"os"
++	"os/exec"
++	"path/filepath"
++	"sync"
++)
++
++// The audio engine is the discordo-audio process. It decodes, mixes and plays what everyone says and captures, gates and encodes the microphone,
++// so that the Discord connection and its encryption stay here. Frames are [type u8][len u32 LE][payload].
++const (
++	inPacket    byte = 1
++	inMute      byte = 2
++	inDeafen    byte = 3
++	inReset     byte = 4
++	inThreshold byte = 5
++	inQuit      byte = 6
++
++	outReady    byte = 0
++	outMic      byte = 1
++	outSpeaking byte = 2
++	outError    byte = 3
++)
++
++type engine struct {
++	cmd *exec.Cmd
++	in  io.WriteCloser
++
++	mu    sync.Mutex
++	muted bool
++	deaf  bool
++
++	// mic is what the microphone said, encoded, ready to send.
++	mic chan []byte
++}
++
++// engineBinary returns the path of the audio engine, or "" if there is none, in which case the built-in audio is used.
++func engineBinary() string {
++	if path := os.Getenv("DISCORDO_AUDIO_ENGINE"); path != "" {
++		if path == "off" {
++			return ""
++		}
++		return path
++	}
++
++	home, err := os.UserHomeDir()
++	if err != nil {
++		return ""
++	}
++
++	path := filepath.Join(home, ".local", "share", "quickshell-ii", "bin", "discordo-audio")
++	if info, err := os.Stat(path); err != nil || info.IsDir() {
++		return ""
++	}
++
++	return path
++}
++
++// startEngine starts the audio engine, muted and deafened. onSpeaking is called when the gate opens or closes.
++func startEngine(path string, threshold int, onSpeaking func(bool)) (*engine, error) {
++	cmd := exec.Command(path)
++	cmd.Stderr = nil
++	in, err := cmd.StdinPipe()
++	if err != nil {
++		return nil, err
++	}
++
++	out, err := cmd.StdoutPipe()
++	if err != nil {
++		return nil, err
++	}
++
++	if err := cmd.Start(); err != nil {
++		return nil, err
++	}
++
++	e := &engine{cmd: cmd, in: in, muted: true, deaf: true, mic: make(chan []byte, 8)}
++	go e.read(bufio.NewReader(out), onSpeaking)
++
++	var payload [4]byte
++	binary.LittleEndian.PutUint32(payload[:], uint32(int32(threshold)))
++	_ = e.send(inThreshold, payload[:])
++
++	return e, nil
++}
++
++func (e *engine) read(r *bufio.Reader, onSpeaking func(bool)) {
++	defer close(e.mic)
++	defer func() { _ = e.cmd.Wait() }()
++
++	var head [5]byte
++	for {
++		if _, err := io.ReadFull(r, head[:]); err != nil {
++			return
++		}
++
++		length := binary.LittleEndian.Uint32(head[1:])
++		if length > 64*1024 {
++			slog.Error("audio engine sent a frame that is too large")
++			return
++		}
++
++		payload := make([]byte, length)
++		if _, err := io.ReadFull(r, payload); err != nil {
++			return
++		}
++
++		switch head[0] {
++		case outMic:
++			e.queueMic(payload)
++		case outSpeaking:
++			if len(payload) == 1 && onSpeaking != nil {
++				onSpeaking(payload[0] != 0)
++			}
++		case outError:
++			// The engine's texts are fixed, with no device names or credentials.
++			slog.Warn("audio engine", "message", string(payload))
++		case outReady:
++		}
++	}
++}
++
++// queueMic queues a packet in place of the oldest if the queue is full, for what is said not to be sent ever later.
++func (e *engine) queueMic(packet []byte) {
++	for {
++		select {
++		case e.mic <- packet:
++			return
++		default:
++		}
++
++		select {
++		case <-e.mic:
++		default:
++		}
++	}
++}
++
++func (e *engine) send(kind byte, payload []byte) error {
++	frame := make([]byte, 5+len(payload))
++	frame[0] = kind
++	binary.LittleEndian.PutUint32(frame[1:], uint32(len(payload)))
++	copy(frame[5:], payload)
++
++	e.mu.Lock()
++	defer e.mu.Unlock()
++
++	_, err := e.in.Write(frame)
++	return err
++}
++
++func (e *engine) packet(ssrc uint32, seq uint16, opus []byte) {
++	payload := make([]byte, 6+len(opus))
++	binary.LittleEndian.PutUint32(payload, ssrc)
++	binary.LittleEndian.PutUint16(payload[4:], seq)
++	copy(payload[6:], opus)
++
++	if err := e.send(inPacket, payload); err != nil {
++		slog.Debug("failed to send a voice packet to the audio engine", "err", err)
++	}
++}
++
++func flag(on bool) []byte {
++	if on {
++		return []byte{1}
++	}
++
++	return []byte{0}
++}
++
++func (e *engine) setMuted(muted bool) error {
++	e.mu.Lock()
++	e.muted = muted
++	e.mu.Unlock()
++
++	return e.send(inMute, flag(muted))
++}
++
++func (e *engine) setDeaf(deaf bool) error {
++	e.mu.Lock()
++	e.deaf = deaf
++	e.mu.Unlock()
++
++	return e.send(inDeafen, flag(deaf))
++}
++
++func (e *engine) isMuted() bool {
++	e.mu.Lock()
++	defer e.mu.Unlock()
++
++	return e.muted
++}
++
++func (e *engine) isDeaf() bool {
++	e.mu.Lock()
++	defer e.mu.Unlock()
++
++	return e.deaf
++}
++
++func (e *engine) reset() {
++	_ = e.send(inReset, nil)
++}
++
++func (e *engine) close() {
++	_ = e.send(inQuit, nil)
++	_ = e.in.Close()
++}

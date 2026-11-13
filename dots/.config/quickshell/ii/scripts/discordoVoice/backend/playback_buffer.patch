@@ -1,0 +1,228 @@
+diff --git a/internal/voice/speaker.go b/internal/voice/speaker.go
+index 1bc3214..35d1563 100644
+--- a/internal/voice/speaker.go
++++ b/internal/voice/speaker.go
+@@ -20,11 +20,17 @@ const (
+ 	frameBytes   = frameSamples * sampleBytes
+ 
+ 	// cushion is how much is buffered before it is played, so that packets arriving unevenly do not make gaps.
+-	cushion = 3 * frameBytes
++	cushion = 5 * frameBytes
++	// resume is how much must be buffered to start again after the buffer ran dry, which is less than cushion so that a gap is short.
++	resume = 3 * frameBytes
+ 	// maxBuffered is how much is buffered before the oldest is dropped rather than fall behind.
+-	maxBuffered = 10 * frameBytes
++	maxBuffered = 16 * frameBytes
++	// fadeSamples is how many samples of one channel a fade in or out lasts, 5ms.
++	fadeSamples = sampleRate / 200
+ 	// maxLost is how many packets in a row are made up for.
+ 	maxLost = 3
++	// concealWindow is how long after the last packet a frame is made up rather than silence when the buffer runs dry.
++	concealWindow = 80 * time.Millisecond
+ )
+ 
+ // speaker decodes and buffers what one user says, to be mixed into what is played.
+@@ -35,6 +41,11 @@ type speaker struct {
+ 	buf     []byte
+ 	// playing is whether the cushion was buffered and what is left of it is being played.
+ 	playing bool
++	// started is whether it played before, fadeIn whether it is fading in, and faded how many samples of the fade were played.
++	started, fadeIn bool
++	faded           int
++	// concealed is how many frames were made up because a packet had not arrived in time. The packets they stand for are decoded and dropped when they do arrive.
++	concealed int
+ 	// seq is the sequence number of the last packet, and last when it arrived.
+ 	seq  uint16
+ 	last time.Time
+@@ -81,16 +92,30 @@ func (s *speaker) write(seq uint16, packet []byte) error {
+ 		return nil
+ 	}
+ 
+-	if err := s.makeUpLost(gap); err != nil {
+-		return err
++	// A pause long enough that nothing is waited for any more.
++	if time.Since(s.last) > concealWindow*2 {
++		s.concealed = 0
++	}
++
++	if s.concealed == 0 {
++		if err := s.makeUpLost(gap); err != nil {
++			return err
++		}
+ 	}
+ 
+ 	s.seq, s.last = seq, time.Now()
+ 
++	// The packet stands for a frame that was already made up: decode it to keep the decoder in step, but do not play it twice.
++	length := len(s.buf)
+ 	if err := s.decode(packet); err != nil {
+ 		return err
+ 	}
+ 
++	if s.concealed > 0 {
++		s.buf = s.buf[:length]
++		s.concealed--
++	}
++
+ 	if len(s.buf) > maxBuffered {
+ 		s.buf = s.buf[len(s.buf)-cushion:]
+ 	}
+@@ -113,21 +138,52 @@ func (s *speaker) makeUpLost(gap uint16) error {
+ 	return nil
+ }
+ 
+-// mix adds what is buffered to output, once the cushion is.
+-func (s *speaker) mix(output []byte) {
++// mix adds what is buffered to acc, which has a sample for each of the samples of output, once the cushion is.
++// Playing starts and stops with a fade, so that a gap does not click.
++func (s *speaker) mix(acc []int32) {
+ 	s.mu.Lock()
+ 	defer s.mu.Unlock()
+ 
+-	if s.playing = s.playing || len(s.buf) >= cushion; !s.playing {
+-		return
++	if !s.playing {
++		if len(s.buf) < cushion && !(s.started && len(s.buf) >= resume) {
++			return
++		}
++
++		s.playing, s.fadeIn = true, true
+ 	}
+ 
+-	n := min(len(output), len(s.buf))
+-	for i := 0; i+1 < n; i += 2 {
+-		sum := int32(int16(binary.LittleEndian.Uint16(output[i:]))) + int32(int16(binary.LittleEndian.Uint16(s.buf[i:])))
+-		binary.LittleEndian.PutUint16(output[i:], uint16(max(-1<<15, min(1<<15-1, sum))))
++	// Make up the frames of a packet that is late, rather than let the sound drop to silence.
++	for len(s.buf) < len(acc)*sampleBytes && s.concealed < maxLost && time.Since(s.last) < concealWindow {
++		if s.decode(nil) != nil {
++			break
++		}
++
++		s.concealed++
++	}
++
++	n := min(len(acc)*sampleBytes, len(s.buf))
++	samples := n / sampleBytes
++	fade := fadeSamples * channels
++	for i := 0; i < samples; i++ {
++		sample := int32(int16(binary.LittleEndian.Uint16(s.buf[i*sampleBytes:])))
++		switch {
++		case s.fadeIn && s.faded < fade:
++			sample = sample * int32(s.faded) / int32(fade)
++			s.faded++
++		case n < len(acc)*sampleBytes && samples-i <= fade:
++			// The buffer ran dry before the end of output.
++			sample = sample * int32(samples-i) / int32(fade)
++		}
++
++		acc[i] += sample
++	}
++
++	if s.faded >= fade {
++		s.fadeIn = false
+ 	}
+ 
+ 	s.buf = s.buf[n:]
+-	s.playing = len(s.buf) > 0
++	if len(s.buf) == 0 {
++		s.playing, s.started, s.fadeIn, s.faded = false, true, false, 0
++	}
+ }
+--- a/internal/voice/session.go
++++ b/internal/voice/session.go
+@@ -94,6 +94,8 @@
+ 	status   Status
+ 	speaking map[discord.UserID]bool
+ 	speakers map[uint32]*speaker
++	// acc is what mix adds the speakers to.
++	acc []int32
+ }
+ 
+ // New returns a Session that sends what the microphone captures louder than sensitivity, in dB.
+@@ -350,8 +352,21 @@
+ 	s.stateMu.Lock()
+ 	defer s.stateMu.Unlock()
+ 
++	// Add in 32 bits and limit once, so that speakers at the same time do not clip each other.
++	samples := len(output) / sampleBytes
++	if cap(s.acc) < samples {
++		s.acc = make([]int32, samples)
++	}
++
++	acc := s.acc[:samples]
++	clear(acc)
++
+ 	for _, speaker := range s.speakers {
+-		speaker.mix(output)
++		speaker.mix(acc)
++	}
++
++	for i, sample := range acc {
++		binary.LittleEndian.PutUint16(output[i*sampleBytes:], uint16(int16(max(-1<<15, min(1<<15-1, sample)))))
+ 	}
+ }
+ 
+--- /dev/null
++++ b/internal/voice/speaker_conceal_test.go
+@@ -0,0 +1,60 @@
++//go:build !no_voice
++
++package voice
++
++import (
++	"testing"
++
++	"github.com/tphakala/go-opus/opus"
++)
++
++func TestSpeakerConcealsLatePacket(t *testing.T) {
++	enc, err := opus.NewEncoder(opus.EncoderConfig{SampleRate: sampleRate, Channels: channels})
++	if err != nil {
++		t.Fatal(err)
++	}
++
++	pcm := make([]int16, frameSamples)
++	for i := range pcm {
++		pcm[i] = int16(3000 * (i % 100) / 100)
++	}
++
++	packet := func() []byte {
++		out := make([]byte, maxPacketBytes)
++		n, err := enc.Encode(pcm, out)
++		if err != nil {
++			t.Fatal(err)
++		}
++		return out[:n]
++	}
++
++	s, err := newSpeaker(1)
++	if err != nil {
++		t.Fatal(err)
++	}
++
++	for seq := uint16(1); seq <= 6; seq++ {
++		if err := s.write(seq, packet()); err != nil {
++			t.Fatal(err)
++		}
++	}
++
++	// Drain more than is buffered: the shortfall is made up, up to maxLost frames.
++	acc := make([]int32, frameSamples*10)
++	s.mix(acc)
++	if s.concealed == 0 || s.concealed > maxLost {
++		t.Fatalf("concealed = %d, want 1..%d", s.concealed, maxLost)
++	}
++
++	// The late packets arrive: they are not played again.
++	before := s.concealed
++	for seq := uint16(7); seq < 7+uint16(before); seq++ {
++		if err := s.write(seq, packet()); err != nil {
++			t.Fatal(err)
++		}
++	}
++
++	if s.concealed != 0 || len(s.buf) != 0 {
++		t.Fatalf("concealed = %d, buffered = %d, want 0, 0", s.concealed, len(s.buf))
++	}
++}

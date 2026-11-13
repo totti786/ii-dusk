@@ -1,0 +1,21 @@
+diff --git a/internal/voice/session.go b/internal/voice/session.go
+--- a/internal/voice/session.go
++++ b/internal/voice/session.go
+@@ -234,4 +234,2 @@ func (s *Session) Join(channelID discord.ChannelID) error {
+-	if !s.mu.TryLock() {
+-		return nil
+-	}
++	s.mu.Lock()
+ 	defer s.mu.Unlock()
+@@ -287,4 +285,2 @@ func (s *Session) Leave() error {
+-	if !s.mu.TryLock() {
+-		return nil
+-	}
++	s.mu.Lock()
+ 	defer s.mu.Unlock()
+@@ -311,4 +307,2 @@ func (s *Session) Toggle(deafen bool) error {
+-	if !s.mu.TryLock() {
+-		return nil
+-	}
++	s.mu.Lock()
+ 	defer s.mu.Unlock()

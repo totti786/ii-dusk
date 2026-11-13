@@ -1,0 +1,9 @@
+module qs.modules.ii.discordoVoice
+
+DiscordoVoiceApp 1.0 DiscordoVoiceApp.qml
+DiscordoVoiceWindow 1.0 DiscordoVoiceWindow.qml
+DiscordoVoiceContent 1.0 DiscordoVoiceContent.qml
+DiscordoAvatar 1.0 DiscordoAvatar.qml
+DiscordoVoiceAuth 1.0 DiscordoVoiceAuth.qml
+DiscordoVideoTile 1.0 DiscordoVideoTile.qml
+DiscordoCallStage 1.0 DiscordoCallStage.qml
