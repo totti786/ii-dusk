@@ -2,8 +2,8 @@
     "_comment": [
         "Packages this fork uses on top of what the base illogical-impulse install brings.",
         "Read by scripts/deps/deps.py, which the setup script and Settings > About both go through.",
-        "tier 'required': installed by `ii-p3drovfx install` and `update`, after asking.",
-        "tier 'optional': never installed on its own; `ii-p3drovfx deps` or Settings > About.",
+        "tier 'required': installed by `ii-dusk install` and `update`, after asking.",
+        "tier 'optional': never installed on its own; `ii-dusk deps` or Settings > About.",
         "A package is present when its check passes: 'bin' (any one of them on PATH or in",
         "/usr/sbin), 'python' (importable by the system python3), or the package manager.",
         "'name' is the package on every distro; 'arch'/'fedora' override it, null means",
@@ -200,7 +200,7 @@
             "id": "dictation",
             "tier": "optional",
             "label": "Dictation",
-            "description": "Push-to-talk dictation through voxtype.",
+            "description": "Push-to-talk dictation through voxtype (or Hex, which is not packaged and needs no entry here).",
             "packages": [{ "arch": "voxtype-bin", "aur": true, "fedora": null, "bin": "voxtype" }]
         },
         {
@@ -311,6 +311,20 @@
             "label": "System Health: package cache",
             "description": "Cleaning old package versions, and merging .pacnew files.",
             "packages": [{ "arch": "pacman-contrib", "fedora": null, "bin": "paccache" }]
+        },
+        {
+            "id": "anki",
+            "tier": "optional",
+            "label": "Anki reviewer",
+            "description": "The built-in Anki app runs on its own pinned copy of Anki's engine (installed from inside the app), so it does not need this. The Anki desktop package is only used by the Open in Anki button.",
+            "packages": [{ "name": "anki", "bin": "anki" }]
+        },
+        {
+            "id": "books",
+            "tier": "optional",
+            "label": "Books library",
+            "description": "The Books app opens your PDFs and EPUBs in zathura or sioyek and makes covers with poppler and the GNOME thumbnailers.",
+            "packages": [{ "name": "zathura", "bin": "zathura" }, { "name": "poppler", "bin": "pdfinfo" }, { "name": "papers", "bin": "papers-thumbnailer" }, { "name": "gnome-epub-thumbnailer", "bin": "gnome-epub-thumbnailer" }]
         }
     ]
 }

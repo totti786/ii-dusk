@@ -1,7 +1,8 @@
 {
   "_comment": "People credited on Settings > About & Updates. `login` is the GitHub username (profile link and avatar), `name` is what the card shows, `role` is the line under it. Order here is the display order.",
   "contributors": [
-    { "login": "P3DROVFX", "name": "P3DROVFX", "role": "Author and maintainer of II-P3DROVFX" },
+    { "login": "totti786", "name": "Tarek", "role": "Author and maintainer of ii-dusk" },
+    { "login": "P3DROVFX", "name": "P3DROVFX", "role": "Author and maintainer of II-P3DROVFX, the fork ii-dusk is built on" },
     { "login": "Scrimas", "name": "Scrimas", "role": "Collaborator" }
   ]
 }
