@@ -481,7 +481,7 @@ class TabletFamilyContractTests(unittest.TestCase):
         gestures = read("modules/common/TouchGestureActionRegistry.qml")
 
         self.assertIn("if (PanelFamily.nativeAppWindows)", states)
-        self.assertIn('{ id: "sidebarLeft", name: "Left Sidebar", icon: "left_panel_open", families: ["ii", "waffle"] }', gestures)
+        self.assertIn('{ id: "sidebarLeft", name: "Left Sidebar", icon: "left_panel_open", families: ["ii"] }', gestures)
 
     def test_tablet_dock_reuses_ii_context_menu_actions_with_pointer_and_touch_entrypoints(self):
         button = read("modules/tablet/dock/TabletDockButton.qml")

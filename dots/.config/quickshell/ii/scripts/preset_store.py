@@ -104,7 +104,7 @@ NAME_RE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9 ()_.-]*$')
 REPO_NAME_RE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]*$')
 PRESET_ID_RE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]*$')
 SLUG_RE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*$')
-IMAGE_EXTS = ('.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp')
+IMAGE_EXTS = ('.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp', '.jxl')
 
 
 class StoreError(Exception):

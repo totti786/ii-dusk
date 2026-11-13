@@ -67,6 +67,12 @@ QtObject {
 ''')
         put('qs/modules/common/widgets/StyledScrollBar.qml',
             'import QtQuick\nimport QtQuick.Controls\nScrollBar {}')
+        put('qs/modules/common/widgets/TouchpadKinetic.qml',
+            (ROOT / 'modules/common/widgets/TouchpadKinetic.qml').read_text())
+        scroll_wheel = (ROOT / 'modules/common/functions/ScrollWheel.qml').read_text()
+        scroll_wheel = scroll_wheel.replace('import Quickshell\n', 'import QtQuick\n')
+        scroll_wheel = scroll_wheel.replace('Singleton {', 'QtObject {')
+        put('qs/modules/common/functions/ScrollWheel.qml', scroll_wheel)
         for name in ('StyledFlickable', 'StyledListView'):
             put(f'qs/modules/common/widgets/{name}.qml',
                 (ROOT / f'modules/common/widgets/{name}.qml').read_text())

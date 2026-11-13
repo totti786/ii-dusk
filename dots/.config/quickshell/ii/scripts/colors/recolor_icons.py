@@ -44,6 +44,31 @@ import collections
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, FIRST_COMPLETED, wait
 
+# Papirus is a finished, colourful pack: tone-mapping its app icons flattens them into one
+# tint. For Papirus the wallpaper colour goes on the folders only (what papirus-folders did),
+# which recolor_folders.py does without touching anything else.
+def _base_pack():
+    if "--base" in sys.argv[:-1]:
+        return sys.argv[sys.argv.index("--base") + 1]
+    try:
+        with open(os.path.expanduser("~/.config/illogical-impulse/config.json")) as fh:
+            return str(json.load(fh).get("appearance", {}).get("iconTheme", ""))
+    except (OSError, ValueError):
+        return ""
+
+if _base_pack().lower().startswith("papirus"):
+    _folders = os.path.join(os.path.dirname(os.path.abspath(__file__)), "recolor_folders.py")
+    os.execv(sys.executable, [sys.executable, _folders] + sys.argv[1:])
+
+# Callers run this with the system python3, which has no materialyoucolor: re-run inside the
+# shell's venv (exact hue/chroma tonal palettes) when it exists and we are not already in it.
+_VENV_PY = os.path.join(os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state"),
+                        "quickshell", ".venv", "bin", "python")
+if os.path.realpath(sys.prefix) != os.path.realpath(os.path.dirname(os.path.dirname(_VENV_PY))) \
+        and os.access(_VENV_PY, os.X_OK) and not os.environ.get("II_RECOLOR_REEXEC"):
+    os.environ["II_RECOLOR_REEXEC"] = "1"
+    os.execv(_VENV_PY, [_VENV_PY] + sys.argv)
+
 # --force skips the "nothing changed" early-exit and always regenerates
 FORCE = "--force" in sys.argv
 # --base NAME overrides the configured base pack (the caller's config write is debounced)
@@ -218,7 +243,10 @@ class Palette:
             rows = []
             for t in self.TONES:
                 argb = palette.tone(float(t))
-                rows.append(((argb >> 16) & 255, (argb >> 8) & 255, argb & 255))
+                if isinstance(argb, (list, tuple)):  # materialyoucolor 2.x returns [r, g, b, a]
+                    rows.append((argb[0], argb[1], argb[2]))
+                else:
+                    rows.append(((argb >> 16) & 255, (argb >> 8) & 255, argb & 255))
             return np.array(rows, dtype=np.float32)
         # No materialyoucolor: interpolate the scheme's own colours by tone
         samples = [(0.0, (0, 0, 0)), (100.0, (255, 255, 255))]
@@ -1390,6 +1418,58 @@ def _generate_locked(token):
     base_count = sum(1 for r in results if r)
     print(f"[Phase 1] Done! {base_count} base icons recolored.")
     print(f"[Phase 2] Injected {svg_count} scavenged SVG + {raster_count} Pillow-recolored raster icons")
+
+    # ── Phase 2b: Papirus folders ────────────────────────────────────────
+    # Papirus draws its folders in three blues. Swapping those for the primary colour (and two
+    # darker steps of it, as papirus-folders does) keeps the shading and emblems of every
+    # folder-blue*/user-blue* icon, which the tone mapping above would flatten.
+    primary = str(colors.get("primary", "")).lstrip("#").lower()
+    if re.fullmatch(r"[0-9a-f]{6}", primary):
+        def _darker(hexv, amount):
+            return "".join("%02x" % max(0, int(hexv[i:i + 2], 16) - amount) for i in (0, 2, 4))
+        subs = (("5294e2", primary), ("4877b1", _darker(primary, 20)), ("1d344f", _darker(primary, 56)))
+        folder_count = 0
+        for root_dir, _dirs, files in os.walk(base_theme_path, followlinks=True):
+            # Aliases (folder.svg -> folder-blue.svg) are carried over once their target is tinted
+            tinted_here = set()
+            for fname in files:
+                if not (fname.startswith(("folder-blue", "user-blue")) and fname.endswith(".svg")):
+                    continue
+                src = os.path.join(root_dir, fname)
+                if os.path.islink(src):
+                    continue
+                try:
+                    with open(src, "r", encoding="utf-8") as fh:
+                        text = fh.read()
+                    if "5294e2" not in text.lower():
+                        continue
+                    for old, new in subs:
+                        text = re.sub(old, new, text, flags=re.I)
+                    dst = os.path.join(TARGET_THEME_PATH, os.path.relpath(src, base_theme_path))
+                    os.makedirs(os.path.dirname(dst), exist_ok=True)
+                    if os.path.lexists(dst):
+                        os.remove(dst)
+                    with open(dst, "w", encoding="utf-8") as fh:
+                        fh.write(text)
+                    tinted_here.add(fname)
+                    folder_count += 1
+                except (OSError, UnicodeDecodeError):
+                    pass
+            for fname in files:
+                src = os.path.join(root_dir, fname)
+                if not (fname.endswith(".svg") and os.path.islink(src)):
+                    continue
+                if os.readlink(src) not in tinted_here:
+                    continue
+                dst = os.path.join(TARGET_THEME_PATH, os.path.relpath(src, base_theme_path))
+                try:
+                    if os.path.lexists(dst):
+                        os.remove(dst)
+                    os.symlink(os.readlink(src), dst)
+                except OSError:
+                    pass
+        if folder_count:
+            print(f"[Phase 2b] Tinted {folder_count} Papirus folder icons with the primary colour")
 
     # ── Phase 3: Finalize ────────────────────────────────────────────────
     # Create lowercase symlinks for case-insensitive lookup

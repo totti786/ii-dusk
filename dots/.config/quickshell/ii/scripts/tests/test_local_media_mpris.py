@@ -175,7 +175,7 @@ class LocalMediaMprisTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(reply.returncode, 0, reply.stderr)
-        self.assertIn("II Music", reply.stdout)
+        self.assertIn("Audio Player", reply.stdout)
 
         seek = subprocess.run(
             [

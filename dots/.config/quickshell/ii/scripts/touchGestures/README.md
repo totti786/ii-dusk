@@ -1,6 +1,6 @@
 # Touchscreen Gestures Helper (`touch_gestures`)
 
-Helper passivo para observação e reconhecimento de gestos em telas touchscreen no `ii-p3drovfx`.
+Helper passivo para observação e reconhecimento de gestos em telas touchscreen no `ii-dusk`.
 
 ## Visão Geral
 

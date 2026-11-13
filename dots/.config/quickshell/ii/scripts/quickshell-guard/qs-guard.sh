@@ -137,6 +137,19 @@ if [[ "$qt_ok" == false ]]; then
     notify 0 600 "$(qt_mismatch_text). The shell may crash until it is rebuilt: $rebuild_cmd"
 fi
 
+# The Hyprland session this guard belongs to. Its lock file holds the compositor's pid and
+# is gone once that session ends. A guard that outlives its session must not restart the
+# shell: the new session starts its own guard, and the two would run two shells.
+sig="${HYPRLAND_INSTANCE_SIGNATURE:-}"
+lock="${XDG_RUNTIME_DIR:-/run/user/$UID}/hypr/$sig/hyprland.lock"
+session_gone() {
+    [[ -n "$sig" ]] || return 1
+    local pid
+    pid="$(head -n1 "$lock" 2>/dev/null)"
+    [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null && return 1
+    return 0
+}
+
 # ── Running it ──────────────────────────────────────────────────────────
 child=0
 trap '((child > 0)) && kill -TERM "$child" 2>/dev/null; exit 0' TERM INT HUP
@@ -171,6 +184,15 @@ while :; do
 
     # Quit, HUP, INT, KILL, TERM: stopped on purpose.
     case "$rc" in 0 | 129 | 130 | 137 | 143) exit 0 ;; esac
+    # The compositor ended, and the shell with it: nothing to restart.
+    session_gone && exit 0
+    # Keep what a crash leaves: the exit status and the end of the shell's log, which is the
+    # only trace when the crash handler could not write a report.
+    crashlog="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/guard-crashes.log"
+    {
+        printf '=== %s: %s after %ss\n' "$(date '+%F %T')" "$(describe "$rc")" "$ran"
+        qs "${args[@]}" log -t 25 2>&1 | sed 's/\x1b\[[0-9;]*m//g' | cut -c1-240
+    } >>"$crashlog" 2>/dev/null
     # Started again from elsewhere in the meantime: that one is the shell now.
     loaded && exit 0
 

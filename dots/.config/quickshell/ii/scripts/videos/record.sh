@@ -15,9 +15,11 @@ STATE_FILE="$HOME/.local/state/quickshell/states.json"
 STATE_JSON_PATH=".screenRecord.active"
 
 CUSTOM_PATH=$(jq -r "$JSON_PATH" "$CONFIG_FILE" 2>/dev/null)
-REC_SERVICE=$(jq -r "$SERVICE_PATH" "$CONFIG_FILE" 2>/dev/null)
-if [[ -z "$REC_SERVICE" || "$REC_SERVICE" == "null" ]]; then
-    REC_SERVICE="obs"
+# What the user asked for, before availability is considered. "auto" is the
+# shipped default; the explicit values stay explicit when their recorder exists.
+REC_SERVICE_CONFIG=$(jq -r "$SERVICE_PATH" "$CONFIG_FILE" 2>/dev/null)
+if [[ -z "$REC_SERVICE_CONFIG" || "$REC_SERVICE_CONFIG" == "null" ]]; then
+    REC_SERVICE_CONFIG="auto"
 fi
 
 REC_USE_GPU=$(jq -r ".screenRecord.useGpu" "$CONFIG_FILE" 2>/dev/null)
@@ -76,10 +78,17 @@ if [[ -z "$REC_RECORD_MIC" || "$REC_RECORD_MIC" == "null" ]]; then
     REC_RECORD_MIC="false"
 fi
 
+REC_MIC_DEVICE=$(jq -r ".screenRecord.micDevice" "$CONFIG_FILE" 2>/dev/null)
+if [[ -z "$REC_MIC_DEVICE" || "$REC_MIC_DEVICE" == "null" ]]; then
+    REC_MIC_DEVICE=""
+fi
+
 RECORDING_DIR=""
 
 TIMER_PID=""  
 SECONDS_ELAPSED=-1
+RECORDING_SESSION=0
+RECORDER_PID=""
 
 if [[ -n "$CUSTOM_PATH" ]]; then
     RECORDING_DIR="$CUSTOM_PATH"
@@ -115,6 +124,16 @@ stop_timer() {
 
 cleanup() {
     stop_timer
+    # A recording session owns the state until it is done. If this process is
+    # terminated while one is running, stop the child cleanly and clear the
+    # state so the bar cannot be left showing a recording that ended.
+    if [[ "${RECORDING_SESSION:-0}" == "1" ]]; then
+        if [[ -n "${RECORDER_PID:-}" ]] && kill -0 "$RECORDER_PID" 2>/dev/null; then
+            kill -CONT "$RECORDER_PID" 2>/dev/null
+            kill -INT "$RECORDER_PID" 2>/dev/null
+        fi
+        updatestate false
+    fi
 }
 
 trap cleanup EXIT
@@ -159,6 +178,53 @@ getactivemonitor() {
         active=$(hyprctl activeworkspace -j | jq -r '.monitor' 2>/dev/null)
     fi
     echo "$active"
+}
+
+# gpu-screen-recorder's process name is longer than pgrep's 15-character
+# comm limit, so -x can never match it; the full command line is the only
+# reliable handle.
+gsr_pid() {
+    pgrep -f '(^|/)gpu-screen-recorder( |$)' 2>/dev/null | head -n1
+}
+
+service_available() {
+    case "$1" in
+        gsr) command -v gpu-screen-recorder >/dev/null 2>&1 ;;
+        wf-recorder) command -v wf-recorder >/dev/null 2>&1 ;;
+        obs)
+            command -v obs >/dev/null 2>&1 && return 0
+            command -v flatpak >/dev/null 2>&1 &&
+                flatpak list --app --columns=application 2>/dev/null | grep -qx com.obsproject.Studio
+            ;;
+        *) return 1 ;;
+    esac
+}
+
+# Pick the recorder for this run. An explicit choice is honoured while its
+# program exists; otherwise (and for "auto") the most capable backend wins:
+# GPU Screen Recorder, then wf-recorder, then OBS. OBS is last because it
+# needs a configured scene and its WebSocket API, while the other two record
+# immediately.
+resolve_service() {
+    local requested="${1:-auto}" candidate
+    [[ "$requested" == "gpu-screen-recorder" ]] && requested="gsr"
+
+    case "$requested" in
+        gsr|wf-recorder|obs)
+            if service_available "$requested"; then
+                printf '%s' "$requested"
+                return 0
+            fi
+            ;;
+    esac
+
+    for candidate in gsr wf-recorder obs; do
+        if service_available "$candidate"; then
+            printf '%s' "$candidate"
+            return 0
+        fi
+    done
+    return 1
 }
 
 # Actually try to encode one frame with the given hardware codec, rather than
@@ -218,6 +284,26 @@ get_best_codec() {
     fi
 }
 
+# GPU Screen Recorder has its own codec vocabulary (h264/hevc/vp9/av1), so the
+# ffmpeg encoder names in the settings collapse to the codec family. CPU
+# encoding only exists for H.264 there.
+gsr_codec() {
+    case "$REC_CODEC" in
+        hevc*|libx265) echo "hevc" ;;
+        h264*|libx264) echo "h264" ;;
+        *) echo "auto" ;;
+    esac
+}
+
+# GSR's three quality presets line up with the settings page's low/balanced/high.
+gsr_quality() {
+    case "$REC_QUALITY" in
+        low) echo "medium" ;;
+        high) echo "very_high" ;;
+        *) echo "high" ;;
+    esac
+}
+
 # ── Quality: a resolution and a frame rate instead of a raw bitrate ──────────
 # Mbps means nothing on its own — the same number is generous at 720p and starved
 # at 4K — so the bitrate is derived from the pixels actually being encoded. The
@@ -265,20 +351,15 @@ monitor_scale_at() {
     echo "$scale"
 }
 
-# Appends the scaling filter and the derived bitrate to CODEC_OPTS, now that the
-# size of what is about to be captured is known.
-apply_quality() {
-    local src_w=$1 src_h=$2 codec=$3
-    local box_w box_h out_w out_h bitrate
+# The size a recording is actually encoded at: fitted inside the resolution
+# preset, aspect preserved, never scaled up. Scaling a small region up to a big
+# preset only wastes bits, so the preset is a ceiling rather than a target.
+fit_size() {
+    local src_w=$1 src_h=$2 box_w box_h
 
     read -r box_w box_h <<< "$(resolution_box)"
-    out_w="$src_w"
-    out_h="$src_h"
-
-    # Scaling up a small region to a big preset only wastes bits, so the box is
-    # a ceiling rather than a target.
     if [[ -n "$box_w" ]] && (( src_w > box_w || src_h > box_h )); then
-        read -r out_w out_h <<< "$(awk -v sw="$src_w" -v sh="$src_h" -v bw="$box_w" -v bh="$box_h" 'BEGIN {
+        awk -v sw="$src_w" -v sh="$src_h" -v bw="$box_w" -v bh="$box_h" 'BEGIN {
             ratio = bw / sw
             if (bh / sh < ratio) ratio = bh / sh
             w = int(sw * ratio / 2) * 2
@@ -286,7 +367,36 @@ apply_quality() {
             if (w < 2) w = 2
             if (h < 2) h = 2
             print w, h
-        }')"
+        }'
+    else
+        echo "$src_w $src_h"
+    fi
+}
+
+# The bitrate the pixels and frame rate are worth. Shared by the wf-recorder
+# path and the size estimate, so the two cannot disagree.
+bitrate_for() {
+    local out_w=$1 out_h=$2
+
+    awk -v w="$out_w" -v h="$out_h" -v fps="$REC_FRAMERATE" -v bpp="$(quality_bpp)" \
+        -v lo="$BITRATE_FLOOR_MBPS" -v hi="$BITRATE_CEILING_MBPS" 'BEGIN {
+        mbps = w * h * fps * bpp / 1000000
+        if (mbps < lo) mbps = lo
+        if (mbps > hi) mbps = hi
+        printf "%.1f", mbps
+    }'
+}
+
+# Appends the scaling filter and the derived bitrate to CODEC_OPTS, now that the
+# size of what is about to be captured is known.
+apply_quality() {
+    local src_w=$1 src_h=$2 codec=$3
+    local box_w box_h out_w out_h bitrate
+
+    read -r box_w box_h <<< "$(resolution_box)"
+    read -r out_w out_h <<< "$(fit_size "$src_w" "$src_h")"
+
+    if [[ -n "$box_w" ]] && (( src_w > box_w || src_h > box_h )); then
         if [[ "$codec" == *_vaapi ]]; then
             # VAAPI frames live on the GPU by the time the filter runs, so the
             # scaler has to be the VAAPI one; the CPU `scale` would never see them.
@@ -296,13 +406,7 @@ apply_quality() {
         fi
     fi
 
-    bitrate=$(awk -v w="$out_w" -v h="$out_h" -v fps="$REC_FRAMERATE" -v bpp="$(quality_bpp)" \
-        -v lo="$BITRATE_FLOOR_MBPS" -v hi="$BITRATE_CEILING_MBPS" 'BEGIN {
-        mbps = w * h * fps * bpp / 1000000
-        if (mbps < lo) mbps = lo
-        if (mbps > hi) mbps = hi
-        printf "%.1f", mbps
-    }')
+    bitrate=$(bitrate_for "$out_w" "$out_h")
     CODEC_OPTS+=("-p" "b=${bitrate}M")
 }
 
@@ -323,8 +427,11 @@ updatestate() {
         jq "$STATE_JSON_PATH = true | .screenRecord.loading = false" "$STATE_FILE" > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
         start_timer
     else
-        jq "$STATE_JSON_PATH = false | .screenRecord.loading = false | .screenRecord.paused = false" "$STATE_FILE" > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
+        # Stop the writer before clearing the flag: a timer tick that already
+        # read active=true could otherwise land its jq write afterwards and
+        # resurrect a recording that has just ended.
         stop_timer
+        jq "$STATE_JSON_PATH = false | .screenRecord.loading = false | .screenRecord.paused = false | .screenRecord.seconds = 0" "$STATE_FILE" > "${STATE_FILE}.tmp" && mv "${STATE_FILE}.tmp" "$STATE_FILE"
     fi
 }
 
@@ -339,6 +446,10 @@ toggle_pause() {
     # pause that still flips the state file leaves the UI lying about the recording.
     if [[ "$REC_SERVICE" == "obs" ]] && { pgrep -x "obs" > /dev/null || pgrep -f "com.obsproject.Studio" > /dev/null; }; then
         python3 "$SCRIPT_DIR/obs_pause.py" 2>/dev/null || return
+    elif GSR_ACTIVE_PID=$(gsr_pid) && [[ -n "$GSR_ACTIVE_PID" ]]; then
+        # GSR toggles its own pause state on SIGUSR2, so the video keeps a
+        # correct timeline instead of freezing a frame the way SIGSTOP does.
+        kill -USR2 "$GSR_ACTIVE_PID" 2>/dev/null || return
     elif pgrep -x wf-recorder > /dev/null; then
         # wf-recorder has no pause feature and installs no SIGUSR1 handler, so the
         # default action applies: SIGUSR1 terminates it. That is why pausing used to
@@ -361,6 +472,14 @@ toggle_pause() {
         notify-send "Recording Resumed" -a 'Recorder' &
     fi
 }
+
+# Resolve before anything else touches the recorder. A configured backend that
+# was uninstalled (or the "auto" default) falls through to the next one instead
+# of failing the recording.
+if ! REC_SERVICE=$(resolve_service "$REC_SERVICE_CONFIG"); then
+    notify-send "No Screen Recorder" "Install GPU Screen Recorder, wf-recorder, or OBS Studio" -a 'Recorder' &
+    exit 1
+fi
 
 mkdir -p "$RECORDING_DIR"
 cd "$RECORDING_DIR" || exit
@@ -406,7 +525,7 @@ for ((i=0;i<${#ARGS[@]};i++)); do
 done
 
 AUDIO_ARGS=()
-if [[ $SOUND_FLAG -eq 1 ]]; then
+if [[ "$REC_SERVICE" == "wf-recorder" && $SOUND_FLAG -eq 1 ]]; then
     AUDIO_DEVICE=$(getaudiooutput)
     if [[ -n "$AUDIO_DEVICE" ]]; then
         AUDIO_ARGS=("--audio=$AUDIO_DEVICE")
@@ -432,6 +551,23 @@ if [[ "$REC_SERVICE" == "obs" ]]; then
     fi
 fi
 
+GSR_ACTIVE_PID=$(gsr_pid)
+if [[ -n "$GSR_ACTIVE_PID" ]]; then
+    notify-send "Recording Stopped" "Stopped" -a 'Recorder' &
+    updatestate false
+    # SIGINT is GSR's "stop and save": it flushes the container and exits. Wait
+    # for that before returning so a restart does not race the finalizer.
+    kill -INT "$GSR_ACTIVE_PID" 2>/dev/null
+    for _ in {1..50}; do
+        kill -0 "$GSR_ACTIVE_PID" 2>/dev/null || break
+        sleep 0.2
+    done
+    if kill -0 "$GSR_ACTIVE_PID" 2>/dev/null; then
+        kill -TERM "$GSR_ACTIVE_PID" 2>/dev/null
+    fi
+    exit 0
+fi
+
 if pgrep wf-recorder > /dev/null; then
     notify-send "Recording Stopped" "Stopped" -a 'Recorder' &
     updatestate false
@@ -447,6 +583,16 @@ if [[ $IS_OBS_RECORDING -eq 1 ]]; then
     python3 "$SCRIPT_DIR/obs_control.py" stop
     sleep 1.5
     pkill -x "obs" || pkill -f "com.obsproject.Studio"
+    exit 0
+fi
+
+# The state file can outlive its recorder: a killed script, a shell restart or a
+# recorder crash leaves active=true with nothing running. Without this the bar's
+# stop button starts a brand-new recording and asks for a region, which looks
+# exactly like a stop that is being ignored.
+if [[ "$(jq -r "$STATE_JSON_PATH" "$STATE_FILE" 2>/dev/null)" == "true" ]]; then
+    notify-send "Recording Stopped" "The recorder was no longer running" -a 'Recorder' &
+    updatestate false
     exit 0
 fi
 
@@ -613,6 +759,114 @@ if [[ -n "$OBS_CMD" ]]; then
 
     updatestate false
     exit 0
+elif [[ "$REC_SERVICE" == "gsr" ]]; then
+    GSR_FORMAT="$REC_FORMAT"
+    case "$GSR_FORMAT" in
+        mp4|mkv|webm|flv) ;;
+        # GSR has no animated-image muxer. Record the clip as MP4 instead of
+        # failing after the format was picked in the toolbar.
+        *) GSR_FORMAT="mp4" ;;
+    esac
+    FILENAME="recording_$(getdate).${GSR_FORMAT}"
+
+    GSR_CODEC="$(gsr_codec)"
+    GSR_ENCODER_ARGS=()
+    if [[ "$GSR_FORMAT" == "webm" ]]; then
+        # WebM carries VP8/VP9/AV1 and Opus, never H.264 or AAC.
+        GSR_CODEC="vp9"
+    fi
+    if [[ "$REC_USE_GPU" != "true" || "$REC_CODEC" == "libx264" ]]; then
+        # GSR's CPU encoder is H.264 only; it has no software HEVC.
+        GSR_ENCODER_ARGS=("-encoder" "cpu")
+        GSR_CODEC="h264"
+    fi
+
+    if [[ "$REC_FRAME_SYNC" == "vfr" ]]; then
+        GSR_FRAME_SYNC="vfr"
+    else
+        GSR_FRAME_SYNC="cfr"
+    fi
+
+    GSR_ARGS=(-f "$REC_FRAMERATE" -k "$GSR_CODEC" -q "$(gsr_quality)"
+        -fm "$GSR_FRAME_SYNC" -c "$GSR_FORMAT" -cursor yes
+        -fallback-cpu-encoding yes -o "$FILENAME")
+    [[ ${#GSR_ENCODER_ARGS[@]} -gt 0 ]] && GSR_ARGS+=("${GSR_ENCODER_ARGS[@]}")
+
+    if [[ $SOUND_FLAG -eq 1 ]]; then
+        # GSR follows PipeWire's default output, unlike the monitor source name
+        # wf-recorder wants, so no pactl lookup is needed here.
+        GSR_AUDIO="default_output"
+        if [[ "$REC_RECORD_MIC" == "true" ]]; then
+            GSR_AUDIO+="|${REC_MIC_DEVICE:-default_input}"
+        fi
+        GSR_ARGS+=(-a "$GSR_AUDIO" -ab 320)
+        if [[ "$GSR_FORMAT" == "webm" ]]; then
+            GSR_ARGS+=(-ac opus)
+        else
+            GSR_ARGS+=(-ac aac)
+        fi
+    fi
+
+    if [[ $FULLSCREEN_FLAG -eq 1 ]]; then
+        MONITOR="$(getactivemonitor)"
+        [[ -z "$MONITOR" || "$MONITOR" == "null" ]] && MONITOR="screen"
+        read -r MON_W MON_H <<< "$(hyprctl monitors -j 2>/dev/null | jq -r --arg m "$MONITOR" \
+            '[.[] | select(.name == $m)][0] | "\(.width) \(.height)"' 2>/dev/null)"
+        if [[ -z "$MON_W" || "$MON_W" == "null" ]]; then
+            MON_W=1920
+            MON_H=1080
+        fi
+        if [[ -n "$(resolution_box)" ]]; then
+            read -r GSR_W GSR_H <<< "$(fit_size "$MON_W" "$MON_H")"
+            GSR_ARGS+=(-s "${GSR_W}x${GSR_H}")
+        fi
+        GSR_ARGS+=(-w "$MONITOR")
+    else
+        if [[ -n "$MANUAL_REGION" ]]; then
+            region="$MANUAL_REGION"
+        else
+            if ! region="$(slurp 2>&1)"; then
+                notify-send "Recording cancelled" "Selection was cancelled" -a 'Recorder' & disown
+                updatestate false
+                exit 1
+            fi
+        fi
+
+        pos="${region%% *}"      # x,y (logical)
+        size="${region##* }"     # WxH (logical)
+        x="${pos%,*}"
+        y="${pos#*,}"
+
+        # GSR takes slurp's logical coordinates directly; only the encoded size
+        # needs the monitor scale to derive a bitrate/preview resolution.
+        region_scale="$(monitor_scale_at "$x" "$y")"
+        read -r REGION_W REGION_H <<< "$(awk -v s="${size%x*}" -v t="${size#*x}" -v scale="$region_scale" 'BEGIN {
+            printf "%d %d", int(s * scale + 0.5), int(t * scale + 0.5)
+        }')"
+        if [[ -n "$(resolution_box)" ]]; then
+            read -r GSR_W GSR_H <<< "$(fit_size "$REGION_W" "$REGION_H")"
+            GSR_ARGS+=(-s "${GSR_W}x${GSR_H}")
+        fi
+        GSR_ARGS+=(-w "${size}+${x}+${y}")
+    fi
+
+    notify-send "Starting recording" "$FILENAME" -a 'Recorder' & disown
+    RECORDING_SESSION=1
+    updatestate true
+    gpu-screen-recorder "${GSR_ARGS[@]}" &
+    RECORDER_PID=$!
+    wait "$RECORDER_PID"
+    RECORDING_SESSION=0
+
+    if [[ ! -s "$FILENAME" ]]; then
+        notify-send "Recording Failed" "GPU Screen Recorder did not write $FILENAME" -a 'Recorder' &
+    fi
+
+    if [[ -s "$FILENAME" ]]; then
+        notify-send "Recording Finished" "Saved to: $PWD/$FILENAME" -a 'Recorder' &
+        qs -c ii ipc call launchVideoEditor handle "$PWD/$FILENAME"
+    fi
+    updatestate false
 else
     FILENAME="recording_$(getdate).${REC_FORMAT}"
     
@@ -664,8 +918,12 @@ else
         apply_quality "$MON_W" "$MON_H" "$CODEC"
 
         notify-send "Starting recording" "$FILENAME" -a 'Recorder' & disown
+        RECORDING_SESSION=1
         updatestate true
-        wf-recorder -o "$MONITOR" "${CODEC_OPTS[@]}" -f "$FILENAME" "${AUDIO_ARGS[@]}"
+        wf-recorder -o "$MONITOR" "${CODEC_OPTS[@]}" -f "$FILENAME" "${AUDIO_ARGS[@]}" &
+        RECORDER_PID=$!
+        wait "$RECORDER_PID"
+        RECORDING_SESSION=0
     else
         # If a manual region was provided via --region, use it; otherwise run slurp as before.
         if [[ -n "$MANUAL_REGION" ]]; then
@@ -694,12 +952,16 @@ else
         apply_quality "$REGION_W" "$REGION_H" "$CODEC"
 
         notify-send "Starting recording" "$FILENAME" -a 'Recorder' & disown
+        RECORDING_SESSION=1
         updatestate true
         # With a geometry, wf-recorder detects the containing output from the
         # global xdg-output coordinates. Forcing the focused output here makes
         # selections on another monitor invalid and silently records the full
         # output instead.
-        wf-recorder "${CODEC_OPTS[@]}" -f "$FILENAME" --geometry "$geometry" "${AUDIO_ARGS[@]}"
+        wf-recorder "${CODEC_OPTS[@]}" -f "$FILENAME" --geometry "$geometry" "${AUDIO_ARGS[@]}" &
+        RECORDER_PID=$!
+        wait "$RECORDER_PID"
+        RECORDING_SESSION=0
     fi
 
     # Post recording action (launch video editor)

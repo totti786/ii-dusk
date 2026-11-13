@@ -9,12 +9,21 @@ on stdout, so they never land in QML memory or in a Process buffer.
 Commands (all print one JSON object):
     detect                         which CLIs exist, plus wtype for auto-type
     status  --provider P           missing | unauthenticated | locked | unlocked
-    unlock  --provider P           master password on stdin (bitwarden only)
+    unlock  --provider P           master password on stdin (bitwarden only);
+                                   --remember also keeps it for fingerprint unlock
+    fingerprint --provider P       unlock after a fingerprint match (bitwarden only)
+    fp-status                      {available, enrolled, stashed}
+    fp-forget                      drop the remembered master password
     lock    --provider P
     list    --provider P           items without secrets
     sync    --provider P
     copy    --provider P --id ID --field password|username|totp --clear SECONDS
     type    --provider P --id ID --mode password|username|login
+
+Fingerprint unlock is a convenience, not a second key: fprintd only answers
+match / no match, so the master password has to be readable by this user once
+the finger matches. It is kept in gnome-keyring's *session* collection (memory
+only, gone at logout, never on disk) and only when the user opted in.
 
 Bitwarden's session key lives in $XDG_RUNTIME_DIR/ii-passwords (0700/0600):
 a tmpfs that dies with the login session, so a reboot always comes back
@@ -175,6 +184,64 @@ def type_text(parts: list[tuple[str, str]]) -> None:
         elif value:
             subprocess.run(["wtype", "-d", "12", "-"], input=value, text=True,
                            check=False, timeout=60)
+
+
+# ── Fingerprint (fprintd) ────────────────────────────────────────────────────
+
+SESSION_COLLECTION = "/org/freedesktop/secrets/collection/session"
+STASH_ATTRS = ["service", "ii-passwords", "kind", "master-password"]
+FP_TIMEOUT = 25
+
+
+def fp_enrolled() -> bool:
+    if not shutil.which("fprintd-list"):
+        return False
+    result = run(["fprintd-list", os.environ.get("USER", "")], timeout=10)
+    return result.returncode == 0 and "\n - #" in result.stdout.replace("\r", "")
+
+
+def stash_password(password: str) -> None:
+    """Keep the master password in the session keyring, via stdin (never argv)."""
+    if not shutil.which("secret-tool"):
+        raise BridgeError("secret-tool is not installed", "fp_missing")
+    result = run(["secret-tool", "store", f"--collection={SESSION_COLLECTION}",
+                  "--label=ii passwords (this session)", *STASH_ATTRS], stdin=password)
+    if result.returncode != 0:
+        raise BridgeError(last_line(result.stderr) or "Could not keep the password for fingerprint unlock",
+                          "fp_stash")
+
+
+def stashed_password() -> str:
+    if not shutil.which("secret-tool"):
+        return ""
+    result = run(["secret-tool", "lookup", *STASH_ATTRS], timeout=10)
+    return result.stdout.rstrip("\n") if result.returncode == 0 else ""
+
+
+def forget_password() -> None:
+    if shutil.which("secret-tool"):
+        run(["secret-tool", "clear", *STASH_ATTRS], timeout=10)
+
+
+def verify_fingerprint() -> None:
+    """Block until the sensor reports a match; raise BridgeError otherwise."""
+    if not shutil.which("fprintd-verify"):
+        raise BridgeError("fprintd is not installed", "fp_missing")
+    if not fp_enrolled():
+        raise BridgeError("No fingerprint is enrolled (fprintd-enroll)", "fp_missing")
+    # The shell stops us with SIGTERM when the popup closes: leave through an
+    # exception so subprocess.run kills fprintd-verify too.
+    import signal
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(1))
+    try:
+        result = run(["fprintd-verify"], timeout=FP_TIMEOUT)
+    except BridgeError as err:
+        raise BridgeError("Fingerprint timed out", "fp_timeout") from err
+    if "verify-match" not in result.stdout:
+        if "verify-no-match" in result.stdout:
+            raise BridgeError("Fingerprint not recognised", "fp_nomatch")
+        raise BridgeError(last_line(result.stdout) or last_line(result.stderr) or "Fingerprint failed",
+                          "fp_error")
 
 
 # ── Bitwarden (official `bw` CLI) ────────────────────────────────────────────
@@ -611,16 +678,28 @@ def resolve(provider: str) -> str:
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("command", choices=["detect", "status", "unlock", "lock", "list",
-                                            "sync", "copy", "type", "login"])
+                                            "sync", "copy", "type", "login", "fingerprint",
+                                            "fp-status", "fp-forget"])
     parser.add_argument("--provider", default="auto")
     parser.add_argument("--id", default="")
     parser.add_argument("--field", default="password", choices=["password", "username", "totp"])
     parser.add_argument("--mode", default="password", choices=["password", "username", "login"])
     parser.add_argument("--clear", type=int, default=30)
+    parser.add_argument("--remember", action="store_true")
     args = parser.parse_args(argv)
 
     if args.command == "detect":
         emit({"ok": True, "providers": available(), "wtype": bool(shutil.which("wtype"))})
+        return 0
+
+    if args.command == "fp-status":
+        enrolled = fp_enrolled()
+        emit({"ok": True, "available": bool(shutil.which("fprintd-verify")) and bool(shutil.which("secret-tool")),
+              "enrolled": enrolled, "stashed": bool(stashed_password())})
+        return 0
+    if args.command == "fp-forget":
+        forget_password()
+        emit({"ok": True})
         return 0
 
     try:
@@ -640,6 +719,20 @@ def main(argv: list[str]) -> int:
             out = adapter.status()
         elif args.command == "unlock":
             password = sys.stdin.readline().rstrip("\n") if name == "bitwarden" else ""
+            out = adapter.unlock(password)
+            if args.remember and name == "bitwarden":
+                try:
+                    stash_password(password)
+                except BridgeError:
+                    pass  # the vault is open; only the fingerprint shortcut is missing
+            password = ""
+        elif args.command == "fingerprint":
+            if name != "bitwarden":
+                raise BridgeError("Fingerprint unlock is for Bitwarden", "fp_missing")
+            verify_fingerprint()
+            password = stashed_password()
+            if not password:
+                raise BridgeError("Type your master password once this session first", "fp_stash")
             out = adapter.unlock(password)
             password = ""
         elif args.command == "lock":

@@ -501,7 +501,7 @@ class BudsLinkIsolatedMockDBusTests(unittest.TestCase):
         self.assertEqual(first_snap["config"]["battery1Icon"], "earbuds-left")
 
         # Verify HoldService was called with stable client ID
-        self.assertIn("ii-p3drovfx-budslink", self.holds)
+        self.assertIn("ii-dusk-budslink", self.holds)
 
         # Verify UiAction was called with toggle1State, toggle2State, and settingsButtonClicked
         self.assertIn(("toggle1State", 4), self.actions)
@@ -509,7 +509,7 @@ class BudsLinkIsolatedMockDBusTests(unittest.TestCase):
         self.assertIn(("settingsButtonClicked", 0), self.actions)
 
         # Verify ReleaseService was called
-        self.assertIn("ii-p3drovfx-budslink", self.releases)
+        self.assertIn("ii-dusk-budslink", self.releases)
         self.assertEqual(proc.returncode, 0)
 
     def test_section_45_action_allowlist_enforcement(self):
@@ -1194,7 +1194,7 @@ Exec={self.daemon_script}
         self._wait_for_sentinel(
             self.hold_file,
             timeout=5.0,
-            check_fn=lambda c: "ii-p3drovfx-budslink" in c,
+            check_fn=lambda c: "ii-dusk-budslink" in c,
             msg="HoldService method invocation",
         )
 
@@ -1219,7 +1219,7 @@ Exec={self.daemon_script}
         self._wait_for_sentinel(
             self.release_file,
             timeout=5.0,
-            check_fn=lambda c: "ii-p3drovfx-budslink" in c,
+            check_fn=lambda c: "ii-dusk-budslink" in c,
             msg="ReleaseService method invocation",
         )
 
@@ -1239,7 +1239,7 @@ Exec={self.daemon_script}
 
         with open(self.hold_file, "r") as f:
             hold_clients = [line.strip() for line in f if line.strip()]
-        self.assertIn("ii-p3drovfx-budslink", hold_clients)
+        self.assertIn("ii-dusk-budslink", hold_clients)
 
         with open(self.action_file, "r") as f:
             actions_executed = [line.strip() for line in f if line.strip()]

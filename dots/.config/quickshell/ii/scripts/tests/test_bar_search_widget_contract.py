@@ -30,7 +30,7 @@ class BarSearchWidgetContractTest(unittest.TestCase):
         component_registry = self.read("modules/common/BarComponentRegistry.qml")
         style_registry = self.read("modules/ii/bar/registry/BarWidgetRegistry.qml")
         settings_registry = self.read("modules/common/SettingsPageRegistry.qml")
-        waffle = self.read("modules/settings/configs/widgets/BarWidgetsWaffleConfig.qml")
+        waffle = self.read("modules/settings/configs/widgets/BarWidgetsConfig.qml")
 
         self.assertIn('property string search: "default"', config)
         # Config.qml stores the selected style; widget IDs belong to the

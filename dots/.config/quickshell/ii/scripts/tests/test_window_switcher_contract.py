@@ -34,7 +34,7 @@ GLOBAL_STATES = ROOT / "GlobalStates.qml"
 WINDOWS_PAGE = ROOT / "modules/settings/configs/WindowsConfig.qml"
 ISLAND_PAGE = ROOT / "modules/settings/configs/DynamicIslandConfig.qml"
 PAGE_REGISTRY = ROOT / "modules/common/SettingsPageRegistry.qml"
-FAMILIES = [ROOT / f"panelFamilies/{name}.qml" for name in ("IllogicalImpulseFamily", "WaffleFamily", "TabletFamily")]
+FAMILIES = [ROOT / f"panelFamilies/{name}.qml" for name in ("IllogicalImpulseFamily", "TabletFamily")]
 
 PEEK = PANEL_DIR / "WindowSwitcherPeek.qml"
 LOGIC = ROOT / "services/windowSwitcher/WindowSwitcherLogic.js"

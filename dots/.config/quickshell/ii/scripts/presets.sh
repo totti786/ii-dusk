@@ -3,6 +3,7 @@
 PRESETS_DIR="$HOME/.config/illogical-impulse/presets"
 CONFIG_FILE="$HOME/.config/illogical-impulse/config.json"
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SWITCHWALL_BIN="${SWITCHWALL_BIN:-$(dirname "${BASH_SOURCE[0]}")/colors/switchwall.sh}"
 BACKUP_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/ii/preset-backups"
 BACKUP_KEEP=10
 # Which preset the running config came from. Nothing else records this, and
@@ -148,7 +149,7 @@ apply_colors() {
     fi
     (
         if [[ -z "$cache_hit" ]]; then
-            "${nice_cmd[@]}" "$SCRIPTS_DIR/colors/switchwall.sh" --colors-only --noswitch
+            "${nice_cmd[@]}" "$SWITCHWALL_BIN" --colors-only --noswitch
             # Keep it only if no newer apply has started meanwhile.
             if [[ -n "$cached" && "$(cat "$token_file" 2>/dev/null)" == "$token" && -s "$COLORS_FILE" ]]; then
                 mkdir -p "$COLORS_CACHE_DIR" && atomic_copy_file "$COLORS_FILE" "$cached"
@@ -166,9 +167,9 @@ apply_colors() {
         fi
         [[ "$(cat "$token_file" 2>/dev/null)" == "$token" ]] || exit 0
         if [[ -n "$switch_to" && -f "$switch_to" ]]; then
-            "${nice_cmd[@]}" "$SCRIPTS_DIR/colors/switchwall.sh" --image "$switch_to"
+            "${nice_cmd[@]}" "$SWITCHWALL_BIN" --image "$switch_to"
         else
-            "${nice_cmd[@]}" "$SCRIPTS_DIR/colors/switchwall.sh" --noswitch
+            "${nice_cmd[@]}" "$SWITCHWALL_BIN" --noswitch
         fi
     ) > /tmp/presets_switchwall.log 2>&1 &
 }

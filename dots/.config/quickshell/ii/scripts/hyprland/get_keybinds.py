@@ -156,7 +156,8 @@ def parse_lua_binds(path):
 
         # hl.bind call - may span multiple lines
         stripped = raw.strip()
-        if stripped.startswith('hl.bind('):
+        # `rebind(` is the config's own unbind-then-bind helper for keys it takes over
+        if stripped.startswith(('hl.bind(', 'rebind(')):
             bind_src = stripped
             # collect continuation lines until matching closing paren
             depth = stripped.count('(') - stripped.count(')')
@@ -229,8 +230,11 @@ def process_lua_bind(bind_src, current, is_unbind=False):
     if not m:
         return
     combo = m.group(1)
+    # `mainMod .. " + SHIFT + W"`: the variable is the Super key (local mainMod = "SUPER")
+    if re.match(r'\s*(?:hl\.bind|rebind)\(\s*mainMod\s*\.\.', bind_src):
+        combo = "SUPER" + combo
     parts = [p.strip() for p in combo.split('+')]
-    mods = parts[:-1] if len(parts) > 1 else []
+    mods = [p for p in parts[:-1] if p] if len(parts) > 1 else []
     key = parts[-1]
 
     # Extract description from options table

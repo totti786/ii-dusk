@@ -72,6 +72,41 @@ FAKE_WL_COPY = textwrap.dedent(r'''
 ''').lstrip()
 
 
+FAKE_FPRINTD_VERIFY = textwrap.dedent(r'''
+    #!/usr/bin/env python3
+    import os, sys
+    print("Verify started!")
+    print("Verify result: " + os.environ.get("FAKE_FP", "verify-match") + " (done)")
+    sys.exit(0 if os.environ.get("FAKE_FP", "verify-match") == "verify-match" else 1)
+''').lstrip()
+
+FAKE_FPRINTD_LIST = textwrap.dedent(r'''
+    #!/usr/bin/env python3
+    import os
+    if os.environ.get("FAKE_FP_ENROLLED", "1") == "1":
+        print("found 1 devices\nFingerprints for user x on sensor:\n - #0: right-thumb")
+    else:
+        print("User x has no fingers enrolled for sensor.")
+''').lstrip()
+
+# secret-tool keeps one secret in a file; argv is logged so a test can prove the secret never is.
+FAKE_SECRET_TOOL = textwrap.dedent(r'''
+    #!/usr/bin/env python3
+    import json, os, sys
+    state = os.environ["FAKE_STATE"]
+    store = os.path.join(state, "stash")
+    open(os.path.join(state, "secret-argv.log"), "a").write(json.dumps(sys.argv[1:]) + "\n")
+    cmd = sys.argv[1]
+    if cmd == "store":
+        open(store, "w").write(sys.stdin.read())
+    elif cmd == "lookup":
+        if not os.path.exists(store): sys.exit(1)
+        sys.stdout.write(open(store).read())
+    elif cmd == "clear":
+        if os.path.exists(store): os.remove(store)
+''').lstrip()
+
+
 def write_exec(path: Path, body: str) -> None:
     path.write_text(body)
     path.chmod(path.stat().st_mode | stat.S_IEXEC)
@@ -89,6 +124,9 @@ class BitwardenBridgeTests(unittest.TestCase):
         self.runtime.mkdir(mode=0o700)
         write_exec(self.bin / "bw", FAKE_BW)
         write_exec(self.bin / "wl-copy", FAKE_WL_COPY)
+        write_exec(self.bin / "fprintd-verify", FAKE_FPRINTD_VERIFY)
+        write_exec(self.bin / "fprintd-list", FAKE_FPRINTD_LIST)
+        write_exec(self.bin / "secret-tool", FAKE_SECRET_TOOL)
         # timeout is a real coreutil; keep the system PATH after our fakes.
         self.env = dict(os.environ, PATH=f"{self.bin}:/usr/bin:/bin",
                         FAKE_STATE=str(self.state), XDG_RUNTIME_DIR=str(self.runtime))
@@ -193,6 +231,74 @@ class BitwardenBridgeTests(unittest.TestCase):
                     pass
             subprocess.run(["sleep", "0.05"])
         self.fail("wl-copy was never called")
+
+    # ── Fingerprint ──────────────────────────────────────────────────────────
+
+    def lock(self):
+        self.call("lock")
+
+    def test_fingerprint_needs_a_remembered_password_first(self):
+        out, _ = self.call("fingerprint")
+        self.assertFalse(out["ok"])
+        self.assertEqual(out["code"], "fp_stash")
+
+    def test_unlock_without_remember_keeps_nothing(self):
+        self.unlock()
+        self.assertFalse((self.state / "stash").exists())
+        out, _ = self.call("fp-status")
+        self.assertFalse(out["stashed"])
+
+    def test_remember_then_fingerprint_unlocks_after_a_lock(self):
+        out, _ = self.call("unlock", "--remember", stdin="correct horse\n")
+        self.assertTrue(out["ok"], out)
+        self.assertEqual((self.state / "stash").read_text(), "correct horse")
+        self.lock()
+        status, _ = self.call("status")
+        self.assertEqual(status["state"], "locked")
+        out, _ = self.call("fingerprint")
+        self.assertTrue(out["ok"], out)
+        status, _ = self.call("status")
+        self.assertEqual(status["state"], "unlocked")
+
+    def test_the_master_password_never_goes_through_argv(self):
+        self.call("unlock", "--remember", stdin="correct horse\n")
+        for log in ("secret-argv.log", "argv.log"):
+            self.assertNotIn("correct horse", (self.state / log).read_text())
+
+    def test_no_match_does_not_unlock(self):
+        self.call("unlock", "--remember", stdin="correct horse\n")
+        self.lock()
+        self.env["FAKE_FP"] = "verify-no-match"
+        out, _ = self.call("fingerprint")
+        self.assertFalse(out["ok"])
+        self.assertEqual(out["code"], "fp_nomatch")
+        status, _ = self.call("status")
+        self.assertEqual(status["state"], "locked")
+
+    def test_no_enrolled_finger_is_reported(self):
+        self.call("unlock", "--remember", stdin="correct horse\n")
+        self.lock()
+        self.env["FAKE_FP_ENROLLED"] = "0"
+        out, _ = self.call("fingerprint")
+        self.assertEqual(out["code"], "fp_missing")
+        status, _ = self.call("fp-status")
+        self.assertFalse(status["enrolled"])
+
+    def test_forget_drops_the_password(self):
+        self.call("unlock", "--remember", stdin="correct horse\n")
+        out, _ = self.call("fp-status")
+        self.assertTrue(out["stashed"])
+        self.call("fp-forget")
+        out, _ = self.call("fp-status")
+        self.assertFalse(out["stashed"])
+        self.lock()
+        out, _ = self.call("fingerprint")
+        self.assertEqual(out["code"], "fp_stash")
+
+    def test_a_wrong_password_is_never_remembered(self):
+        out, _ = self.call("unlock", "--remember", stdin="nope\n")
+        self.assertFalse(out["ok"])
+        self.assertFalse((self.state / "stash").exists())
 
 
 class HelperTests(unittest.TestCase):

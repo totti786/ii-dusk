@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Behaviour tests for scripts/colors/recolor_icons.py: tone normalisation and icon lookup."""
+"""Tests for scripts/colors/recolor_icons.py: folder icons recoloured into an overlay theme."""
 
 import importlib.util
 import os
@@ -7,8 +7,6 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-
-import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 _argv = sys.argv
@@ -18,90 +16,90 @@ recolor = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(recolor)
 sys.argv = _argv
 
-TONAL_SPOT = {"primary": "#ffb77c", "primary_container": "#6c3a0c", "on_primary_container": "#ffdcc2",
-              "secondary": "#e4bfa7", "secondary_container": "#5b4130"}
-INTENSE = {"primary": "#b4c5ff", "primary_container": "#0040e0", "on_primary_container": "#dce1ff",
-           "secondary": "#b9c3ff", "secondary_container": "#2a3fb0"}
+SVG = '<svg><path style="fill:#5294e2"/><path style="fill:#4877b1"/><path style="fill:#1D344F"/><path style="fill:#fff"/></svg>'
+INDEX = """[Icon Theme]
+Name=Mock
+Directories=48x48/places,48x48/apps
+
+[48x48/places]
+Size=48
+Type=Fixed
+Context=Places
+
+[48x48/apps]
+Size=48
+Type=Fixed
+Context=Applications
+"""
 
 
-def plate_icon(plate, logo, size=64):
-    """A rounded-square plate with a centred logo, as a PIL image."""
-    from PIL import Image, ImageDraw
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    d.rounded_rectangle((4, 4, size - 5, size - 5), radius=14, fill=plate)
-    d.ellipse((22, 22, size - 23, size - 23), fill=logo)
-    return img
+def make_base(root):
+    base = Path(root) / "Mock"
+    places = base / "48x48/places"
+    places.mkdir(parents=True)
+    (base / "48x48/apps").mkdir(parents=True)
+    (base / "index.theme").write_text(INDEX)
+    (places / "folder-blue.svg").write_text(SVG)
+    (places / "user-blue-desktop.svg").write_text(SVG)
+    (places / "folder-red.svg").write_text(SVG)  # another colour: not touched
+    os.symlink("folder-blue.svg", places / "folder.svg")
+    os.symlink("user-blue-desktop.svg", places / "user-desktop.svg")
+    os.symlink("user-desktop.svg", places / "desktop.svg")  # alias of an alias
+    (base / "48x48/apps/app.svg").write_text(SVG)
+    return base
 
 
-def tone_at(img, xy):
-    return float(recolor.lab_tone_chroma(np.array([img.getpixel(xy)[:3]], dtype=np.uint8))[0][0])
+class RecolorIconsTest(unittest.TestCase):
+    def test_darker_clamps_each_channel(self):
+        self.assertEqual(recolor.darker("102030", 0x20), "000010")
+        self.assertEqual(recolor.darker("ffffff", 20), "ebebeb")
 
+    def test_overlay_recolors_blue_folders_and_links_aliases(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = make_base(tmp)
+            staging = Path(tmp) / "out"
+            staging.mkdir()
+            recolored, linked = recolor.build_overlay(str(base), "Mock", "d4bbff", str(staging))
+            places = staging / "48x48/places"
+            self.assertEqual(recolored, 2)
+            self.assertEqual(linked, 3)
+            text = (places / "folder-blue.svg").read_text()
+            self.assertIn("#" + recolor.darker("d4bbff", recolor.FOLDER_DARKEN), text)
+            self.assertNotIn("#d4bbff", text.lower())
+            self.assertNotIn("5294e2", text.lower())
+            self.assertNotIn("1d344f", text.lower())
+            self.assertIn("#fff", text)
+            # Aliases resolve inside the overlay, including the alias of an alias.
+            for name, target in (("folder.svg", "folder-blue.svg"),
+                                 ("user-desktop.svg", "user-blue-desktop.svg"),
+                                 ("desktop.svg", "user-blue-desktop.svg")):
+                self.assertTrue((places / name).is_symlink(), name)
+                self.assertEqual(Path(os.path.realpath(places / name)), places / target, name)
+            self.assertFalse((places / "folder-red.svg").exists())
+            self.assertFalse((staging / "48x48/apps").exists())
 
-class RecolorToneTests(unittest.TestCase):
-    def setUp(self):
-        self.palette = recolor.Palette(TONAL_SPOT)
+    def test_index_inherits_the_base_and_declares_only_filled_dirs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = make_base(tmp)
+            staging = Path(tmp) / "out"
+            staging.mkdir()
+            recolor.build_overlay(str(base), "Mock", "d4bbff", str(staging))
+            index = recolor.read_index(str(staging))
+            self.assertEqual(index.get("Icon Theme", "Name"), "DynamicTheme")
+            self.assertEqual(index.get("Icon Theme", "Inherits"), "Mock,hicolor")
+            self.assertEqual(index.get("Icon Theme", "Directories"), "48x48/places")
+            self.assertEqual(index.get("48x48/places", "Context"), "Places")
 
-    def recolored(self, img):
-        return recolor.recolor_raster_image(img, recolor.analyze_image(img), self.palette)
-
-    def test_light_and_dark_plates_land_on_the_same_tones(self):
-        light = self.recolored(plate_icon((250, 250, 250, 255), (30, 90, 200, 255)))
-        dark = self.recolored(plate_icon((20, 20, 24, 255), (120, 200, 255, 255)))
-        for img in (light, dark):
-            self.assertAlmostEqual(tone_at(img, (8, 32)), recolor.ToneMap.PLATE_TONE, delta=3)
-            self.assertGreater(tone_at(img, (32, 32)), 70)
-
-    def test_bare_glyph_comes_out_light(self):
-        from PIL import Image, ImageDraw
-        img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-        ImageDraw.Draw(img).ellipse((24, 24, 40, 40), fill=(10, 10, 10, 255))
-        out = self.recolored(img)
-        self.assertGreater(tone_at(out, (32, 32)), 70)
-        self.assertEqual(out.getpixel((2, 2))[3], 0)
-
-    def test_ui_glyphs_keep_their_tone(self):
-        svg = '<svg xmlns="http://www.w3.org/2000/svg"><path fill="#363636" d="M0 0h4v4z"/></svg>'
-        out = recolor.recolor_svg(svg, recolor.ToneMap(), self.palette)
-        hexval = out.split('<path fill="')[1][:7]
-        rgb = np.array([[int(hexval[i:i + 2], 16) for i in (1, 3, 5)]], dtype=np.uint8)
-        self.assertAlmostEqual(float(recolor.lab_tone_chroma(rgb)[0][0]), 22.6, delta=2)
-
-    def test_intense_scheme_gives_more_chroma(self):
-        tone = np.array([30.0])
-        calm = self.palette.sample(tone, np.array([1.0]))[0].astype(np.uint8)
-        vivid = recolor.Palette(INTENSE).sample(tone, np.array([1.0]))[0].astype(np.uint8)
-        c = lambda rgb: float(recolor.lab_tone_chroma(np.array([rgb]))[1][0])
-        self.assertGreater(c(vivid), c(calm))
-
-    def test_svg_references_masks_and_alpha_survive(self):
-        svg = ('<svg xmlns="http://www.w3.org/2000/svg"><defs><mask id="m"><rect fill="#ffffff"/></mask></defs>'
-               '<use href="#abc"/><path fill="url(#bad)" stroke="#11223380" mask="url(#m)"/></svg>')
-        out = recolor.recolor_svg(svg, recolor.ToneMap(), self.palette)
-        self.assertIn('href="#abc"', out)
-        self.assertIn('url(#bad)', out)
-        self.assertIn('<rect fill="#ffffff"/>', out)
-        self.assertRegex(out, r'stroke="#[0-9a-f]{6}80"')
-
-
-class IconLookupTests(unittest.TestCase):
-    def test_extensionless_svg_is_sniffed_as_svg(self):
-        with tempfile.NamedTemporaryFile("w", delete=False) as f:
-            f.write('<?xml version="1.0"?>\n<!DOCTYPE svg>\n<svg xmlns="http://www.w3.org/2000/svg"/>')
-        try:
-            self.assertEqual(recolor.sniff_image_kind(f.name), "svg")
-        finally:
-            os.unlink(f.name)
-
-    def test_loose_file_at_icon_dir_root_is_found(self):
-        with tempfile.TemporaryDirectory() as icons:
-            Path(icons, "awcc.png").write_bytes(b"\x89PNG\r\n\x1a\n")
-            saved = (recolor.ICON_SEARCH_DIRS, recolor.PIXMAP_DIRS, recolor._ICON_INDEX)
-            recolor.ICON_SEARCH_DIRS, recolor.PIXMAP_DIRS, recolor._ICON_INDEX = [icons], [], None
-            try:
-                self.assertEqual(recolor.find_icon_in_themes("awcc"), os.path.join(icons, "awcc.png"))
-            finally:
-                recolor.ICON_SEARCH_DIRS, recolor.PIXMAP_DIRS, recolor._ICON_INDEX = saved
+    def test_base_without_blue_folders_gives_an_empty_overlay(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp) / "Plain"
+            (base / "48x48/places").mkdir(parents=True)
+            (base / "index.theme").write_text(INDEX)
+            (base / "48x48/places/folder.svg").write_text("<svg/>")
+            staging = Path(tmp) / "out"
+            staging.mkdir()
+            self.assertEqual(recolor.build_overlay(str(base), "Plain", "d4bbff", str(staging)), (0, 0))
+            self.assertEqual(recolor.read_index(str(staging)).get("Icon Theme", "Directories"), "")
 
 
 if __name__ == "__main__":

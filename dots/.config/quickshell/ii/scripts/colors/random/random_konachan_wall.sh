@@ -39,4 +39,4 @@ if [ "$downloadPath" == "$currentWallpaperPath" ]; then
     downloadPath="$PICTURES_DIR/Wallpapers/random_wallpaper-1.$ext"
 fi
 curl "$link" -o "$downloadPath"
-"$SCRIPT_DIR/../switchwall.sh" --image "$downloadPath"
+"$(dirname "${BASH_SOURCE[0]}")/../switchwall.sh" --image "$downloadPath"

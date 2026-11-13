@@ -1,4 +1,30 @@
 #!/usr/bin/env bash
+#
+# switchwall.sh: the one entry point for wallpapers, palettes and the colours of this desktop.
+#
+# With a wallpaper (or none, which opens a picker) it deals with the wallpaper itself: video
+# (mpvpaper or the shell's player), Wallpaper Engine, the upscale prompt, the AI category for the
+# clock widget and the config entries those need. Then it runs the colour pipeline with the image
+# the colours should come from, which is the wallpaper, a video's frame or a Wallpaper Engine
+# screenshot. The pipeline runs matugen with the shell's scheme, mode and overrides; matugen's
+# post-hook then runs `switchwall.sh --matugen`, which writes the palette files (palette16.sh).
+#
+#   switchwall.sh [--mode dark|light] [--type SCHEME] [--image FILE|ID] [--noswitch] [--colors-only]
+#                 [--lockscreen] [--lightmode] [--color HEX|clear] [--refresh-frame] [--request-seq N]
+#
+# Commands that do not touch the wallpaper:
+#   --matugen        write the palette files from matugen's output (matugen post-hook)
+#   --apply          write the palette files, without refreshing the other tools
+#   --reload         write the palette, then flip the GTK theme so running apps reload it
+#   --restart        same as --reload
+#   --restore        GTK and cursor settings at login; the shell restores the wallpaper itself
+#   --set FILE       set a wallpaper through the shell's IPC, so its own config updates too
+#   --random         set a random wallpaper from ~/Pictures/Wallpapers
+#   --pick           open the shell's wallpaper selector, or waypaper / nsxiv without the shell
+#   --reset          run the pipeline again for the current wallpaper
+#   --phone          send the current wallpaper to the phone over KDE Connect
+#   --colors         print the palette (debugging)
+#   --folders        rebuild the recoloured icon theme
 
 QUICKSHELL_CONFIG_NAME="ii"
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
@@ -10,121 +36,30 @@ STATE_DIR="$XDG_STATE_HOME/quickshell"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SHELL_CONFIG_FILE="$XDG_CONFIG_HOME/illogical-impulse/config.json"
 CONFIG_LOCK_FILE="$STATE_DIR/config-write.lock"
+export ILLOGICAL_IMPULSE_VIRTUAL_ENV="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$XDG_STATE_HOME/quickshell/.venv}"
+
+USER_CONFIG="$XDG_CONFIG_HOME"
+PALETTE_CACHE="$XDG_CACHE_HOME/switchwall"
+THEME_FILE="$HOME/.theme"
+WALLPAPERS_DIR="$HOME/Pictures/Wallpapers"
+
 MATUGEN_DIR="$XDG_CONFIG_HOME/matugen"
 terminalscheme="$SCRIPT_DIR/terminal/scheme-base.json"
 SHELL_MATUGEN_CONFIG="$SCRIPT_DIR/matugen-shell.toml"
 
 # Picks the newest installed Matugen; see the header of matugen.sh.
 source "$SCRIPT_DIR/matugen.sh"
+# The 16-colour palette backend.
+source "$SCRIPT_DIR/palette16.sh"
 
-# Matugen aborts the whole run - colors.json included - as soon as any template
-# in its config points at an input file that does not exist, and it walks the
-# templates in random order, so the breakage looks intermittent: some runs write
-# the palette, most do not. Name the offending entries instead of leaving the
-# shell silently stuck on the previous colors.
-report_matugen_failure() {
-    local script_name="$1"
-    local exit_code="${2:-1}"
-    local flag_file="$STATE_DIR/matugen_error_notified"
-    local extra_flags=()
+die() { echo "switchwall: $*" >&2; exit 1; }
+have() { command -v "$1" >/dev/null 2>&1; }
+notify() { have notify-send && notify-send -u low "$@"; }
 
-    mkdir -p "$STATE_DIR" 2>/dev/null || true
-
-    if [[ -f "$flag_file" ]]; then
-        extra_flags+=(-t 0 -h boolean:suppress-sound:true)
-    else
-        touch "$flag_file" 2>/dev/null || true
-    fi
-
-    local cfg="$MATUGEN_DIR/config.toml"
-    local missing=()
-    local p
-    if [[ -f "$cfg" ]]; then
-        while read -r p; do
-            [[ -z "$p" ]] && continue
-            p="${p/#\~/$HOME}"
-            [[ -f "$p" ]] || missing+=("$p")
-        done < <(grep -oP "input_path\s*=\s*'\K[^']+" "$cfg" 2>/dev/null)
-    fi
-
-    if [[ ${#missing[@]} -gt 0 ]]; then
-        echo "[$script_name] matugen aborted (exit code $exit_code); missing template inputs: ${missing[*]}" >&2
-        notify-send -a "Wallpaper switcher" -c "im.error" "${extra_flags[@]}" \
-            "Color generation failed (code $exit_code)" \
-            "matugen aborted with error code $exit_code because these templates are missing: ${missing[*]} - fix or remove them in $cfg" 2>/dev/null || true
-    else
-        echo "[$script_name] matugen failed (exit code $exit_code); keeping the previous palette." >&2
-        notify-send -a "Wallpaper switcher" -c "im.error" "${extra_flags[@]}" \
-            "Color generation failed (code $exit_code)" \
-            "matugen exited with error code $exit_code, so the shell kept its previous palette." 2>/dev/null || true
-    fi
-}
-
-# Rebuild the recolored icon theme without holding up the rest of the theming. The recolor
-# runs at idle priority, debounces and drops superseded runs itself, so a burst of wallpaper
-# changes ends in one rebuild that never takes CPU from the desktop. It is detached from this
-# script's process group so the caller finishing (or being killed) does not stop it.
-recolor_icons_in_background() {
-    local script="$HOME/.config/quickshell/ii/scripts/colors/recolor_icons.py"
-    if command -v setsid >/dev/null 2>&1; then
-        setsid -f python3 "$script" >/dev/null 2>&1 </dev/null
-    else
-        nohup python3 "$script" >/dev/null 2>&1 </dev/null &
-    fi
-}
-
-handle_kde_material_you_colors() {
-    # Check if Qt app theming is enabled in config
-    if [ -f "$SHELL_CONFIG_FILE" ]; then
-        enable_qt_apps=$(jq -r '.appearance.wallpaperTheming.enableQtApps' "$SHELL_CONFIG_FILE")
-        if [ "$enable_qt_apps" == "false" ]; then
-            return
-        fi
-    fi
-
-    # Map $type_flag to allowed scheme variants for kde-material-you-colors-wrapper.sh
-    local kde_scheme_variant=""
-    case "$type_flag" in
-        scheme-content|scheme-expressive|scheme-fidelity|scheme-fruit-salad|scheme-monochrome|scheme-neutral|scheme-rainbow|scheme-tonal-spot|scheme-vibrant)
-            kde_scheme_variant="$type_flag"
-            ;;
-        scheme-intense)
-            kde_scheme_variant="scheme-fidelity"
-            ;;
-        *)
-            kde_scheme_variant="scheme-tonal-spot" # default
-            ;;
-    esac
-    "$XDG_CONFIG_HOME"/matugen/templates/kde/kde-material-you-colors-wrapper.sh --scheme-variant "$kde_scheme_variant"
-}
-
-pre_process() {
-    local mode_flag="$1"
-    # Set GNOME color-scheme if mode_flag is dark or light
-    if [[ "$mode_flag" == "dark" ]]; then
-        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
-    elif [[ "$mode_flag" == "light" ]]; then
-        gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3'
-    fi
-
-    if [ ! -d "$CACHE_DIR"/user/generated ]; then
-        mkdir -p "$CACHE_DIR"/user/generated
-    fi
-}
-
-post_process() {
-    local screen_width="$1"
-    local screen_height="$2"
-    local wallpaper_path="$3"
-
-    handle_kde_material_you_colors &
-    "$SCRIPT_DIR/code/material-code-set-color.sh" &
-    
-    # Generate YouTube Music theme via matugen native template
-    "$SCRIPT_DIR/../ytmusic/generate-ytmusic-theme.sh" > /dev/null 2>&1 &
-}
+# True while the shell runs. Matches the whole command line, so a command that only
+# mentions "qs -c ii" does not count as the shell.
+shell_running() { pgrep -xf "qs -c ii" >/dev/null; }
+require_shell() { shell_running || die "the shell is not running; start it first (qs -c ii)"; }
 
 check_and_prompt_upscale() {
     local img="$1"
@@ -141,10 +76,14 @@ check_and_prompt_upscale() {
             img_width=$min_width_desired
             img_height=$min_height_desired
         else
-            img_width=$(identify -format "%w" "$img" 2>/dev/null)
-            img_height=$(identify -format "%h" "$img" 2>/dev/null)
+            # One call, header only: -ping skips decoding, which took about half a second per
+            # call on a 6843x4473 wallpaper.
+            read -r img_width img_height < <(identify -ping -format "%w %h\n" "$img" 2>/dev/null)
         fi
         if [[ "$img_width" -lt "$min_width_desired" || "$img_height" -lt "$min_height_desired" ]]; then
+            # In the background: notify-send waits for an answer to its action button, and the
+            # colours, icons and terminal palette must not wait for that.
+            (
             action=$(notify-send "Upscale?" \
                 "Image resolution (${img_width}x${img_height}) is lower than screen resolution (${min_width_desired}x${min_height_desired})" \
                 -A "upscale=Upscale" \
@@ -179,6 +118,7 @@ check_and_prompt_upscale() {
                     fi
                 fi
             fi
+            ) 200>&- >/dev/null 2>&1 &
         fi
     fi
 }
@@ -188,6 +128,35 @@ RESTORE_SCRIPT_DIR="$CUSTOM_DIR/scripts"
 RESTORE_SCRIPT="$RESTORE_SCRIPT_DIR/__restore_video_wallpaper.sh"
 THUMBNAIL_DIR="$RESTORE_SCRIPT_DIR/mpvpaper_thumbnails"
 VIDEO_OPTS="no-audio loop hwdec=auto scale=bilinear interpolation=no video-sync=display-resample panscan=1.0 video-zoom=0.08 load-scripts=no"
+
+# JPEG XL: matugen reads it, but the Pillow and OpenCV scripts behind the terminal palette and
+# the light/dark detection do not. Their colours come from a small PNG copy (cached by path and
+# mtime); the wallpaper itself stays the .jxl, which Qt draws through kimageformats.
+is_jxl() {
+    local f="$1" magic
+    [[ -f "$f" ]] || return 1
+    [[ "${f,,}" == *.jxl ]] && return 0
+    magic="$(head -c 12 -- "$f" 2>/dev/null | od -An -tx1 | tr -d ' \n')"
+    [[ "$magic" == ff0a* || "$magic" == 0000000c4a584c20* ]]
+}
+
+decoded_copy() {
+    local src="$1" key out
+    key="$(printf '%s %s' "$src" "$(stat -c %Y -- "$src" 2>/dev/null)" | md5sum | cut -c1-16)"
+    out="$PALETTE_CACHE/decoded/$key.png"
+    if [[ ! -s "$out" ]]; then
+        mkdir -p "$PALETTE_CACHE/decoded"
+        local tmp="$out.$$.tmp.png"
+        if { command -v magick &>/dev/null && magick "$src[0]" -resize '2560x2560>' "$tmp" 2>/dev/null; } \
+            || { command -v djxl &>/dev/null && djxl "$src" "$tmp" --quiet 2>/dev/null; }; then
+            mv -f -- "$tmp" "$out"
+        else
+            rm -f -- "$tmp"
+            return 1
+        fi
+    fi
+    printf '%s' "$out"
+}
 
 is_video() {
     local extension="${1##*.}"
@@ -395,87 +364,9 @@ set_thumbnail_path() {
     update_config_value_if_changed '.background.thumbnailPath' string "$path" '""'
 }
 
-categorize_wallpaper() {
-    img_cat=$("$SCRIPT_DIR/../ai/gemini-categorize-wallpaper.sh" "$1")
-    # notify-send "Wallpaper category" "$img_cat"
-    echo "$img_cat" > "$STATE_DIR/user/generated/wallpaper/category.txt"
-}
 
-switch() {
-    imgpath="$1"
-    mode_flag="$2"
-    type_flag="$3"
-    color_flag="$4"
-    color="$5"
-    theme_file="$6"
-
-    # Guard against rapid wallpaper switches racing each other: the all-previews
-    # generation below takes over a second, so a second switch launched before it
-    # finishes must not have its result overwritten by the older, slower run.
-    # request_seq_flag (--request-seq) comes from the QML caller and is strictly
-    # increasing in click order, since QML dispatch is single-threaded. Direct
-    # callers without a sequence receive the next token under the same lock, so
-    # they cannot be rejected just because an older QML token uses timestamps.
-    request_token_file="$STATE_DIR/user/generated/.preview_request_token"
-    mkdir -p "$(dirname "$request_token_file")"
-    if [[ -n "$request_seq_flag" ]]; then
-        my_request_token="$request_seq_flag"
-        (
-            flock -x 201
-            current_seq=$(cat "$request_token_file" 2>/dev/null)
-            if [[ -z "$current_seq" ]] || ! [[ "$current_seq" =~ ^[0-9]+$ ]] || (( my_request_token > current_seq )); then
-                printf '%s' "$my_request_token" > "$request_token_file"
-            fi
-        ) 201>"$request_token_file.lock"
-    else
-        my_request_token=$(
-            (
-                flock -x 201
-                current_seq=$(cat "$request_token_file" 2>/dev/null)
-                if [[ "$current_seq" =~ ^[0-9]+$ ]]; then
-                    next_seq=$((current_seq + 1))
-                else
-                    next_seq=$(date +%s%3N)
-                fi
-                printf '%s' "$next_seq" > "$request_token_file"
-                printf '%s' "$next_seq"
-            ) 201>"$request_token_file.lock"
-        )
-    fi
-
-    # Categorization is unrelated to shell colors and can spawn a network/model
-    # process while the preset transition is trying to render its first frame.
-    if [[ -z "$colors_only_flag" && -z "$noswitch_flag" ]]; then
-        aiStylingEnabled=$(jq -r '.background.widgets.clock.cookie.aiStyling' "$SHELL_CONFIG_FILE")
-        aiStylingModel=$(jq -r '.background.widgets.clock.cookie.aiStylingModel' "$SHELL_CONFIG_FILE")
-    fi
-    if [[ -n "$aiStylingEnabled" && "$aiStylingEnabled" == "true" ]]; then
-        if [[ "$aiStylingModel" == "gemini" ]]; then  
-            "$SCRIPT_DIR/../ai/gemini-categorize-wallpaper.sh" "$imgpath" > "$STATE_DIR/user/generated/wallpaper/category.txt" &
-        fi
-        if [[ "$aiStylingModel" == "openrouter" ]]; then  
-            "$SCRIPT_DIR/../ai/openrouter-categorize-wallpaper.sh" "$imgpath" > "$STATE_DIR/user/generated/wallpaper/category.txt" &
-        fi
-    fi
-
-    # These compositor queries only supported the old wallpaper animation path;
-    # colors-only runs do not need them and must stay independent of Hyprland's
-    # command latency.
-    if [[ -z "$colors_only_flag" ]]; then
-        read scale screenx screeny screensizey < <(hyprctl monitors -j | jq '.[] | select(.focused) | .scale, .x, .y, .height' | xargs)
-        cursorposx=$(hyprctl cursorpos -j | jq '.x' 2>/dev/null) || cursorposx=960
-        cursorposx=$(bc <<< "scale=0; ($cursorposx - $screenx) * $scale / 1")
-        cursorposy=$(hyprctl cursorpos -j | jq '.y' 2>/dev/null) || cursorposy=540
-        cursorposy=$(bc <<< "scale=0; ($cursorposy - $screeny) * $scale / 1")
-        cursorposy_inverted=$((screensizey - cursorposy))
-    fi
-
-    matugen_args=(--source-color-index 0)
-
-    if [[ "$color_flag" == "1" ]]; then
-        matugen_args+=(color hex "$color")
-        generate_colors_material_args=(--color "$color")
-    else
+# Everything the wallpaper itself needs. Sets color_source to the image the colours are taken from.
+prepare_wallpaper() {
         if [[ -z "$imgpath" ]]; then
             echo 'Aborted'
             exit 0
@@ -542,8 +433,7 @@ switch() {
 
             if [[ "$noswitch_flag" == "1" || "$colors_only_flag" == "1" ]]; then
                 if [ -f "$wpe_screenshot" ]; then
-                    matugen_args+=(image "$wpe_screenshot")
-                    generate_colors_material_args=(--path "$wpe_screenshot")
+                    color_source="$wpe_screenshot"
                 else
                     # Fallback to preview or static
                     local fallback_img=""
@@ -556,12 +446,10 @@ switch() {
                         fi
                     fi
                     if [[ -n "$fallback_img" && -f "$fallback_img" ]]; then
-                        matugen_args+=(image "$fallback_img")
-                        generate_colors_material_args=(--path "$fallback_img")
+                        color_source="$fallback_img"
                     else
                         local default_wall="$HOME/.config/quickshell/ii/assets/images/default_wallpaper.png"
-                        matugen_args+=(image "$default_wall")
-                        generate_colors_material_args=(--path "$default_wall")
+                        color_source="$default_wall"
                     fi
                 fi
             else
@@ -657,8 +545,7 @@ done"
                 done
 
                 if [ -f "$wpe_screenshot" ]; then
-                    matugen_args+=(image "$wpe_screenshot")
-                    generate_colors_material_args=(--path "$wpe_screenshot")
+                    color_source="$wpe_screenshot"
                 else
                     echo "Cannot create image to colorgen from Wallpaper Engine screenshot, trying fallbacks" >&2
                     local fallback_img=""
@@ -675,8 +562,7 @@ done"
                     fi
 
                     if [[ -n "$fallback_img" && -f "$fallback_img" ]]; then
-                        matugen_args+=(image "$fallback_img")
-                        generate_colors_material_args=(--path "$fallback_img")
+                        color_source="$fallback_img"
                     else
                         exit 1
                     fi
@@ -792,8 +678,7 @@ done"
             fi
 
             if [ -f "$thumbnail" ]; then
-                matugen_args+=(image "$thumbnail")
-                generate_colors_material_args=(--path "$thumbnail")
+                color_source="$thumbnail"
                 if is_desktop_target && [[ "$colors_only_flag" != "1" && "$noswitch_flag" != "1" ]]; then
                     if video_backend_is_shell; then
                         remove_restore
@@ -812,8 +697,7 @@ done"
             if is_desktop_target && [[ "$colors_only_flag" != "1" && "$noswitch_flag" != "1" ]]; then
                 kill_existing_mpvpaper
             fi
-            matugen_args+=(image "$imgpath")
-            generate_colors_material_args=(--path "$imgpath")
+            color_source="$imgpath"
             # Update wallpaper path in config
             if [[ -z "$colors_only_flag" && -z "$noswitch_flag" ]]; then
                 # A light-mode pick only stores its own path; the dark wallpaper stays in wallpaperPath
@@ -828,6 +712,166 @@ done"
             fi
         fi
     fi
+}
+
+
+# ── Colour pipeline ──────────────────────────────────────────────────────────
+
+# Matugen aborts the whole run - colors.json included - as soon as any template
+# in its config points at an input file that does not exist, and it walks the
+# templates in random order, so the breakage looks intermittent: some runs write
+# the palette, most do not. Name the offending entries instead of leaving the
+# shell silently stuck on the previous colors.
+report_matugen_failure() {
+    local script_name="$1"
+    local exit_code="${2:-1}"
+    local flag_file="$STATE_DIR/matugen_error_notified"
+    local extra_flags=()
+
+    mkdir -p "$STATE_DIR" 2>/dev/null || true
+
+    if [[ -f "$flag_file" ]]; then
+        extra_flags+=(-t 0 -h boolean:suppress-sound:true)
+    else
+        touch "$flag_file" 2>/dev/null || true
+    fi
+
+    local cfg="$MATUGEN_DIR/config.toml"
+    local missing=()
+    local p
+    if [[ -f "$cfg" ]]; then
+        while read -r p; do
+            [[ -z "$p" ]] && continue
+            p="${p/#\~/$HOME}"
+            [[ -f "$p" ]] || missing+=("$p")
+        done < <(grep -oP "input_path\s*=\s*'\K[^']+" "$cfg" 2>/dev/null)
+    fi
+
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        echo "[$script_name] matugen aborted (exit code $exit_code); missing template inputs: ${missing[*]}" >&2
+        notify-send -a "Wallpaper switcher" -c "im.error" "${extra_flags[@]}" \
+            "Color generation failed (code $exit_code)" \
+            "matugen aborted with error code $exit_code because these templates are missing: ${missing[*]} - fix or remove them in $cfg" 2>/dev/null || true
+    else
+        echo "[$script_name] matugen failed (exit code $exit_code); keeping the previous palette." >&2
+        notify-send -a "Wallpaper switcher" -c "im.error" "${extra_flags[@]}" \
+            "Color generation failed (code $exit_code)" \
+            "matugen exited with error code $exit_code, so the shell kept its previous palette." 2>/dev/null || true
+    fi
+}
+
+# Rebuild the recolored icon theme without holding up the rest of the theming. The recolor
+# runs at idle priority, debounces and drops superseded runs itself, so a burst of wallpaper
+# changes ends in one rebuild that never takes CPU from the desktop. It is detached from this
+# script's process group so the caller finishing (or being killed) does not stop it.
+# Folder icons follow the palette. matugen's post-hook (`switchwall.sh --matugen`) starts this as soon as
+# colors.json is written, so the icons rebuild alongside the rest of the apply rather than after it.
+# It goes before refine_wal_palette: the recolor reads only colors.json and runs detached, so there is no
+# reason for it to wait for the palette refinement.
+recolor_icons_if_themed() {
+    [[ "$(jq -r '.appearance.icons.enableThemed' "${SHELL_CONFIG_FILE:-$HOME/.config/illogical-impulse/config.json}" 2>/dev/null)" == "true" ]] || return 0
+    recolor_icons_in_background
+}
+
+recolor_icons_in_background() {
+    local script="$HOME/.config/quickshell/ii/scripts/colors/recolor_icons.py"
+    # Kept in a log (trimmed to the last 200 lines) so a missed recolor can be traced afterwards.
+    local log="$HOME/.cache/switchwall/recolor.log"
+    mkdir -p "$(dirname "$log")"
+    [[ -f "$log" && $(wc -l <"$log") -gt 200 ]] && tail -n 100 "$log" >"$log.tmp" && mv "$log.tmp" "$log"
+    echo "== $(date +%T) recolor requested by ${FUNCNAME[1]:-?}" >>"$log"
+    if command -v setsid >/dev/null 2>&1; then
+        setsid -f python3 "$script" >>"$log" 2>&1 </dev/null
+    else
+        nohup python3 "$script" >>"$log" 2>&1 </dev/null &
+    fi
+}
+
+pre_process() {
+    local mode_flag="$1"
+    # Set GNOME color-scheme if mode_flag is dark or light. The GTK theme is FlatColor in both.
+    if [[ "$mode_flag" == "dark" ]]; then
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+        gsettings set org.gnome.desktop.interface gtk-theme 'FlatColor'
+    elif [[ "$mode_flag" == "light" ]]; then
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
+        gsettings set org.gnome.desktop.interface gtk-theme 'FlatColor'
+    fi
+
+    if [ ! -d "$CACHE_DIR"/user/generated ]; then
+        mkdir -p "$CACHE_DIR"/user/generated
+    fi
+}
+
+switch() {
+    imgpath="$1"
+    mode_flag="$2"
+    type_flag="$3"
+    color_flag="$4"
+    color="$5"
+    theme_file="$6"
+
+    # Guard against rapid wallpaper switches racing each other: the all-previews
+    # generation below takes over a second, so a second switch launched before it
+    # finishes must not have its result overwritten by the older, slower run.
+    # request_seq_flag (--request-seq) comes from the QML caller and is strictly
+    # increasing in click order, since QML dispatch is single-threaded. Direct
+    # callers without a sequence receive the next token under the same lock, so
+    # they cannot be rejected just because an older QML token uses timestamps.
+    request_token_file="$STATE_DIR/user/generated/.preview_request_token"
+    mkdir -p "$(dirname "$request_token_file")"
+    if [[ -n "$request_seq_flag" ]]; then
+        my_request_token="$request_seq_flag"
+        (
+            flock -x 201
+            current_seq=$(cat "$request_token_file" 2>/dev/null)
+            if [[ -z "$current_seq" ]] || ! [[ "$current_seq" =~ ^[0-9]+$ ]] || (( my_request_token > current_seq )); then
+                printf '%s' "$my_request_token" > "$request_token_file"
+            fi
+        ) 201>"$request_token_file.lock"
+    else
+        my_request_token=$(
+            (
+                flock -x 201
+                current_seq=$(cat "$request_token_file" 2>/dev/null)
+                if [[ "$current_seq" =~ ^[0-9]+$ ]]; then
+                    next_seq=$((current_seq + 1))
+                else
+                    next_seq=$(date +%s%3N)
+                fi
+                printf '%s' "$next_seq" > "$request_token_file"
+                printf '%s' "$next_seq"
+            ) 201>"$request_token_file.lock"
+        )
+    fi
+
+    matugen_args=(--source-color-index 0)
+
+    if [[ "$color_flag" == "1" ]]; then
+        matugen_args+=(color hex "$color")
+        generate_colors_material_args=(--color "$color")
+    else
+        if [[ -z "$imgpath" ]]; then
+            echo 'Aborted'
+            exit 0
+        fi
+
+        # A folder or a numeric id (Wallpaper Engine) has no image of its own, unless
+        # switchwall.sh passed one as --source.
+        if [[ -z "$source_img" && ( -d "$imgpath" || "$imgpath" =~ ^[0-9]+$ ) ]]; then
+            imgpath="$CONFIG_DIR/assets/images/default_wallpaper.png"
+        fi
+
+        matugen_args+=(image "${source_img:-$imgpath}")
+        generate_colors_material_args=(--path "${source_img:-$imgpath}")
+        if [[ -z "$colors_only_flag" && -z "$noswitch_flag" ]]; then
+            # A light-mode pick only stores its own path; the dark wallpaper stays in wallpaperPath
+            if [[ -n "$lightmode_flag" ]]; then
+                set_wallpaper_path "$imgpath" "lightmode"
+            else
+                set_wallpaper_path "$imgpath" "${lockscreen_flag:+lockscreen}"
+            fi
+        fi
     fi
 
     # Determine mode if not set
@@ -889,7 +933,7 @@ done"
         cp "$theme_file" "$STATE_DIR/user/generated/colors.json"
         rm -f "$STATE_DIR/matugen_error_notified"
         apply_color_overrides_flat "$mode_flag"
-        echo "[switchwall.sh] Applied theme: $type_flag"
+        echo "[switchwall] Applied theme: $type_flag"
         if [[ -z "$colors_only_flag" && "$(jq -r '.appearance.icons.enableThemed' "$SHELL_CONFIG_FILE" 2>/dev/null)" == "true" ]]; then recolor_icons_in_background; fi
         "$SCRIPT_DIR"/applycolor.sh
     else
@@ -901,6 +945,23 @@ done"
             # needs the m3colors template that Quickshell watches.
             matugen_config_args+=(--config "$SHELL_MATUGEN_CONFIG")
         fi
+        # The terminal palette and preview swatches only need the image, not matugen's output, and
+        # on a large wallpaper decoding it takes as long as matugen does: run both at once.
+        preview_args=()
+        if [[ -z "$colors_only_flag" ]]; then
+            preview_args+=(
+                --all-previews "$STATE_DIR/user/generated/wallpaper_preview_colors.json"
+                --request-token "$request_token_file"
+                --request-value "$my_request_token"
+            )
+        fi
+        material_scss="$STATE_DIR/user/generated/material_colors.scss"
+        (
+            source "$(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate"
+            python3 "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" "${preview_args[@]}" \
+                > "$material_scss.tmp"
+        ) 200>&- &
+        generate_colors_pid=$!
         color_overrides="$(get_color_overrides "$mode_flag")"
         if [[ -n "$color_overrides" ]]; then
             # Matugen cannot pin a role, but it renders templates from a dump:
@@ -912,239 +973,259 @@ done"
                 rm -f "$STATE_DIR/matugen_error_notified"
             else
                 matugen_exit_code=$?
-                report_matugen_failure "switchwall.sh" "$matugen_exit_code"
+                report_matugen_failure "switchwall" "$matugen_exit_code"
             fi
             rm -f "$matugen_dump"
         elif matugen "${matugen_config_args[@]}" "${matugen_args[@]}"; then
             rm -f "$STATE_DIR/matugen_error_notified"
         else
             matugen_exit_code=$?
-            report_matugen_failure "switchwall.sh" "$matugen_exit_code"
+            report_matugen_failure "switchwall" "$matugen_exit_code"
         fi
         if [[ "$type_flag" == "scheme-intense" ]]; then
-            echo "[switchwall.sh] Applying intense surface boost to colors.json (mode: $mode_flag)" >&2
+            echo "[switchwall] Applying intense surface boost to colors.json (mode: $mode_flag)" >&2
             python3 "$SCRIPT_DIR/boost_surface_chroma.py" "$STATE_DIR/user/generated/colors.json" --mode "$mode_flag"
             # The boost rewrites the surfaces; a picked surface still wins.
             apply_color_overrides_flat "$mode_flag"
         fi
-        if [[ -z "$colors_only_flag" && "$(jq -r '.appearance.icons.enableThemed' "$SHELL_CONFIG_FILE" 2>/dev/null)" == "true" ]]; then recolor_icons_in_background; fi
-        source "$(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate"
-        preview_args=()
-        if [[ -z "$colors_only_flag" ]]; then
-            preview_args+=(
-                --all-previews "$STATE_DIR/user/generated/wallpaper_preview_colors.json"
-                --request-token "$request_token_file"
-                --request-value "$my_request_token"
-            )
-        fi
-        if python3 "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" "${preview_args[@]}" \
-            > "$STATE_DIR"/user/generated/material_colors.scss.tmp; then
-            mv "$STATE_DIR"/user/generated/material_colors.scss.tmp "$STATE_DIR"/user/generated/material_colors.scss
+        # Folder icons: started by matugen's post-hook as soon as colors.json is written.
+        if wait "$generate_colors_pid"; then
+            mv "$material_scss.tmp" "$material_scss"
         else
-            rm -f "$STATE_DIR"/user/generated/material_colors.scss.tmp
-            echo "[switchwall.sh] Color generation skipped; preserving the previous terminal palette." >&2
+            rm -f "$material_scss.tmp"
+            echo "[switchwall] Color generation skipped; preserving the previous terminal palette." >&2
         fi
-        deactivate
         "$SCRIPT_DIR"/applycolor.sh
-    fi
-
-
-    # Generate dynamic Material You icon theme
-    # Using gowall and python helper to recolor a base SVG theme
-    #echo "Generating dynamic icons..."
-    #python3 "$HOME/.config/quickshell/ii/scripts/colors/recolor_icons.py"
-    #local _venv="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$XDG_STATE_HOME/quickshell/.venv}"
-    #source "$(eval echo $_venv)/bin/activate"
-    #python3 "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" \
-    #    > "$STATE_DIR"/user/generated/material_colors.scss.tmp && \
-    #mv "$STATE_DIR"/user/generated/material_colors.scss.tmp "$STATE_DIR"/user/generated/material_colors.scss
-    #"$SCRIPT_DIR"/applycolor.sh
-    #deactivate
-
-    # KDE/code/YouTube Music theming is deliberately outside the first preset
-    # frame. They are still run for a normal wallpaper switch, but colors-only
-    # is a shell-palette transaction and must not fan out into more processes.
-    if [[ -z "$colors_only_flag" ]]; then
-        max_width_desired="$(hyprctl monitors -j | jq '([.[].width] | min)' | xargs)"
-        max_height_desired="$(hyprctl monitors -j | jq '([.[].height] | min)' | xargs)"
-        post_process "$max_width_desired" "$max_height_desired" "$imgpath"
     fi
 }
 
+# The scheme types matugen takes, plus the two names that ask for detection.
+allowed_types=(scheme-content scheme-expressive scheme-fidelity scheme-fruit-salad scheme-monochrome scheme-neutral scheme-rainbow scheme-tonal-spot scheme-vibrant scheme-intense auto scheme-auto)
+
+get_type_from_config() {
+    jq -r '.appearance.palette.type' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "auto"
+}
+
+get_accent_color_from_config() {
+    jq -r '.appearance.palette.accentColor' "$SHELL_CONFIG_FILE" 2>/dev/null || echo ""
+}
+
+set_accent_color() {
+    update_config_value_if_changed '.appearance.palette.accentColor' string "$1" '""'
+}
+
+# The user's hand-picked key colors for a mode, as compact JSON; empty
+# when none of them is set (see color_overrides.py).
+get_color_overrides() {
+    local mode="${1:-dark}"
+    jq -c --arg mode "$mode" '(.appearance.palette.overrides[$mode] // {})
+        | with_entries(select((.value | type) == "string" and (.value | test("^#?[0-9A-Fa-f]{6}$"))))
+        | select(length > 0)' "$SHELL_CONFIG_FILE" 2>/dev/null
+}
+
+run_color_overrides() {
+    bash "$SCRIPT_DIR/color_overrides.sh" "$@"
+}
+
+apply_color_overrides_flat() {
+    local overrides
+    overrides="$(get_color_overrides "${1:-dark}")"
+    [[ -z "$overrides" ]] && return 0
+    run_color_overrides patch-flat "$STATE_DIR/user/generated/colors.json" --mode "${1:-dark}" --overrides "$overrides"
+}
+
+# The scheme for an image never changes while the file does not, and a dark/light toggle or a
+# re-apply asks again for the same wallpaper: the answer is kept per path, size and mtime.
+detect_scheme_type_from_image() {
+    local img="$1" key cache_file result
+    key=$(printf '%s|%s' "$img" "$(stat -c '%s:%Y' -- "$img" 2>/dev/null)" | sha256sum | cut -c1-24)
+    cache_file="$PALETTE_CACHE/scheme-for-image/$key"
+    if [[ -s "$cache_file" ]]; then
+        cat -- "$cache_file"
+        return 0
+    fi
+    local _venv="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$XDG_STATE_HOME/quickshell/.venv}"
+    source "$(eval echo $_venv)/bin/activate"
+    result=$("$SCRIPT_DIR"/scheme_for_image.py "$img" 2>/dev/null | tr -d '\n')
+    deactivate
+    if [[ -n "$result" ]]; then
+        mkdir -p "${cache_file%/*}" && printf '%s' "$result" > "$cache_file"
+    fi
+    printf '%s' "$result"
+}
+
+
+# ── Palette and desktop ──────────────────────────────────────────────────────
+# Settings from ~/.theme, which the bar and the GTK setup read too. Defaults cover a missing file.
+load_theme() {
+    gtk_theme=FlatColor icon_theme=Papirus-Dark
+    cursor_theme=Fluent-dark-cursors font_name="Noto Sans 9"
+    # shellcheck source=/dev/null
+    [[ -f "$THEME_FILE" ]] && source "$THEME_FILE"
+    return 0
+}
+
+# The wallpaper the shell shows: its own setting, else the image the palette came from.
+current_wallpaper() {
+    local path
+    path=$(jq -r '.background.wallpaperPath // ""' "$SHELL_CONFIG_FILE" 2>/dev/null)
+    [[ -f "$path" ]] || path=$(palette_wallpaper)
+    printf '%s\n' "$path"
+}
+
+# Tools that read the palette on their own. pywalfox reads matugen's colors.json.
+refresh_tools() {
+    have pywalfox && ( pywalfox update >/dev/null 2>&1 & )
+    return 0
+}
+
+# Flips the GTK theme so running GTK apps reload their colours. Wayland only.
+reload_gtk() {
+    have gsettings || return 0
+    gsettings set org.gnome.desktop.interface gtk-theme "Dummy"
+    gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme"
+}
+
+reload_all() {
+    apply_palette
+    reload_gtk
+}
+
+# At login. The shell restores its own wallpaper, so only the GTK and cursor settings are set.
+restore() {
+    load_theme
+    if have gsettings; then
+        # Themed icons (recolor_icons.py) live in DynamicTheme. Set the pack back to
+        # Papirus here and the shell's colours are lost at every login.
+        local icon=$icon_theme
+        if [[ "$(jq -r '.appearance.icons.enableThemed // false' "$SHELL_CONFIG_FILE" 2>/dev/null)" == "true" \
+              && -d "$HOME/.local/share/icons/DynamicTheme" ]]; then
+            icon=DynamicTheme
+        fi
+        gsettings set org.gnome.desktop.interface icon-theme "$icon"
+        gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme"
+        gsettings set org.gnome.desktop.interface font-name "$font_name"
+        gsettings set org.gnome.desktop.interface cursor-theme "$cursor_theme"
+    fi
+    if [[ "${XDG_CURRENT_DESKTOP:-}" == "Hyprland" ]] && have hyprctl; then
+        hyprctl setcursor "$cursor_theme" 24 >/dev/null 2>&1
+    fi
+    return 0
+}
+
+# Sets a wallpaper through the shell. The shell runs its own pipeline for it (the wallpaper,
+# video included, and the palette). The palette then reaches the desktop through the
+# matugen post-hook, which runs `switchwall.sh --matugen`.
+set_wallpaper() {
+    local file=$1
+    [[ -n "$file" ]] || die "no image was selected"
+    [[ -f "$file" ]] || die "no such file: $file"
+    require_shell
+    qs -c ii ipc call wallpapers apply "$(realpath -- "$file")"
+}
+
+random_wallpaper() {
+    have fd || die "fd is not installed"
+    local image
+    image=$(fd --type f -e jpg -e jpeg -e png -e webp -e jxl . "$WALLPAPERS_DIR" -0 2>/dev/null | shuf -zn1 | tr -d '\0')
+    if [[ -n "$image" ]]; then
+        set_wallpaper "$image"
+    else
+        notify -u low "No wallpapers found" "$WALLPAPERS_DIR"
+    fi
+}
+
+pick_wallpaper() {
+    if shell_running; then
+        qs -c ii ipc call wallpaperSelector toggle
+    elif have waypaper; then
+        pgrep -x waypaper >/dev/null || waypaper
+    elif have nsxiv; then
+        local chosen
+        chosen=$(nsxiv -torb "$WALLPAPERS_DIR" | head -n1)
+        [[ -n "$chosen" ]] && set_wallpaper "$chosen"
+    else
+        die "no picker: the shell is not running, and neither waypaper nor nsxiv is installed"
+    fi
+}
+
+send_to_phone() {
+    have kdeconnect-cli || die "KDE Connect is not installed"
+    local wallpaper device copy
+    wallpaper=$(current_wallpaper)
+    [[ -f "$wallpaper" ]] || die "no wallpaper to send"
+    device=$(kdeconnect-cli -a --id-only | head -n1)
+    [[ -n "$device" ]] || die "no KDE Connect device found"
+    # KDE Connect reads the file while it sends, so it is copied to a stable name in the cache.
+    mkdir -p "$PALETTE_CACHE"
+    copy="$PALETTE_CACHE/phone-wallpaper.${wallpaper##*.}"
+    cp -f -- "$wallpaper" "$copy"
+    kdeconnect-cli -d "$device" --share "$copy" &&
+        kdeconnect-cli -d "$device" --ping
+}
+
+show_colors() {
+    load_theme
+    load_palette
+    local name
+    for name in background foreground cursor black red green yellow blue magenta cyan white \
+        bright_black bright_red bright_green bright_yellow bright_blue bright_magenta bright_cyan bright_white; do
+        printf '%-15s %s\n' "$name" "${!name}"
+    done
+}
+
+usage() {
+    awk 'NR > 1 && /^# shellcheck/ { next } NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "${BASH_SOURCE[0]}"
+}
+
+# ── Main ─────────────────────────────────────────────────────────────────────
 main() {
-    imgpath=""
-    mode_flag=""
-    type_flag=""
-    color_flag=""
-    color=""
-    noswitch_flag=""
-
-    get_type_from_config() {
-        jq -r '.appearance.palette.type' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "auto"
-    }
-    get_accent_color_from_config() {
-        jq -r '.appearance.palette.accentColor' "$SHELL_CONFIG_FILE" 2>/dev/null || echo ""
-    }
-    # The user's hand-picked key colors for a mode, as compact JSON; empty
-    # when none of them is set (see color_overrides.py).
-    get_color_overrides() {
-        local mode="${1:-dark}"
-        jq -c --arg mode "$mode" '(.appearance.palette.overrides[$mode] // {})
-            | with_entries(select((.value | type) == "string" and (.value | test("^#?[0-9A-Fa-f]{6}$"))))
-            | select(length > 0)' "$SHELL_CONFIG_FILE" 2>/dev/null
-    }
-    run_color_overrides() {
-        bash "$SCRIPT_DIR/color_overrides.sh" "$@"
-    }
-    apply_color_overrides_flat() {
-        local overrides
-        overrides="$(get_color_overrides "${1:-dark}")"
-        [[ -z "$overrides" ]] && return 0
-        run_color_overrides patch-flat "$STATE_DIR/user/generated/colors.json" --mode "${1:-dark}" --overrides "$overrides"
-    }
-    set_accent_color() {
-        local color="$1"
-        update_config_value_if_changed '.appearance.palette.accentColor' string "$color" '""'
-    }
-
-    detect_scheme_type_from_image() {
-        local img="$1"
-        local _venv="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$XDG_STATE_HOME/quickshell/.venv}"
-        source "$(eval echo $_venv)/bin/activate"
-        "$SCRIPT_DIR"/scheme_for_image.py "$img" 2>/dev/null | tr -d '\n'
-        deactivate
-    }
-
-    lockscreen_flag=""
-    colors_only_flag=""
-    lightmode_flag=""
-    refresh_frame_flag=""
+    imgpath="" mode_flag="" type_flag="" color_flag="" color="" request_seq_flag=""
+    lockscreen_flag="" lightmode_flag="" colors_only_flag="" noswitch_flag="" refresh_frame_flag=""
+    color_source="" source_img=""
+    local accent="" theme_file=""
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            --mode)
-                mode_flag="$2"
-                shift 2
-                ;;
-            --type)
-                type_flag="$2"
-                shift 2
-                ;;
-            --lockscreen)
-                lockscreen_flag="1"
-                shift
-                ;;
-            --lightmode)
-                lightmode_flag="1"
-                shift
-                ;;
-            --colors-only)
-                colors_only_flag="1"
-                shift
-                ;;
+            --mode)          mode_flag="$2"; shift 2 ;;
+            --type)          type_flag="$2"; shift 2 ;;
+            --request-seq)   request_seq_flag="$2"; shift 2 ;;
+            --lockscreen)    lockscreen_flag="1"; shift ;;
+            --lightmode)     lightmode_flag="1"; shift ;;
+            --colors-only)   colors_only_flag="1"; shift ;;
+            --refresh-frame) refresh_frame_flag="1"; shift ;;
+            --noswitch)      noswitch_flag="1"; shift ;;
+            --image)         imgpath="$2"; shift 2 ;;
             --color)
                 if [[ "$2" =~ ^#?[A-Fa-f0-9]{6}$ ]]; then
-                    set_accent_color "$2"
-                    shift 2
+                    accent="$2"; set_accent_color "$2"; shift 2
                 elif [[ "$2" == "clear" ]]; then
-                    set_accent_color ""
-                    shift 2
+                    accent="clear"; set_accent_color ""; shift 2
                 else
-                    set_accent_color $(hyprpicker --no-fancy)
-                    shift
+                    accent="picked"; set_accent_color "$(hyprpicker --no-fancy)"; shift
                 fi
                 ;;
-            --image)
-                imgpath="$2"
-                shift 2
-                ;;
-            --request-seq)
-                request_seq_flag="$2"
-                shift 2
-                ;;
-            --refresh-frame)
-                # Use with --noswitch: re-extract the current video's color frame
-                # and regenerate colors, leaving the running video alone.
-                refresh_frame_flag="1"
-                shift
-                ;;
-            --noswitch)
-                noswitch_flag="1"
-                if [[ -z "$imgpath" ]]; then
-                    use_wpe=$(jq -r '.background.useWallpaperEngine' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "false")
-                    if [[ "$use_wpe" == "true" ]]; then
-                        imgpath=$(jq -r '.background.wallpaperEngineId' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "")
-                    else
-                        imgpath=$(jq -r '.background.wallpaperPath' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "")
-                    fi
-                fi
-                shift
-                ;;
-            *)
-                if [[ -z "$imgpath" ]]; then
-                    imgpath="$1"
-                fi
-                shift
-                ;;
+            *) [[ -z "$imgpath" ]] && imgpath="$1"; shift ;;
         esac
     done
 
-    # If accentColor is set in config, use it
+    # A colour from the config is used instead of the wallpaper's own.
+    local config_color
     config_color="$(get_accent_color_from_config)"
     if [[ "$config_color" =~ ^#?[A-Fa-f0-9]{6}$ ]]; then
         color_flag="1"
         color="$config_color"
+        [[ -z "$accent" ]] && accent="$config_color"
     fi
 
-    # If type_flag is not set, get it from config
-    if [[ -z "$type_flag" ]]; then
-        type_flag="$(get_type_from_config)"
+    # These only read the wallpaper that is already set.
+    if [[ -n "$noswitch_flag" || -n "$colors_only_flag" ]]; then
+        [[ -z "$imgpath" ]] && imgpath=$(jq -r '.background.wallpaperPath' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "")
     fi
 
-    # Validate type_flag (allow 'auto' and 'scheme-auto' as well)
-    allowed_types=(scheme-content scheme-expressive scheme-fidelity scheme-fruit-salad scheme-monochrome scheme-neutral scheme-rainbow scheme-tonal-spot scheme-vibrant scheme-intense auto scheme-auto)
-    valid_type=0
-    for t in "${allowed_types[@]}"; do
-        if [[ "$type_flag" == "$t" ]]; then
-            valid_type=1
-            break
-        fi
-    done
-    
-    theme_file=""
-    if [[ $valid_type -eq 0 ]]; then
-        # Check if it's a custom or default theme
-        if [[ -f "$XDG_CONFIG_HOME/illogical-impulse/themes/$type_flag.json" ]]; then
-            theme_file="$XDG_CONFIG_HOME/illogical-impulse/themes/$type_flag.json"
-            valid_type=1
-        elif [[ -f "$CONFIG_DIR/defaults/themes/$type_flag.json" ]]; then
-            theme_file="$CONFIG_DIR/defaults/themes/$type_flag.json"
-            valid_type=1
-        fi
-    fi
-
-    if [[ $valid_type -eq 0 ]]; then
-        echo "[switchwall.sh] Warning: Invalid type '$type_flag', defaulting to 'auto'" >&2
-        type_flag="auto"
-    fi
-    # Normalize scheme-auto → auto for detection
-    [[ "$type_flag" == "scheme-auto" ]] && type_flag="auto"
-
-    # A colors-only request is implicitly tied to the currently selected
-    # wallpaper when no explicit image was supplied. It should never open a
-    # picker just to recolor a preset.
-    if [[ -n "$colors_only_flag" && -z "$imgpath" ]]; then
-        use_wpe=$(jq -r '.background.useWallpaperEngine' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "false")
-        if [[ "$use_wpe" == "true" ]]; then
-            imgpath=$(jq -r '.background.wallpaperEngineId' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "")
-        else
-            imgpath=$(jq -r '.background.wallpaperPath' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "")
-        fi
-    fi
-
-    # Only prompt for wallpaper if not using --color/--colors-only/--noswitch.
-    if [[ -z "$imgpath" && -z "$color_flag" && -z "$colors_only_flag" && -z "$noswitch_flag" ]]; then
-        cd "$(xdg-user-dir PICTURES)/Wallpapers/showcase" 2>/dev/null || cd "$(xdg-user-dir PICTURES)/Wallpapers" 2>/dev/null || cd "$(xdg-user-dir PICTURES)" || return 1
+    # Nothing chosen yet: ask, unless a colour stands in for the wallpaper.
+    if [[ -z "$imgpath" && -z "$accent" && -z "$colors_only_flag" && -z "$noswitch_flag" ]]; then
+        cd "$(xdg-user-dir PICTURES)/Wallpapers/showcase" 2>/dev/null || cd "$(xdg-user-dir PICTURES)/Wallpapers" 2>/dev/null || cd "$(xdg-user-dir PICTURES)" || exit 1
         if command -v zenity >/dev/null; then
             imgpath="$(zenity --file-selection --title="Choose wallpaper" 2>/dev/null)"
         else
@@ -1156,20 +1237,90 @@ main() {
         fi
     fi
 
-    # Fallback to default wallpaper if empty
     if [[ -z "$imgpath" || "$imgpath" == "null" ]]; then
         imgpath="$CONFIG_DIR/assets/images/default_wallpaper.png"
     fi
 
-    # If --lightmode is passed and --noswitch is passed:
-    # Only save to config without running matugen or changing theme colors
+    # The AI category for the clock widget is unrelated to the colours, so it runs on its own.
+    if [[ -z "$colors_only_flag" && -z "$noswitch_flag" ]]; then
+        local ai_enabled ai_model
+        ai_enabled=$(jq -r '.background.widgets.clock.cookie.aiStyling' "$SHELL_CONFIG_FILE" 2>/dev/null)
+        ai_model=$(jq -r '.background.widgets.clock.cookie.aiStylingModel' "$SHELL_CONFIG_FILE" 2>/dev/null)
+        if [[ "$ai_enabled" == "true" ]]; then
+            mkdir -p "$STATE_DIR/user/generated/wallpaper"
+            case "$ai_model" in
+                gemini)     "$SCRIPT_DIR/../ai/gemini-categorize-wallpaper.sh" "$imgpath" > "$STATE_DIR/user/generated/wallpaper/category.txt" & ;;
+                openrouter) "$SCRIPT_DIR/../ai/openrouter-categorize-wallpaper.sh" "$imgpath" > "$STATE_DIR/user/generated/wallpaper/category.txt" & ;;
+            esac
+        fi
+    fi
+
+    # The wallpaper itself. With a colour in charge, or a light-mode path that is only being
+    # stored, there is none to deal with.
+    if [[ -z "$accent" && ! ( -n "$lightmode_flag" && -n "$noswitch_flag" ) ]]; then
+        prepare_wallpaper
+    fi
+    # A video's frame or a Wallpaper Engine screenshot, when that is what the colours come from.
+    source_img="$color_source"
+    if [[ -z "$source_img" && -z "$color_flag" ]] && is_jxl "$imgpath"; then
+        source_img="$(decoded_copy "$imgpath")" || echo "[switchwall] Could not decode $imgpath for its colours" >&2
+    fi
+
+    # A light-mode path that is only being stored changes no colours.
     if [[ -n "$lightmode_flag" && -n "$noswitch_flag" ]]; then
         set_wallpaper_path "$imgpath" "lightmode"
-        echo "[switchwall.sh] Saved light mode wallpaper path."
+        echo "[switchwall] Saved light mode wallpaper path."
         exit 0
     fi
 
-    # Update config wallpaper path unless colors_only_flag or noswitch_flag is set
+    # A video has no colours of its own; prepare_wallpaper hands over its frame.
+    if [[ -z "$color_flag" && -z "$source_img" ]] && is_video "$imgpath"; then
+        echo "[switchwall] $imgpath is a video with no frame to take colours from" >&2
+        exit 0
+    fi
+
+    # The scheme: the one asked for, else the config's. A name that is not a scheme may be a theme.
+    [[ -z "$type_flag" ]] && type_flag="$(get_type_from_config)"
+    local valid_type=0 t
+    for t in "${allowed_types[@]}"; do
+        [[ "$type_flag" == "$t" ]] && { valid_type=1; break; }
+    done
+    if [[ $valid_type -eq 0 ]]; then
+        if [[ -f "$XDG_CONFIG_HOME/illogical-impulse/themes/$type_flag.json" ]]; then
+            theme_file="$XDG_CONFIG_HOME/illogical-impulse/themes/$type_flag.json"
+            valid_type=1
+        elif [[ -f "$CONFIG_DIR/defaults/themes/$type_flag.json" ]]; then
+            theme_file="$CONFIG_DIR/defaults/themes/$type_flag.json"
+            valid_type=1
+        fi
+    fi
+    if [[ $valid_type -eq 0 ]]; then
+        echo "[switchwall] Warning: Invalid type '$type_flag', defaulting to 'auto'" >&2
+        type_flag="auto"
+    fi
+    [[ "$type_flag" == "scheme-auto" ]] && type_flag="auto"
+
+    # The mode is otherwise only read later, in switch(), after the dark theme file was picked.
+    if [[ -n "$theme_file" && -z "$mode_flag" ]]; then
+        if [[ "$(gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null | tr -d "'")" == "prefer-dark" ]]; then
+            mode_flag="dark"
+        else
+            mode_flag="light"
+        fi
+    fi
+    if [[ -n "$theme_file" && "$mode_flag" == "light" ]]; then
+        local light_theme_file="${theme_file%.json}_light.json"
+        if [[ -f "$light_theme_file" ]]; then
+            theme_file="$light_theme_file"
+            echo "[switchwall] Using light theme variant: $type_flag"
+        else
+            echo "[switchwall] No light variant for '$type_flag', falling back to matugen generation"
+            theme_file=""
+            type_flag="scheme-tonal-spot"
+        fi
+    fi
+
+    # Record the wallpaper unless this run only reads it.
     if [[ -z "$colors_only_flag" && -z "$noswitch_flag" ]]; then
         if [[ -n "$lightmode_flag" ]]; then
             set_wallpaper_path "$imgpath" "lightmode"
@@ -1180,7 +1331,8 @@ main() {
         fi
     fi
 
-    # Only clear accent color if a NEW image is provided and noswitch is NOT set
+    # A new wallpaper ends the accent colour picked for the old one.
+    local current_wallpaper
     current_wallpaper=$(jq -r '.background.wallpaperPath' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "")
     if [[ -n "$imgpath" && -z "$noswitch_flag" && "$imgpath" != "$current_wallpaper" ]]; then
         set_accent_color ""
@@ -1188,49 +1340,21 @@ main() {
         color=""
     fi
 
-    # If type_flag is 'auto', detect scheme type from image (after imgpath is set)
+    # 'auto' picks the scheme from the image.
     if [[ "$type_flag" == "auto" ]]; then
-        if [[ -n "$imgpath" && -f "$imgpath" ]]; then
-            detected_type="$(detect_scheme_type_from_image "$imgpath")"
-            # Only use detected_type if it's valid
-            valid_detected=0
+        if [[ -f "${source_img:-$imgpath}" ]]; then
+            local detected_type
+            detected_type="$(detect_scheme_type_from_image "${source_img:-$imgpath}")"
+            type_flag="scheme-tonal-spot"
             for t in "${allowed_types[@]}"; do
                 if [[ "$detected_type" == "$t" && "$detected_type" != "auto" ]]; then
-                    valid_detected=1
+                    type_flag="$detected_type"
                     break
                 fi
             done
-            if [[ $valid_detected -eq 1 ]]; then
-                type_flag="$detected_type"
-            else
-                echo "[switchwall] Warning: Could not auto-detect a valid scheme, defaulting to 'scheme-tonal-spot'" >&2
-                type_flag="scheme-tonal-spot"
-            fi
+            [[ "$type_flag" == "$detected_type" ]] || echo "[switchwall] Warning: Could not auto-detect a valid scheme, defaulting to 'scheme-tonal-spot'" >&2
         else
             echo "[switchwall] Warning: No image to auto-detect scheme from, defaulting to 'scheme-tonal-spot'" >&2
-            type_flag="scheme-tonal-spot"
-        fi
-    fi
-
-    # Resolve light theme variant when mode is light. Without --mode the mode
-    # is only read in switch(), after the dark file was already picked.
-    if [[ -n "$theme_file" && -z "$mode_flag" ]]; then
-        current_mode=$(gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null | tr -d "'")
-        if [[ "$current_mode" == "prefer-dark" ]]; then
-            mode_flag="dark"
-        else
-            mode_flag="light"
-        fi
-    fi
-    if [[ -n "$theme_file" && "$mode_flag" == "light" ]]; then
-        local light_theme_file="${theme_file%.json}_light.json"
-        if [[ -f "$light_theme_file" ]]; then
-            theme_file="$light_theme_file"
-            echo "[switchwall.sh] Using light theme variant: $type_flag"
-        else
-            echo "[switchwall.sh] No light variant for '$type_flag', falling back to matugen generation"
-            theme_file=""
-            # Must be a valid matugen scheme (not "auto" — matugen rejects it)
             type_flag="scheme-tonal-spot"
         fi
     fi
@@ -1238,4 +1362,18 @@ main() {
     switch "$imgpath" "$mode_flag" "$type_flag" "$color_flag" "$color" "$theme_file"
 }
 
-main "$@"
+case "${1:-}" in
+    --matugen)          recolor_icons_if_themed; refine_wal_palette; apply_palette; reload_gtk; refresh_tools ;;
+    --apply)            apply_palette ;;
+    --reload|--restart) reload_all ;;
+    --restore)          restore ;;
+    --set)              set_wallpaper "${2:-}" ;;
+    --random)           random_wallpaper ;;
+    --pick)             pick_wallpaper ;;
+    --reset)            set_wallpaper "$(current_wallpaper)" ;;
+    --phone)            send_to_phone ;;
+    --colors)           show_colors ;;
+    --folders)          python3 "$SCRIPT_DIR/recolor_icons.py" --force ;;
+    -h|--help)          usage ;;
+    *)                  main "$@" ;;
+esac

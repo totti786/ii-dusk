@@ -10,7 +10,7 @@ Gio._promisify(Gio.DBusProxy, 'new_for_bus');
 Gio._promisify(Gio.DBusConnection.prototype, 'call');
 Gio._promisify(Gio.DataInputStream.prototype, 'read_line_async');
 
-const CLIENT_ID = 'ii-p3drovfx-budslink';
+const CLIENT_ID = 'ii-dusk-budslink';
 const BUS_NAME = 'io.github.maniacx.BudsLink';
 const MANAGER_PATH = '/io/github/maniacx/BudsLink';
 const MANAGER_INTERFACE = 'io.github.maniacx.BudsLink.DeviceManager';

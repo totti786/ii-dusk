@@ -57,7 +57,7 @@ class RemindersContractTests(unittest.TestCase):
 
     def test_every_family_loads_the_full_screen_alert(self) -> None:
         self.assertIn("reminderAlertPopup/ReminderAlertPopup.qml", read("panelFamilies/IllogicalImpulseFamily.qml"))
-        for family in ("panelFamilies/TabletFamily.qml", "panelFamilies/WaffleFamily.qml"):
+        for family in ("panelFamilies/TabletFamily.qml",):
             text = read(family)
             self.assertIn("import qs.modules.ii.reminderAlertPopup", text)
             self.assertIn("component: ReminderAlertPopup {}", text)

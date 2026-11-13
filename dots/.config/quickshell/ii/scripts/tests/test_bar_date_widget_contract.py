@@ -36,7 +36,7 @@ class BarDateWidgetContractTest(unittest.TestCase):
         config = self.read("modules/common/Config.qml")
         style_registry = self.read("modules/ii/bar/registry/BarWidgetRegistry.qml")
         settings_registry = self.read("modules/common/SettingsPageRegistry.qml")
-        waffle = self.read("modules/settings/configs/widgets/BarWidgetsWaffleConfig.qml")
+        waffle = self.read("modules/settings/configs/widgets/BarWidgetsConfig.qml")
         router = self.read("modules/ii/bar/BarComponent.qml")
 
         self.assertIn('property string date: "default"', config)

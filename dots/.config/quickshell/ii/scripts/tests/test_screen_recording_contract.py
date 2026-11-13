@@ -1,4 +1,4 @@
-"""Contracts for the wf-recorder and region-selector integration.
+"""Contracts for the recorder backends and region-selector integration.
 
 These tests intentionally inspect the command boundary rather than starting a
 Wayland capture.  They keep the regression coverage safe for headless CI and
@@ -11,9 +11,9 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 RECORD = (ROOT / "scripts/videos/record.sh").read_text()
+CONFIG = (ROOT / "modules/common/Config.qml").read_text()
 SCREENSHOT_ACTION = (ROOT / "modules/common/utils/ScreenshotAction.qml").read_text()
 REGION_SELECTION = (ROOT / "modules/ii/regionSelector/RegionSelection.qml").read_text()
-WAFFLE_REGION_SELECTION = (ROOT / "modules/waffle/screenSnip/WRegionSelectionPanel.qml").read_text()
 QUALITY_JS = (ROOT / "modules/common/functions/recordingQuality.js").read_text()
 KEYPRESS_MONITOR = (ROOT / "scripts/videos/keypress_monitor.py").read_text()
 
@@ -36,6 +36,94 @@ class ScreenRecordingContractTests(unittest.TestCase):
         block = RECORD.split("AUDIO_ARGS=()", 1)[1].split("\nfi\n", 2)
         self.assertIn('AUDIO_ARGS+=("-C" "aac" "-P" "b=320k")', block[0] + block[1])
 
+    def test_auto_prefers_gpu_screen_recorder_then_wf_recorder_then_obs(self):
+        body = RECORD.split("resolve_service() {", 1)[1].split("\n}\n", 1)[0]
+        self.assertIn("for candidate in gsr wf-recorder obs; do", body)
+        order = body.split("for candidate in ", 1)[1].split(";", 1)[0].split()
+        self.assertEqual(order, ["gsr", "wf-recorder", "obs"])
+        # An explicit choice is honoured only while that program exists, so a
+        # stale config entry cannot break recording.
+        self.assertIn('case "$requested" in', body)
+        self.assertIn("if service_available \"$requested\"", body)
+
+    def test_default_service_is_auto(self):
+        self.assertIn('property string service: "auto"', CONFIG)
+        self.assertIn("GPU Screen Recorder is now the preferred backend", CONFIG)
+        self.assertIn('raw.screenRecord?.service === "wf-recorder"', CONFIG)
+        self.assertIn('raw.screenRecord.service = "auto";', CONFIG)
+
+    def test_gpu_screen_recorder_is_a_first_class_backend(self):
+        self.assertIn('elif [[ "$REC_SERVICE" == "gsr" ]]; then', RECORD)
+        self.assertIn("gpu-screen-recorder \"${GSR_ARGS[@]}\"", RECORD)
+        self.assertIn("gsr_pid()", RECORD)
+        # The 15-character comm limit makes `pgrep -x` silently match nothing.
+        self.assertIn("pgrep -f '(^|/)gpu-screen-recorder( |$)'", RECORD)
+
+    def test_gsr_records_region_in_slurp_coordinates(self):
+        body = RECORD.split('elif [[ "$REC_SERVICE" == "gsr" ]]; then', 1)[1].split('\nelse\n    FILENAME="recording_', 1)[0]
+        self.assertIn('GSR_ARGS+=(-w "${size}+${x}+${y}")', body)
+        # GSR and slurp share the logical coordinate space; only the encoded
+        # size uses the monitor scale.
+        self.assertNotIn("-region", body)
+        self.assertIn('GSR_ARGS+=(-s "${GSR_W}x${GSR_H}")', body)
+
+    def test_gsr_maps_settings_to_its_own_vocabulary(self):
+        body = RECORD.split("gsr_codec() {", 1)[1].split("\n}\n", 1)[0]
+        self.assertIn("hevc*|libx265", body)
+        self.assertIn("h264*|libx264", body)
+        quality = RECORD.split("gsr_quality() {", 1)[1].split("\n}\n", 1)[0]
+        self.assertIn("low) echo \"medium\"", quality)
+        self.assertIn('high) echo "very_high"', quality)
+        start = RECORD.split('elif [[ "$REC_SERVICE" == "gsr" ]]; then', 1)[1].split('\nelse\n    FILENAME="recording_', 1)[0]
+        self.assertIn("-fm \"$GSR_FRAME_SYNC\"", start)
+        self.assertIn('GSR_ENCODER_ARGS=("-encoder" "cpu")', start)
+
+    def test_gsr_audio_follows_the_default_output(self):
+        body = RECORD.split('elif [[ "$REC_SERVICE" == "gsr" ]]; then', 1)[1].split('\nelse\n    FILENAME="recording_', 1)[0]
+        self.assertIn('GSR_AUDIO="default_output"', body)
+        self.assertIn('GSR_ARGS+=(-a "$GSR_AUDIO" -ab 320)', body)
+        self.assertIn('GSR_ARGS+=(-ac aac)', body)
+        self.assertIn('GSR_ARGS+=(-ac opus)', body)
+
+    def test_terminated_session_stops_the_recorder_and_clears_state(self):
+        body = RECORD.split("cleanup() {", 1)[1].split("\n}\n", 1)[0]
+        self.assertIn('[[ "${RECORDING_SESSION:-0}" == "1" ]]', body)
+        self.assertIn('kill -CONT "$RECORDER_PID"', body)
+        self.assertIn('kill -INT "$RECORDER_PID"', body)
+        self.assertIn("updatestate false", body)
+        # The recorder runs as a child so the trap can reach it by PID, while
+        # the script still waits for the file to be finalised.
+        self.assertIn('gpu-screen-recorder "${GSR_ARGS[@]}" &', RECORD)
+        self.assertIn('wait "$RECORDER_PID"', RECORD)
+
+    def test_stale_active_state_stops_instead_of_starting_a_recording(self):
+        """A killed script leaves active=true behind. The stop button must clear
+        that state, not fall through to the toolbar/region picker."""
+        stale = RECORD.split("# The state file can outlive its recorder", 1)[1]
+        stale = stale.split("# If toolbar is enabled", 1)[0]
+        self.assertIn('if [[ "$(jq -r "$STATE_JSON_PATH" "$STATE_FILE" 2>/dev/null)" == "true" ]]; then', stale)
+        self.assertIn('notify-send "Recording Stopped"', stale)
+        self.assertIn("updatestate false", stale)
+        self.assertIn("exit 0", stale)
+
+    def test_stopping_resets_the_elapsed_counter_even_without_a_timer(self):
+        body = RECORD.split("updatestate() {", 1)[1].split("\n}\n", 1)[0]
+        self.assertIn(".screenRecord.seconds = 0", body)
+        # The timer must be dead before the flag is cleared, or its in-flight
+        # jq write can restore active=true after a successful stop.
+        false_branch = body.split("else", 1)[1]
+        self.assertLess(false_branch.index("stop_timer"), false_branch.index(".screenRecord.seconds = 0"))
+
+    def test_gsr_stop_finalises_through_sigint(self):
+        body = RECORD.split("GSR_ACTIVE_PID=$(gsr_pid)", 1)[1].split("if pgrep wf-recorder", 1)[0]
+        self.assertIn('kill -INT "$GSR_ACTIVE_PID"', body)
+        self.assertIn('kill -0 "$GSR_ACTIVE_PID"', body)
+        self.assertIn('kill -TERM "$GSR_ACTIVE_PID"', body)
+
+    def test_gsr_pause_uses_its_own_signal(self):
+        body = RECORD.split("elif GSR_ACTIVE_PID=$(gsr_pid)", 1)[1].split("elif pgrep -x wf-recorder", 1)[0]
+        self.assertIn('kill -USR2 "$GSR_ACTIVE_PID"', body)
+
     def test_video_is_labelled_limited_range(self):
         # Untagged output is flagged full range and plays back washed out.
         self.assertIn('"-p" "color_range=tv"', RECORD)
@@ -49,8 +137,6 @@ class ScreenRecordingContractTests(unittest.TestCase):
         self.assertIn("recordGeometry ? recordGeometry.height : height", SCREENSHOT_ACTION)
         self.assertIn("x: rx + root.monitorOffsetX", REGION_SELECTION)
         self.assertIn("y: ry + root.monitorOffsetY", REGION_SELECTION)
-        self.assertIn("x: dragArea.selectionX + root.monitorOffsetX", WAFFLE_REGION_SELECTION)
-        self.assertIn("y: dragArea.selectionY + root.monitorOffsetY", WAFFLE_REGION_SELECTION)
 
     def test_region_recording_does_not_force_the_focused_output(self):
         region_body = RECORD.split("# If a manual region was provided", 1)[1]

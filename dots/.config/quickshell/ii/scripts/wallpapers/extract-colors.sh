@@ -30,7 +30,7 @@ while IFS= read -r key; do
     CACHED_KEYS["$key"]=1
 done < <(echo "$EXISTING_JSON" | jq -r 'keys[]')
 
-TOTAL=$(find "$TARGET_DIR" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.webp" \) | wc -l)
+TOTAL=$(find "$TARGET_DIR" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.webp" -o -iname "*.jxl" \) | wc -l)
 
 temp_results=$(mktemp)
 processed=${#CACHED_KEYS[@]}
@@ -87,7 +87,7 @@ while IFS= read -r -d '' img; do
         flush_results
         count=0
     fi
-done < <(find "$TARGET_DIR" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.webp" \) -print0)
+done < <(find "$TARGET_DIR" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.webp" -o -iname "*.jxl" \) -print0)
 
 wait
 flush_results

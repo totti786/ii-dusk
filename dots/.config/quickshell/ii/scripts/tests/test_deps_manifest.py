@@ -105,7 +105,7 @@ class StateRecord(unittest.TestCase):
             # mpv is shared with another feature, so removing phone keeps it.
             self.assertEqual(run(["owned", "phone"])[1].split(), ["scrcpy"])
             run(["forget", "phone", "scrcpy"])
-            data = json.loads((Path(tmp) / "ii-p3drovfx" / "deps.json").read_text())
+            data = json.loads((Path(tmp) / "ii-dusk" / "deps.json").read_text())
             self.assertEqual(data["installed"], {"phone": ["mpv"], "camera": ["mpv"]})
 
 

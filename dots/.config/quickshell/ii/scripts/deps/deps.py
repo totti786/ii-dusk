@@ -41,7 +41,7 @@ SBIN_DIRS = ("/usr/sbin", "/sbin", "/usr/local/sbin")
 
 def state_file():
     base = os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state")
-    return Path(base) / "ii-p3drovfx" / "deps.json"
+    return Path(base) / "ii-dusk" / "deps.json"
 
 
 def detect_distro():

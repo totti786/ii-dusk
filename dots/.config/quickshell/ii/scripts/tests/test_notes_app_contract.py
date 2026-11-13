@@ -614,7 +614,7 @@ class WiringTests(unittest.TestCase):
         family = read(FAMILY)
         self.assertIn("import qs.modules.ii.notes", family)
         self.assertIn("extraCondition: Config.options.notes.enable", family)
-        self.assertIn("component: NotesApp {}", family)
+        self.assertIn('panelUrl: Qt.resolvedUrl("../modules/ii/notes/NotesApp.qml")', family)
 
 
 if __name__ == "__main__":

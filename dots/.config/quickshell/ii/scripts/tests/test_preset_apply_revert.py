@@ -31,13 +31,14 @@ class TestPresetApplyRevert(unittest.TestCase):
             shutil.copyfile(SCRIPTS / name, self.scripts / name)
         script = self.scripts / 'presets.sh'
         script.write_text(script.read_text().replace('/tmp/presets_switchwall.log', str(self.root / 'colors.log')))
-        for name in ['colors/switchwall.sh', 'notify-send']:
+        for name in ['switchwall', 'notify-send']:
             target = self.scripts / name
             target.parent.mkdir(exist_ok=True)
             target.write_text('#!/bin/sh\nexit 0\n')
             target.chmod(0o755)
         self.env = dict(os.environ, HOME=str(self.user_dir), XDG_STATE_HOME=str(self.state),
-                        PATH=str(self.scripts) + os.pathsep + os.environ['PATH'])
+                        PATH=str(self.scripts) + os.pathsep + os.environ['PATH'],
+                        SWITCHWALL_BIN=str(self.scripts / 'switchwall'))
         for name, height in [('Blue', 64), ('Green', 72)]:
             (self.presets / (name + '.json')).write_text(json.dumps({'configVersion': 16, 'bar': {'height': height}}))
 

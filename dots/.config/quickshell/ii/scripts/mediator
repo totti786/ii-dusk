@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Mediator backend launcher for the Quickshell build.
+#
+# The backend is one Rust binary, vendor/mediator-rs (built by scripts/build-mediator-rust.sh).
+# A system-wide `mediator` on PATH is used when the vendored binary is missing.
+set -euo pipefail
+
+self="$(readlink -f -- "${BASH_SOURCE[0]}")"
+root="$(cd -- "$(dirname -- "$self")/.." && pwd)"
+
+# Downloads queue their direct streams in the shell's Downloads app (mediator download ...)
+export MEDIATOR_YTDL="${MEDIATOR_YTDL:-python3 $root/scripts/ytdl/ytdl.py}"
+
+if [ -x "$root/vendor/mediator-rs" ]; then
+    exec "$root/vendor/mediator-rs" "$@"
+fi
+
+system="$(command -v mediator || true)"
+if [ -n "$system" ] && [ "$(readlink -f -- "$system")" != "$self" ]; then
+    exec "$system" "$@"
+fi
+
+echo "mediator: backend not found (expected $root/vendor/mediator-rs)" >&2
+echo "mediator: run scripts/build-mediator-rust.sh, or install the mediator package" >&2
+exit 127

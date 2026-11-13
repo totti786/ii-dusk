@@ -69,7 +69,7 @@ A few things that bite:
   path is what `AppStats.qml` launches, with no fallback.
 - Nothing rebuilds it automatically — repeat step 1 after any change to `app_stats_src/`.
 - The binary, `target/` and `Cargo.lock` are gitignored on purpose; mirror the source
-  and build on the target machine. `setup-ii-p3drovfx.sh` protects the built binary so
+  and build on the target machine. `setup-ii-dusk.sh` protects the built binary so
   a config update carries it across instead of deleting it.
 
 <details>

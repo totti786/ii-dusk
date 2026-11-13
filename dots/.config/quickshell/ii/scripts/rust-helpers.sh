@@ -4,7 +4,7 @@
 #
 # The helpers ship as source and are built on the machine that runs them, which
 # leaves one thing nobody can see: an update replaces `*_src/` and carries the
-# old binary across untouched (PROTECTED_PATTERNS in setup-ii-p3drovfx.sh), so a
+# old binary across untouched (PROTECTED_PATTERNS in setup-ii-dusk.sh), so a
 # helper keeps running last month's code with no sign anywhere that it does.
 #
 # The signal is a stamp written beside each binary holding a hash of the sources
@@ -48,6 +48,7 @@ HELPERS=(
     "workspace_profile_manager:hyprland"
     "sni_watcher:tray"
     "health_watch:health"
+    "ii-quickshare:quickshare"
 )
 
 # name:former name, in the same directory. An updater from before the rename

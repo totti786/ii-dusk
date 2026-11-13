@@ -30,7 +30,7 @@ class WiringTests(unittest.TestCase):
 
     def test_settings_page_is_registered_and_reachable(self):
         settings_registry = (REPO_ROOT / "modules/common/SettingsPageRegistry.qml").read_text()
-        waffle = (REPO_ROOT / "modules/settings/configs/widgets/BarWidgetsWaffleConfig.qml").read_text()
+        waffle = (REPO_ROOT / "modules/settings/configs/widgets/BarWidgetsConfig.qml").read_text()
         self.assertIn('"widgets/NetworkSpeedConfig.qml"', settings_registry)
         self.assertIn('openComponentPage("network_speed")', waffle)
         self.assertTrue((REPO_ROOT / "modules/settings/configs/widgets/NetworkSpeedConfig.qml").is_file())

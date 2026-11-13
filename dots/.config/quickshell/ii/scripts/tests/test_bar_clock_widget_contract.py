@@ -40,7 +40,7 @@ class BarClockWidgetContractTest(unittest.TestCase):
     def test_widget_is_wired_through_the_registries(self):
         config = self.read("modules/common/Config.qml")
         settings_registry = self.read("modules/common/SettingsPageRegistry.qml")
-        waffle = self.read("modules/settings/configs/widgets/BarWidgetsWaffleConfig.qml")
+        waffle = self.read("modules/settings/configs/widgets/BarWidgetsConfig.qml")
 
         self.assertIn("property JsonObject clockWidget: JsonObject {", config)
         self.assertIn("widgets/ClockBarWidgetConfig.qml", settings_registry)

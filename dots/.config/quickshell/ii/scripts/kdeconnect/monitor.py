@@ -165,9 +165,32 @@ def _subscribe(path, iface, signal_name, callback):
 
 # ─── D-Bus data helpers ─────────────────────────────────────────
 
+def fetch_enabled_plugins(dev_path, supported):
+    """Plugins switched on in the device's config. loadedPlugins is empty whenever the
+    device is out of reach, which would make every switch read off."""
+    try:
+        proxy = Gio.DBusProxy.new_sync(
+            _connection, Gio.DBusProxyFlags.NONE, None,
+            BUS_NAME, dev_path, DEVICE_IFACE)
+    except Exception:
+        return []
+    enabled = []
+    for name in supported:
+        try:
+            res = proxy.call_sync(
+                "isPluginEnabled", GLib.Variant("(s)", (name,)),
+                Gio.DBusCallFlags.NONE, 2000, None)
+            if res is not None and res.get_child_value(0).get_boolean():
+                enabled.append(name)
+        except Exception:
+            pass
+    return enabled
+
+
 def fetch_device_props(dev_id):
     dev_path = f"/modules/kdeconnect/devices/{dev_id}"
     props = _get_all_props(dev_path, DEVICE_IFACE)
+    supported = [str(p) for p in props.get("supportedPlugins", [])]
     return {
         "id": str(dev_id),
         "name": str(props.get("name", "")),
@@ -175,7 +198,10 @@ def fetch_device_props(dev_id):
         "icon": str(props.get("iconName", "phone")),
         "reachable": bool(props.get("isReachable", False)),
         "paired": bool(props.get("isPaired", False)),
-        "supported_plugins": [str(p) for p in props.get("supportedPlugins", [])],
+        # 0 not paired, 1 we asked, 2 the peer asked, 3 paired (core/pairstate.h)
+        "pair_state": int(props.get("pairState", 0) or 0),
+        "supported_plugins": supported,
+        "enabled_plugins": fetch_enabled_plugins(dev_path, supported),
         "loaded_plugins": [str(p) for p in props.get("loadedPlugins", [])],
         "reachableAddresses": [str(a) for a in props.get("reachableAddresses", [])],
     }
@@ -244,6 +270,55 @@ def _emit_pairing_requests():
         emit({"event": "pairing_request", "id": dev_id, "name": name})
 
 
+# ─── Phone-side plugin state (volume, lock, commands) ───────────
+
+RSV_IFACE = "org.kde.kdeconnect.device.remotesystemvolume"
+RC_IFACE = "org.kde.kdeconnect.device.remotecommands"
+LOCK_IFACE = "org.kde.kdeconnect.device.lockdevice"
+
+_plugin_subs = set()
+
+
+def _json_prop(path, iface, prop, fallback):
+    """A QByteArray property holding JSON, as a Python value."""
+    raw = _get_prop(path, iface, prop)
+    if raw is None:
+        return fallback
+    try:
+        return json.loads(raw if isinstance(raw, str) else bytes(raw).decode("utf-8", "replace"))
+    except Exception:
+        return fallback
+
+
+def emit_remote_state(dev_id):
+    """What the phone offers through the plugins that have a D-Bus object only while the
+    device is connected. Whatever is absent right now simply reads as empty."""
+    base = f"/modules/kdeconnect/devices/{dev_id}"
+    sinks = _json_prop(f"{base}/remotesystemvolume", RSV_IFACE, "sinks", [])
+    emit({"event": "remote_sinks", "id": dev_id, "sinks": sinks if isinstance(sinks, list) else []})
+    commands = _json_prop(f"{base}/remotecommands", RC_IFACE, "commands", {})
+    emit({"event": "remote_commands", "id": dev_id,
+          "commands": commands if isinstance(commands, dict) else {}})
+    locked = _get_prop(f"{base}/lockdevice", LOCK_IFACE, "isLocked")
+    emit({"event": "locked", "id": dev_id, "locked": bool(locked) if locked is not None else None})
+
+
+def attach_remote_state(dev_id):
+    """Subscribe once per device; the signals are matched by path, so they keep working
+    when the plugin objects come and go with the connection."""
+    emit_remote_state(dev_id)
+    if dev_id in _plugin_subs:
+        return
+    _plugin_subs.add(dev_id)
+    base = f"/modules/kdeconnect/devices/{dev_id}"
+    refresh = lambda _params: emit_remote_state(dev_id)
+    _subscribe(f"{base}/remotesystemvolume", RSV_IFACE, "sinksChanged", refresh)
+    _subscribe(f"{base}/remotesystemvolume", RSV_IFACE, "volumeChanged", refresh)
+    _subscribe(f"{base}/remotesystemvolume", RSV_IFACE, "mutedChanged", refresh)
+    _subscribe(f"{base}/remotecommands", RC_IFACE, "commandsChanged", refresh)
+    _subscribe(f"{base}/lockdevice", LOCK_IFACE, "lockedChanged", refresh)
+
+
 # ─── Device attach / detach ─────────────────────────────────────
 
 def attach_device(dev_id):
@@ -264,6 +339,7 @@ def attach_device(dev_id):
     emit({"event": "connectivity", "id": dev_id, "type": ctype, "strength": cstr})
 
     sync_notifications(dev_id)
+    attach_remote_state(dev_id)
 
     # ── Signal subscriptions ──
 
@@ -353,10 +429,18 @@ def attach_device(dev_id):
 
     def on_pair_state_changed(params):
         pair_state = int(_unpack_variant(params.get_child_value(0))) if params.n_children() > 0 else 0
+        props = fetch_device_props(dev_id)
+        # Merge, so the page never waits on a PropertiesChanged that may not name pairState.
+        emit({"event": "device_added", **props})
         if pair_state == 2:
-            props = fetch_device_props(dev_id)
             emit({"event": "pairing_request", "id": dev_id, "name": props.get("name", "")})
     _subscribe(dev_path, DEVICE_IFACE, "pairStateChanged", on_pair_state_changed)
+
+    def on_plugins_changed(_params):
+        # loadedPlugins is a method, not a property, so toggling a plugin raises no PropertiesChanged.
+        emit({"event": "device_added", **fetch_device_props(dev_id)})
+        emit_remote_state(dev_id)
+    _subscribe(dev_path, DEVICE_IFACE, "pluginsChanged", on_plugins_changed)
 
 
 def detach_device(dev_id):
@@ -406,6 +490,9 @@ def main():
         dev_id = str(_unpack_variant(params.get_child_value(0))) if params.n_children() > 0 else ""
         is_visible = bool(_unpack_variant(params.get_child_value(1))) if params.n_children() > 1 else False
         emit({"event": "device_visibility", "id": dev_id, "reachable": is_visible})
+        if is_visible:
+            # The plugin objects only exist from the moment the link is up.
+            GLib.timeout_add(1500, lambda: (emit_remote_state(dev_id), False)[1])
 
     def on_pairing_requests_changed(_params):
         _emit_pairing_requests()

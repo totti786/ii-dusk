@@ -216,7 +216,7 @@ class GuardTests(unittest.TestCase):
         self.assertIn("quickshell-guard/qs-guard.sh", execs)
         self.assertIn("quickshell-guard/qs-guard.sh", keybinds)
         # The repository's setup script; a deployed config has none.
-        setup = DOTS.parents[1] / "setup-ii-p3drovfx.sh"
+        setup = DOTS.parents[1] / "setup-ii-dusk.sh"
         if setup.exists():
             self.assertIn("scripts/quickshell-guard/qs-guard.sh", setup.read_text(encoding="utf-8"))
         # With the guard missing, the plain start is still there.

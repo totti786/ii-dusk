@@ -15,7 +15,7 @@
 #      allowed, but only from panelFamilies/TabletFamily.qml, so the debt is countable in
 #      one file. To share a component properly, promote it to modules/common/ first.
 #
-#   3. modules/ii/ must not import qs.modules.tablet.* or qs.modules.waffle.*, for the same
+#   3. modules/ii/ must not import qs.modules.tablet.*, for the same
 #      reason as (1) in the other direction.
 #
 #   4. No relative directory import may climb out of its own top-level module directory.
@@ -57,7 +57,7 @@ collect_escaping_relative() {
     python3 - "$@" <<'PY'
 import os, re, sys
 
-FAMILY_DIRS = ("modules/ii", "modules/tablet", "modules/waffle")
+FAMILY_DIRS = ("modules/ii", "modules/tablet")
 IMPORT_RE = re.compile(r'^\s*import\s+"([^"]*\.\./[^"]*)"')
 
 def owner(path):
@@ -94,10 +94,10 @@ PY
 
 current=$(
     {
-        collect '^[[:space:]]*import[[:space:]]+qs\.modules\.(ii|tablet|waffle)\b' services modules/common
+        collect '^[[:space:]]*import[[:space:]]+qs\.modules\.(ii|tablet)\b' services modules/common
         collect '^[[:space:]]*import[[:space:]]+qs\.modules\.ii\b' modules/tablet
-        collect '^[[:space:]]*import[[:space:]]+qs\.modules\.(tablet|waffle)\b' modules/ii
-        collect_escaping_relative modules/common modules/tablet modules/ii modules/waffle
+        collect '^[[:space:]]*import[[:space:]]+qs\.modules\.tablet\b' modules/ii
+        collect_escaping_relative modules/common modules/tablet modules/ii
     } | sort -u
 )
 
