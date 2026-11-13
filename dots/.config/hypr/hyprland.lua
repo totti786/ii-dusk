@@ -21,9 +21,9 @@ end
 
 -- Default configurations --
 safe_require("hyprland.execs")
+safe_require("hyprland.colors")
 safe_require("hyprland.general")
 safe_require("hyprland.rules")
-safe_require("hyprland.colors")
 safe_require("hyprland.keybinds")
 -- zscroll (lua:zscroll): before custom/ so general:layout can name it and custom binds win
 safe_require("hyprland.layouts.zscroll")

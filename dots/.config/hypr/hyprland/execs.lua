@@ -1,6 +1,11 @@
 -- put former exec-once commands inside the func and former exec commands outside
 hl.on("hyprland.start", function()
 
+    -- Splash: ii takes ~6-8 s to load, so show the greeter's wallpaper straight away.
+    -- Quits itself once the shell has drawn its own wallpaper. Installed by
+    -- ~/Projects/qs-greeter/install.sh; skipped when absent.
+    hl.exec_cmd("[ -f /etc/greetd/qs-greeter/splash.qml ] && exec qs -p /etc/greetd/qs-greeter/splash.qml")
+
     -- Tray watcher: holds org.kde.StatusNotifierWatcher across shell restarts, so
     -- tray icons survive one. Started before the shell, which then uses it
     -- instead of registering a watcher of its own. See
@@ -22,6 +27,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("g=$HOME/.config/quickshell/$qsConfig/scripts/quickshell-guard/qs-guard.sh; "
         .. "if [ -x \"$g\" ]; then MALLOC_CONF=narenas:1 exec \"$g\" -c $qsConfig; "
         .. "else MALLOC_CONF=narenas:1 exec qs -c $qsConfig; fi")
+    -- Relaunches the video or Wallpaper Engine wallpaper; switchwall.sh writes this script.
     hl.exec_cmd("$HOME/.config/hypr/custom/scripts/__restore_video_wallpaper.sh")
 
     -- Core components (authentication, lock screen, notification daemon)
@@ -64,4 +70,24 @@ end)
 
 hl.on("hyprland.shutdown", function()
     os.execute("systemctl --user stop hyprland-session.target && sleep 0.1")
+end)
+
+-- ---- Our autostart (standard) ----
+-- Our autostart, only the lines the stock hyprland/execs.lua does not already run.
+-- Dropped from ours because the stock file starts them: qs, hypridle, the dbus and
+-- systemd environment lines, gnome-keyring, the cliphist watchers and wl-clip-persist.
+hl.on("hyprland.start", function()
+    -- Wallpaper and colors
+    hl.exec_cmd("$HOME/.config/quickshell/ii/scripts/colors/switchwall.sh --restore")
+
+    -- Optional
+    hl.exec_cmd("kdeconnectd")
+    hl.exec_cmd("gesture-hold") -- 4-finger hold to play/pause, replaces fusuma
+
+    -- Our own launches. The "[workspace N silent]" form is not a Lua exec: it reached the
+    -- shell as a literal "[" command. Kept here, commented, until it is rewritten.
+    -- hl.exec_cmd("[workspace 2 silent] firefox")
+    -- hl.exec_cmd("[workspace 3 silent] thunar")
+    -- hl.exec_cmd("[workspace 3 silent] geany")
+    hl.exec_cmd("proto-recall --shoot")
 end)

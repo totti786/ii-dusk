@@ -14,6 +14,9 @@ hl.window_rule({match = {class = "^()$", title = "^()$" },                   no_
 -- Keybinds app" should look like — and they still respect the bar's and the dock's
 -- reserved edges, which a maximised floating window would have to be told about.
 hl.window_rule({match = {title = "^(Open File)(.*)$" },                      center = true})
+-- The file manager is a FloatingWindow to Qt, which Hyprland floats on map. Rules for it
+-- here do not stick (something later in the load overrides them), so the tile rule that
+-- works is declared last, in custom/rules.lua.
 -- The notes app is a real toplevel, not a layer surface: it belongs to a workspace
 -- and a click elsewhere must not dismiss it. Floated and centred so it opens as a
 -- document window rather than taking over the tile layout.
@@ -25,10 +28,44 @@ hl.window_rule({match = {title = "^(ii Notes)$" },                           siz
 -- whole-app windows read as one family.
 hl.window_rule({match = {title = "^(ii Clock)$" },                           float = true})
 hl.window_rule({match = {title = "^(ii Clock)$" },                           center = true})
+-- Grit: the habit tracker and focus timer, the same kind of toplevel as the clock.
+hl.window_rule({match = {title = "^(ii Grit)$" },                            float = true})
+hl.window_rule({match = {title = "^(ii Grit)$" },                            center = true})
+hl.window_rule({match = {title = "^(ii Calculator)$" },                      float = true})
+hl.window_rule({match = {title = "^(ii Calculator)$" },                      center = true})
 hl.window_rule({match = {title = "^(ii EasyEffects)$" },                     float = true})
 hl.window_rule({match = {title = "^(ii EasyEffects)$" },                     center = true})
 hl.window_rule({match = {title = "^(ii Usage)$" },                           float = true})
 hl.window_rule({match = {title = "^(ii Usage)$" },                           center = true})
+hl.window_rule({match = {title = "^(ii Downloads)$" },                       float = true})
+hl.window_rule({match = {title = "^(ii Downloads)$" },                       center = true})
+hl.window_rule({match = {title = "^(ii Mixer)$" },                           float = true})
+hl.window_rule({match = {title = "^(ii Mixer)$" },                           center = true})
+hl.window_rule({match = {title = "^(ii Soundscapes)$" },                     float = true})
+hl.window_rule({match = {title = "^(ii Soundscapes)$" },                     center = true})
+hl.window_rule({match = {title = "^(ii Packages)$" },                        float = true})
+hl.window_rule({match = {title = "^(ii Packages)$" },                        center = true})
+hl.window_rule({match = {title = "^(ii Bluetooth)$" },                       float = true})
+hl.window_rule({match = {title = "^(ii Bluetooth)$" },                       center = true})
+hl.window_rule({match = {title = "^(ii Patchbay)$" },                        float = true})
+hl.window_rule({match = {title = "^(ii Patchbay)$" },                        center = true})
+hl.window_rule({match = {title = "^(ii Torrents)$" },                        float = true})
+hl.window_rule({match = {title = "^(ii Torrents)$" },                        center = true})
+hl.window_rule({match = {title = "^(ii Music)$" },                           float = true})
+hl.window_rule({match = {title = "^(ii Music)$" },                           center = true})
+hl.window_rule({match = {title = "^(ii Monitor)$" },                         float = true})
+hl.window_rule({match = {title = "^(ii Monitor)$" },                         center = true})
+hl.window_rule({match = {title = "^(ii Anki)$" },                            float = true})
+hl.window_rule({match = {title = "^(ii Anki)$" },                            center = true})
+hl.window_rule({match = {title = "^(ii Books)$" },                           float = true})
+hl.window_rule({match = {title = "^(ii Books)$" },                           center = true})
+hl.window_rule({match = {class = "^(org.pwmt.zathura|sioyek)$" },             fullscreen = true})
+hl.window_rule({match = {title = "^(ii Mediator)$" },                        float = true})
+hl.window_rule({match = {title = "^(ii Mediator)$" },                        center = true})
+hl.window_rule({match = {title = "^(ii Quran)$" },                           float = true})
+hl.window_rule({match = {title = "^(ii Quran)$" },                           center = true})
+hl.window_rule({match = {title = "^(ii Diwan)$" },                           float = true})
+hl.window_rule({match = {title = "^(ii Diwan)$" },                           center = true})
 hl.window_rule({match = {title = "^(ii Modes)$" },                           float = true})
 hl.window_rule({match = {title = "^(ii Modes)$" },                           center = true})
 hl.window_rule({match = {title = "^(ii System Health)$" },                   float = true})
@@ -292,3 +329,162 @@ hl.layer_rule({ match = { namespace = "quickshell:wTaskView" }, no_anim = true})
 
 -- Launchers need to be FAST
 hl.layer_rule({ match = { namespace = "gtk4-layer-shell" }, no_anim = true})
+
+-- ---- Our window rules (standard) ----
+-- Window, layer and workspace rules migrated from hyprland.conf and custom.conf.
+-- Effects confirmed in the 0.56 Lua docs are active. Others are kept as TODO
+-- comments with the original line, so check them before enabling.
+
+
+---------------------
+---- WINDOW RULES ----
+---------------------
+
+-- Float rules
+hl.window_rule({ match = { class = "^(org.*|com.*|app.*|io.*|nwg-*)$" }, float = true })
+hl.window_rule({ match = { title = "^(Open File)(.*)$" }, center = true })
+
+hl.window_rule({ match = { class = "^(notification|error|splash|feh|mpv|eog|wpg|dialog|confirm)$" }, float = true })
+hl.window_rule({ match = { class = "^(file_progress|viewnior|confirmreset|steam|waypaper|xarchiver)$" }, float = true })
+hl.window_rule({ match = { class = "^(nm-connection-editor|yad|xdg-desktop-portal-gtk|papers-previewer)$" }, float = true })
+hl.window_rule({ match = { class = "^(blueman-manager|trackma-gtk|pavucontrol)$" }, float = true })
+hl.window_rule({ match = { class = "^(Signal|AppImageLauncher|wihotspot|zenity|syncplay)$" }, float = true })
+hl.window_rule({ match = { title = "^(branchdialog|KDE Connect URL handler|Network Manager|Quickshell Settings)$" }, float = true })
+hl.window_rule({ match = { class = "^(firefox)$", title = "^(Extension:.*)$" }, float = true })
+
+-- Misc
+hl.window_rule({ match = { class = "^(hyprland-share-picker)$" }, pin = true })
+hl.window_rule({ match = { initial_class = "^(firefox)$", initial_title = "^Extension: .* - Mozilla Firefox$" }, float = true })
+
+-- Picture-in-picture
+hl.window_rule({ match = { title = "^([Pp]icture[-\\s]?[Ii]n[-\\s]?[Pp]icture).*$" }, float = true, pin = true, border_size = 0 })
+-- TODO: PiP position and size used move/size with monitor math, and no_initial_focus and keep_aspect_ratio.
+-- Original:
+-- windowrule = match:title ^([Pp]icture[-\s]?[Ii]n[-\s]?[Pp]icture)(.*)$, move (monitor_w*.735) (monitor_h*.065)
+-- windowrule = match:title ^([Pp]icture[-\s]?[Ii]n[-\s]?[Pp]icture)(.*)$, size (monitor_w*.25) (monitor_h*.25)
+-- windowrule = match:title ^([Pp]icture[-\s]?[Ii]n[-\s]?[Pp]icture).*$, keep_aspect_ratio 1
+-- windowrule = match:title ^([Pp]icture[-\s]?[Ii]n[-\s]?[Pp]icture).*$, no_initial_focus 0
+
+-- Dialogs
+hl.window_rule({ match = { title = "^(Open File|Select a File|Choose wallpaper|Open Folder|Save As|Library|File|Confirm).*$" }, float = true, center = true })
+-- TODO: tile rules for quickshell and Nautilus. Not verified in Lua yet.
+-- windowrule = match:title ^(quickshell)$, tile 1
+-- windowrule = match:class ^(org.gnome.Nautilus)$, tile 1
+
+-- Media
+-- TODO: keep_aspect_ratio for mpv. Not verified in Lua yet.
+-- windowrule = match:class ^(mpv)$, keep_aspect_ratio 1
+
+-- Idle inhibit
+hl.window_rule({ match = { class = "^(com.usebottles.bottles|Bottles)$" }, idle_inhibit = "fullscreen" })
+hl.window_rule({ match = { class = "^(firefox)$" }, idle_inhibit = "fullscreen" })
+hl.window_rule({ match = { title = "^(Picture-in-Picture)$" }, idle_inhibit = "always" })
+
+-- Visual tweaks
+hl.window_rule({ match = { class = "^(org.gnome.Loupe)$" }, border_size = 0 })
+-- Telegram: the conf suppressed "activatefocus". The Lua docs list "activate" as the suppressible event, so verify this one.
+hl.window_rule({ match = { class = "^(org.telegram.desktop)$" }, suppress_event = "activate" })
+
+-- Find and rename dialogs
+-- TODO: "move onscreen cursor" is not verified in Lua yet.
+hl.window_rule({ match = { title = "^(Find.*|Rename.*)$" }, float = true })
+-- windowrule = match:title ^(Find.*|Rename.*)$, move onscreen cursor
+
+hl.window_rule({ match = { title = "^(Question.*)$" }, stay_focused = true })
+
+-- Tearing / immediate
+hl.window_rule({ match = { title = ".*\\.exe$" }, immediate = true })
+hl.window_rule({ match = { title = ".*minecraft.*" }, immediate = true })
+hl.window_rule({ match = { class = "^(steam_app).*" }, immediate = true })
+
+-- No shadow for tiled windows
+hl.window_rule({ match = { float = false }, no_shadow = true })
+
+-- Opacity rules (commented out in the conf, kept for reference)
+-- windowrule = match:class .*, opacity 0.89 0.89 override
+-- windowrule = match:class ^(thunar|geany|org.pwmt.zathura|sioyek|pavucontrol|org.telegram.desktop|discord|vesktop|WebCord|Spotify|quickshell)$, opacity 0.85 0.85
+-- windowrule = match:title ^(Find)$, opacity 0.75 0.75
+
+
+---------------------
+---- LAYER RULES ----
+---------------------
+-- Layer rule effect names other than no_anim are not verified in Lua yet.
+-- They use the same names as the conf. If one fails, hyprctl configerrors will show it.
+
+-- Rofi
+hl.layer_rule({ match = { namespace = "^(rofi)$" }, blur = true, ignore_alpha = 0.1 })
+
+-- GTK layer-shell surfaces (bars, panels, launchers)
+hl.layer_rule({ match = { namespace = "^(gtk-layer-shell)$" }, blur = true })
+
+-- Hyprpicker
+hl.layer_rule({ match = { namespace = "^(hyprpicker)$" }, no_anim = true })
+
+-- Quickshell (launchers must be fast)
+hl.layer_rule({ match = { namespace = "quickshell:.*" }, blur_popups = true })
+hl.layer_rule({ match = { namespace = "quickshell:.*" }, blur = true })
+hl.layer_rule({ match = { namespace = "quickshell:.*" }, ignore_alpha = 0.7 })
+hl.layer_rule({ match = { namespace = "quickshell:bar" }, animation = "slide" })
+hl.layer_rule({ match = { namespace = "quickshell:actionCenter" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "quickshell:cheatsheet" }, animation = "slide bottom" })
+hl.layer_rule({ match = { namespace = "quickshell:dock" }, animation = "slide bottom" })
+hl.layer_rule({ match = { namespace = "quickshell:screenCorners" }, animation = "popin 120%" })
+hl.layer_rule({ match = { namespace = "quickshell:lockWindowPusher" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "quickshell:notificationPopup" }, animation = "fade" })
+hl.layer_rule({ match = { namespace = "quickshell:overlay" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "quickshell:overlay" }, ignore_alpha = 1 })
+hl.layer_rule({ match = { namespace = "quickshell:overview" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "quickshell:osk" }, animation = "slide bottom" })
+hl.layer_rule({ match = { namespace = "quickshell:osk" }, order = -1 })
+hl.layer_rule({ match = { namespace = "quickshell:polkit" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "quickshell:popup" }, xray = false }) -- No weird color for bar tooltips
+hl.layer_rule({ match = { namespace = "quickshell:popup" }, ignore_alpha = 1 }) -- Same, needed in practice
+hl.layer_rule({ match = { namespace = "quickshell:mediaControls" }, ignore_alpha = 1 })
+hl.layer_rule({ match = { namespace = "quickshell:reloadPopup" }, animation = "slide" })
+hl.layer_rule({ match = { namespace = "quickshell:regionSelector" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "quickshell:screenshot" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "quickshell:session" }, blur = true })
+hl.layer_rule({ match = { namespace = "quickshell:session" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "quickshell:session" }, ignore_alpha = 0 })
+hl.layer_rule({ match = { namespace = "quickshell:sidebarRight" }, animation = "slide right" })
+hl.layer_rule({ match = { namespace = "quickshell:sidebarLeft" }, animation = "slide left" })
+hl.layer_rule({ match = { namespace = "quickshell:verticalBar" }, animation = "slide" })
+hl.layer_rule({ match = { namespace = "quickshell:wallpaperSelector" }, animation = "slide top" })
+hl.layer_rule({ match = { namespace = "quickshell:wNotificationCenter" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "quickshell:wOnScreenDisplay" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "quickshell:wStartMenu" }, no_anim = true })
+hl.layer_rule({ match = { namespace = "quickshell:wTaskView" }, ignore_alpha = 0 })
+hl.layer_rule({ match = { namespace = "quickshell:wTaskView" }, no_anim = true })
+
+-- Launchers need to be fast
+hl.layer_rule({ match = { namespace = "gtk4-layer-shell" }, no_anim = true })
+
+
+-----------------------
+---- WORKSPACE RULES ----
+-----------------------
+
+-- Drop-down terminal: launches the first time the special:drop workspace is created empty.
+-- The on_created_empty workspace rule is deprecated in 0.57; the workspace.created
+-- event with an is_empty check is the replacement.
+hl.on("workspace.created", function(ws)
+    if ws and ws.is_empty and ws.name == "special:drop" then
+        hl.exec_cmd("terminal --drop")
+    end
+end)
+
+---------------------------
+---- TRANSPARENCY ----
+---------------------------
+-- Quickshell settings > Transparency runs "switchwall.sh --trans", which writes transparency.lua.
+-- These are the opacity rules that the old hyprland.conf toggled.
+local okTransparency, transparency = pcall(require, "transparency")
+if okTransparency and transparency.enabled then
+    hl.window_rule({ name = "opacity-all", match = { class = ".*" }, opacity = "0.89 0.89 override" })
+    hl.window_rule({ name = "opacity-apps", match = { class = "^(thunar|geany|org.pwmt.zathura|sioyek|pavucontrol|org.telegram.desktop|discord|vesktop|WebCord|Spotify|quickshell)$" }, opacity = "0.85 0.85" })
+    hl.window_rule({ name = "opacity-find", match = { title = "^(Find)$" }, opacity = "0.75 0.75" })
+end
+
+-- Floating terminal (SUPER+SHIFT+Return runs `terminal --float`): float and center it.
+hl.window_rule({ match = { class = "^(Alacritty-float)$" }, float = true, center = true })

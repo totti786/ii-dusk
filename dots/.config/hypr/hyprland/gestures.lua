@@ -112,9 +112,31 @@ local function handle_scratchpad_gesture(direction)
 end
 
 -- Actions that only make sense written in Lua, offered to the shell by name.
+local volumeAcc = 0
+local VOLUME_PER_DELTA = 0.2
+
 ii_gestures.handlers = {
     scratchpadUp = function() handle_scratchpad_gesture("up") end,
-    scratchpadDown = function() handle_scratchpad_gesture("down") end
+    scratchpadDown = function() handle_scratchpad_gesture("down") end,
+    -- Continuous 4-finger volume (ported from the parked gestures-ours.lua.txt).
+    -- A tracked gesture table: Hyprland calls start/update/finish per swipe.
+    volume = {
+        start = function(e) volumeAcc = 0 end,
+        update = function(e)
+            local dy = type(e.delta) == "table" and (e.delta.y or 0) or 0
+            volumeAcc = volumeAcc - dy * VOLUME_PER_DELTA
+            if math.abs(volumeAcc) >= 1 then
+                local step = volumeAcc >= 0 and math.floor(volumeAcc) or math.ceil(volumeAcc)
+                volumeAcc = volumeAcc - step
+                if step > 0 then
+                    hl.exec_cmd("wpctl set-volume -l 1.5 @DEFAULT_SINK@ " .. step .. "%+")
+                else
+                    hl.exec_cmd("wpctl set-volume @DEFAULT_SINK@ " .. (-step) .. "%-")
+                end
+            end
+        end,
+        finish = function(e) end
+    }
 }
 
 -- What this config ships. The shell's own default list mirrors it

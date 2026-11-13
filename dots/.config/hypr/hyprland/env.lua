@@ -60,3 +60,25 @@ hl.env("ILLOGICAL_IMPULSE_VIRTUAL_ENV", home_dir .. "/.local/state/quickshell/.v
 -- KdeConnectService instead, whose 30 s probe drops any network device that stops
 -- answering.
 hl.env("ADB_TCP_KEEPALIVE_INTERVAL", "60")
+
+-- ---- Our environment (standard) ----
+---------------
+---- ENV ----
+---------------
+
+-- Defaults
+hl.env("QT_QPA_PLATFORM", "wayland")
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+hl.env("QT_AUTO_SCREEN_SCALE_FACTOR", "1")
+hl.env("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
+hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
+
+-- Wireless ADB: the adb server sends a TCP keepalive every second by default, which
+-- wakes a locked phone ~30 times a minute and roughly doubled its idle drain once
+-- adbd started surviving the lock. The server reads this when it starts, so it holds
+-- for the shell, terminals and scrcpy alike. A vanished phone is caught by
+-- KdeConnectService instead, whose 30 s probe drops any network device that stops
+-- answering.
+hl.env("ADB_TCP_KEEPALIVE_INTERVAL", "60")
+
+-- NVIDIA lines from hyprland.conf are commented out there, so they are not migrated.

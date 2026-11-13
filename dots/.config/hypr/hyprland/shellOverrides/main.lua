@@ -1,1 +1,1 @@
--- MANAGED BY HYPRSET.LUA — DO NOT EDIT
+-- Runtime overrides written by quickshell (hyprconfigurator.py). Loaded from hyprland.lua.
