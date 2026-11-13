@@ -233,7 +233,11 @@ def extract_embedded_lyrics(audio: Any) -> str:
 
     # 3. MP4 / M4A (iTunes ©lyr)
     if tags is not None and hasattr(tags, "get"):
-        mp4_lyr = tags.get("\xa9lyr")
+        try:
+            mp4_lyr = tags.get("\xa9lyr")
+        except (ValueError, KeyError):
+            # Vorbis comments reject keys that are not printable ASCII
+            mp4_lyr = None
         if mp4_lyr:
             text = _first_text(mp4_lyr)
             if text:
@@ -241,7 +245,10 @@ def extract_embedded_lyrics(audio: Any) -> str:
 
     # 4. WMA / ASF
     if tags is not None and hasattr(tags, "get"):
-        wma_lyr = tags.get("WM/Lyrics_Synchronised") or tags.get("WM/Lyrics")
+        try:
+            wma_lyr = tags.get("WM/Lyrics_Synchronised") or tags.get("WM/Lyrics")
+        except (ValueError, KeyError):
+            wma_lyr = None
         if wma_lyr:
             text = _first_text(wma_lyr)
             if text:

@@ -26,7 +26,7 @@ MPRIS_OBJECT_PATH = "/org/mpris/MediaPlayer2"
 ROOT_INTERFACE = "org.mpris.MediaPlayer2"
 PLAYER_INTERFACE = "org.mpris.MediaPlayer2.Player"
 PROPERTIES_INTERFACE = "org.freedesktop.DBus.Properties"
-DEFAULT_BUS_NAME = "org.mpris.MediaPlayer2.ii_local"
+DEFAULT_BUS_NAME = "org.mpris.MediaPlayer2.audioplayer"
 DBUS_DAEMON_NAME = "org.freedesktop.DBus"
 DBUS_DAEMON_PATH = "/org/freedesktop/DBus"
 DBUS_DAEMON_INTERFACE = "org.freedesktop.DBus"
@@ -206,7 +206,7 @@ class MprisBridge:
             "CanQuit": bool(snapshot.get("canQuit", True)),
             "CanRaise": bool(snapshot.get("canRaise", True)),
             "HasTrackList": False,
-            "Identity": str(snapshot.get("identity", "II Music")),
+            "Identity": str(snapshot.get("identity", "Audio Player")),
             "DesktopEntry": str(snapshot.get("desktopEntry", "ii-local-music")),
             "SupportedUriSchemes": ["file"],
             "SupportedMimeTypes": list(snapshot.get("supportedMimeTypes", [])),

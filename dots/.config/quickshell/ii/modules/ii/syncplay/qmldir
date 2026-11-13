@@ -1,0 +1,8 @@
+module qs.modules.ii.syncplay
+
+SyncplayApp 1.0 SyncplayApp.qml
+SyncplayWindow 1.0 SyncplayWindow.qml
+SyncplayConnect 1.0 SyncplayConnect.qml
+SyncplayRoom 1.0 SyncplayRoom.qml
+SyncplayChat 1.0 SyncplayChat.qml
+SyncplayPane 1.0 SyncplayPane.qml

@@ -104,6 +104,10 @@ Scope {
         }
     }
 
+    function isQuranPlayer(p) {
+        return p.dbusName === "org.mpris.MediaPlayer2.quran" || p.identity === "Quran";
+    }
+
     function filterDuplicatePlayers(players) {
         let filtered = [];
         let used = new Set();
@@ -117,6 +121,10 @@ Scope {
             // Find duplicates by trackTitle prefix
             for (let j = i + 1; j < players.length; ++j) {
                 let p2 = players[j];
+                // The Quran player is never a duplicate of another one: the position/length
+                // heuristic below would merge it into an idle phone player and drop its card
+                if (root.isQuranPlayer(p1) !== root.isQuranPlayer(p2))
+                    continue;
                 if (p1.trackTitle && p2.trackTitle && (p1.trackTitle.includes(p2.trackTitle) || p2.trackTitle.includes(p1.trackTitle)) || (Math.abs(p1.position - p2.position) <= 2 && Math.abs(p1.length - p2.length) <= 2)) {
                     group.push(j);
                 }
@@ -130,7 +138,17 @@ Scope {
             filtered.push(players[chosenIdx]);
             group.forEach(idx => used.add(idx));
         }
-        return filtered;
+        // One Quran card, and it replaces the generic cards while nothing else is playing: an idle
+        // phone player ("No media") or a stale entry from a restarted helper must not sit beside it
+        const quran = filtered.filter(p => root.isQuranPlayer(p));
+        if (quran.length === 0)
+            return filtered;
+        const others = filtered.filter(p => !root.isQuranPlayer(p));
+        const quranCard = quran[quran.length - 1];
+        const othersPlaying = others.filter(p => p.isPlaying);
+        if (quranCard.isPlaying || othersPlaying.length === 0)
+            return othersPlaying.length > 0 ? [quranCard].concat(othersPlaying) : [quranCard];
+        return othersPlaying;
     }
 
 
@@ -294,10 +312,21 @@ Scope {
                         required property MprisPlayer modelData
 
                         sourceComponent: {
+                            // The Quran player gets its own card, whatever popup style is chosen
+                            if (modelData.identity === "Quran" && GlobalStates.quranPlayer)
+                                return quranComp;
                             switch (Config.options.bar.mediaPlayer.popupStyle) {
                             case "expressive": return expressiveComp;
                             case "android": return androidComp;
                             default: return standardComp;
+                            }
+                        }
+
+                        Component {
+                            id: quranComp
+                            QuranMediaCard {
+                                player: delegateLoader.modelData
+                                radius: root.popupRounding
                             }
                         }
 

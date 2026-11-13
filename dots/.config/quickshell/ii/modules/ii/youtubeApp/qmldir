@@ -1,0 +1,7 @@
+module qs.modules.ii.youtubeApp
+
+YouTubeApp 1.0 YouTubeApp.qml
+YouTubeWindow 1.0 YouTubeWindow.qml
+YouTubeContent 1.0 YouTubeContent.qml
+YouTubeResultsList 1.0 YouTubeResultsList.qml
+YouTubeVideoRow 1.0 YouTubeVideoRow.qml

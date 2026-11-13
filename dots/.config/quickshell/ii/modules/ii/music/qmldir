@@ -1,0 +1,23 @@
+module qs.modules.ii.music
+
+singleton MusicTone 1.0 MusicTone.qml
+MusicApp 1.0 MusicApp.qml
+MusicContent 1.0 MusicContent.qml
+MusicWindow 1.0 MusicWindow.qml
+RoundedCover 1.0 RoundedCover.qml
+TrackRow 1.0 TrackRow.qml
+TrackList 1.0 TrackList.qml
+PlayerBar 1.0 PlayerBar.qml
+NowPlaying 1.0 NowPlaying.qml
+LyricsView 1.0 LyricsView.qml
+HomePage 1.0 HomePage.qml
+SearchPage 1.0 SearchPage.qml
+CollectionPage 1.0 CollectionPage.qml
+LibraryPage 1.0 LibraryPage.qml
+TastePage 1.0 TastePage.qml
+QueuePage 1.0 QueuePage.qml
+MusicSettingsPage 1.0 MusicSettingsPage.qml
+MiniSlider 1.0 MiniSlider.qml
+Card 1.0 Card.qml
+ArtistPage 1.0 ArtistPage.qml
+ArtistLink 1.0 ArtistLink.qml

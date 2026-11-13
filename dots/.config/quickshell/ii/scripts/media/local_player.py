@@ -824,9 +824,24 @@ class LocalPlayerDaemon:
             self._stopping = True
             GLib.idle_add(self.loop.quit)
 
+    # A daemon whose session has been paused or stopped this long ends: nothing is using it, and a
+    # living one keeps an MPRIS player (and an mpv) on the bus for every other app to list.
+    IDLE_EXIT_SECONDS = 600.0
+
     def _tick(self) -> bool:
         if self._stopping:
             return False
+        if self.daemon_mode:
+            now = time.monotonic()
+            if self._playback_status == "Playing":
+                self._idle_since = None
+            elif getattr(self, "_idle_since", None) is None:
+                self._idle_since = now
+            elif now - self._idle_since > self.IDLE_EXIT_SECONDS:
+                self._stopping = True
+                if self.loop is not None:
+                    GLib.idle_add(self.loop.quit)
+                return False
         with self._state_lock:
             changed = self._refresh_state_unlocked()
         if changed:
