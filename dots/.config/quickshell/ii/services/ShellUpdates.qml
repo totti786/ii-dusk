@@ -190,7 +190,7 @@ Singleton {
         // Array form, so a home directory with a space in it cannot break the
         // command apart the way a single shell string would.
         const cmd = terminal.split(" ").filter(part => part.length > 0);
-        cmd.push("-e", "bash", "-c", 'if [ ! -f "$1" ]; then ' + 'printf "Update script not found:\\n  %s\\n\\n[Press Enter to close] " "$1"; read -r; exit 1; fi; ' + 'script="$1"; shift; bash "$script" "$@"; ' + 'printf "\\n[Press Enter to close] "; read -r', "ii-update", root.setupScript, ...args);
+        cmd.push("-e", "bash", "-c", 'if [ ! -f "$1" ]; then ' + 'printf "Fetching the updater (first run)...\\n"; mkdir -p "$(dirname "$1")" && curl -fsSL "https://raw.githubusercontent.com/totti786/ii-dusk/main/setup-ii-dusk.sh" -o "$1.tmp" && mv "$1.tmp" "$1"; fi; ' + 'if [ ! -f "$1" ]; then printf "Update script not found and could not be downloaded:\\n  %s\\n\\n[Press Enter to close] " "$1"; read -r; exit 1; fi; ' + 'script="$1"; shift; bash "$script" "$@"; ' + 'printf "\\n[Press Enter to close] "; read -r', "ii-update", root.setupScript, ...args);
         Quickshell.execDetached(cmd);
     }
 
