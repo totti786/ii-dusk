@@ -12,6 +12,4 @@ your own books-cli checkout (its `rust/` crate):
 scripts/build-books-rs.sh /path/to/books-cli
 ```
 
-or point `BOOKS_RS_BIN` at an existing binary. `books.pyz` is the older Python form of the same
-backend (`scripts/build-books-zipapp.sh`, or `BOOKS_CLI_PYZ`) and is used only when `books-rs` is
-missing. Without either, the Books app shows that it is missing.
+or point `BOOKS_RS_BIN` at an existing binary. Without it the Books app shows that it is missing.
