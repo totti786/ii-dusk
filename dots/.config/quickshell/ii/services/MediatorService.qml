@@ -18,12 +18,33 @@ Singleton {
 
     signal providerStreamStarted()
 
-    // The shipped shell carries its own backend at scripts/mediator (a zipapp under
-    // vendor/). Packagers can point at a system mediator with mediator.binary.
+    // The shipped shell carries its own backend: scripts/mediator launches the Rust binary
+    // scripts/mediatorRs/mediator-rs, compiled on demand from the source beside it. Packagers
+    // can point at a system mediator with mediator.binary.
     readonly property string binary: {
         const custom = String(Config.options?.mediator?.binary ?? "").trim();
         return custom !== "" ? custom : Quickshell.shellPath("scripts/mediator");
     }
+
+    // The backend is compiled here, not shipped. With neither the built binary nor an older
+    // vendor/ copy present, the first use builds it (cargo needed); progress and the Rebuild
+    // button live in Settings > About > Compiled components. A failed build is not retried on
+    // its own.
+    readonly property RustHelperBuild backendBuild: RustHelperBuild {
+        label: "Mediator"
+        sourceDir: Quickshell.shellPath("scripts/mediatorRs/mediator-rs_src")
+        crateName: "mediator-rs"
+        onCargoAvailableChanged: root.ensureBackend()
+    }
+    Process {
+        id: backendCheck
+        command: ["bash", "-c", 'test -x "$1" || test -x "$2"', "check", Quickshell.shellPath("scripts/mediatorRs/mediator-rs"), Quickshell.shellPath("vendor/mediator-rs")]
+        onExited: code => {
+            if (code !== 0 && root.backendBuild.cargoAvailable && !root.backendBuild.building && root.backendBuild.buildResult !== "failed" && String(Config.options?.mediator?.binary ?? "").trim() === "")
+                root.backendBuild.build();
+        }
+    }
+    function ensureBackend(): void { backendCheck.running = true; }
 
     // The private, last successful carousel survives closing Mediator and shell restarts.
     property var continueSnapshot: []
@@ -448,6 +469,7 @@ Singleton {
     }
 
     Component.onCompleted: {
+        root.ensureBackend();
         root.preloadContinueCache();
         root.nativeWasActive = root.nativeActive;
         Qt.callLater(root.loadNativeState);
