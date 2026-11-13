@@ -1,0 +1,9 @@
+module qs.modules.ii.downloads
+
+DownloadsApp 1.0 DownloadsApp.qml
+DownloadsContent 1.0 DownloadsContent.qml
+DownloadsWindow 1.0 DownloadsWindow.qml
+DownloadPage 1.0 DownloadPage.qml
+DownloadsSettingsPage 1.0 DownloadsSettingsPage.qml
+JobsPage 1.0 JobsPage.qml
+JobCard 1.0 JobCard.qml

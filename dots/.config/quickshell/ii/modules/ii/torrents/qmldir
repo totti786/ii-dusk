@@ -1,0 +1,15 @@
+module qs.modules.ii.torrents
+
+TorrentsApp 1.0 TorrentsApp.qml
+TorrentsContent 1.0 TorrentsContent.qml
+TorrentsWindow 1.0 TorrentsWindow.qml
+TorrentsPage 1.0 TorrentsPage.qml
+TorrentRow 1.0 TorrentRow.qml
+TorrentContextMenu 1.0 TorrentContextMenu.qml
+TorrentMenuItem 1.0 TorrentMenuItem.qml
+TorrentMenuRule 1.0 TorrentMenuRule.qml
+TorrentSortMenu 1.0 TorrentSortMenu.qml
+TorrentsAddPage 1.0 TorrentsAddPage.qml
+TorrentsSettingsPage 1.0 TorrentsSettingsPage.qml
+TorrentDetailPage 1.0 TorrentDetailPage.qml
+TorrentsSearchPage 1.0 TorrentsSearchPage.qml

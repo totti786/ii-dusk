@@ -1,0 +1,5 @@
+module qs.modules.ii.imageViewer
+
+ImageViewerApp 1.0 ImageViewerApp.qml
+ImageViewerWindow 1.0 ImageViewerWindow.qml
+ImageViewerContent 1.0 ImageViewerContent.qml

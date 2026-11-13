@@ -1,0 +1,7 @@
+module qs.modules.ii.textEditor
+
+CodeView 1.0 CodeView.qml
+FindBar 1.0 FindBar.qml
+EditorContent 1.0 EditorContent.qml
+EditorWindow 1.0 EditorWindow.qml
+EditorApp 1.0 EditorApp.qml

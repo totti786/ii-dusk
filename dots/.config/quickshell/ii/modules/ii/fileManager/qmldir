@@ -1,0 +1,33 @@
+module qs.modules.ii.fileManager
+
+ActionsEditor 1.0 ActionsEditor.qml
+BulkRenameDialog 1.0 BulkRenameDialog.qml
+ConflictDialog 1.0 ConflictDialog.qml
+FileBackend 1.0 FileBackend.qml
+FileGridView 1.0 FileGridView.qml
+FileIcon 1.0 FileIcon.qml
+FileListView 1.0 FileListView.qml
+FileManagerApp 1.0 FileManagerApp.qml
+FileManagerContent 1.0 FileManagerContent.qml
+FileManagerWindow 1.0 FileManagerWindow.qml
+FilePreview 1.0 FilePreview.qml
+FileSidebar 1.0 FileSidebar.qml
+FileTabs 1.0 FileTabs.qml
+FileToolbar 1.0 FileToolbar.qml
+FmButton 1.0 FmButton.qml
+FmChip 1.0 FmChip.qml
+FmDialog 1.0 FmDialog.qml
+FmField 1.0 FmField.qml
+FmIconButton 1.0 FmIconButton.qml
+FmMenu 1.0 FmMenu.qml
+OpenWithDialog 1.0 OpenWithDialog.qml
+PathBar 1.0 PathBar.qml
+PromptDialog 1.0 PromptDialog.qml
+PropertiesDialog 1.0 PropertiesDialog.qml
+TransferPanel 1.0 TransferPanel.qml
+SearchFilters 1.0 SearchFilters.qml
+ChecksumDialog 1.0 ChecksumDialog.qml
+DiskUsageDialog 1.0 DiskUsageDialog.qml
+CompareDialog 1.0 CompareDialog.qml
+FolderPickerDialog 1.0 FolderPickerDialog.qml
+DuplicatesDialog 1.0 DuplicatesDialog.qml
