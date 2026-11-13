@@ -136,14 +136,14 @@ Item {
             target: iconShape
             property: "scale"
             to: 1.25
-            duration: 120
+            duration: Appearance.dur(120)
             easing.type: Easing.OutQuad
         }
         NumberAnimation {
             target: iconShape
             property: "scale"
             to: 1.0
-            duration: 220
+            duration: Appearance.dur(220)
             easing.type: Easing.OutBack
         }
     }
@@ -225,7 +225,7 @@ Item {
                         color: ModeUi.accent(root.colorKey)
 
                         SequentialAnimation on opacity {
-                            running: Modes.active && root.isExpanded
+                            running: (Modes.active && root.isExpanded) && !Appearance.motionOff
                             loops: Animation.Infinite
                             NumberAnimation { from: 1.0; to: 0.35; duration: 800; easing.type: Easing.InOutSine }
                             NumberAnimation { from: 0.35; to: 1.0; duration: 800; easing.type: Easing.InOutSine }

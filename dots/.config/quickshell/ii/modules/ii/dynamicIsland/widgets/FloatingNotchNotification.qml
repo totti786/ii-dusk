@@ -59,7 +59,7 @@ Item {
 
     SequentialAnimation {
         id: pulseAnimation
-        running: root.isUrgent
+        running: (root.isUrgent) && !Appearance.motionOff
         loops: Animation.Infinite
         NumberAnimation {
             target: root
@@ -263,7 +263,7 @@ Item {
 
         scale: root.isUrgent ? 1.0 + root.pulseOpacity * 0.08 : 1.0
         Behavior on scale {
-            NumberAnimation { duration: 200; easing.type: Easing.OutQuad }
+            NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutQuad }
         }
     }
 

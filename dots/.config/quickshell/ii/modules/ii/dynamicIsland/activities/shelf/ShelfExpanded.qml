@@ -146,6 +146,7 @@ Item {
 
         // ── ShelfPanel Body (Same as dock popup) ─────────────────────────────
         Flickable {
+            WheelScroll {}
             Layout.fillWidth: true
             implicitHeight: Math.min(380, shelfPanel.implicitHeight)
             contentHeight: shelfPanel.implicitHeight

@@ -137,7 +137,7 @@ Scope {
      * agent asking for approval is not a side glance and takes the island.
      */
     readonly property var sideActivities: ["media", "ai", "recording", "timer", "mode", "update", "earbuds", "weather", "batteryGlance",
-        "reminderSoon", "privacy", "discordVoice", "phoneMirror", "phoneLink", "phoneCall", "sports", "phoneLive", "systemTray", "easyEffects"]
+        "reminderSoon", "privacy", "discordVoice", "phoneMirror", "phoneLink", "phoneCall", "sports", "phoneLive", "systemTray", "easyEffects", "soundscapes", "quickShare", "monitorAlert"]
 
     /** The resting face's height: what the clock face is sized to, never the live height. */
     readonly property real restingHeight: (root.pillShape && root.centerInBar)
@@ -2210,8 +2210,8 @@ Scope {
                 bodyWidth: notchBody.bodyWidth * container.scale
                 bodyHeight: notchBody.height * container.scale
                 bodyRadius: notchBody.bodyRadius * container.scale
-                reservedRight: container.x + container.width / 2 + IslandGeometry.centerWidth / 2
-                reservedLeft: container.x + container.width / 2 - IslandGeometry.centerWidth / 2
+                reservedRight: container.x + container.width / 2 + (IslandGeometry.centerWidth ?? 0) / 2
+                reservedLeft: container.x + container.width / 2 - (IslandGeometry.centerWidth ?? 0) / 2
                 surfaceColor: notchBody.color
                 shadowEnabled: notchBody.layer.enabled
                 cutAtEdge: root.sculptedFlare
@@ -2489,7 +2489,7 @@ Scope {
             Behavior on y {
                 enabled: !root.centerInBar
                 NumberAnimation {
-                    duration: 330
+                    duration: Appearance.dur(330)
                     easing.type: Easing.OutBack
                     easing.overshoot: root.hidden ? 0.9 : 0.3
                 }

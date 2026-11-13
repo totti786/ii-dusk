@@ -72,7 +72,7 @@ Item {
     // ── Balance ──────────────────────────────────────────────────────────────
     /** Who is seated first when several arrive together. */
     readonly property var sideOrder: ["media", "phoneCall", "privacy", "discordVoice", "phoneMirror", "phoneLink", "sports", "phoneLive", "ai", "recording", "timer", "mode", "update", "earbuds", "weather",
-        "batteryGlance", "reminderSoon", "easyEffects"]  // media brings "mediaViz"
+        "batteryGlance", "reminderSoon", "easyEffects", "soundscapes", "quickShare", "monitorAlert"]  // media brings "mediaViz"
     /** Each end's widgets, from the island's edge inwards. */
     property var leftIds: []
     property var rightIds: []
@@ -126,6 +126,9 @@ Item {
         case "mode": return face.glanceSize;
         case "update": return face.glanceSize;
         case "easyEffects": return face.glanceSize;
+        case "soundscapes": return soundscapesGlance.preferredWidth;
+        case "quickShare": return face.glanceSize;
+        case "monitorAlert": return face.glanceSize;
         case "earbuds": return earbudsGlance.implicitWidth;
         case "weather": return weatherGlance.implicitWidth;
         case "reminderSoon": return reminderGlance.implicitWidth;
@@ -134,7 +137,7 @@ Item {
         case "phoneCall": return callGlance.implicitWidth;
         case "sports": return sportsGlance.implicitWidth;
         case "phoneLive": return phoneLiveGlance.implicitWidth;
-        case "discordVoice": return face.glanceSize;
+        case "discordVoice": return discordGlance.preferredWidth;
         case "phoneMirror": return phoneMirrorGlance.preferredWidth;
         case "phoneLink": return phoneLinkGlance.preferredWidth;
         }
@@ -156,7 +159,7 @@ Item {
         for (let i = 0; i < ids.length; i++) {
             if (face.isPresent(ids[i]))
                 return (ids[i] === "media" || ids[i] === "mediaViz" || ids[i] === "ai" || ids[i] === "mode" || ids[i] === "update"
-                    || ids[i] === "discordVoice" || ids[i] === "phoneMirror" || ids[i] === "easyEffects")
+                    || ids[i] === "phoneMirror" || ids[i] === "easyEffects" || ids[i] === "soundscapes" || ids[i] === "quickShare" || ids[i] === "monitorAlert")
                     ? face.endPadding : face.textEndPadding;
         }
         // Nothing at this end: the clock is outermost here, and it is text.
@@ -194,6 +197,9 @@ Item {
         case "mode": return modeSlot;
         case "update": return updateSlot;
         case "easyEffects": return easyEffectsSlot;
+        case "soundscapes": return soundscapesSlot;
+        case "quickShare": return quickShareSlot;
+        case "monitorAlert": return monitorAlertSlot;
         case "earbuds": return earbudsSlot;
         case "weather": return weatherSlot;
         case "reminderSoon": return reminderSlot;
@@ -520,6 +526,83 @@ Item {
                 EasyEffects.cyclePreset(wheelDelta > 0 ? -1 : 1);
                 wheelDelta = 0;
             }
+        }
+    }
+
+    // A soundscape mix: the lead sound, breathing while it plays, and the sleep timer's
+    // time left when one runs. A click pauses or resumes, a scroll sets the volume.
+    SideSlot {
+        id: soundscapesSlot
+        sideId: "soundscapes"
+        contentWidth: soundscapesGlance.preferredWidth
+
+        AuxiliaryBubbleContent {
+            id: soundscapesGlance
+            anchors.verticalCenter: parent.verticalCenter
+            width: soundscapesGlance.preferredWidth
+            activityId: face.isPresent("soundscapes") ? "soundscapes" : ""
+            diameter: face.glanceSize
+            glanceOnly: true
+            interactive: false
+        }
+
+        MouseArea {
+            property real wheelDelta: 0
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: SoundscapesService.togglePlay()
+            onWheel: wheel => {
+                wheelDelta += wheel.angleDelta.y;
+                if (Math.abs(wheelDelta) < 40)
+                    return;
+                SoundscapesService.setMaster(Math.max(0, Math.min(1, SoundscapesService.master + (wheelDelta > 0 ? 0.05 : -0.05))));
+                wheelDelta = 0;
+            }
+        }
+    }
+
+    // Quick Share: the phone glyph, rippling while the PC is visible. A click opens its window.
+    SideSlot {
+        id: quickShareSlot
+        sideId: "quickShare"
+        contentWidth: face.glanceSize
+
+        AuxiliaryBubbleContent {
+            id: quickShareGlance
+            anchors.verticalCenter: parent.verticalCenter
+            width: face.glanceSize
+            activityId: face.isPresent("quickShare") ? "quickShare" : ""
+            diameter: face.glanceSize
+            glanceOnly: true
+            interactive: false
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: GlobalStates.openQuickShareApp()
+        }
+    }
+
+    // CPU or memory held high: the alert disc. A click opens the monitor.
+    SideSlot {
+        id: monitorAlertSlot
+        sideId: "monitorAlert"
+        contentWidth: face.glanceSize
+
+        AuxiliaryBubbleContent {
+            anchors.verticalCenter: parent.verticalCenter
+            width: face.glanceSize
+            activityId: face.isPresent("monitorAlert") ? "monitorAlert" : ""
+            diameter: face.glanceSize
+            glanceOnly: true
+            interactive: false
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: GlobalStates.openMonitorApp("")
         }
     }
 
@@ -861,16 +944,17 @@ Item {
         }
     }
 
-    // A Discord call: whoever is talking, the headcount, a red ring while muted. A click
-    // is the mute key, the one thing worth doing to a call without opening anything.
+    // A Discord call: headset state and headcount, with a speaking or muted outline. A
+    // click is the mute key, the one thing worth doing to a call without opening anything.
     SideSlot {
         id: discordSlot
         sideId: "discordVoice"
-        contentWidth: face.glanceSize
+        contentWidth: discordGlance.preferredWidth
 
         AuxiliaryBubbleContent {
+            id: discordGlance
             anchors.verticalCenter: parent.verticalCenter
-            width: face.glanceSize
+            width: discordGlance.preferredWidth
             activityId: face.isPresent("discordVoice") ? "discordVoice" : ""
             diameter: face.glanceSize
             glanceOnly: true
@@ -879,7 +963,7 @@ Item {
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: DiscordVoice.setMuted(!DiscordVoice.muted)
+            onClicked: DiscordVoiceActivity.setMuted(!DiscordVoiceActivity.muted)
         }
     }
 
@@ -944,4 +1028,3 @@ Item {
     }
 
 }
-

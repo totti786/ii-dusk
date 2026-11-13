@@ -52,7 +52,7 @@ Item {
                 color: root.phase === "failed" ? Appearance.colors.colOnLayer2 : Appearance.colors.colOnPrimary
 
                 SequentialAnimation on opacity {
-                    running: root.listening && root.visible && root.Window.window !== null
+                    running: (root.listening && root.visible && root.Window.window !== null) && !Appearance.motionOff
                     loops: Animation.Infinite
                     alwaysRunToEnd: true
                     NumberAnimation { to: 0.35; duration: 700; easing.type: Easing.InOutSine }

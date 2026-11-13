@@ -13,21 +13,21 @@ import qs.modules.ii.dynamicIsland.core
  * folds back - but only a join that happens while the shell watches: a reload mid-call,
  * or the bridge reconnecting, reports the channel it finds and is not a join.
  *
- * DiscordVoice is a Python bridge that retries Discord's RPC socket every few seconds,
- * so merely reading it would start that for everyone with the island on, Discord or
- * not. The service is only touched once a Discord client has had a window this session;
- * after that it stays, as it does for the overlay.
+ * The activity facade keeps the standalone Discordo helper separate from the legacy
+ * Discord/Vesktop bridge. The latter is only touched once a Discord client has had a
+ * window this session; joining Discordo Voice is already an explicit user action.
  */
 ContinuousSource {
     id: source
 
     activityId: "discordVoice"
 
-    // ── Only once Discord is around ─────────────────────────────────────────
-    readonly property bool armed: source.allowed && GlobalStates.discordClientSeen
+    // ── Arm for either explicit standalone voice or an observed desktop client ─
+    readonly property bool armed: source.allowed
+        && (GlobalStates.discordClientSeen || DiscordVoiceActivity.standaloneJoined)
 
-    condition: source.armed && DiscordVoice.inVoice
-    payload: source.armed ? DiscordVoice.channel : null
+    condition: source.armed && DiscordVoiceActivity.inVoice
+    payload: source.armed ? DiscordVoiceActivity.channel : null
 
     // ── Joining is news once ────────────────────────────────────────────────
     /** How long "Joined General" holds the centre. */
@@ -44,7 +44,8 @@ ContinuousSource {
     property double _authenticatedAt: 0
     property string _channelId: ""
 
-    readonly property string status: source.armed ? DiscordVoice.status : ""
+    readonly property string status: source.armed ? DiscordVoiceActivity.status : ""
+    property bool _initialised: false
     onStatusChanged: {
         if (source.status === "authenticated")
             source._authenticatedAt = Date.now();
@@ -52,6 +53,8 @@ ContinuousSource {
 
     onPayloadChanged: {
         const id = String(source.payload?.id ?? "");
+        if (!source._initialised)
+            return;
         if (id === source._channelId)
             return;
         source._channelId = id;
@@ -80,5 +83,15 @@ ContinuousSource {
             else
                 source.announcing = false;
         }
+    }
+
+    Component.onCompleted: {
+        source._initialised = true;
+        source._channelId = String(source.payload?.id ?? "");
+        // The first snapshot may be a call that predates this shell instance.
+        // Give the desktop bridge the same baseline quiet period as before and
+        // keep a restored standalone call quiet as well.
+        if (source._channelId.length > 0)
+            source._authenticatedAt = Date.now();
     }
 }

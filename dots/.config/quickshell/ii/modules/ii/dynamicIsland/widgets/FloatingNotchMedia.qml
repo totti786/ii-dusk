@@ -12,6 +12,7 @@ import qs.modules.common.widgets
 import qs.modules.common.functions
 import qs.modules.common.models
 import qs.services
+import "../../mediaControls"
 import Qt5Compat.GraphicalEffects
 
 Item {
@@ -242,7 +243,7 @@ Item {
 
     Behavior on artVignetteBlur {
         NumberAnimation {
-            duration: 500
+            duration: Appearance.dur(500)
             easing.type: Easing.OutCubic
         }
     }
@@ -327,13 +328,13 @@ Item {
 
     ParallelAnimation {
         id: expandAnim
-        NumberAnimation { target: contractedLayout; property: "opacity"; to: 0.0; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-        NumberAnimation { target: contractedLayout; property: "scale"; to: 0.95; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-        NumberAnimation { target: expandedBg; property: "opacity"; to: 1.0; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-        NumberAnimation { target: expandedBg; property: "scale"; to: 1.0; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-        NumberAnimation { target: expandedLayout; property: "opacity"; to: 1.0; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-        NumberAnimation { target: expandedLayout; property: "scale"; to: 1.0; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-        NumberAnimation { target: root; property: "_contractScale"; to: 1.0; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+        NumberAnimation { target: contractedLayout; property: "opacity"; to: 0.0; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+        NumberAnimation { target: contractedLayout; property: "scale"; to: 0.95; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+        NumberAnimation { target: expandedBg; property: "opacity"; to: 1.0; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+        NumberAnimation { target: expandedBg; property: "scale"; to: 1.0; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+        NumberAnimation { target: expandedLayout; property: "opacity"; to: 1.0; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+        NumberAnimation { target: expandedLayout; property: "scale"; to: 1.0; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+        NumberAnimation { target: root; property: "_contractScale"; to: 1.0; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
     }
 
     SequentialAnimation {
@@ -351,13 +352,13 @@ Item {
         // 500ms cross-fade + whole-widget scale matching the dynamic island's container animation.
         // expanded scales down + fades out, contracted scales down + fades in, root shrinks.
         ParallelAnimation {
-            NumberAnimation { target: expandedBg; property: "opacity"; to: 0.0; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-            NumberAnimation { target: expandedBg; property: "scale"; to: 1.0 / root._effectiveExpandContractRatio; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-            NumberAnimation { target: expandedLayout; property: "opacity"; to: 0.0; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-            NumberAnimation { target: expandedLayout; property: "scale"; to: 0.95; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-            NumberAnimation { target: contractedLayout; property: "opacity"; to: 1.0; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-            NumberAnimation { target: contractedLayout; property: "scale"; to: 1.0; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-            NumberAnimation { target: root; property: "_contractScale"; to: 1.0; duration: 500; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+            NumberAnimation { target: expandedBg; property: "opacity"; to: 0.0; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+            NumberAnimation { target: expandedBg; property: "scale"; to: 1.0 / root._effectiveExpandContractRatio; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+            NumberAnimation { target: expandedLayout; property: "opacity"; to: 0.0; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+            NumberAnimation { target: expandedLayout; property: "scale"; to: 0.95; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+            NumberAnimation { target: contractedLayout; property: "opacity"; to: 1.0; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+            NumberAnimation { target: contractedLayout; property: "scale"; to: 1.0; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+            NumberAnimation { target: root; property: "_contractScale"; to: 1.0; duration: Appearance.dur(500); easing.type: Easing.OutBack; easing.overshoot: 0.5 }
         }
     }
 
@@ -380,14 +381,14 @@ Item {
             property: "lyricYOffset"
             from: 15
             to: 0.0
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
             target: root
             property: "lyricOpacity"
             to: 1.0
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.OutCubic
         }
     }
@@ -406,14 +407,14 @@ Item {
                 target: root
                 property: "artOutgoingBlur"
                 to: 30
-                duration: 300
+                duration: Appearance.dur(300)
                 easing.type: Easing.OutQuad
             }
             NumberAnimation {
                 target: root
                 property: "artOutgoingScale"
                 to: 1.05
-                duration: 300
+                duration: Appearance.dur(300)
                 easing.type: Easing.OutQuad
             }
         }
@@ -434,14 +435,14 @@ Item {
                 target: root
                 property: "artIncomingBlur"
                 to: 0
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.OutCubic
             }
             NumberAnimation {
                 target: root
                 property: "artIncomingScale"
                 to: 1.0
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.OutExpo
             }
         }
@@ -532,14 +533,14 @@ Item {
                 target: root
                 property: "titleOpacity"
                 to: 0.0
-                duration: 150
+                duration: Appearance.dur(150)
                 easing.type: Easing.OutQuad
             }
             NumberAnimation {
                 target: root
                 property: "titleYOffset"
                 to: -24
-                duration: 150
+                duration: Appearance.dur(150)
                 easing.type: Easing.OutQuad
             }
         }
@@ -563,14 +564,14 @@ Item {
                 target: root
                 property: "titleOpacity"
                 to: 1.0
-                duration: 220
+                duration: Appearance.dur(220)
                 easing.type: Easing.OutCubic
             }
             NumberAnimation {
                 target: root
                 property: "titleYOffset"
                 to: 0.0
-                duration: 220
+                duration: Appearance.dur(220)
                 easing.type: Easing.OutCubic
             }
         }
@@ -647,7 +648,11 @@ Item {
         if (root.inBubbleCard)
             root.snapExpanded();
         root._initialized = true;
+        // Passive: attaches to a Syncplay session that exists, never starts one.
+        if (Config.options.syncplay?.enable ?? true)
+            SyncplayService.watch();
     }
+    Component.onDestruction: if (Config.options.syncplay?.enable ?? true) SyncplayService.unwatch()
 
     // ==========================================
     // 1. CONTRACTED MODE (album-art full background)
@@ -883,7 +888,7 @@ Item {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 400
+                    duration: Appearance.dur(400)
                     easing.type: Easing.OutQuad
                 }
             }
@@ -906,7 +911,7 @@ Item {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 500
+                        duration: Appearance.dur(500)
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -1030,7 +1035,7 @@ Item {
         y: root.inBubbleCard ? 0 : -(root.widgetBg.height - root.height) / 2
         width: root.inBubbleCard ? root.width : root.widgetBg.width
         height: root.inBubbleCard ? root.height : root.widgetBg.height
-        visible: true
+        visible: !root.quranMode
         opacity: 0.0
         scale: 0.95
 
@@ -1236,7 +1241,7 @@ Item {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 400
+                    duration: Appearance.dur(400)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -1259,11 +1264,29 @@ Item {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 500
+                        duration: Appearance.dur(500)
                         easing.type: Easing.OutCubic
                     }
                 }
             }
+        }
+    }
+
+    /// The Quran player brings its own card instead of the generic music layout
+    readonly property bool quranMode: root.identity === "Quran" && GlobalStates.quranPlayer !== null
+
+    Loader {
+        id: quranCard
+        active: root.quranMode
+        anchors.fill: parent
+        z: 2
+        opacity: expandedLayout.opacity
+        scale: expandedLayout.scale
+        visible: root.quranMode
+        sourceComponent: QuranMediaCard {
+            player: root.player
+            embedded: true
+            radius: 0
         }
     }
 
@@ -1287,7 +1310,7 @@ Item {
             return (p && p.activeWidgetsList.length > 1) ? 4 : 8;
         }
         spacing: 6
-        visible: true
+        visible: !root.quranMode
         opacity: 0.0
         scale: 0.95
 
@@ -1334,6 +1357,53 @@ Item {
 
             Item {
                 Layout.fillWidth: true
+            }
+
+            // A Syncplay room you are in: who is watching and whether everyone is ready.
+            // Opens the room window. Only there while connected.
+            RippleButton {
+                id: roomPill
+                visible: SyncplayService.connected
+                implicitHeight: 24
+                leftPadding: 8
+                rightPadding: 8
+                Layout.alignment: Qt.AlignTop
+                colBackground: root.containerFillColor
+                colBackgroundHover: ColorUtils.mix(root.containerFillColor, root.containerContentColor, 0.9)
+                colBackgroundActive: ColorUtils.mix(root.containerFillColor, root.containerContentColor, 0.8)
+                colRipple: ColorUtils.applyAlpha(root.containerContentColor, 0.2)
+                buttonRadius: Appearance.rounding.full
+
+                readonly property int total: SyncplayService.roomUsers.length
+                readonly property int ready: SyncplayService.roomUsers.filter(u => u.ready).length
+                readonly property var notReady: SyncplayService.roomUsers.filter(u => !u.ready).map(u => u.name)
+
+                onClicked: GlobalStates.openSyncplayApp()
+
+                contentItem: RowLayout {
+                    spacing: 4
+
+                    MaterialSymbol {
+                        text: "group"
+                        fill: 1
+                        iconSize: Appearance.font.pixelSize.smallest
+                        color: root.containerContentColor
+                    }
+                    StyledText {
+                        text: roomPill.ready === roomPill.total
+                            ? String(roomPill.total)
+                            : Translation.tr("%1 · %2/%1 ready").arg(roomPill.total).arg(roomPill.ready)
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.bold: true
+                        color: root.containerContentColor
+                    }
+                }
+
+                StyledToolTip {
+                    text: roomPill.notReady.length > 0
+                        ? Translation.tr("%1 · waiting for %2").arg(SyncplayService.room).arg(roomPill.notReady.join(", "))
+                        : Translation.tr("%1 · everyone is ready").arg(SyncplayService.room)
+                }
             }
 
             // Audio output device pill (headphones/speaker)
@@ -1431,7 +1501,7 @@ Item {
                             target: expandedLyricsContainer
                             property: "scrollOffset"
                             to: 0
-                            duration: 400
+                            duration: Appearance.dur(400)
                             easing.type: Easing.OutQuart
                         }
 

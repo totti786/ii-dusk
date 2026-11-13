@@ -239,7 +239,7 @@ Item {
                 Behavior on color {
                     animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
                 }
-                Behavior on scale { NumberAnimation { duration: 150 } }
+                Behavior on scale { NumberAnimation { duration: Appearance.dur(150) } }
 
                 RowLayout {
                     anchors.centerIn: parent
@@ -322,7 +322,7 @@ Item {
                 Behavior on color {
                     animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
                 }
-                Behavior on scale { NumberAnimation { duration: 150 } }
+                Behavior on scale { NumberAnimation { duration: Appearance.dur(150) } }
 
                 RowLayout {
                     anchors.centerIn: parent

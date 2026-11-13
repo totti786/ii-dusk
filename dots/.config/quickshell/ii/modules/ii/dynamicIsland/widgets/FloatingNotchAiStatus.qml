@@ -349,7 +349,7 @@ Item {
                                         // finished turn that keeps twitching reads as
                                         // still working, and it costs frames for nothing.
                                         SequentialAnimation on height {
-                                            running: root.isExpanded && root.busyStates.indexOf(modelData.state) !== -1
+                                            running: (root.isExpanded && root.busyStates.indexOf(modelData.state) !== -1) && !Appearance.motionOff
                                             loops: Animation.Infinite
                                             NumberAnimation { from: 3; to: 9; duration: 250 + index * 80; easing.type: Easing.InOutQuad }
                                             NumberAnimation { from: 9; to: 3; duration: 250 + index * 80; easing.type: Easing.InOutQuad }

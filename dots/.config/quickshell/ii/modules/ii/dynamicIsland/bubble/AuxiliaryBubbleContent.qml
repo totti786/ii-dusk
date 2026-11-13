@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell.Hyprland
+import Quickshell.Widgets
 import qs
 import qs.services
 import qs.modules.common
@@ -13,6 +14,7 @@ import qs.modules.ii.bar.widgets.media
 import qs.modules.ii.bar.widgets.indicators
 import qs.modules.ii.bar.widgets.timer
 import qs.modules.ii.modes
+import qs.modules.ii.soundscapes.components
 
 /**
  * What an auxiliary bubble shows: a glance at an activity, never the activity itself.
@@ -34,11 +36,14 @@ import qs.modules.ii.modes
  *               countdown, or the stopwatch); paused, it folds to the marker alone
  *   update      the update glyph, with how many commits behind in the corner
  *   privacy     one glyph per sensor held, in the phones' colours
- *   discordVoice  whoever is talking (else yourself) in a ring that lights while
- *               anyone talks and turns red while you are muted, with the headcount
+ *   discordVoice  the headset or microphone state in a compact pill, with the
+ *               headcount and a speaking or muted outline
  *   phoneLink   the phone's camera and/or microphone glyph while they stream here
  *   systemTray  the tray's own chevron, the count of programs in a badge
  *   easyEffects the loaded preset's glyph, dimmed while bypassed; a scroll switches preset
+ *   soundscapes the lead sound of the ambient mix in its group's tone, rippling while it plays,
+ *               a pause badge when it does not; a sleep timer widens it into a pill with the
+ *               time left. A scroll sets the volume
  *   earbuds     the connected headset's glyph inside a ring that is its battery,
  *               error-coloured at 15 % and below
  *   btPhone     the same for a phone connected over Bluetooth
@@ -112,6 +117,7 @@ Item {
         id: badge
         required property real diameter
         property string label: ""
+        property string glyph: ""
 
         readonly property real reach: Math.max(0, badge.diameter / 2 - badge.height / 2 - 1) / Math.SQRT2
 
@@ -122,9 +128,19 @@ Item {
         radius: badge.height / 2
         color: Appearance.colors.colPrimary
 
+        MaterialSymbol {
+            anchors.centerIn: parent
+            visible: badge.glyph !== ""
+            text: badge.glyph
+            iconSize: 11
+            fill: 1
+            color: Appearance.colors.colOnPrimary
+        }
+
         StyledText {
             id: badgeText
             anchors.centerIn: parent
+            visible: badge.glyph === ""
             text: badge.label
             font.pixelSize: Appearance.font.pixelSize.smallest
             font.weight: Font.Bold
@@ -138,10 +154,12 @@ Item {
         sourceComponent: {
             switch (root.activityId) {
             case "media": return mediaGlance;
+            case "mediator": return mediatorGlance;
             case "workspaces": return workspaceGlance;
             case "ai": return aiGlance;
             case "dictation": return dictationGlance;
             case "recording": return recordingGlance;
+            case "audioRecording": return audioRecordingGlance;
             case "timer": return timerGlance;
             case "mode": return modeGlance;
             case "update": return updateGlance;
@@ -152,6 +170,12 @@ Item {
             case "shelf": return shelfGlance;
             case "systemTray": return systemTrayGlance;
             case "easyEffects": return easyEffectsGlance;
+            case "soundscapes": return soundscapesGlance;
+            case "quickShare": return quickShareGlance;
+            case "progress": return progressGlance;
+            case "monitorAlert": return monitorAlertGlance;
+            case "focus": return focusGlance;
+            case "prayer": return prayerGlance;
             case "earbuds": return earbudsGlance;
             case "btPhone": return phoneGlance;
             }
@@ -215,7 +239,17 @@ Item {
 
             // Only a pinned pill shows lyrics, so only then does the service need to fetch them.
             onPinnedChanged: if (media.pinned) LyricsService.initiliazeLyrics()
-            Component.onCompleted: if (media.pinned) LyricsService.initiliazeLyrics()
+
+            // A Syncplay room you are in rides on this bubble: the count of people watching.
+            // Watching only attaches to a session that exists; it never starts one.
+            readonly property bool inRoom: SyncplayService.connected
+            Component.onCompleted: {
+                if (media.pinned)
+                    LyricsService.initiliazeLyrics();
+                if (Config.options.syncplay?.enable ?? true)
+                    SyncplayService.watch();
+            }
+            Component.onDestruction: if (Config.options.syncplay?.enable ?? true) SyncplayService.unwatch()
 
             // Measured apart from the label: the label is laid out at the width this
             // decides, and measuring the label itself would loop.
@@ -309,6 +343,107 @@ Item {
                     iconSize: Math.round(root.diameter * 0.5)
                     color: Appearance.colors.colOnPrimary
                 }
+            }
+
+            CountBadge {
+                diameter: root.diameter
+                visible: media.inRoom && !root.glanceOnly
+                glyph: "group"
+                label: ""
+            }
+        }
+    }
+
+    // ── Native anime playback ───────────────────────────────────────────────
+    // Keep the anime player visually in the media family without reading MPRIS:
+    // its own worker state drives the ring, pause pill and expanded card.
+    Component {
+        id: mediatorGlance
+
+        Item {
+            id: mediator
+
+            readonly property bool active: MediatorService.nativeActive
+                && !MediatorService.nativePaused
+            readonly property bool paused: MediatorService.displayHasState
+                && (!MediatorService.nativeActive || MediatorService.nativePaused)
+            readonly property real buttonWidth: Math.round(root.diameter * 1.3)
+            readonly property real progress: Math.max(0, Math.min(1,
+                Number(MediatorService.nativeDuration) > 0
+                    ? Number(MediatorService.nativePosition) / Number(MediatorService.nativeDuration)
+                    : 0))
+            readonly property real preferredWidth: root.glanceOnly || !mediator.paused
+                ? root.diameter : root.diameter + mediator.buttonWidth + 4
+
+            // A Syncplay room you are in rides on this bubble too (Watch Together plays
+            // through the native player): the count of people watching.
+            Component.onCompleted: if (Config.options.syncplay?.enable ?? true) SyncplayService.watch()
+            Component.onDestruction: if (Config.options.syncplay?.enable ?? true) SyncplayService.unwatch()
+            readonly property real balanceWidth: 2 * root.diameter
+            readonly property string posterSource: MediatorService.posterUrl(MediatorService.displayState?.poster)
+            // Hand off the same poster item that the expanded card uses. The
+            // rim is chrome around this item and must not become the hero.
+            readonly property var heroItems: [animeRing.artItem]
+
+            Item {
+                id: animeDisc
+                width: root.diameter
+                height: root.diameter
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+
+                MediaRingVisual {
+                    id: animeRing
+                    anchors.centerIn: parent
+                    diameter: root.diameter - 4
+                    progress: mediator.progress
+                    chromeOpacity: 1 - Math.min(1, root.handOff / 0.2)
+                    artSource: mediator.posterSource
+                    icon: MediatorService.streamResolving ? "hourglass_top"
+                        : (mediator.active ? "play_circle" : "movie")
+                    primaryColor: Appearance.colors.colPrimary
+                    iconColor: mediator.active
+                        ? Appearance.colors.colOnPrimaryContainer : root.colText
+                }
+            }
+
+            RippleButton {
+                id: playButton
+                x: root.diameter
+                anchors.verticalCenter: parent.verticalCenter
+                width: mediator.buttonWidth
+                height: root.diameter - 8
+                enabled: root.interactive && mediator.paused && !root.glanceOnly
+                    && !MediatorService.streamResolving
+                    && !(MediatorService.streamBusy && !MediatorService.nativeActive)
+                readonly property real revealed: Math.max(0, Math.min(1,
+                    (root.revealedWidth - playButton.x - playButton.width * 0.3)
+                        / (playButton.width * 0.7)))
+                opacity: mediator.paused && !root.glanceOnly ? playButton.revealed : 0
+                scale: 0.85 + 0.15 * playButton.revealed
+                visible: opacity > 0
+                buttonRadius: Appearance.rounding.full
+                colBackground: Appearance.colors.colPrimary
+                colBackgroundHover: Appearance.colors.colPrimaryHover
+                colRipple: Appearance.colors.colPrimaryActive
+                onClicked: MediatorService.nativeActive
+                    ? MediatorService.nativeControl("toggle")
+                    : MediatorService.playRememberedNative()
+
+                contentItem: MaterialSymbol {
+                    anchors.centerIn: parent
+                    text: "play_arrow"
+                    fill: 1
+                    iconSize: Math.round(root.diameter * 0.5)
+                    color: Appearance.colors.colOnPrimary
+                }
+            }
+
+            CountBadge {
+                diameter: root.diameter
+                visible: SyncplayService.connected && !root.glanceOnly
+                glyph: "group"
+                label: ""
             }
         }
     }
@@ -407,7 +542,7 @@ Item {
                     // The microphone is open: the same breathing the bar's indicator has,
                     // and only while it is.
                     SequentialAnimation on opacity {
-                        running: DictationService.recording
+                        running: (DictationService.recording) && !Appearance.motionOff
                         loops: Animation.Infinite
                         NumberAnimation { from: 1.0; to: 0.45; duration: 700; easing.type: Easing.InOutSine }
                         NumberAnimation { from: 0.45; to: 1.0; duration: 700; easing.type: Easing.InOutSine }
@@ -457,6 +592,50 @@ Item {
                     pixelSize: Appearance.font.pixelSize.small
                     colText: root.colText
                     animate: !Appearance.reducedMotion
+                }
+            }
+        }
+    }
+
+    // ── Audio recording ──────────────────────────────────────────────────────
+    Component {
+        id: audioRecordingGlance
+
+        Item {
+            id: audioRec
+            readonly property int seconds: AudioRecorderService.elapsed
+            readonly property string timeText: {
+                const s = audioRec.seconds;
+                const hours = Math.floor(s / 3600);
+                const clock = String(Math.floor((s % 3600) / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+                return hours > 0 ? String(hours) + ":" + clock : clock;
+            }
+            readonly property real preferredWidth: row.implicitWidth + 2 * root.endPadding
+            readonly property var heroItems: [audioRecDot, audioRecTime]
+
+            Row {
+                id: row
+                anchors.centerIn: parent
+                spacing: 7
+
+                // A held take goes amber and dim; a running one is the saturated red.
+                Rectangle {
+                    id: audioRecDot
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 9
+                    height: 9
+                    radius: 4.5
+                    color: AudioRecorderService.paused ? Appearance.colors.colWarning : Appearance.colors.colErrorContainer
+                    opacity: AudioRecorderService.paused ? 0.65 : 1
+                }
+
+                RecordTimerText {
+                    id: audioRecTime
+                    anchors.verticalCenter: parent.verticalCenter
+                    value: audioRec.timeText
+                    pixelSize: Appearance.font.pixelSize.small
+                    colText: root.colText
+                    animate: !Appearance.reducedMotion && !AudioRecorderService.paused
                 }
             }
         }
@@ -651,86 +830,64 @@ Item {
 
         Item {
             id: discord
+            readonly property string stateGlyph: discord.muted
+                ? (DiscordVoiceActivity.deafened ? "headset_off" : "mic_off") : "headset_mic"
+            readonly property color stateColor: discord.muted ? Appearance.colors.colError
+                : Appearance.colors.colOnLayer2
             readonly property real preferredWidth: root.diameter
 
-            readonly property var participants: DiscordVoice.participants ?? []
+            readonly property var participants: DiscordVoiceActivity.participants ?? []
             readonly property bool anyoneSpeaking: discord.participants.some(user => user?.speaking === true)
-            readonly property bool muted: DiscordVoice.muted || DiscordVoice.deafened
+            readonly property bool muted: DiscordVoiceActivity.muted || DiscordVoiceActivity.deafened
             readonly property var speaker: {
                 const talking = discord.participants.find(user => user?.speaking === true);
-                if (talking)
-                    return talking;
-                const selfId = String(DiscordVoice.currentUser?.id ?? "");
-                return discord.participants.find(user => String(user?.id ?? "") === selfId)
+                const selfId = String(DiscordVoiceActivity.currentUser?.id ?? "");
+                return talking ?? discord.participants.find(user => String(user?.id ?? "") === selfId)
                     ?? discord.participants[0] ?? null;
             }
-            readonly property real ringWidth: Math.max(2, Math.round(root.diameter * 0.07))
-            readonly property real avatarSize: root.diameter - 2 * (discord.ringWidth + 1)
 
             Rectangle {
                 anchors.centerIn: parent
                 width: root.diameter
-                height: root.diameter
+                height: width
                 radius: width / 2
                 color: "transparent"
-                border.width: discord.ringWidth
-                border.color: discord.muted ? Appearance.colors.colError
-                    : (discord.anyoneSpeaking ? Appearance.colors.colPrimary : "transparent")
-            }
+                // A ring only while there is something to say with it (speaking, muted). At
+                // rest the 1px outline was nearly the colour of what is behind the bubble, so
+                // it showed as a faint arc on whichever side the backdrop differed.
+                readonly property bool ringed: discord.anyoneSpeaking || discord.muted
+                border.width: ringed ? 3 : 0
+                border.color: discord.anyoneSpeaking ? Appearance.colors.colPrimary : Appearance.colors.colError
 
-            Rectangle {
-                anchors.centerIn: parent
-                width: discord.avatarSize
-                height: discord.avatarSize
-                radius: width / 2
-                color: "#5865F2"
-                visible: speakerImage.status !== Image.Ready
-
-                MaterialSymbol {
+                ClippingRectangle {
                     anchors.centerIn: parent
-                    text: discord.muted ? (DiscordVoice.deafened ? "headset_off" : "mic_off") : "headset_mic"
-                    fill: 1
-                    iconSize: Math.round(parent.width * 0.55)
-                    color: "#FFFFFF"
+                    width: root.diameter - (parent.ringed ? 10 : 4)
+                    height: width
+                    Behavior on width {
+                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                    }
+                    radius: width / 2
+                    color: Appearance.colors.colLayer2
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        visible: speakerImage.status !== Image.Ready
+                        text: discord.stateGlyph
+                        fill: 1
+                        iconSize: Math.max(16, Math.round(root.diameter * 0.46))
+                        color: discord.stateColor
+                    }
+
+                    Image {
+                        id: speakerImage
+                        anchors.fill: parent
+                        source: DiscordVoiceActivity.avatarUrl(discord.speaker, 64)
+                        sourceSize: Qt.size(64, 64)
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        visible: status === Image.Ready
+                    }
                 }
-            }
-
-            Image {
-                id: speakerImage
-                anchors.centerIn: parent
-                width: discord.avatarSize
-                height: discord.avatarSize
-                source: DiscordVoice.avatarUrl(discord.speaker, 64)
-                sourceSize: Qt.size(64, 64)
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                visible: false
-            }
-
-            Rectangle {
-                id: speakerMask
-                anchors.centerIn: parent
-                width: discord.avatarSize
-                height: discord.avatarSize
-                radius: width / 2
-                visible: false
-                layer.enabled: speakerImage.status === Image.Ready
-            }
-
-            MultiEffect {
-                anchors.fill: speakerImage
-                source: speakerImage
-                visible: speakerImage.status === Image.Ready
-                maskEnabled: true
-                maskSource: speakerMask
-                maskThresholdMin: 0.5
-                maskSpreadAtMin: 1.0
-            }
-
-            CountBadge {
-                diameter: root.diameter
-                visible: discord.participants.length > 1
-                label: String(discord.participants.length)
             }
         }
     }
@@ -1011,5 +1168,543 @@ Item {
             }
         }
     }
-}
 
+    // ── Soundscapes ──────────────────────────────────────────────────────────
+    // The first sound of the mix, as the app draws it: its pictogram in its group's tone.
+    // While the mix plays, rings leave the disc and fade towards the rim, the way a sound
+    // spreads; paused, the rings stop, the pictogram dims and a pause badge sits on the
+    // rim. With a sleep timer running the bubble widens into a pill with the time left.
+    Component {
+        id: soundscapesGlance
+
+        Item {
+            id: scape
+
+            readonly property bool playing: SoundscapesService.playing
+            readonly property bool timed: SoundscapesService.timerRunning
+            readonly property var ids: SoundscapesService.active
+            readonly property var lead: SoundscapesService.sound(scape.ids[0] ?? "")
+            readonly property int tone: SoundscapesService.styleOf(scape.lead?.groupId ?? "").tone
+            readonly property color tint: scape.tone === 1 ? Appearance.colors.colSecondaryContainer
+                : scape.tone === 2 ? Appearance.colors.colTertiaryContainer : Appearance.colors.colPrimaryContainer
+            readonly property color onTint: scape.tone === 1 ? Appearance.colors.colOnSecondaryContainer
+                : scape.tone === 2 ? Appearance.colors.colOnTertiaryContainer : Appearance.colors.colOnPrimaryContainer
+            readonly property color accent: scape.tone === 1 ? Appearance.colors.colSecondary
+                : scape.tone === 2 ? Appearance.colors.colTertiary : Appearance.colors.colPrimary
+            readonly property real discSize: root.diameter - 8
+            // Folded to the disc while no timer runs; the weight stays one circle's so that the
+            // row is not re-dealt each time a timer starts or ends.
+            readonly property real preferredWidth: scape.timed
+                ? (root.diameter - scape.discSize) / 2 + row.implicitWidth + root.endPadding
+                : root.diameter
+            readonly property real balanceWidth: root.diameter
+            readonly property var heroItems: [disc]
+            property real wheelDelta: 0
+
+            Row {
+                id: row
+                x: (root.diameter - scape.discSize) / 2
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
+
+                Item {
+                    width: scape.discSize
+                    height: scape.discSize
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Repeater {
+                        model: 2
+
+                        Rectangle {
+                            id: ripple
+                            required property int index
+                            anchors.centerIn: parent
+                            width: scape.discSize
+                            height: width
+                            radius: width / 2
+                            color: "transparent"
+                            border.width: 1.5
+                            border.color: scape.accent
+                            opacity: 0
+                            scale: 1
+
+                            SequentialAnimation {
+                                running: scape.playing && !Appearance.motionOff
+                                loops: Animation.Infinite
+                                PauseAnimation { duration: ripple.index * 1300 }
+                                ParallelAnimation {
+                                    NumberAnimation { target: ripple; property: "scale"; from: 1; to: 1.32; duration: 2600; easing.type: Easing.OutCubic }
+                                    SequentialAnimation {
+                                        NumberAnimation { target: ripple; property: "opacity"; from: 0; to: 0.55; duration: 260 }
+                                        NumberAnimation { target: ripple; property: "opacity"; to: 0; duration: 2340; easing.type: Easing.OutQuad }
+                                    }
+                                }
+                                onRunningChanged: if (!running) { ripple.opacity = 0; ripple.scale = 1; }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        id: disc
+                        anchors.centerIn: parent
+                        width: scape.discSize
+                        height: width
+                        radius: width / 2
+                        color: scape.playing ? scape.tint : Appearance.colors.colSurfaceContainerHighest
+                        Behavior on color {
+                            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                        }
+
+                        SoundIcon {
+                            anchors.centerIn: parent
+                            width: Math.round(scape.discSize * 0.56)
+                            height: width
+                            source: scape.lead?.icon ?? ""
+                            color: scape.playing ? scape.onTint : Appearance.colors.colSubtext
+                            opacity: scape.playing ? 1 : 0.7
+                            Behavior on opacity {
+                                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                            }
+                        }
+
+                        // No pictogram (the library is still loading, or the sound is gone)
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            visible: !scape.lead || (scape.lead.icon ?? "") === ""
+                            text: "waves"
+                            fill: 1
+                            iconSize: Math.round(scape.discSize * 0.56)
+                            color: scape.playing ? scape.onTint : Appearance.colors.colSubtext
+                        }
+                    }
+                }
+
+                StyledText {
+                    id: scapeTime
+                    anchors.verticalCenter: parent.verticalCenter
+                    opacity: scape.timed ? 1 : 0
+                    Behavior on opacity {
+                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(scapeTime)
+                    }
+                    text: SoundscapesService.formatTime(SoundscapesService.timerLeft)
+                    font.family: Appearance.font.family.title
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    font.weight: Font.DemiBold
+                    font.features: ({ "tnum": 1 })
+                    color: root.colText
+                }
+            }
+
+            // How many sounds are in the mix, or that it is paused. Inside the island itself
+            // (glanceOnly) the glance is small and the badge is dropped.
+            CountBadge {
+                diameter: root.diameter
+                visible: !root.glanceOnly && !scape.timed && (!scape.playing || scape.ids.length > 1)
+                glyph: scape.playing ? "" : "pause"
+                label: String(scape.ids.length)
+            }
+
+            WheelHandler {
+                enabled: root.interactive
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                onWheel: event => {
+                    scape.wheelDelta += event.angleDelta.y;
+                    if (Math.abs(scape.wheelDelta) < 40)
+                        return;
+                    SoundscapesService.setMaster(Math.max(0, Math.min(1, SoundscapesService.master + (scape.wheelDelta > 0 ? 0.05 : -0.05))));
+                    scape.wheelDelta = 0;
+                }
+            }
+        }
+    }
+
+    // ── Quick Share ──────────────────────────────────────────────────────────
+    // A phone glyph on a disc. Visible to nearby devices: rings leave the disc, the way a
+    // signal spreads. Moving a file: the rim fills as a progress ring. A request waiting
+    // for an answer: the disc turns to the accent and a badge counts what is waiting.
+    Component {
+        id: quickShareGlance
+
+        Item {
+            id: share
+
+            readonly property bool waiting: QuickShareService.incoming.length > 0
+            readonly property bool moving: QuickShareService.active.some(t => t.state === "ReceivingFiles" || t.state === "SendingFiles")
+            readonly property bool discoverable: QuickShareService.visibility !== "invisible"
+            readonly property real fraction: {
+                const t = QuickShareService.active.find(x => x.state === "ReceivingFiles" || x.state === "SendingFiles");
+                const m = t?.meta ?? {};
+                return m.total_bytes > 0 ? Math.min(1, m.ack_bytes / m.total_bytes) : 0;
+            }
+            readonly property real discSize: root.diameter - 8
+            readonly property real preferredWidth: root.diameter
+            readonly property real balanceWidth: root.diameter
+            readonly property var heroItems: [shareDisc]
+
+            Item {
+                id: shareBox
+                x: (root.diameter - share.discSize) / 2
+                anchors.verticalCenter: parent.verticalCenter
+                width: share.discSize
+                height: share.discSize
+
+                Repeater {
+                    model: 2
+
+                    Rectangle {
+                        id: shareRipple
+                        required property int index
+                        anchors.centerIn: parent
+                        width: share.discSize
+                        height: width
+                        radius: width / 2
+                        color: "transparent"
+                        border.width: 1.5
+                        border.color: Appearance.colors.colPrimary
+                        opacity: 0
+                        scale: 1
+
+                        SequentialAnimation {
+                            running: share.discoverable && !share.moving && !Appearance.motionOff
+                            loops: Animation.Infinite
+                            PauseAnimation { duration: shareRipple.index * 1300 }
+                            ParallelAnimation {
+                                NumberAnimation { target: shareRipple; property: "scale"; from: 1; to: 1.32; duration: 2600; easing.type: Easing.OutCubic }
+                                SequentialAnimation {
+                                    NumberAnimation { target: shareRipple; property: "opacity"; from: 0; to: 0.55; duration: 260 }
+                                    NumberAnimation { target: shareRipple; property: "opacity"; to: 0; duration: 2340; easing.type: Easing.OutQuad }
+                                }
+                            }
+                            onRunningChanged: if (!running) { shareRipple.opacity = 0; shareRipple.scale = 1; }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: shareDisc
+                    anchors.centerIn: parent
+                    width: share.discSize
+                    height: width
+                    radius: width / 2
+                    color: share.waiting ? Appearance.colors.colPrimary : Appearance.colors.colPrimaryContainer
+                    Behavior on color {
+                        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    }
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: "send_to_mobile"
+                        fill: 1
+                        iconSize: Math.round(share.discSize * 0.56)
+                        color: share.waiting ? Appearance.colors.colOnPrimary : Appearance.colors.colOnPrimaryContainer
+                    }
+                }
+
+                // Progress rim while a file moves.
+                Canvas {
+                    anchors.fill: parent
+                    visible: share.moving
+                    property real f: share.fraction
+                    onFChanged: requestPaint()
+                    onVisibleChanged: requestPaint()
+                    onPaint: {
+                        const ctx = getContext("2d");
+                        ctx.clearRect(0, 0, width, height);
+                        ctx.lineWidth = 2.5;
+                        ctx.lineCap = "round";
+                        ctx.strokeStyle = Appearance.colors.colPrimary;
+                        ctx.beginPath();
+                        ctx.arc(width / 2, height / 2, width / 2 - 1.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0.02, f));
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            CountBadge {
+                diameter: root.diameter
+                visible: !root.glanceOnly && share.waiting
+                label: String(QuickShareService.incoming.length)
+            }
+        }
+    }
+    // Background jobs: a disc whose rim fills with how far the running ones have got, a
+    // check when they are done and the error tint if one failed. A badge counts them when
+    // there are several. The card lists them.
+    Component {
+        id: progressGlance
+
+        Item {
+            id: jobs
+
+            readonly property var running: ProgressService.runningJobs
+            readonly property bool failed: jobs.running.length === 0 && ProgressService.jobs.some(j => j.state === "failed")
+            readonly property real discSize: root.diameter - 8
+            readonly property real preferredWidth: root.diameter
+            readonly property real balanceWidth: root.diameter
+            readonly property var heroItems: [jobsDisc]
+
+            Item {
+                id: jobsBox
+                x: (root.diameter - jobs.discSize) / 2
+                anchors.verticalCenter: parent.verticalCenter
+                width: jobs.discSize
+                height: jobs.discSize
+
+                Rectangle {
+                    id: jobsDisc
+                    anchors.centerIn: parent
+                    width: jobs.discSize
+                    height: width
+                    radius: width / 2
+                    color: jobs.failed ? Appearance.colors.colErrorContainer : Appearance.colors.colPrimaryContainer
+                    Behavior on color {
+                        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    }
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: jobs.running.length > 0 ? (jobs.running[0].icon ?? "downloading") : (jobs.failed ? "error" : (ProgressService.pausedJobs.length > 0 && ProgressService.pausedJobs.length === ProgressService.jobs.length ? "pause" : "check"))
+                        fill: 1
+                        iconSize: Math.round(jobs.discSize * 0.56)
+                        color: jobs.failed ? Appearance.colors.colOnErrorContainer : Appearance.colors.colOnPrimaryContainer
+                    }
+                }
+
+                Canvas {
+                    anchors.fill: parent
+                    property real f: ProgressService.overallFraction
+                    property color stroke: jobs.failed ? Appearance.colors.colError : Appearance.colors.colPrimary
+                    onFChanged: requestPaint()
+                    onStrokeChanged: requestPaint()
+                    onPaint: {
+                        const ctx = getContext("2d");
+                        ctx.clearRect(0, 0, width, height);
+                        ctx.lineWidth = 2.5;
+                        ctx.lineCap = "round";
+                        ctx.strokeStyle = stroke;
+                        ctx.beginPath();
+                        ctx.arc(width / 2, height / 2, width / 2 - 1.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0.02, Math.min(1, f)));
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            CountBadge {
+                diameter: root.diameter
+                visible: !root.glanceOnly && jobs.running.length > 1
+                label: String(jobs.running.length)
+            }
+        }
+    }
+
+    // CPU or memory held high: an error-tinted disc with the metric's glyph, and a rim that
+    // is how full it is right now.
+    Component {
+        id: monitorAlertGlance
+
+        Item {
+            id: alert
+
+            readonly property bool isMemory: ResourceAlerts.kind === "memory"
+            readonly property real discSize: root.diameter - 8
+            readonly property real preferredWidth: root.diameter
+            readonly property real balanceWidth: root.diameter
+            readonly property var heroItems: [alertDisc]
+
+            Item {
+                id: alertBox
+                x: (root.diameter - alert.discSize) / 2
+                anchors.verticalCenter: parent.verticalCenter
+                width: alert.discSize
+                height: alert.discSize
+
+                Rectangle {
+                    id: alertDisc
+                    anchors.centerIn: parent
+                    width: alert.discSize
+                    height: width
+                    radius: width / 2
+                    color: Appearance.colors.colErrorContainer
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: alert.isMemory ? "memory" : "speed"
+                        fill: 1
+                        iconSize: Math.round(alert.discSize * 0.56)
+                        color: Appearance.colors.colOnErrorContainer
+                    }
+                }
+
+                Canvas {
+                    anchors.fill: parent
+                    property real f: ResourceAlerts.value
+                    onFChanged: requestPaint()
+                    onPaint: {
+                        const ctx = getContext("2d");
+                        ctx.clearRect(0, 0, width, height);
+                        ctx.lineWidth = 2.5;
+                        ctx.lineCap = "round";
+                        ctx.strokeStyle = Appearance.colors.colError;
+                        ctx.beginPath();
+                        ctx.arc(width / 2, height / 2, width / 2 - 1.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0.02, Math.min(1, f)));
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+    }
+
+    // A Grit focus session: the tag's shape and the time left, folding to the shape alone
+    // while paused. The card pauses, skips or opens Focus.
+    Component {
+        id: focusGlance
+
+        Item {
+            id: focus
+
+            readonly property bool running: GritService.timerRunning
+            readonly property bool onBreak: GritService.timerPhase !== "focus"
+            readonly property int secondsLeft: GritService.timerSecondsLeft
+            readonly property real markerSize: root.diameter - 10
+            readonly property real preferredWidth: focus.running
+                ? (root.diameter - focus.markerSize) / 2 + focusRow.implicitWidth + root.endPadding
+                : root.diameter
+            readonly property var heroItems: [focusMarker, focusText]
+
+            Row {
+                id: focusRow
+                x: (root.diameter - focus.markerSize) / 2
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
+
+                MaterialShapeWrappedMaterialSymbol {
+                    id: focusMarker
+                    anchors.verticalCenter: parent.verticalCenter
+                    shape: focus.onBreak ? "SoftBurst" : String(GritService.activeTag?.shape ?? "Cookie7Sided")
+                    implicitSize: focus.markerSize
+                    iconSize: Appearance.font.pixelSize.normal
+                    padding: 3
+                    text: !focus.running ? "pause" : (focus.onBreak ? "coffee" : "psychiatry")
+                    color: focus.onBreak ? Appearance.colors.colTertiaryContainer : Appearance.colors.colPrimary
+                    colSymbol: focus.onBreak ? Appearance.colors.colOnTertiaryContainer : Appearance.colors.colOnPrimary
+                }
+
+                StyledText {
+                    id: focusText
+                    anchors.verticalCenter: parent.verticalCenter
+                    opacity: focus.running ? 1 : 0
+                    Behavior on opacity {
+                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(focusText)
+                    }
+                    text: String(Math.floor(focus.secondsLeft / 60)).padStart(2, "0") + ":" + String(focus.secondsLeft % 60).padStart(2, "0")
+                    font.family: Appearance.font.family.title
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    font.weight: Font.DemiBold
+                    font.features: ({ "tnum": 1 })
+                    color: root.colText
+                }
+            }
+        }
+    }
+
+    // The next prayer as a small sky: a disc bearing that prayer's own glyph (dawn, sun, dusk,
+    // night), a rim that fills as the wait goes by with a bead riding its end, and the minutes
+    // left in a small badge on the corner. Once the time has come the rim is full and the glyph is filled.
+    Component {
+        id: prayerGlance
+
+        Item {
+            id: prayer
+
+            readonly property var current: PrayerTimes.glancePrayer
+            readonly property bool begun: PrayerTimes.glanceBegan
+            readonly property string prayerId: prayer.current?.id ?? ""
+            readonly property real fraction: prayer.begun ? 1 : PrayerTimes.progress
+            readonly property real discSize: root.diameter - 8
+            readonly property real preferredWidth: root.diameter
+            readonly property real balanceWidth: root.diameter
+            readonly property var heroItems: [prayerDisc]
+
+            function glyphFor(id: string): string {
+                switch (id) {
+                case "Fajr": return "wb_twilight";
+                case "Dhuhr": return "light_mode";
+                case "Asr": return "wb_sunny";
+                case "Maghrib": return "wb_twilight";
+                case "Isha": return "bedtime";
+                }
+                return "mosque";
+            }
+            // Dawn and dusk lean on the warm tertiary, noon on primary, night on the cool secondary.
+            readonly property bool nightish: prayer.prayerId === "Isha" || prayer.prayerId === "Fajr"
+            readonly property color rim: prayer.nightish ? Appearance.colors.colSecondary
+                : (prayer.prayerId === "Maghrib" ? Appearance.colors.colTertiary : Appearance.colors.colPrimary)
+            readonly property color discColor: prayer.nightish ? Appearance.colors.colSecondaryContainer
+                : (prayer.prayerId === "Maghrib" ? Appearance.colors.colTertiaryContainer : Appearance.colors.colPrimaryContainer)
+            readonly property color onDisc: prayer.nightish ? Appearance.colors.colOnSecondaryContainer
+                : (prayer.prayerId === "Maghrib" ? Appearance.colors.colOnTertiaryContainer : Appearance.colors.colOnPrimaryContainer)
+
+            Item {
+                x: (root.diameter - prayer.discSize) / 2
+                anchors.verticalCenter: parent.verticalCenter
+                width: prayer.discSize
+                height: prayer.discSize
+
+                Rectangle {
+                    id: prayerDisc
+                    anchors.centerIn: parent
+                    width: prayer.discSize
+                    height: width
+                    radius: width / 2
+                    color: prayer.discColor
+                    Behavior on color {
+                        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    }
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: prayer.glyphFor(prayer.prayerId)
+                        fill: prayer.begun ? 1 : 0
+                        iconSize: Math.round(prayer.discSize * 0.56)
+                        color: prayer.onDisc
+                    }
+                }
+
+                Canvas {
+                    anchors.fill: parent
+                    anchors.margins: -3
+                    property real f: prayer.fraction
+                    property color stroke: prayer.rim
+                    onFChanged: requestPaint()
+                    onStrokeChanged: requestPaint()
+                    onPaint: {
+                        const ctx = getContext("2d");
+                        ctx.clearRect(0, 0, width, height);
+                        const r = width / 2 - 4.5;
+                        const a0 = -Math.PI / 2;
+                        const a1 = a0 + Math.PI * 2 * Math.max(0.03, Math.min(1, f));
+                        ctx.lineWidth = 2.5;
+                        ctx.lineCap = "round";
+                        ctx.strokeStyle = stroke;
+                        ctx.beginPath();
+                        ctx.arc(width / 2, height / 2, r, a0, a1);
+                        ctx.stroke();
+                        // The bead: the sun on its way round.
+                        if (f < 1) {
+                            ctx.fillStyle = stroke;
+                            ctx.beginPath();
+                            ctx.arc(width / 2 + r * Math.cos(a1), height / 2 + r * Math.sin(a1), 3.2, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                }
+            }
+
+            CountBadge {
+                diameter: root.diameter
+                visible: !root.glanceOnly && !prayer.begun && prayer.current !== null
+                label: String(PrayerTimes.minutesToNext)
+            }
+        }
+    }
+}

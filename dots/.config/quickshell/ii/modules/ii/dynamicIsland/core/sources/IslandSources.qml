@@ -22,12 +22,12 @@ Item {
         // arbitration is IslandRegistry's tier, not this list.
         windowSwitcher, askpass, search, wallpaper, session, colorPicker, displayModes, notification, osd, phoneCall, alarm, reminder, fingerprint,
         // Live and ambient.
-        ai, media, timer, recording, dictation, localSend, shelf, progress, songRec, teleprompter,
+        ai, media, mediator, timer, focusSession, recording, audioRecording, dictation, localSend, shelf, progress, songRec, teleprompter,
         // Side glances.
-        earbuds, btPhone, weather, batteryGlance, reminderSoon, privacy, discordVoice, phoneMirror, phoneLink, sports, phoneLive,
+        earbuds, btPhone, weather, batteryGlance, reminderSoon, prayer, privacy, discordVoice, phoneMirror, phoneLink, sports, phoneLive,
         // Announcements.
         health, phoneMirrorError, phoneKeyboard, workspaces, clipboard, battery, wifi, bluetooth, keyboard, mode, update, vpn, systemTray,
-        easyEffects
+        easyEffects, soundscapes, quickShare, monitorAlert
     ]
 
     readonly property WindowSwitcherSource windowSwitcher: WindowSwitcherSource {}
@@ -44,14 +44,18 @@ Item {
     readonly property AlarmSource alarm: AlarmSource {}
     readonly property ReminderSource reminder: ReminderSource {}
     readonly property ReminderSoonSource reminderSoon: ReminderSoonSource {}
+    readonly property PrayerSource prayer: PrayerSource {}
     readonly property SongRecSource songRec: SongRecSource {}
     readonly property SportsSource sports: SportsSource {}
     readonly property PhoneLiveSource phoneLive: PhoneLiveSource {}
     readonly property VpnSource vpn: VpnSource {}
     readonly property AiSource ai: AiSource {}
     readonly property MediaSource media: MediaSource {}
+    readonly property MediatorSource mediator: MediatorSource {}
     readonly property TimerSource timer: TimerSource {}
+    readonly property FocusSource focusSession: FocusSource {}
     readonly property RecordingSource recording: RecordingSource {}
+    readonly property AudioRecordingSource audioRecording: AudioRecordingSource {}
     readonly property TeleprompterSource teleprompter: TeleprompterSource {}
     readonly property DictationSource dictation: DictationSource {}
     readonly property LocalSendSource localSend: LocalSendSource {}
@@ -77,7 +81,10 @@ Item {
     readonly property UpdateSource update: UpdateSource {}
     readonly property SystemTraySource systemTray: SystemTraySource {}
     readonly property EasyEffectsSource easyEffects: EasyEffectsSource {}
+    readonly property SoundscapesSource soundscapes: SoundscapesSource {}
+    readonly property QuickShareSource quickShare: QuickShareSource {}
     readonly property HealthSource health: HealthSource {}
+    readonly property MonitorAlertSource monitorAlert: MonitorAlertSource {}
 
     function sourceFor(activityId) {
         for (let i = 0; i < sources.all.length; i++) {

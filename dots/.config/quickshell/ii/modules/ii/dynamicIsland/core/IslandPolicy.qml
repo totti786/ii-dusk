@@ -176,8 +176,8 @@ Singleton {
      * and left, the rest chain outwards from them.
      */
     readonly property var bubbleActivities: {
-        const list = ["shelf", "media", "workspaces", "ai", "recording", "privacy", "discordVoice", "phoneMirror", "phoneLink",
-            "timer", "dictation", "mode", "update", "earbuds", "btPhone", "systemTray", "easyEffects"];
+        const list = ["shelf", "media", "mediator", "workspaces", "ai", "recording", "audioRecording", "privacy", "discordVoice", "phoneMirror", "phoneLink",
+            "timer", "dictation", "mode", "update", "earbuds", "btPhone", "systemTray", "easyEffects", "soundscapes", "quickShare", "progress", "monitorAlert", "focus", "prayer"];
         if (Config.ready && root.legacy && root.legacy.disableWorkspacesBubble === true)
             list.splice(list.indexOf("workspaces"), 1);
         return list;
@@ -261,6 +261,7 @@ Singleton {
      * this off gives back the standalone selector, unchanged.
      */
     readonly property bool ownsWallpaper: root.enabled
+        && Config.options.wallpaperSelector.style !== "deck"
         && (root.legacy ? root.legacy.integratedWallpaperBrowser !== false : true)
 
     /**

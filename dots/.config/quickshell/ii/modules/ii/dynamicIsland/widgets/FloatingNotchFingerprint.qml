@@ -70,10 +70,10 @@ Item {
 
             SequentialAnimation {
                 id: shake
-                NumberAnimation { target: shakeOffset; property: "x"; to: -5; duration: 50 }
-                NumberAnimation { target: shakeOffset; property: "x"; to: 5; duration: 70 }
-                NumberAnimation { target: shakeOffset; property: "x"; to: -3; duration: 60 }
-                NumberAnimation { target: shakeOffset; property: "x"; to: 0; duration: 50 }
+                NumberAnimation { target: shakeOffset; property: "x"; to: -5; duration: Appearance.dur(50) }
+                NumberAnimation { target: shakeOffset; property: "x"; to: 5; duration: Appearance.dur(70) }
+                NumberAnimation { target: shakeOffset; property: "x"; to: -3; duration: Appearance.dur(60) }
+                NumberAnimation { target: shakeOffset; property: "x"; to: 0; duration: Appearance.dur(50) }
             }
         }
 

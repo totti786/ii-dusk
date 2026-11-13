@@ -22,6 +22,10 @@ ContinuousSource {
         const player = MprisController.activePlayer;
         if (player === null)
             return false;
+        // Mediator's own playback has its own bubble; a second one for the same player is a duplicate
+        const own = MediatorService.nativeMprisPlayer;
+        if (own && MediatorService.nativePillVisible && String(own.dbusName ?? "") === String(player.dbusName ?? ""))
+            return false;
         const title = player.trackTitle ?? "";
         const artist = player.trackArtist ?? "";
         return title !== "" || artist !== "";

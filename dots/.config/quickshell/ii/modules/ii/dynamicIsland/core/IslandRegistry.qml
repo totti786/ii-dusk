@@ -50,6 +50,24 @@ Singleton {
             content: {}
         },
         {
+            // Native anime playback is a live activity of its own. It keeps the
+            // remembered episode visible even when the provider worker is paused,
+            // and its card owns the exact episode list and native controls.
+            id: "mediator",
+            tier: "live",
+            icon: "movie",
+            label: "Anime streaming",
+            preferredSide: "right",
+            canDetach: true,
+            settleMs: 0,
+            compact: { width: -1, height: -1 },
+            orb: { size: -1 },
+            expanded: { width: 340, height: 320 },
+            content: {
+                expanded: "activities/mediator/MediatorExpanded.qml"
+            }
+        },
+        {
             id: "workspaces",
             legacyContent: "FloatingNotchWorkspaces.qml",
             tier: "transient",
@@ -261,6 +279,24 @@ Singleton {
             }
         },
         {
+            // The audio recorder's take, for as long as it is capturing: the same red dot
+            // and clock as the screen recording's bubble, a mic glyph where the card says
+            // what is being recorded. See AudioRecordingSource and AudioRecordingExpanded.
+            id: "audioRecording",
+            tier: "live",
+            icon: "mic",
+            label: "Audio recording",
+            preferredSide: "left",
+            canDetach: true,
+            settleMs: 1500,
+            compact: { width: 172, height: -1 },
+            orb: { size: -1 },
+            expanded: { width: 388, height: 68 },
+            content: {
+                expanded: "activities/audioRecording/AudioRecordingExpanded.qml"
+            }
+        },
+        {
             id: "teleprompter",
             tier: "live",
             icon: "subtitles",
@@ -462,6 +498,41 @@ Singleton {
             orb: { size: -1 },
             expanded: { width: 0, height: 0 },
             content: {}
+        },
+        {
+            // A Grit focus session, running or paused: a bubble with the tag's shape and the
+            // time left, and a card to pause, skip or open Focus. See FocusSource.
+            id: "focus",
+            tier: "live",
+            icon: "psychiatry",
+            label: "Focus session",
+            preferredSide: "left",
+            canDetach: true,
+            settleMs: 0,
+            compact: { width: -1, height: -1 },
+            orb: { size: -1 },
+            expanded: { width: 300, height: 190 },
+            content: {
+                expanded: "activities/focus/FocusExpanded.qml"
+            }
+        },
+        {
+            // The next prayer, for the last 45 minutes before it and a few after it begins:
+            // a bubble with its name and the time left, and a card with the day's times.
+            // See PrayerSource.
+            id: "prayer",
+            tier: "ambient",
+            icon: "mosque",
+            label: "Prayer times",
+            preferredSide: "left",
+            canDetach: true,
+            settleMs: 0,
+            compact: { width: -1, height: -1 },
+            orb: { size: -1 },
+            expanded: { width: 280, height: 150 },
+            content: {
+                expanded: "activities/prayer/PrayerExpanded.qml"
+            }
         },
         {
             // The next reminder within the hour, a glance beside the clock: its icon and
@@ -728,6 +799,9 @@ Singleton {
             }
         },
         {
+            // Background jobs. With bubbles on this is a bubble: a ring for the running ones
+            // and a card that lists them, each stoppable if the shell started it. Without,
+            // the legacy compact face below draws the first one. See ProgressExpanded.
             id: "progress",
             legacyContent: "FloatingNotchProgress.qml",
             tier: "live",
@@ -738,8 +812,10 @@ Singleton {
             settleMs: 2000,
             compact: { width: 240, height: 48 },
             orb: { size: -1 },
-            expanded: { width: 0, height: 0 },   // no expanded face: expanding opens the dashboard
-            content: {}
+            expanded: { width: 340, height: 260 },
+            content: {
+                expanded: "activities/progress/ProgressExpanded.qml"
+            }
         },
         {
             id: "dictation",
@@ -825,6 +901,61 @@ Singleton {
                 expanded: "activities/easyEffects/EasyEffectsExpanded.qml"
             }
         },
+        {
+            // An ambient mix that is playing (or paused): a bubble beside the island, or a
+            // glance beside the clock while bubbles are off. The glance shows the lead
+            // sound and breathes while it plays; the card is the mixer in small.
+            // See SoundscapesSource and SoundscapesExpanded.
+            id: "soundscapes",
+            tier: "live",
+            icon: "waves",
+            label: "Soundscapes",
+            preferredSide: "right",
+            canDetach: true,
+            settleMs: 0,
+            compact: { width: -1, height: -1 },
+            orb: { size: -1 },
+            expanded: { width: 340, height: 300 },
+            content: {
+                expanded: "activities/soundscapes/SoundscapesExpanded.qml"
+            }
+        },
+        {
+            // Quick Share: a bubble while the PC is visible to nearby phones, a request is
+            // waiting, a transfer runs, or files wait for a device. The card is the request,
+            // the progress, or the device picker. See QuickShareSource and QuickShareExpanded.
+            id: "quickShare",
+            tier: "live",
+            icon: "send_to_mobile",
+            label: "Quick Share",
+            preferredSide: "right",
+            canDetach: true,
+            settleMs: 0,
+            compact: { width: -1, height: -1 },
+            orb: { size: -1 },
+            expanded: { width: 340, height: 300 },
+            content: {
+                expanded: "activities/quickShare/QuickShareExpanded.qml"
+            }
+        },
+        {
+            // CPU or memory held high for a while: a bubble, and a card with the programs
+            // using it, to end or snooze. See MonitorAlertSource, ResourceAlerts and
+            // MonitorAlertExpanded.
+            id: "monitorAlert",
+            tier: "live",
+            icon: "speed",
+            label: "Resource alert",
+            preferredSide: "right",
+            canDetach: true,
+            settleMs: 0,
+            compact: { width: -1, height: -1 },
+            orb: { size: -1 },
+            expanded: { width: 340, height: 300 },
+            content: {
+                expanded: "activities/monitorAlert/MonitorAlertExpanded.qml"
+            }
+        }
     ]
 
     readonly property var ids: root.descriptors.map(descriptor => descriptor.id)

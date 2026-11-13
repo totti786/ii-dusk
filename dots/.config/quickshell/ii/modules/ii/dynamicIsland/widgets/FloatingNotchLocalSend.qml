@@ -74,7 +74,7 @@ Item {
         target: root
         property: "lsProgress"
         from: 0.0; to: 0.92
-        duration: 3200
+        duration: Appearance.dur(3200)
         easing.type: Easing.OutCubic
         running: LocalSend.sending
     }
@@ -147,7 +147,7 @@ Item {
                 : Appearance.colors.colPrimary
 
             RotationAnimation on rotation {
-                running: LocalSend.sending && contractedView.visible
+                running: (LocalSend.sending && contractedView.visible) && !Appearance.motionOff
                 loops: Animation.Infinite
                 from: 0; to: 360; duration: 2000
             }
@@ -678,7 +678,7 @@ Item {
                     color: lsFMouse.containsMouse
                         ? Qt.rgba(Appearance.colors.colPrimary.r, Appearance.colors.colPrimary.g, Appearance.colors.colPrimary.b, 0.15)
                         : Qt.rgba(Appearance.colors.colPrimary.r, Appearance.colors.colPrimary.g, Appearance.colors.colPrimary.b, 0.08)
-                    Behavior on color { ColorAnimation { duration: 100 } }
+                    Behavior on color { ColorAnimation { duration: Appearance.dur(100) } }
 
                     MouseArea {
                         id: lsFMouse
@@ -896,7 +896,7 @@ Item {
                         anchors.bottom: parent.bottom
                         width: 8; height: 8; radius: 4
                         color: root.kdeAvailable ? Appearance.colors.colSecondary : Appearance.colors.colError
-                        Behavior on color { ColorAnimation { duration: 300 } }
+                        Behavior on color { ColorAnimation { duration: Appearance.dur(300) } }
                     }
                 }
 
@@ -957,7 +957,7 @@ Item {
                     MaterialSymbol {
                         text: "upload"; iconSize: 14; color: Appearance.colors.colSecondary
                         SequentialAnimation on opacity {
-                            running: root.kdeSending; loops: Animation.Infinite
+                            running: (root.kdeSending) && !Appearance.motionOff; loops: Animation.Infinite
                             NumberAnimation { to: 0.3; duration: 600 }
                             NumberAnimation { to: 1.0; duration: 600 }
                         }
@@ -1030,7 +1030,7 @@ Item {
                     color: kdeFMouse.containsMouse
                         ? Qt.rgba(Appearance.colors.colSecondary.r, Appearance.colors.colSecondary.g, Appearance.colors.colSecondary.b, 0.15)
                         : Qt.rgba(Appearance.colors.colSecondary.r, Appearance.colors.colSecondary.g, Appearance.colors.colSecondary.b, 0.08)
-                    Behavior on color { ColorAnimation { duration: 100 } }
+                    Behavior on color { ColorAnimation { duration: Appearance.dur(100) } }
 
                     MouseArea {
                         id: kdeFMouse

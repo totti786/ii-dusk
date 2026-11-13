@@ -59,7 +59,7 @@ Item {
         // Only animates when it is the thing being shown, so a missing audio
         // bridge does not leave a timer running behind a hidden notch.
         NumberAnimation on value {
-            running: root.recording && !root.hasLevels
+            running: (root.recording && !root.hasLevels) && !Appearance.motionOff
             loops: Animation.Infinite
             from: 0.25
             to: 1.0
@@ -87,7 +87,7 @@ Item {
                 opacity: root.transcribing ? 0.45 : 1
 
                 Behavior on height {
-                    NumberAnimation { duration: 70; easing.type: Easing.OutQuad }
+                    NumberAnimation { duration: Appearance.dur(70); easing.type: Easing.OutQuad }
                 }
             }
         }
@@ -108,7 +108,7 @@ Item {
             color: root.accent
 
             SequentialAnimation on opacity {
-                running: root.recording
+                running: (root.recording) && !Appearance.motionOff
                 loops: Animation.Infinite
                 NumberAnimation { from: 1.0; to: 0.45; duration: 700; easing.type: Easing.InOutSine }
                 NumberAnimation { from: 0.45; to: 1.0; duration: 700; easing.type: Easing.InOutSine }
