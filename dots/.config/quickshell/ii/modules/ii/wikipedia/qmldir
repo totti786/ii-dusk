@@ -1,0 +1,11 @@
+module qs.modules.ii.wikipedia
+
+WikipediaApp 1.0 WikipediaApp.qml
+WikipediaWindow 1.0 WikipediaWindow.qml
+WikipediaContent 1.0 WikipediaContent.qml
+WikipediaSearchField 1.0 WikipediaSearchField.qml
+WikipediaHomePage 1.0 WikipediaHomePage.qml
+WikipediaSearchPage 1.0 WikipediaSearchPage.qml
+WikipediaArticlePage 1.0 WikipediaArticlePage.qml
+WikipediaLanguagePopup 1.0 WikipediaLanguagePopup.qml
+WikipediaReadingPopup 1.0 WikipediaReadingPopup.qml

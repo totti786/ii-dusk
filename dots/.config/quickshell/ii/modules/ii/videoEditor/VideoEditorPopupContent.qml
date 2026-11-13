@@ -36,8 +36,8 @@ Item {
     implicitWidth: popupWidth + 2 * Appearance.sizes.elevationMargin
     implicitHeight: contentLayout.implicitHeight + verticalPadding * 2 + 2 * Appearance.sizes.elevationMargin
 
-    NumberAnimation on opacity { from: 0; to: 1; duration: 350; easing.type: Easing.OutCubic }
-    NumberAnimation on scale { from: 0.85; to: 1; duration: 400; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+    NumberAnimation on opacity { from: 0; to: 1; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
+    NumberAnimation on scale { from: 0.85; to: 1; duration: Appearance.dur(400); easing.type: Easing.OutBack; easing.overshoot: 1.2 }
 
     transformOrigin: Item.TopRight
 
@@ -96,7 +96,7 @@ Item {
                 color: editMa.containsMouse ? Appearance.colors.colPrimaryContainerHover : Appearance.colors.colPrimaryContainer
                 
                 scale: editMa.pressed ? 0.95 : (editMa.containsMouse ? 1.02 : 1.0)
-                Behavior on scale { NumberAnimation { duration: 150 } }
+                Behavior on scale { NumberAnimation { duration: Appearance.dur(150) } }
                 Behavior on color { animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this) }
 
                 RowLayout {

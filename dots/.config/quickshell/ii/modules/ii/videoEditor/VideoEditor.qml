@@ -1069,7 +1069,7 @@ FloatingWindow {
                     radius: 22
                     color: Appearance.colors.colSurfaceContainerHighest
                     opacity: root.snapshotToastVisible ? 1.0 : 0.0
-                    Behavior on opacity { NumberAnimation { duration: 250 } }
+                    Behavior on opacity { NumberAnimation { duration: Appearance.dur(250) } }
 
                     RowLayout {
                         id: toastRow
@@ -1989,7 +1989,7 @@ FloatingWindow {
                                         value: root.muteAudio ? 0 : root.previewVolume
                                         enabled: !root.muteAudio
                                         opacity: root.muteAudio ? 0.4 : 1.0
-                                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                                        Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
                                         onValueChanged: {
                                             if (!root.muteAudio) root.previewVolume = value
                                         }

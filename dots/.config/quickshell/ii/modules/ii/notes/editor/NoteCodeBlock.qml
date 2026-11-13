@@ -107,6 +107,7 @@ Item {
              * inside this, and the caret drags the view along with it.
              */
             Flickable {
+                WheelScroll {}
                 id: codeScroll
                 Layout.fillWidth: true
                 Layout.preferredHeight: codeText.implicitHeight

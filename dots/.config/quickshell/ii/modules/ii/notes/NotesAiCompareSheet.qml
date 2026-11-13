@@ -340,7 +340,7 @@ Item {
                                 color: Appearance.colors.colTertiary
 
                                 RotationAnimation on rotation {
-                                    running: root.isStreaming
+                                    running: (root.isStreaming) && !Appearance.motionOff
                                     loops: Animation.Infinite
                                     from: 0
                                     to: 360

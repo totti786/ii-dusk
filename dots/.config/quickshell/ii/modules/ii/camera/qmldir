@@ -1,0 +1,5 @@
+module qs.modules.ii.camera
+
+CameraApp 1.0 CameraApp.qml
+CameraWindow 1.0 CameraWindow.qml
+CameraContent 1.0 CameraContent.qml

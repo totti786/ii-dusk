@@ -1,0 +1,13 @@
+module qs.modules.ii.anki
+
+AnkiApp 1.0 AnkiApp.qml
+AnkiWindow 1.0 AnkiWindow.qml
+AnkiContent 1.0 AnkiContent.qml
+DeckSidebar 1.0 DeckSidebar.qml
+ReviewPane 1.0 ReviewPane.qml
+AnkiCardHtml 1.0 AnkiCardHtml.qml
+AnkiMedia 1.0 AnkiMedia.qml
+GradeButton 1.0 GradeButton.qml
+AnkiSettingsSheet 1.0 AnkiSettingsSheet.qml
+AnkiSyncSheet 1.0 AnkiSyncSheet.qml
+AnkiAddSheet 1.0 AnkiAddSheet.qml

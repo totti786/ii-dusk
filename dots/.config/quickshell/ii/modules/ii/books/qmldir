@@ -1,0 +1,13 @@
+module qs.modules.ii.books
+
+BooksApp 1.0 BooksApp.qml
+BooksWindow 1.0 BooksWindow.qml
+BooksContent 1.0 BooksContent.qml
+BookCover 1.0 BookCover.qml
+BooksBrowse 1.0 BooksBrowse.qml
+BooksManga 1.0 BooksManga.qml
+RemoteBookCard 1.0 RemoteBookCard.qml
+Bookcase 1.0 Bookcase.qml
+ShelfBook 1.0 ShelfBook.qml
+BookOpenLift 1.0 BookOpenLift.qml
+BooksOverlay 1.0 BooksOverlay.qml
