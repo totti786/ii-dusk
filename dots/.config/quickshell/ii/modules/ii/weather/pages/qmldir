@@ -1,0 +1,7 @@
+module qs.modules.ii.weather.pages
+
+WeatherDailyPage 1.0 WeatherDailyPage.qml
+WeatherDetailsPage 1.0 WeatherDetailsPage.qml
+WeatherHourlyPage 1.0 WeatherHourlyPage.qml
+WeatherOverviewPage 1.0 WeatherOverviewPage.qml
+WeatherSettingsPage 1.0 WeatherSettingsPage.qml

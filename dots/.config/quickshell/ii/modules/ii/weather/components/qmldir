@@ -1,0 +1,30 @@
+module qs.modules.ii.weather.components
+
+WeatherAqiGauge 1.0 WeatherAqiGauge.qml
+WeatherChart 1.0 WeatherChart.qml
+WeatherChartSheet 1.0 WeatherChartSheet.qml
+WeatherChip 1.0 WeatherChip.qml
+WeatherDailyDetail 1.0 WeatherDailyDetail.qml
+WeatherDailyRow 1.0 WeatherDailyRow.qml
+WeatherEmptyState 1.0 WeatherEmptyState.qml
+WeatherHero 1.0 WeatherHero.qml
+WeatherHourRow 1.0 WeatherHourRow.qml
+WeatherHourlyStrip 1.0 WeatherHourlyStrip.qml
+WeatherIcon 1.0 WeatherIcon.qml
+WeatherIconButton 1.0 WeatherIconButton.qml
+WeatherInfoRow 1.0 WeatherInfoRow.qml
+WeatherLocationManager 1.0 WeatherLocationManager.qml
+WeatherLocationSheet 1.0 WeatherLocationSheet.qml
+WeatherMetricTile 1.0 WeatherMetricTile.qml
+WeatherNavigation 1.0 WeatherNavigation.qml
+WeatherOptionChips 1.0 WeatherOptionChips.qml
+WeatherPage 1.0 WeatherPage.qml
+WeatherProviderCard 1.0 WeatherProviderCard.qml
+WeatherQuickStat 1.0 WeatherQuickStat.qml
+WeatherRail 1.0 WeatherRail.qml
+WeatherRailItem 1.0 WeatherRailItem.qml
+WeatherRangeChart 1.0 WeatherRangeChart.qml
+WeatherSection 1.0 WeatherSection.qml
+WeatherSettingsRow 1.0 WeatherSettingsRow.qml
+WeatherSunArc 1.0 WeatherSunArc.qml
+WeatherTopBar 1.0 WeatherTopBar.qml

@@ -1,0 +1,6 @@
+module qs.modules.ii.weather
+
+singleton WeatherStyle 1.0 WeatherStyle.qml
+WeatherApp 1.0 WeatherApp.qml
+WeatherAppWindow 1.0 WeatherAppWindow.qml
+WeatherAppContent 1.0 WeatherAppContent.qml
