@@ -1,11 +1,13 @@
 [Unit]
 Description=ii shell fan curve, turbo and TCC daemon
 After=multi-user.target
-Conflicts=g15-fancurve.service
+Conflicts=g15-fancurve.service nbfc.service
 
 [Service]
 Type=simple
 ExecStart=/usr/local/bin/ii-fand daemon
+# also after a crash: never leave a manual duty/pwm behind
+ExecStopPost=-/usr/local/bin/ii-fand release
 Restart=always
 RestartSec=5
 

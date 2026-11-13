@@ -1,0 +1,25 @@
+module qs.modules.ii.monitor
+
+MonitorApp 1.0 MonitorApp.qml
+MonitorContent 1.0 MonitorContent.qml
+MonitorWindow 1.0 MonitorWindow.qml
+OverviewPage 1.0 OverviewPage.qml
+ProcessesPage 1.0 ProcessesPage.qml
+NetworkPage 1.0 NetworkPage.qml
+MonitorSettingsPage 1.0 MonitorSettingsPage.qml
+MonitorGraph 1.0 MonitorGraph.qml
+MeterBar 1.0 MeterBar.qml
+Panel 1.0 Panel.qml
+LatencyGraph 1.0 LatencyGraph.qml
+MonitorCard 1.0 MonitorCard.qml
+MonitorOverlay 1.0 MonitorOverlay.qml
+RingGauge 1.0 RingGauge.qml
+ProcessTable 1.0 ProcessTable.qml
+BatteryChip 1.0 BatteryChip.qml
+NetworkGraph 1.0 NetworkGraph.qml
+ProcessTools 1.0 ProcessTools.qml
+StatTile 1.0 StatTile.qml
+ExpandedCpu 1.0 ExpandedCpu.qml
+ExpandedMemory 1.0 ExpandedMemory.qml
+ExpandedNetwork 1.0 ExpandedNetwork.qml
+ExpandedLatency 1.0 ExpandedLatency.qml

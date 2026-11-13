@@ -596,7 +596,7 @@ Item {
                     visible: !!stage.g?.afterUpdate || !!stage.g?.package
                     implicitWidth: corrRow.implicitWidth + 20
                     implicitHeight: 30
-                    radius: 15
+                    radius: Appearance.rounding.full
                     color: stage.g?.afterUpdate ? ClockStyle.colTertiaryContainer : ClockStyle.colSurfaceHigh
 
                     RowLayout {

@@ -1,0 +1,7 @@
+module qs.modules.ii.patchbay
+
+PatchbayApp 1.0 PatchbayApp.qml
+PatchbayContent 1.0 PatchbayContent.qml
+PatchbayWindow 1.0 PatchbayWindow.qml
+PatchbayView 1.0 PatchbayView.qml
+PatchbayNode 1.0 PatchbayNode.qml

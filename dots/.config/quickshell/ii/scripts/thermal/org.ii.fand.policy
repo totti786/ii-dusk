@@ -13,4 +13,14 @@
     </defaults>
     <annotate key="org.freedesktop.policykit.exec.path">/usr/local/bin/ii-fand</annotate>
   </action>
+  <action id="org.ii.fand.ec">
+    <description>Set up fan control through the embedded controller</description>
+    <message>Authentication is required to let the thermal service write embedded controller registers</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/bin/ii-fand-ec</annotate>
+  </action>
 </policyconfig>

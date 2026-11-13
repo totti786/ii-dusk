@@ -256,7 +256,7 @@ Item {
                 visible: !root.compact
                 implicitWidth: srcText.implicitWidth + 14
                 implicitHeight: srcText.implicitHeight + 6
-                radius: 8
+                radius: Appearance.rounding.verysmall
                 color: ClockStyle.colRailRow
 
                 StyledText {

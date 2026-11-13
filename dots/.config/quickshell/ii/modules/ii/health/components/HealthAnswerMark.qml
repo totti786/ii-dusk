@@ -35,7 +35,7 @@ MaterialSymbol {
     }
 
     SequentialAnimation on opacity {
-        running: root.writing && !ClockStyle.reducedMotion
+        running: (root.writing && !ClockStyle.reducedMotion) && !Appearance.motionOff
         loops: Animation.Infinite
         alwaysRunToEnd: true
         NumberAnimation { to: 0.35; duration: 700; easing.type: Easing.InOutSine }

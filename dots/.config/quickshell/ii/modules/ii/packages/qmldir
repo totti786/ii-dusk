@@ -1,0 +1,14 @@
+module qs.modules.ii.packages
+
+PackagesApp 1.0 PackagesApp.qml
+PackagesContent 1.0 PackagesContent.qml
+PackagesWindow 1.0 PackagesWindow.qml
+UpdatesPage 1.0 UpdatesPage.qml
+InstalledPage 1.0 InstalledPage.qml
+BrowsePage 1.0 BrowsePage.qml
+MaintenancePage 1.0 MaintenancePage.qml
+PackageRow 1.0 PackageRow.qml
+PackageSearchField 1.0 PackageSearchField.qml
+PackageDetailPanel 1.0 PackageDetailPanel.qml
+PackageTaskPanel 1.0 PackageTaskPanel.qml
+PackageConfirm 1.0 PackageConfirm.qml
