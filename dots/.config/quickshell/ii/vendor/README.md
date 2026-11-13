@@ -1,13 +1,15 @@
-# Mediator backend payload
+# vendor/
 
-`mediator-rs` is the backend: one Rust binary built from the mediator checkout's `rust/` crate.
-`scripts/mediator` launches it, so the shell needs no Python backend, no pip install and no
-separate mediator installation. (`books.pyz` here is the Books app's own bundle.)
+Nothing in here is committed. The Mediator backend used to live here as a prebuilt binary; it is
+now compiled from `scripts/mediatorRs/mediator-rs_src` by `scripts/rust-helpers.sh` (the shell
+builds it on first use, see Settings > About > Compiled components). A leftover `mediator-rs` here
+is still used until the new build exists.
 
-Rebuild after backend changes:
+`books.pyz` is the Books app's own bundle, an optional extra that ii-dusk does not ship. Build it
+from your own books-cli checkout:
 
 ```sh
-scripts/build-mediator-rust.sh          # needs cargo; about 2-4 minutes with -j2
+scripts/build-books-zipapp.sh /path/to/books-cli
 ```
 
-User data stays in `~/.config/mediator`, `~/.local/state/mediator` and `~/.cache/mediator`.
+or point `BOOKS_CLI_PYZ` at an existing bundle. Without it the Books app shows that it is missing.
