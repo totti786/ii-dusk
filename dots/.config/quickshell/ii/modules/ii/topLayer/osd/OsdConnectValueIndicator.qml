@@ -111,8 +111,8 @@ Item {
             color: root.value > root.maxLimit ? root.shapeBgColorError : root.shapeBgColorNormal
             colSymbol: root.value > root.maxLimit ? root.shapeSymbolColorError : root.shapeSymbolColorNormal
 
-            Behavior on color { ColorAnimation { duration: 150 } }
-            Behavior on colSymbol { ColorAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
+            Behavior on colSymbol { ColorAnimation { duration: Appearance.dur(150) } }
             Behavior on rotation {
                 NumberAnimation {
                     duration: root.rotationDuration
@@ -211,7 +211,7 @@ Item {
                 radius: root.sliderCornerRadius
                 color: root.value > root.maxLimit ? root.shapeBgColorError : Appearance.colors.colPrimary
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
         }
 

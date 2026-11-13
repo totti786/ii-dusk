@@ -103,7 +103,7 @@ Item {
     }
 
     function savedPath() {
-        return `${Directories.pictures}/Screenshots/screenshot-${Qt.formatDateTime(new Date(), "yyyyMMdd-hhmmss")}.png`;
+        return `${Directories.pictures}/Screenshots/Screenshot_${Qt.formatDateTime(new Date(), "yyyy-MM-dd-hh-mm-ss")}.png`;
     }
 
     function saveSelected(): bool {

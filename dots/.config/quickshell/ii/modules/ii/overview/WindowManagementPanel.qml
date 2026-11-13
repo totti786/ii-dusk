@@ -338,6 +338,7 @@ Item {
             }
 
             ListView {
+                WheelScroll {}
                 id: targetStrip
                 Layout.fillWidth: true
                 implicitHeight: Appearance.sizes.elevationMargin * 3

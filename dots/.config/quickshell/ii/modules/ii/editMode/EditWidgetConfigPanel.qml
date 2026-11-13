@@ -182,6 +182,9 @@ Item {
             active: root.hasPage
             source: root.pageUrl
             onLoaded: {
+                // Generic pages (extension widgets) learn which widget they edit.
+                if (item.hasOwnProperty("widgetId"))
+                    item.widgetId = root.widgetId;
                 // The card is the title, and there is nowhere to go back to.
                 if (item.hasOwnProperty("headerVisible"))
                     item.headerVisible = false;

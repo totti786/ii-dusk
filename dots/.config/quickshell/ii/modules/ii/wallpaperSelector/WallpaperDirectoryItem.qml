@@ -55,7 +55,7 @@ MouseArea {
     scale: containsMouse ? 1.04 : 1.0
     Behavior on scale {
         NumberAnimation {
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.OutBack
             easing.overshoot: 1.4
         }

@@ -105,7 +105,7 @@ Singleton {
     // -------------------------------------------------------------- auto pin
 
     function autoPinSignal(identifier: string): bool {
-        return identifier === "discordVoice" ? DiscordVoice.inVoice : GameDetector.rawRunning;
+        return identifier === "discordVoice" ? DiscordVoiceActivity.inVoice : GameDetector.rawRunning;
     }
 
     // Pins a widget while its signal holds and takes back only the pins it
@@ -224,7 +224,7 @@ Singleton {
         }
     }
     Connections {
-        target: DiscordVoice
+        target: DiscordVoiceActivity
         function onInVoiceChanged() {
             root.requestAutoPin("discordVoice");
         }

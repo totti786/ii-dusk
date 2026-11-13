@@ -108,7 +108,7 @@ Item {
                 property: "yOffset"
                 from: contentBackground.slideOffset
                 to: 0
-                duration: 480
+                duration: Appearance.dur(480)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial // premium overshoot bounce
             }
@@ -117,7 +117,7 @@ Item {
                 property: "opacity"
                 from: 0
                 to: 1
-                duration: 480
+                duration: Appearance.dur(480)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.emphasizedDecel // clean fade
             }
@@ -130,7 +130,7 @@ Item {
                 target: contentBackground
                 property: "yOffset"
                 to: contentBackground.slideOffset
-                duration: 200
+                duration: Appearance.dur(200)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.emphasizedAccel
             }
@@ -138,7 +138,7 @@ Item {
                 target: contentBackground
                 property: "opacity"
                 to: 0
-                duration: 200
+                duration: Appearance.dur(200)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.emphasizedAccel
             }
@@ -266,7 +266,7 @@ Item {
 
                     Behavior on x {
                         NumberAnimation {
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutExpo
                         }
                     }
@@ -297,7 +297,7 @@ Item {
                                 color: index === layoutsContainer.activeIndex ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSurfaceVariant
 
                                 Behavior on color {
-                                    ColorAnimation { duration: 150 }
+                                    ColorAnimation { duration: Appearance.dur(150) }
                                 }
                             }
                         }
@@ -310,7 +310,7 @@ Item {
     // Dynamic icon shape micro-interaction pulse
     SequentialAnimation {
         id: iconShapePulse
-        NumberAnimation { target: iconShape; property: "scale"; to: 1.25; duration: 120; easing.type: Easing.OutQuad }
-        NumberAnimation { target: iconShape; property: "scale"; to: 1.0; duration: 220; easing.type: Easing.OutBack }
+        NumberAnimation { target: iconShape; property: "scale"; to: 1.25; duration: Appearance.dur(120); easing.type: Easing.OutQuad }
+        NumberAnimation { target: iconShape; property: "scale"; to: 1.0; duration: Appearance.dur(220); easing.type: Easing.OutBack }
     }
 }

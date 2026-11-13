@@ -102,6 +102,7 @@ ColumnLayout {
     }
 
     ListView {
+        WheelScroll {}
         id: lapList
         Layout.fillWidth: true
         Layout.preferredHeight: Math.min(contentHeight, 40 * 5 + spacing * 4)

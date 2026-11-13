@@ -322,7 +322,7 @@ Scope {
 
             Behavior on y {
                 NumberAnimation {
-                    duration: 90
+                    duration: Appearance.dur(90)
                     easing.type: Easing.OutQuad
                 }
             }
@@ -389,7 +389,7 @@ Scope {
                 target: pill
                 property: "scale"
                 to: 1.25
-                duration: 70
+                duration: Appearance.dur(70)
                 easing.type: Easing.OutQuad
             }
             NumberAnimation {

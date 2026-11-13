@@ -657,7 +657,7 @@ Item {
                             }
                             SequentialAnimation {
                                 id: playRippleAnim
-                                NumberAnimation { target: playRipple; property: "opacity"; from: 0.25; to: 0.0; duration: 250; easing.type: Easing.OutQuad }
+                                NumberAnimation { target: playRipple; property: "opacity"; from: 0.25; to: 0.0; duration: Appearance.dur(250); easing.type: Easing.OutQuad }
                             }
 
                             // Icon micro-bounce on state toggle
@@ -672,8 +672,8 @@ Item {
                             }
                             SequentialAnimation {
                                 id: playBounceAnim
-                                NumberAnimation { target: playBtn; property: "iconBounceScale"; to: 0.74; duration: 80; easing.type: Easing.OutQuad }
-                                NumberAnimation { target: playBtn; property: "iconBounceScale"; to: 1.0; duration: 180; easing.type: Easing.OutBack }
+                                NumberAnimation { target: playBtn; property: "iconBounceScale"; to: 0.74; duration: Appearance.dur(80); easing.type: Easing.OutQuad }
+                                NumberAnimation { target: playBtn; property: "iconBounceScale"; to: 1.0; duration: Appearance.dur(180); easing.type: Easing.OutBack }
                             }
 
                             MaterialSymbol {
@@ -753,14 +753,14 @@ Item {
                             }
                             SequentialAnimation {
                                 id: nextRippleAnim
-                                NumberAnimation { target: nextRipple; property: "opacity"; from: 0.25; to: 0.0; duration: 250; easing.type: Easing.OutQuad }
+                                NumberAnimation { target: nextRipple; property: "opacity"; from: 0.25; to: 0.0; duration: Appearance.dur(250); easing.type: Easing.OutQuad }
                             }
 
                             property real iconTranslateX: 0.0
                             SequentialAnimation {
                                 id: nextNudgeAnim
-                                NumberAnimation { target: nextBtn; property: "iconTranslateX"; to: 3.0; duration: 70; easing.type: Easing.OutQuad }
-                                NumberAnimation { target: nextBtn; property: "iconTranslateX"; to: 0.0; duration: 150; easing.type: Easing.OutBack }
+                                NumberAnimation { target: nextBtn; property: "iconTranslateX"; to: 3.0; duration: Appearance.dur(70); easing.type: Easing.OutQuad }
+                                NumberAnimation { target: nextBtn; property: "iconTranslateX"; to: 0.0; duration: Appearance.dur(150); easing.type: Easing.OutBack }
                             }
 
                             MaterialSymbol {
@@ -855,10 +855,10 @@ Item {
                     scale: root.mediaHovered ? 1.08 : 0.95
 
                     Behavior on radius {
-                        NumberAnimation { duration: 250; easing.type: Easing.OutQuint }
+                        NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutQuint }
                     }
                     Behavior on scale {
-                        NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+                        NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutQuad }
                     }
                     Behavior on color {
                         animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)

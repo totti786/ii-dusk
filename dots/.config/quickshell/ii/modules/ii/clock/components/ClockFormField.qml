@@ -56,9 +56,12 @@ Rectangle {
 
         ColumnLayout {
             Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
             spacing: 0
 
+            // No caption, no line for it: the input centres itself in the field
             StyledText {
+                visible: root.caption !== ""
                 Layout.fillWidth: true
                 text: root.caption
                 font.pixelSize: Appearance.font.pixelSize.smallest

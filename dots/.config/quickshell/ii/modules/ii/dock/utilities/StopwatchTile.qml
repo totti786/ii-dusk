@@ -79,7 +79,7 @@ UtilityTile {
             rotation: tile.seconds * 6
             Behavior on rotation {
                 enabled: !Appearance.reducedMotion && tile.running
-                NumberAnimation { duration: 1000; easing.type: Easing.Linear }
+                NumberAnimation { duration: Appearance.dur(1000); easing.type: Easing.Linear }
             }
             Behavior on width {
                 animation: ClockStyle.motionDefault.numberAnimation.createObject(this)

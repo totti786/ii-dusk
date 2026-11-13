@@ -52,7 +52,7 @@ Item {
         anchors.fill: parent
         color: Appearance.colors.colScrim
         opacity: root.animateIn ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic } }
     }
 
     Rectangle {
@@ -109,7 +109,7 @@ Item {
                 color: Appearance.colors.colSecondary
 
                 scale: root.animateIn ? 1 : 0.4
-                Behavior on scale { NumberAnimation { duration: 450; easing.type: Easing.OutBack; easing.overshoot: 1.6 } }
+                Behavior on scale { NumberAnimation { duration: Appearance.dur(450); easing.type: Easing.OutBack; easing.overshoot: 1.6 } }
             }
 
             WindowDialogTitle {
@@ -136,8 +136,8 @@ Item {
 
                 scale: inputField.activeFocus ? 1.02 : 1.0
 
-                Behavior on border.color { ColorAnimation { duration: 180 } }
-                Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 1.3 } }
+                Behavior on border.color { ColorAnimation { duration: Appearance.dur(180) } }
+                Behavior on scale { NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutBack; easing.overshoot: 1.3 } }
 
                 Item {
                     anchors.fill: parent
@@ -277,7 +277,7 @@ Item {
                                                 target: materialShape
                                                 properties: "opacity"
                                                 to: 1
-                                                duration: 50
+                                                duration: Appearance.dur(50)
                                                 easing.type: Appearance.animation.elementMoveFast.type
                                                 easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                                             }
@@ -285,7 +285,7 @@ Item {
                                                 target: materialShape
                                                 properties: "scale"
                                                 to: 1
-                                                duration: 220
+                                                duration: Appearance.dur(220)
                                                 easing.type: Easing.BezierSpline
                                                 easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial
                                             }
@@ -301,7 +301,7 @@ Item {
                                                 properties: "color"
                                                 from: Appearance.colors.colPrimary
                                                 to: Appearance.colors.colOnLayer1
-                                                duration: 1000
+                                                duration: Appearance.dur(1000)
                                                 easing.type: Appearance.animation.elementMoveFast.type
                                                 easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                                             }
@@ -333,8 +333,8 @@ Item {
                     border.width: 1
 
                     scale: cancelMouse.pressed ? 0.92 : (cancelMouse.containsMouse ? 1.05 : 1.0)
-                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                    Behavior on color { ColorAnimation { duration: Appearance.dur(120) } }
 
                     StyledText {
                         id: cancelText
@@ -366,8 +366,8 @@ Item {
                     scale: okMouse.pressed ? 0.92 : (okMouse.containsMouse && PolkitService.interactionAvailable ? 1.05 : 1.0)
                     opacity: PolkitService.interactionAvailable ? (okMouse.containsMouse ? 0.9 : 1.0) : 0.5
 
-                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
-                    Behavior on opacity { NumberAnimation { duration: 120 } }
+                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                    Behavior on opacity { NumberAnimation { duration: Appearance.dur(120) } }
 
                     StyledText {
                         id: okText

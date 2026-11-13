@@ -47,7 +47,7 @@ Loader {
     property real menuWidth: 288
     signal actionTriggered(string actionId)
 
-    property string dockPos: root.anchorItem?.dockContent?.dockPos ?? (typeof dock !== "undefined" ? dock.dockEffectivePosition : "bottom")
+    property string dockPos: root.anchorItem?.dockContent?.dockPos ?? (typeof dock !== "undefined" ? (dock?.dockEffectivePosition ?? "bottom") : "bottom")
     property real motionMargin: 0
     property color surfaceColor: Appearance.m3colors.m3surfaceContainer
     readonly property real cardRadius: Appearance.rounding.windowRounding

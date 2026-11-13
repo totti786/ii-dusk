@@ -434,7 +434,7 @@ Rectangle {
                     last: true
                     symbol: "keyboard"
                     title: Translation.tr("Keybinds")
-                    description: Translation.tr("Super+Y opens this app. Bind the shortcuts modesToggle, modesOpen and modesClose, or call \"qs -c ii ipc call modes toggle\". Automatic starts are switched on and off in Settings → Modes & Routines.")
+                    description: Translation.tr("Super+Alt+Y opens this app. Bind the shortcuts modesToggle, modesOpen and modesClose, or call \"qs -c ii ipc call modes toggle\". Automatic starts are switched on and off in Settings → Modes & Routines.")
                 }
             }
         }

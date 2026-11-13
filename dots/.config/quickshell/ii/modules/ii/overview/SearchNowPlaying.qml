@@ -50,7 +50,7 @@ Item {
     Behavior on artVignetteBlur {
         enabled: !root.animationsDisabled
         NumberAnimation {
-            duration: 500
+            duration: Appearance.dur(500)
             easing.type: Easing.OutCubic
         }
     }
@@ -207,7 +207,7 @@ Item {
                 Behavior on opacity {
                     enabled: !root.animationsDisabled
                     NumberAnimation {
-                        duration: 400
+                        duration: Appearance.dur(400)
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -230,7 +230,7 @@ Item {
                     Behavior on opacity {
                         enabled: !root.animationsDisabled
                         NumberAnimation {
-                            duration: 500
+                            duration: Appearance.dur(500)
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -285,7 +285,7 @@ Item {
                 Behavior on buttonRadius {
                     enabled: !root.animationsDisabled
                     NumberAnimation {
-                        duration: 250
+                        duration: Appearance.dur(250)
                         easing.type: Easing.OutCubic
                     }
                 }

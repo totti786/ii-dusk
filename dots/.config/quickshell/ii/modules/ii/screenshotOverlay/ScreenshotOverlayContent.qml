@@ -209,7 +209,7 @@ Item {
             return String(s).replace(/'/g, "'\\''");
         };
         var dir = Directories.phoneShare;
-        var dst = dir + "/screenshot-" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_hh.mm.ss") + ".png";
+        var dst = dir + "/Screenshot_" + Qt.formatDateTime(new Date(), "yyyy-MM-dd-hh-mm-ss") + ".png";
         var srcPath = GlobalStates.screenshotOverlayImagePath;
         var hasCrop = GlobalStates.screenshotOverlayRegionW > 0 && GlobalStates.screenshotOverlayRegionH > 0;
 

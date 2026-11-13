@@ -145,7 +145,7 @@ Item {
                 target: contentBackground
                 property: "opacity"
                 from: 0; to: 1
-                duration: 350
+                duration: Appearance.dur(350)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
             }
@@ -153,7 +153,7 @@ Item {
                 target: contentBackground
                 property: "scale"
                 from: 0.85; to: 1
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -221,12 +221,12 @@ Item {
                         from: 0; to: 360
                         duration: 15000
                         loops: Animation.Infinite
-                        running: true
+                        running: !Appearance.motionOff
                     }
 
                     NumberAnimation on scale {
                         from: 0; to: 1
-                        duration: 650
+                        duration: Appearance.dur(650)
                         easing.type: Easing.OutBack
                         easing.overshoot: 2.5
                     }
@@ -246,7 +246,7 @@ Item {
                         
                         NumberAnimation on scale {
                             from: 0; to: 1
-                            duration: 750
+                            duration: Appearance.dur(750)
                             easing.type: Easing.OutBack
                             easing.overshoot: 1.5
                         }
@@ -264,7 +264,7 @@ Item {
 
                         NumberAnimation on scale {
                             from: 0; to: 1
-                            duration: 750
+                            duration: Appearance.dur(750)
                             easing.type: Easing.OutBack
                             easing.overshoot: 1.5
                         }
@@ -386,7 +386,7 @@ Item {
                     }
 
                     Behavior on scale {
-                        NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+                        NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutQuad }
                     }
 
                     MaterialSymbol {
@@ -423,7 +423,7 @@ Item {
                     }
 
                     Behavior on scale {
-                        NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+                        NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutQuad }
                     }
 
                     RowLayout {

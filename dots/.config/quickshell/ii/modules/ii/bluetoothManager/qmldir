@@ -1,0 +1,8 @@
+module qs.modules.ii.bluetoothManager
+
+BluetoothManagerApp 1.0 BluetoothManagerApp.qml
+BluetoothManagerContent 1.0 BluetoothManagerContent.qml
+BluetoothManagerWindow 1.0 BluetoothManagerWindow.qml
+BluetoothDevicesPage 1.0 BluetoothDevicesPage.qml
+BluetoothSettingsPage 1.0 BluetoothSettingsPage.qml
+BluetoothDeviceCard 1.0 BluetoothDeviceCard.qml

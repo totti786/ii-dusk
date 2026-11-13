@@ -105,7 +105,7 @@ Item {
             property: "lift"
             from: 0
             to: 18
-            duration: 126
+            duration: Appearance.dur(126)
             easing.type: Easing.OutQuad
         }
         NumberAnimation {
@@ -113,7 +113,7 @@ Item {
             property: "lift"
             from: 18
             to: 0
-            duration: 154
+            duration: Appearance.dur(154)
             easing.type: Easing.InQuad
         }
     }
@@ -126,28 +126,28 @@ Item {
             property: "lift"
             from: 0
             to: 12
-            duration: 170
+            duration: Appearance.dur(170)
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
             target: root
             property: "lift"
             to: 0
-            duration: 170
+            duration: Appearance.dur(170)
             easing.type: Easing.InCubic
         }
         NumberAnimation {
             target: root
             property: "lift"
             to: 3
-            duration: 90
+            duration: Appearance.dur(90)
             easing.type: Easing.OutQuad
         }
         NumberAnimation {
             target: root
             property: "lift"
             to: 0
-            duration: 110
+            duration: Appearance.dur(110)
             easing.type: Easing.InQuad
         }
     }
@@ -160,14 +160,14 @@ Item {
             property: "pop"
             from: 1
             to: 1.18
-            duration: 140
+            duration: Appearance.dur(140)
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
             target: root
             property: "pop"
             to: 1
-            duration: 320
+            duration: Appearance.dur(320)
             easing.type: Easing.OutBack
             easing.overshoot: 3
         }
@@ -180,42 +180,42 @@ Item {
             target: root
             property: "tilt"
             to: -10
-            duration: 60
+            duration: Appearance.dur(60)
             easing.type: Easing.InOutSine
         }
         NumberAnimation {
             target: root
             property: "tilt"
             to: 10
-            duration: 60
+            duration: Appearance.dur(60)
             easing.type: Easing.InOutSine
         }
         NumberAnimation {
             target: root
             property: "tilt"
             to: -8
-            duration: 60
+            duration: Appearance.dur(60)
             easing.type: Easing.InOutSine
         }
         NumberAnimation {
             target: root
             property: "tilt"
             to: 8
-            duration: 60
+            duration: Appearance.dur(60)
             easing.type: Easing.InOutSine
         }
         NumberAnimation {
             target: root
             property: "tilt"
             to: -4
-            duration: 60
+            duration: Appearance.dur(60)
             easing.type: Easing.InOutSine
         }
         NumberAnimation {
             target: root
             property: "tilt"
             to: 0
-            duration: 60
+            duration: Appearance.dur(60)
             easing.type: Easing.InOutSine
         }
     }
@@ -227,7 +227,7 @@ Item {
             property: "ringProgress"
             from: 0.001
             to: 1
-            duration: 600
+            duration: Appearance.dur(600)
             easing.type: Easing.OutCubic
         }
         PropertyAction {

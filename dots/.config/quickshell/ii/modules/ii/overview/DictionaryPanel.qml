@@ -998,6 +998,7 @@ Item {
                         }
 
                         Flickable {
+                            WheelScroll {}
                             id: tabFlick
                             anchors.fill: parent
                             contentWidth: tabRow.implicitWidth

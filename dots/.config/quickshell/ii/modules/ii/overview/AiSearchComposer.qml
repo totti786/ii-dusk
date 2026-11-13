@@ -843,6 +843,7 @@ ColumnLayout {
         }
 
         Flickable {
+            WheelScroll {}
             id: railFlickable
             anchors.fill: parent
             contentWidth: railRow.implicitWidth
@@ -937,7 +938,7 @@ ColumnLayout {
             RotationAnimator on rotation {
                 // An inline component cannot see the file root's id, so the switch is
                 // read from the config here instead of through `animationsDisabled`.
-                running: iconButton.spinning && Config.options.overview.animationStyle !== "none"
+                running: (iconButton.spinning && Config.options.overview.animationStyle !== "none") && !Appearance.motionOff
                 from: 0
                 to: 360
                 duration: 900

@@ -129,7 +129,7 @@ Item {
         opacity: TouchGestureService.calibrating ? 1.0 : 0.0
 
         Behavior on opacity {
-            NumberAnimation { duration: 150 }
+            NumberAnimation { duration: Appearance.dur(150) }
         }
 
         readonly property string mode: TouchGestureService.calibrationMode
@@ -329,7 +329,7 @@ Item {
                 : Appearance.colors.colLayer2
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: Appearance.dur(150) }
             }
 
             scale: 0.85 + root.gestureProgress * 0.15

@@ -207,6 +207,15 @@ Item {
         onTriggered: root.dismissed()
     }
 
+    // Hovering holds the card open, but not for ever: a pointer resting on the spot where it
+    // appeared used to keep it up with no way to remove it.
+    Timer {
+        interval: 20000
+        running: !matugenProcess.running && !root.schemePageOpen
+        repeat: false
+        onTriggered: root.dismissed()
+    }
+
     // Timer to trigger staggered entrance
     property bool entrance1: false
     property bool entrance2: false
@@ -373,10 +382,42 @@ Item {
             anchors.fill: parent
             z: -1
             hoverEnabled: true
+            acceptedButtons: Qt.AllButtons
             onWheel: wheel => wheel.accepted = true
-            onClicked: mouse => mouse.accepted = true
+            onClicked: mouse => {
+                mouse.accepted = true;
+                // Right or middle click on empty card space closes it
+                if (mouse.button !== Qt.LeftButton)
+                    root.dismissed();
+            }
             onPressed: mouse => mouse.accepted = true
             onReleased: mouse => mouse.accepted = true
+        }
+
+        // Close button, always reachable whatever the pointer is doing
+        Rectangle {
+            id: closeButton
+            z: 20
+            width: 26
+            height: 26
+            radius: 13
+            anchors { top: parent.top; left: parent.left; topMargin: 6; leftMargin: 6 }
+            color: closeMa.containsMouse ? Appearance.colors.colLayer3Hover : Appearance.colors.colLayer3
+            opacity: closeMa.containsMouse ? 1 : 0.85
+
+            MaterialSymbol {
+                anchors.centerIn: parent
+                text: "close"
+                iconSize: 16
+                color: Appearance.colors.colOnLayer3
+            }
+            MouseArea {
+                id: closeMa
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.dismissed()
+            }
         }
 
         ColumnLayout {
@@ -458,7 +499,7 @@ Item {
                     to: 360
                     duration: 15000
                     loops: Animation.Infinite
-                    running: true
+                    running: !Appearance.motionOff
                     direction: RotationAnimation.Clockwise
                 }
             }

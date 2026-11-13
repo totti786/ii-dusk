@@ -109,12 +109,12 @@ Item {
     SequentialAnimation {
         id: stateTransition
         ParallelAnimation {
-            NumberAnimation { target: root; property: "transitionScale"; to: 0.82; duration: 90; easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "transitionRotation"; to: -7; duration: 90; easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "transitionScale"; to: 0.82; duration: Appearance.dur(90); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "transitionRotation"; to: -7; duration: Appearance.dur(90); easing.type: Easing.InCubic }
         }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "transitionScale"; to: 1; duration: 280; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "transitionRotation"; to: 0; duration: 280; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "transitionScale"; to: 1; duration: Appearance.dur(280); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "transitionRotation"; to: 0; duration: Appearance.dur(280); easing.type: Easing.OutBack }
         }
     }
 

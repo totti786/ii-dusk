@@ -91,7 +91,7 @@ Item {
             property: "flip"
             from: 0
             to: 1
-            duration: 640
+            duration: Appearance.dur(640)
             easing.type: Easing.InOutQuad
         }
 

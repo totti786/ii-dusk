@@ -325,7 +325,7 @@ PanelWindow {
     // the same offset, so a bar that changes edge exits through the old one and
     // enters through the new one — the direction flips with the config, which
     // GlobalStates writes while we are off screen.
-    readonly property bool mediaModeHere: GlobalStates.isMediaModeActiveForScreen(topPanel.screen ? topPanel.screen.name : "")
+    readonly property bool mediaModeHere: GlobalStates.isMediaModeRevealingDesktop(topPanel.screen ? topPanel.screen.name : "")
     readonly property bool shellHiddenWanted: (topPanel.hasFullscreenWindowOnMonitor
             && !GlobalStates.overviewOpen && !GlobalStates.sidebarLeftOpen && !GlobalStates.sidebarRightOpen)
         || topPanel.mediaModeHere

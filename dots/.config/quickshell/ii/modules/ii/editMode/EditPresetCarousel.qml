@@ -112,6 +112,7 @@ Item {
     }
 
     GridView {
+        WheelScroll {}
         id: grid
         width: root.width
         height: root.stripHeight

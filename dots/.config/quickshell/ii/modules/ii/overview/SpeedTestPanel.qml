@@ -506,7 +506,7 @@ Item {
                         opacity: SpeedTestService.running ? 1.0 : 0.0
 
                         Behavior on opacity {
-                            NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
+                            NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutQuad }
                         }
 
                         Rectangle {
@@ -522,7 +522,7 @@ Item {
 
                                 Behavior on width {
                                     enabled: !root.animationsDisabled && SpeedTestService.running
-                                    NumberAnimation { duration: 160; easing.type: Easing.OutQuad }
+                                    NumberAnimation { duration: Appearance.dur(160); easing.type: Easing.OutQuad }
                                 }
                             }
                         }

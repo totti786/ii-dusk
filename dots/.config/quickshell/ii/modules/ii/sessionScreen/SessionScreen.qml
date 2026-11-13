@@ -134,7 +134,7 @@ Scope {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 250
+                        duration: Appearance.dur(250)
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -157,13 +157,13 @@ Scope {
 
                 Behavior on scale {
                     NumberAnimation {
-                        duration: 250
+                        duration: Appearance.dur(250)
                         easing.type: Easing.OutCubic
                     }
                 }
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 200
+                        duration: Appearance.dur(200)
                         easing.type: Easing.OutCubic
                     }
                 }

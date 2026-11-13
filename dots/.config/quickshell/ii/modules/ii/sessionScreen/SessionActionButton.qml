@@ -63,7 +63,7 @@ RippleButton {
     bottomRightRadius: button.outerBottomRight ? button.outerCornerRadius : button.innerCornerRadius
 
     component RadiusBehavior: NumberAnimation {
-        duration: 140
+        duration: Appearance.dur(140)
         easing.type: Easing.OutCubic
     }
     Behavior on topLeftRadius { RadiusBehavior { } }
@@ -93,7 +93,7 @@ RippleButton {
 
     Behavior on animScale {
         NumberAnimation {
-            duration: 350
+            duration: Appearance.dur(350)
             easing.type: Easing.OutBack
             easing.overshoot: 1.2
         }
@@ -101,14 +101,14 @@ RippleButton {
 
     Behavior on animTranslateX {
         NumberAnimation {
-            duration: 350
+            duration: Appearance.dur(350)
             easing.type: Easing.OutCubic
         }
     }
 
     Behavior on animOpacity {
         NumberAnimation {
-            duration: 250
+            duration: Appearance.dur(250)
             easing.type: Easing.OutCubic
         }
     }

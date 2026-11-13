@@ -285,13 +285,13 @@ MouseArea {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutCubic
                 }
             }
             Behavior on scale {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutBack
                 }
             }
@@ -358,7 +358,7 @@ MouseArea {
 
                 Behavior on implicitWidth {
                     NumberAnimation {
-                        duration: 300
+                        duration: Appearance.dur(300)
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -410,13 +410,13 @@ MouseArea {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutCubic
                 }
             }
             Behavior on scale {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutBack
                 }
             }
@@ -462,13 +462,13 @@ MouseArea {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutCubic
                 }
             }
             Behavior on scale {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutBack
                 }
             }
@@ -516,7 +516,7 @@ MouseArea {
 
             SequentialAnimation {
                 id: sportsSwitchAnim
-                NumberAnimation { target: sportsIsland; property: "opacity"; to: 0.3; duration: 100; easing.type: Easing.InSine }
+                NumberAnimation { target: sportsIsland; property: "opacity"; to: 0.3; duration: Appearance.dur(100); easing.type: Easing.InSine }
                 ScriptAction {
                     script: {
                         if (SportsService.currentGame) {
@@ -524,7 +524,7 @@ MouseArea {
                         }
                     }
                 }
-                NumberAnimation { target: sportsIsland; property: "opacity"; to: root.toolbarOpacity; duration: 150; easing.type: Easing.OutSine }
+                NumberAnimation { target: sportsIsland; property: "opacity"; to: root.toolbarOpacity; duration: Appearance.dur(150); easing.type: Easing.OutSine }
             }
 
             Toolbar {
@@ -590,7 +590,7 @@ MouseArea {
                     }
 
                     Behavior on color {
-                        ColorAnimation { duration: 200 }
+                        ColorAnimation { duration: Appearance.dur(200) }
                     }
 
                     StyledText {
@@ -757,11 +757,11 @@ MouseArea {
                 transform: Translate { id: fingerprintShakeOffset }
                 SequentialAnimation {
                     id: fingerprintShakeAnim
-                    NumberAnimation { target: fingerprintShakeOffset; property: "x"; to: -6; duration: 50 }
-                    NumberAnimation { target: fingerprintShakeOffset; property: "x"; to: 6; duration: 50 }
-                    NumberAnimation { target: fingerprintShakeOffset; property: "x"; to: -3; duration: 40 }
-                    NumberAnimation { target: fingerprintShakeOffset; property: "x"; to: 3; duration: 40 }
-                    NumberAnimation { target: fingerprintShakeOffset; property: "x"; to: 0; duration: 30 }
+                    NumberAnimation { target: fingerprintShakeOffset; property: "x"; to: -6; duration: Appearance.dur(50) }
+                    NumberAnimation { target: fingerprintShakeOffset; property: "x"; to: 6; duration: Appearance.dur(50) }
+                    NumberAnimation { target: fingerprintShakeOffset; property: "x"; to: -3; duration: Appearance.dur(40) }
+                    NumberAnimation { target: fingerprintShakeOffset; property: "x"; to: 3; duration: Appearance.dur(40) }
+                    NumberAnimation { target: fingerprintShakeOffset; property: "x"; to: 0; duration: Appearance.dur(30) }
                 }
 
                 ColumnLayout {
@@ -776,10 +776,10 @@ MouseArea {
                         color: fingerprintStatus.colContent
                         opacity: (fingerprintStatus.exhausted || fingerprintStatus.unavailable) ? 0.5 : 1
                         Behavior on color {
-                            ColorAnimation { duration: 200 }
+                            ColorAnimation { duration: Appearance.dur(200) }
                         }
                         Behavior on opacity {
-                            NumberAnimation { duration: 200 }
+                            NumberAnimation { duration: Appearance.dur(200) }
                         }
                     }
 
@@ -800,7 +800,7 @@ MouseArea {
                                 border.width: filled ? 0 : 1
                                 border.color: fingerprintStatus.exhausted ? Appearance.colors.colError : Appearance.colors.colOutline
                                 Behavior on color {
-                                    ColorAnimation { duration: 200 }
+                                    ColorAnimation { duration: Appearance.dur(200) }
                                 }
                             }
                         }
@@ -1067,7 +1067,7 @@ MouseArea {
             
             Behavior on Layout.preferredWidth {
                 NumberAnimation {
-                    duration: 300
+                    duration: Appearance.dur(300)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -1168,7 +1168,7 @@ MouseArea {
             
             Behavior on Layout.preferredWidth {
                 NumberAnimation {
-                    duration: 300
+                    duration: Appearance.dur(300)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -1261,7 +1261,7 @@ MouseArea {
             
             Behavior on Layout.preferredWidth {
                 NumberAnimation {
-                    duration: 300
+                    duration: Appearance.dur(300)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -1335,7 +1335,7 @@ MouseArea {
 
             Behavior on Layout.preferredWidth {
                 NumberAnimation {
-                    duration: 300
+                    duration: Appearance.dur(300)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -1392,7 +1392,7 @@ MouseArea {
 
             Behavior on Layout.preferredWidth {
                 NumberAnimation {
-                    duration: 300
+                    duration: Appearance.dur(300)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -1632,10 +1632,10 @@ MouseArea {
         }
         
         Behavior on opacity {
-            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic }
         }
         Behavior on scale {
-            NumberAnimation { duration: 200; easing.type: Easing.OutBack }
+            NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutBack }
         }
         
         function open() {

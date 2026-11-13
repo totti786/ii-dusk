@@ -18,20 +18,27 @@ UtilityTile {
     id: tile
 
     readonly property var cfg: Config.options?.dock?.utilities?.send ?? null
-    readonly property bool localSend: (tile.cfg?.backend ?? "kdeconnect") === "localsend"
+    readonly property string backend: tile.cfg?.backend ?? "kdeconnect"
+    readonly property bool localSend: tile.backend === "localsend"
+    readonly property bool quickShare: tile.backend === "quickshare"
+    readonly property string backendName: tile.quickShare ? "Quick Share" : tile.localSend ? "LocalSend" : "KDE Connect"
 
     readonly property string kdeDeviceId: String(tile.cfg?.kdeDevice ?? "") || KdeConnectService.activeDeviceId
     readonly property var kdeDevice: (KdeConnectService.devices ?? []).find(device => device.id === tile.kdeDeviceId) ?? null
     readonly property string localIp: String(tile.cfg?.localsendIp ?? "")
     readonly property string localAlias: String(tile.cfg?.localsendAlias ?? "")
 
-    readonly property bool ready: tile.localSend
+    // Quick Share has no remembered target: nearby devices only exist while discovering,
+    // so a drop always waits in the panel until one is picked.
+    readonly property bool ready: tile.quickShare ? false
+        : tile.localSend
         ? (LocalSend.available && tile.localIp.length > 0)
         : (tile.kdeDevice?.reachable === true)
-    readonly property string targetName: tile.localSend
+    readonly property string targetName: tile.quickShare ? Translation.tr("Pick a nearby device")
+        : tile.localSend
         ? (tile.localAlias || Translation.tr("No device chosen"))
         : (tile.kdeDevice?.name || Translation.tr("No phone paired"))
-    readonly property bool sending: tile.localSend && LocalSend.sending
+    readonly property bool sending: tile.quickShare ? QuickShareService.busy : tile.localSend && LocalSend.sending
 
     // Files dropped while nothing could take them.
     property var pending: []
@@ -70,7 +77,7 @@ UtilityTile {
     }
 
     readonly property bool justSent: tile.lastSentCount > 0 && !tile.sending
-    readonly property string symbol: tile.localSend ? "near_me" : "smartphone"
+    readonly property string symbol: tile.quickShare ? "send_to_mobile" : tile.localSend ? "near_me" : "smartphone"
 
     surfaceColor: tile.dropHovering ? ClockStyle.colPrimaryContainer
         : tile.justSent ? ClockStyle.colTertiaryContainer
@@ -84,14 +91,14 @@ UtilityTile {
     readonly property string stateText: tile.dropHovering ? Translation.tr("Drop to send")
         : tile.sending ? Translation.tr("Sending…")
         : tile.justSent ? (tile.lastSentCount === 1 ? Translation.tr("Sent 1 file") : Translation.tr("Sent %1 files").arg(tile.lastSentCount))
-        : !tile.ready ? (tile.localSend ? Translation.tr("Choose a device") : Translation.tr("Phone offline"))
-        : (tile.localSend ? "LocalSend" : "KDE Connect")
+        : !tile.ready ? (tile.localSend || tile.quickShare ? Translation.tr("Choose a device") : Translation.tr("Phone offline"))
+        : tile.backendName
 
-    tooltipText: (tile.localSend ? "LocalSend" : "KDE Connect") + " · " + tile.targetName + " · " + tile.stateText
-    panelSubtitle: (tile.localSend ? "LocalSend" : "KDE Connect") + " · " + tile.targetName
+    tooltipText: tile.backendName + " · " + tile.targetName + " · " + tile.stateText
+    panelSubtitle: tile.backendName + " · " + tile.targetName
     panelWidth: 360
 
-    readonly property int phoneCharge: !tile.localSend && tile.ready ? (tile.kdeDevice?.charge ?? -1) : -1
+    readonly property int phoneCharge: !tile.localSend && !tile.quickShare && tile.ready ? (tile.kdeDevice?.charge ?? -1) : -1
 
     // Square: the phone's charge as a ring around the badge.
     ClockProgressRing {
@@ -148,7 +155,7 @@ UtilityTile {
         TileCaption {
             Layout.fillWidth: true
             text: tile.dropHovering ? tile.targetName
-                : tile.stateText + (!tile.localSend && tile.ready && (tile.kdeDevice?.charge ?? -1) >= 0
+                : tile.stateText + (!tile.localSend && !tile.quickShare && tile.ready && (tile.kdeDevice?.charge ?? -1) >= 0
                     ? " · " + tile.kdeDevice.charge + "%" : "")
             color: tile.captionColor
             font.pixelSize: tile.captionSize

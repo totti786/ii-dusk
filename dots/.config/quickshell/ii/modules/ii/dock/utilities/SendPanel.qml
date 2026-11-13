@@ -19,6 +19,7 @@ ColumnLayout {
     readonly property var tile: panel.host?.tile ?? null
     readonly property var cfg: Config.options.dock.utilities.send
     readonly property bool localSend: panel.cfg.backend === "localsend"
+    readonly property bool quickShare: panel.cfg.backend === "quickshare"
     readonly property var pending: panel.tile?.pending ?? []
     readonly property var kdeDevices: (KdeConnectService.devices ?? []).filter(device => device.paired)
 
@@ -36,7 +37,32 @@ ColumnLayout {
             Qt.callLater(() => panel.tile?.send(panel.pending));
     }
 
+    function chooseQuick(endpoint) {
+        if (panel.pending.length === 0)
+            return;
+        QuickShareService.sendFiles(endpoint, panel.pending);
+        panel.tile.pending = [];
+    }
+
+    // Quick Share finds devices only while something asks it to.
+    readonly property bool wantQuick: panel.quickShare
+    onWantQuickChanged: {
+        if (panel.wantQuick) {
+            if (!QuickShareService.enabled)
+                Config.options.quickShare.enable = true;
+            QuickShareService.discover();
+        } else {
+            QuickShareService.stopDiscover();
+        }
+    }
+    Component.onDestruction: if (panel.wantQuick) QuickShareService.stopDiscover()
+
     Component.onCompleted: {
+        if (panel.wantQuick) {
+            if (!QuickShareService.enabled)
+                Config.options.quickShare.enable = true;
+            QuickShareService.discover();
+        }
         if (panel.localSend && LocalSend.available && !LocalSend.scanning)
             LocalSend.startScanning();
     }
@@ -83,7 +109,8 @@ ColumnLayout {
         Repeater {
             model: [
                 { id: "kdeconnect", label: "KDE Connect", symbol: "smartphone" },
-                { id: "localsend", label: "LocalSend", symbol: "near_me" }
+                { id: "localsend", label: "LocalSend", symbol: "near_me" },
+                { id: "quickshare", label: "Quick Share", symbol: "send_to_mobile" }
             ]
             delegate: ClockChip {
                 required property var modelData
@@ -167,7 +194,7 @@ ColumnLayout {
 
     ColumnLayout {
         Layout.fillWidth: true
-        visible: !panel.localSend
+        visible: !panel.localSend && !panel.quickShare
         spacing: 3
         Repeater {
             model: panel.kdeDevices
@@ -242,6 +269,37 @@ ColumnLayout {
             symbol: "radar"
             label: LocalSend.scanning ? Translation.tr("Scanning…") : Translation.tr("Scan again")
             onClicked: LocalSend.startScanning()
+        }
+    }
+
+    ColumnLayout {
+        Layout.fillWidth: true
+        visible: panel.quickShare
+        spacing: 3
+        Repeater {
+            model: QuickShareService.endpoints
+            delegate: DeviceRow {
+                required property var modelData
+                required property int index
+                first: index === 0
+                name: String(modelData.name ?? "")
+                detail: String(modelData.rtype ?? Translation.tr("Nearby"))
+                symbol: modelData.rtype === "laptop" ? "computer" : modelData.rtype === "tablet" ? "tablet_android" : "smartphone"
+                chosen: false
+                onPicked: panel.chooseQuick(modelData)
+            }
+        }
+        StyledText {
+            Layout.fillWidth: true
+            Layout.margins: 6
+            visible: QuickShareService.endpoints.length === 0 || panel.pending.length === 0
+            text: !QuickShareService.linked ? Translation.tr("Starting Quick Share…")
+                : panel.pending.length === 0 ? Translation.tr("Drop files on the tile, then pick a device. The phone must be set to receive from everyone.")
+                : QuickShareService.discovering ? Translation.tr("Looking for devices…")
+                : Translation.tr("No devices found")
+            color: ClockStyle.colOnSurfaceVariant
+            font.pixelSize: ClockStyle.textNormal
+            wrapMode: Text.WordWrap
         }
     }
 }

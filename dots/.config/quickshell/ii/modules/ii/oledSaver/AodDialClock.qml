@@ -153,7 +153,7 @@ Item {
         Behavior on rotation {
             enabled: root.running
             NumberAnimation {
-                duration: 520
+                duration: Appearance.dur(520)
                 easing.type: Easing.OutBack
                 easing.overshoot: 1.2
             }
@@ -195,11 +195,11 @@ Item {
 
                 Behavior on scale {
                     enabled: root.running
-                    NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic }
                 }
                 Behavior on color {
                     enabled: root.running
-                    ColorAnimation { duration: 300 }
+                    ColorAnimation { duration: Appearance.dur(300) }
                 }
             }
         }

@@ -93,7 +93,7 @@ Item {
     }
 
     NumberAnimation on wavePhase {
-        running: root.animateWave && root.visible && root.amplitude > 0.01 && root.sweep > 0
+        running: (root.animateWave && root.visible && root.amplitude > 0.01 && root.sweep > 0) && !Appearance.motionOff
         from: 0
         to: Math.PI * 2
         duration: 1600

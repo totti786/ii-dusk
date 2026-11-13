@@ -497,7 +497,7 @@ PanelWindow {
         return (Config.options.screenSnip.savePath !== "" ? Config.options.screenSnip.savePath : (Directories.home + "/Pictures/Screenshots")).toString().replace(/^file:\/\//, "");
     }
     function timestampedName() {
-        return "screenshot-" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_hh.mm.ss") + ".png";
+        return "Screenshot_" + Qt.formatDateTime(new Date(), "yyyy-MM-dd-hh-mm-ss") + ".png";
     }
 
     function finalizeScreenshot(saveToFile) {
@@ -813,17 +813,32 @@ PanelWindow {
             imageDetectionProcess.running = false;
             imageDetectionProcess.running = true;
         }
-        // Load synchronously before mapping so the first painted frame already
-        // has the frozen screen; an async load could flash an empty window.
-        // Cache-bust because screenshotPath is reused across activations.
+        // Decode off the GUI thread and map only once the frame is ready, so the first
+        // painted frame already has the frozen screen and the shell does not stall while
+        // a full-monitor image is decoded. Cache-busting is `cache: false` on the Image,
+        // because screenshotPath is reused across activations.
+        root.awaitingFrame = true;
         freezeFrame.source = `file://${root.screenshotPath}`;
-        root.preparationDone = true;
+        root.frameMaybeReady();
+    }
+
+    property bool awaitingFrame: false
+
+    function frameMaybeReady() {
+        if (!root.awaitingFrame)
+            return;
+        // An unreadable capture maps anyway: a stuck, invisible selector is worse
+        if (freezeFrame.status === Image.Ready || freezeFrame.status === Image.Error) {
+            root.awaitingFrame = false;
+            root.preparationDone = true;
+        }
     }
 
     onCaptureReadyChanged: root.tryFinishPreparation()
 
     onCaptureTokenChanged: {
         freezeFrame.source = "";
+        root.awaitingFrame = false;
         root.preparationDone = false;
         root.recordingShouldStop = false;
         root.imageRegions = [];
@@ -863,6 +878,7 @@ PanelWindow {
         function onRegionSelectorOpenChanged() {
             if (GlobalStates.regionSelectorOpen)
                 return;
+            root.awaitingFrame = false;
             root.preparationDone = false;
             freezeFrame.source = "";
             root.imageRegions = [];
@@ -1008,7 +1024,8 @@ PanelWindow {
         anchors.fill: parent
         fillMode: Image.Stretch
         cache: false
-        asynchronous: false
+        asynchronous: true
+        onStatusChanged: root.frameMaybeReady()
 
         focus: root.visible && !root.inlineEditorActive
         Keys.onPressed: event => { // Esc to close

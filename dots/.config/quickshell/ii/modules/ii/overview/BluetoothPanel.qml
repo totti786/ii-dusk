@@ -489,7 +489,7 @@ Item {
                                     to: 360
                                     duration: 1200
                                     loops: Animation.Infinite
-                                    running: root.isScanning && !root.animationsDisabled
+                                    running: (root.isScanning && !root.animationsDisabled) && !Appearance.motionOff
                                 }
                             }
 
@@ -541,7 +541,7 @@ Item {
                                 Behavior on color {
                                     enabled: !root.animationsDisabled
                                     ColorAnimation {
-                                        duration: 200
+                                        duration: Appearance.dur(200)
                                     }
                                 }
 
@@ -558,14 +558,14 @@ Item {
                                     Behavior on x {
                                         enabled: !root.animationsDisabled
                                         NumberAnimation {
-                                            duration: 200
+                                            duration: Appearance.dur(200)
                                             easing.type: Easing.OutQuint
                                         }
                                     }
                                     Behavior on color {
                                         enabled: !root.animationsDisabled
                                         ColorAnimation {
-                                            duration: 200
+                                            duration: Appearance.dur(200)
                                         }
                                     }
                                 }
@@ -627,7 +627,7 @@ Item {
                                 to: 360
                                 duration: 2000
                                 loops: Animation.Infinite
-                                running: root.isEnabling && !root.animationsDisabled
+                                running: (root.isEnabling && !root.animationsDisabled) && !Appearance.motionOff
                             }
                         }
 
@@ -683,7 +683,7 @@ Item {
                             opacity: 0.8
 
                             SequentialAnimation on scale {
-                                running: !root.animationsDisabled
+                                running: (!root.animationsDisabled) && !Appearance.motionOff
                                 loops: Animation.Infinite
                                 NumberAnimation {
                                     from: 1.0
@@ -800,14 +800,14 @@ Item {
                                 Behavior on topFadeColor {
                                     enabled: !root.animationsDisabled
                                     ColorAnimation {
-                                        duration: 200
+                                        duration: Appearance.dur(200)
                                         easing.type: Easing.OutQuad
                                     }
                                 }
                                 Behavior on bottomFadeColor {
                                     enabled: !root.animationsDisabled
                                     ColorAnimation {
-                                        duration: 200
+                                        duration: Appearance.dur(200)
                                         easing.type: Easing.OutQuad
                                     }
                                 }
@@ -891,7 +891,7 @@ Item {
                                     Behavior on y {
                                         enabled: slotDelegate.positionAnimationEnabled && !root.animationsDisabled
                                         NumberAnimation {
-                                            duration: 220
+                                            duration: Appearance.dur(220)
                                             easing.type: Easing.BezierSpline
                                             easing.bezierCurve: Appearance.animationCurves.emphasized
                                         }
@@ -900,7 +900,7 @@ Item {
                                     Behavior on height {
                                         enabled: !root.animationsDisabled
                                         NumberAnimation {
-                                            duration: 180
+                                            duration: Appearance.dur(180)
                                             easing.type: Easing.BezierSpline
                                             easing.bezierCurve: Appearance.animationCurves.emphasized
                                         }
@@ -909,7 +909,7 @@ Item {
                                     Behavior on opacity {
                                         enabled: !root.animationsDisabled
                                         NumberAnimation {
-                                            duration: 180
+                                            duration: Appearance.dur(180)
                                             easing.type: Easing.BezierSpline
                                             easing.bezierCurve: Appearance.animationCurves.emphasized
                                         }
@@ -1064,28 +1064,28 @@ Item {
                                                 Behavior on topLeftRadius {
                                                     enabled: !root.animationsDisabled
                                                     NumberAnimation {
-                                                        duration: 300
+                                                        duration: Appearance.dur(300)
                                                         easing.type: Easing.OutQuad
                                                     }
                                                 }
                                                 Behavior on topRightRadius {
                                                     enabled: !root.animationsDisabled
                                                     NumberAnimation {
-                                                        duration: 300
+                                                        duration: Appearance.dur(300)
                                                         easing.type: Easing.OutQuad
                                                     }
                                                 }
                                                 Behavior on bottomLeftRadius {
                                                     enabled: !root.animationsDisabled
                                                     NumberAnimation {
-                                                        duration: 300
+                                                        duration: Appearance.dur(300)
                                                         easing.type: Easing.OutQuad
                                                     }
                                                 }
                                                 Behavior on bottomRightRadius {
                                                     enabled: !root.animationsDisabled
                                                     NumberAnimation {
-                                                        duration: 300
+                                                        duration: Appearance.dur(300)
                                                         easing.type: Easing.OutQuad
                                                     }
                                                 }
@@ -1136,7 +1136,7 @@ Item {
                                                             to: 360
                                                             duration: 2000
                                                             loops: Animation.Infinite
-                                                            running: iconContainer.isProcessing && !root.animationsDisabled
+                                                            running: (iconContainer.isProcessing && !root.animationsDisabled) && !Appearance.motionOff
                                                         }
                                                     }
                                                 }
@@ -1550,7 +1550,7 @@ Item {
                                             to: 360
                                             duration: 2000
                                             loops: Animation.Infinite
-                                            running: connectActionBtn.isProcessing && !root.animationsDisabled
+                                            running: (connectActionBtn.isProcessing && !root.animationsDisabled) && !Appearance.motionOff
                                         }
                                     }
 

@@ -256,11 +256,11 @@ EditDragArea {
                     id: symbolPop
                     NumberAnimation {
                         target: symbolGlyph; property: "scale"; to: 0.55
-                        duration: 70; easing.type: Easing.InQuad
+                        duration: Appearance.dur(70); easing.type: Easing.InQuad
                     }
                     NumberAnimation {
                         target: symbolGlyph; property: "scale"; to: 1
-                        duration: 260; easing.type: Easing.OutBack; easing.overshoot: 2.2
+                        duration: Appearance.dur(260); easing.type: Easing.OutBack; easing.overshoot: 2.2
                     }
                 }
             }

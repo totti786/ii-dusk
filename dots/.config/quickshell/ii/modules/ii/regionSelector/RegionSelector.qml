@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 import qs
 import qs.modules.common
 import qs.modules.common.utils
+import qs.modules.common.functions
 import qs.services
 import QtQuick
 import Quickshell
@@ -47,6 +48,15 @@ Scope {
             // only wait on grim, not on rebuilding ~2k lines of QML.
             property bool stickyLoaded: false
 
+            // Build the selector in the background a few seconds after the shell starts
+            // (and after every reload), so the first screenshot does not pay for creating
+            // ~2k lines of QML on the GUI thread while the screen is already frozen.
+            Timer {
+                interval: 5000
+                running: true
+                onTriggered: monitorScope.stickyLoaded = true
+            }
+
             TempScreenshotProcess {
                 id: captureProc
                 running: false
@@ -88,6 +98,43 @@ Scope {
         root.action = RegionSelection.SnipAction.Copy
         root.selectionMode = RegionSelection.SelectionMode.RectCorners
         root.openSelector()
+    }
+
+    // Whole focused monitor, no selector: grim -> save + clipboard, then the
+    // same preview overlay the region path raises.
+    readonly property string fullShotPath: `${Directories.screenshotTemp}/full-shot.png`
+    property string fullShotMonitor: ""
+
+    function fullscreen() {
+        if (fullShotProc.running)
+            return
+        const name = Hyprland.focusedMonitor?.name ?? Quickshell.screens[0]?.name ?? ""
+        if (name === "")
+            return
+        const q = StringUtils.shellSingleQuoteEscape
+        const saveDir = (Config.options.screenSnip.savePath !== "" ? Config.options.screenSnip.savePath : (Directories.home + "/Pictures/Screenshots")).toString().replace(/^file:\/\//, "")
+        root.fullShotMonitor = name
+        ShellRegions.freeze()
+        fullShotProc.command = ["bash", "-c", `mkdir -p '${q(Directories.screenshotTemp)}' '${q(saveDir)}' && grim -t png -o '${q(name)}' '${q(root.fullShotPath)}' && f='${q(saveDir)}'/Screenshot_$(date +%Y-%m-%d-%H-%M-%S).png && cp '${q(root.fullShotPath)}' "$f" && wl-copy < "$f" && notify-send -i camera-photo -t 4000 --hint=boolean:suppress-sound:true 'Screenshot saved' "Saved to: $f"`]
+        fullShotProc.running = true
+    }
+
+    Process {
+        id: fullShotProc
+        onExited: exitCode => {
+            if (exitCode !== 0)
+                return
+            ScreenshotAction.playShutterSound(ScreenshotAction.Action.Copy)
+            if (Config.options.regionSelector.enableOverlay ?? true) {
+                GlobalStates.screenshotOverlayMonitor = root.fullShotMonitor
+                GlobalStates.screenshotOverlayImagePath = root.fullShotPath
+                GlobalStates.screenshotOverlayRegionX = 0
+                GlobalStates.screenshotOverlayRegionY = 0
+                GlobalStates.screenshotOverlayRegionW = 0
+                GlobalStates.screenshotOverlayRegionH = 0
+                GlobalStates.screenshotOverlayOpen = true
+            }
+        }
     }
 
     function search() {
@@ -164,8 +211,15 @@ Scope {
     IpcHandler {
         target: "region"
 
+        function close() {
+            root.dismiss()
+        }
+
         function screenshot() {
             root.screenshot()
+        }
+        function fullscreen() {
+            root.fullscreen()
         }
         function edit() {
             root.edit()
@@ -197,6 +251,11 @@ Scope {
         name: "regionScreenshot"
         description: "Takes a screenshot of the selected region"
         onPressed: root.screenshot()
+    }
+    GlobalShortcut {
+        name: "fullScreenshot"
+        description: "Takes a screenshot of the focused monitor"
+        onPressed: root.fullscreen()
     }
     GlobalShortcut {
         name: "regionSearch"

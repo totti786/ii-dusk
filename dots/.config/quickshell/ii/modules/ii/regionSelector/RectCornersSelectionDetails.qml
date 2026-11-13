@@ -60,7 +60,7 @@ Item {
         }
 
         SequentialAnimation on opacity {
-            running: root.breathingBorderOnly
+            running: (root.breathingBorderOnly) && !Appearance.motionOff
             loops: Animation.Infinite
 
             NumberAnimation {

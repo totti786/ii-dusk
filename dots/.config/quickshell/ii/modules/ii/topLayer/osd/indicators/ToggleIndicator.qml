@@ -51,8 +51,8 @@ Item {
             color: root.shapeColor
             colSymbol: root.symbolColor
 
-            Behavior on color { ColorAnimation { duration: 150 } }
-            Behavior on colSymbol { ColorAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
+            Behavior on colSymbol { ColorAnimation { duration: Appearance.dur(150) } }
         }
 
         Rectangle {
@@ -85,7 +85,7 @@ Item {
             shape: MaterialShape.Shape.Cookie9Sided
             color: root.shapeColor
 
-            Behavior on color { ColorAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
 
             StyledText {
                 anchors.centerIn: parent

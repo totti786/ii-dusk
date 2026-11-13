@@ -77,7 +77,7 @@ Rectangle {
                 buttonRadius: Appearance.rounding.full
                 colBackground: "transparent"
                 colBackgroundHover: Appearance.colors.colLayer2Hover
-                onClicked: DiscordVoice.setUserLocalMute(root.userId, !root.localMuted)
+                onClicked: DiscordVoiceActivity.setUserLocalMute(root.userId, !root.localMuted)
                 contentItem: MaterialShapeWrappedMaterialSymbol {
                     anchors.centerIn: parent
                     text: root.localMuted ? "volume_off" : "volume_up"
@@ -104,7 +104,7 @@ Rectangle {
                 tooltipContent: `${Math.round(value)}%`
                 configuration: StyledSlider.Configuration.S
                 value: root.volume
-                onMoved: DiscordVoice.setUserVolume(root.userId, value)
+                onMoved: DiscordVoiceActivity.setUserVolume(root.userId, value)
             }
 
             RippleButton {
@@ -115,7 +115,7 @@ Rectangle {
                 colBackgroundHover: Appearance.colors.colLayer2Hover
                 enabled: Math.round(root.volume) !== 100
                 opacity: enabled ? 1 : 0.4
-                onClicked: DiscordVoice.setUserVolume(root.userId, 100)
+                onClicked: DiscordVoiceActivity.setUserVolume(root.userId, 100)
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: "restart_alt"

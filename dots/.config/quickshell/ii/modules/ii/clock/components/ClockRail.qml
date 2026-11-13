@@ -20,6 +20,8 @@ Item {
     property string currentTab: ""
     property bool expanded: true
     property bool settingsOpen: false
+    /// An app with nothing to configure leaves the button out.
+    property bool showSettings: true
     property var badges: ({})
     /// Another app built from these parts names its own settings.
     property string settingsTooltip: Translation.tr("Clock settings")
@@ -85,6 +87,7 @@ Item {
         // ── Settings ────────────────────────────────────────────────────
         RippleButton {
             id: settingsButton
+            visible: root.showSettings
             Layout.fillWidth: true
             Layout.leftMargin: 4
             Layout.rightMargin: 4

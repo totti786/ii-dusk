@@ -22,9 +22,9 @@ Rectangle {
     readonly property bool columnMode: layoutMode === "column"
     readonly property bool gridMode: layoutMode === "grid"
     property bool namesOnLeft: false
-    readonly property bool companionReady: DiscordVoice.backend === "vencord"
+    readonly property bool companionReady: DiscordVoiceActivity.backend === "vencord"
     // Detected by the service, which also decides whether the bridge runs at all.
-    readonly property bool isVencordClient: DiscordVoice.isVencordClient
+    readonly property bool isVencordClient: DiscordVoiceActivity.isVencordClient
     readonly property bool showPttIndicator: Config.options.overlay.discordVoice.pttIndicator
 
     // Per-user volume: tapping someone opens their card. It lives only while the
@@ -32,14 +32,14 @@ Rectangle {
     // closes by itself when that person leaves.
     property string selectedUserId: ""
     readonly property var selectedParticipant: selectedUserId === "" ? null
-        : (DiscordVoice.participants.find(user => String(user?.id ?? "") === selectedUserId) ?? null)
-    readonly property bool canAdjustUsers: GlobalStates.overlayOpen && DiscordVoice.supportsUserVoice
+        : (DiscordVoiceActivity.participants.find(user => String(user?.id ?? "") === selectedUserId) ?? null)
+    readonly property bool canAdjustUsers: GlobalStates.overlayOpen && DiscordVoiceActivity.supportsUserVoice
     readonly property bool sliderActive: volumeCard.sliderPressed
     onSelectedParticipantChanged: if (selectedParticipant === null) selectedUserId = ""
     onCanAdjustUsersChanged: if (!canAdjustUsers) selectedUserId = ""
 
     readonly property real maxContentWidth: 720
-    readonly property int visibleParticipants: Math.min(avatarLimit, DiscordVoice.participantCount)
+    readonly property int visibleParticipants: Math.min(avatarLimit, DiscordVoiceActivity.participantCount)
 
     readonly property real effectiveAvatarSize: gridMode
         ? (visibleParticipants <= 1 ? Math.max(72, root.participantAvatarSize * 1.5)
@@ -84,7 +84,7 @@ Rectangle {
     border.width: 0
 
     function beginAuthorization() {
-        DiscordVoice.authorizeAfterFocusRelease();
+        DiscordVoiceActivity.authorizeAfterFocusRelease();
         GlobalStates.overlayOpen = false;
     }
 
@@ -104,7 +104,7 @@ Rectangle {
         onExited: (code, status) => {
             if (code === 0) {
                 root.installMessage = "Installed! Restart your Discord client.";
-                DiscordVoice.recheck();
+                DiscordVoiceActivity.recheck();
             } else if (!root.installMessage) {
                 root.installMessage = "Failed (exit code " + code + ")";
             }
@@ -136,7 +136,7 @@ Rectangle {
                 StyledText {
                     id: channelName
                     Layout.fillWidth: true
-                    text: DiscordVoice.channel?.name || (DiscordVoice.status === "auth_required"
+                    text: DiscordVoiceActivity.channel?.name || (DiscordVoiceActivity.status === "auth_required"
                         ? "Connect Discord" : "No voice channel")
                     font.pixelSize: Appearance.font.pixelSize.normal
                     font.weight: Font.DemiBold
@@ -145,9 +145,9 @@ Rectangle {
                 }
                 StyledText {
                     Layout.fillWidth: true
-                    text: DiscordVoice.inVoice
-                        ? `${DiscordVoice.participantCount} participant${DiscordVoice.participantCount === 1 ? "" : "s"}`
-                        : (DiscordVoice.errorMessage || "Discord voice overlay")
+                    text: DiscordVoiceActivity.inVoice
+                        ? `${DiscordVoiceActivity.participantCount} participant${DiscordVoiceActivity.participantCount === 1 ? "" : "s"}`
+                        : (DiscordVoiceActivity.errorMessage || "Discord voice overlay")
                     font.pixelSize: Appearance.font.pixelSize.small
                     color: Appearance.colors.colSubtext
                     elide: Text.ElideRight
@@ -157,7 +157,7 @@ Rectangle {
             }
 
             RowLayout {
-                visible: DiscordVoice.inVoice
+                visible: DiscordVoiceActivity.inVoice
                 spacing: 0
 
                 RippleButton {
@@ -166,20 +166,20 @@ Rectangle {
                     buttonRadius: Appearance.rounding.full
                     colBackground: "transparent"
                     colBackgroundHover: Appearance.colors.colLayer1Hover
-                    onClicked: DiscordVoice.setMuted(!DiscordVoice.muted)
+                    onClicked: DiscordVoiceActivity.setMuted(!DiscordVoiceActivity.muted)
                     contentItem: MaterialShapeWrappedMaterialSymbol {
                         anchors.centerIn: parent
-                        text: DiscordVoice.muted ? "mic_off" : "mic"
-                        shape: DiscordVoice.muted ? MaterialShape.Shape.SoftBurst : MaterialShape.Shape.Cookie4Sided
+                        text: DiscordVoiceActivity.muted ? "mic_off" : "mic"
+                        shape: DiscordVoiceActivity.muted ? MaterialShape.Shape.SoftBurst : MaterialShape.Shape.Cookie4Sided
                         implicitSize: 46
                         iconSize: 21
-                        fill: DiscordVoice.muted ? 1 : 0
-                        color: DiscordVoice.muted ? Appearance.colors.colErrorContainer : Appearance.colors.colSecondaryContainer
-                        colSymbol: DiscordVoice.muted ? Appearance.colors.colOnErrorContainer : Appearance.colors.colOnSecondaryContainer
+                        fill: DiscordVoiceActivity.muted ? 1 : 0
+                        color: DiscordVoiceActivity.muted ? Appearance.colors.colErrorContainer : Appearance.colors.colSecondaryContainer
+                        colSymbol: DiscordVoiceActivity.muted ? Appearance.colors.colOnErrorContainer : Appearance.colors.colOnSecondaryContainer
                         scale: parent?.down ? 0.88 : (parent?.hovered ? 1.08 : 1)
                         Behavior on scale { NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Easing.OutBack } }
                     }
-                    StyledToolTip { text: DiscordVoice.muted ? "Unmute" : "Mute" }
+                    StyledToolTip { text: DiscordVoiceActivity.muted ? "Unmute" : "Mute" }
                 }
 
                 RippleButton {
@@ -188,44 +188,44 @@ Rectangle {
                     buttonRadius: Appearance.rounding.full
                     colBackground: "transparent"
                     colBackgroundHover: Appearance.colors.colLayer1Hover
-                    onClicked: DiscordVoice.setDeafened(!DiscordVoice.deafened)
+                    onClicked: DiscordVoiceActivity.setDeafened(!DiscordVoiceActivity.deafened)
                     contentItem: MaterialShapeWrappedMaterialSymbol {
                         anchors.centerIn: parent
-                        text: DiscordVoice.deafened ? "headset_off" : "headphones"
-                        shape: DiscordVoice.deafened ? MaterialShape.Shape.Boom : MaterialShape.Shape.Clover4Leaf
+                        text: DiscordVoiceActivity.deafened ? "headset_off" : "headphones"
+                        shape: DiscordVoiceActivity.deafened ? MaterialShape.Shape.Boom : MaterialShape.Shape.Clover4Leaf
                         implicitSize: 46
                         iconSize: 21
-                        fill: DiscordVoice.deafened ? 1 : 0
-                        color: DiscordVoice.deafened ? Appearance.colors.colErrorContainer : Appearance.colors.colTertiaryContainer
-                        colSymbol: DiscordVoice.deafened ? Appearance.colors.colOnErrorContainer : Appearance.colors.colOnTertiaryContainer
+                        fill: DiscordVoiceActivity.deafened ? 1 : 0
+                        color: DiscordVoiceActivity.deafened ? Appearance.colors.colErrorContainer : Appearance.colors.colTertiaryContainer
+                        colSymbol: DiscordVoiceActivity.deafened ? Appearance.colors.colOnErrorContainer : Appearance.colors.colOnTertiaryContainer
                         scale: parent?.down ? 0.88 : (parent?.hovered ? 1.08 : 1)
                         Behavior on scale { NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Easing.OutBack } }
                     }
-                    StyledToolTip { text: DiscordVoice.deafened ? "Undeafen" : "Deafen" }
+                    StyledToolTip { text: DiscordVoiceActivity.deafened ? "Undeafen" : "Deafen" }
                 }
 
                 RippleButton {
-                    visible: DiscordVoice.supportsInputMode
+                    visible: DiscordVoiceActivity.supportsInputMode
                     implicitWidth: 48
                     implicitHeight: 48
                     buttonRadius: Appearance.rounding.full
                     colBackground: "transparent"
                     colBackgroundHover: Appearance.colors.colLayer1Hover
-                    onClicked: DiscordVoice.togglePushToTalk()
+                    onClicked: DiscordVoiceActivity.togglePushToTalk()
                     contentItem: MaterialShapeWrappedMaterialSymbol {
                         anchors.centerIn: parent
-                        text: DiscordVoice.pushToTalk ? "touch_app" : "graphic_eq"
-                        shape: DiscordVoice.pushToTalk ? MaterialShape.Shape.Pill : MaterialShape.Shape.Cookie6Sided
+                        text: DiscordVoiceActivity.pushToTalk ? "touch_app" : "graphic_eq"
+                        shape: DiscordVoiceActivity.pushToTalk ? MaterialShape.Shape.Pill : MaterialShape.Shape.Cookie6Sided
                         implicitSize: 46
                         iconSize: 21
-                        fill: DiscordVoice.pushToTalk ? 1 : 0
-                        color: DiscordVoice.pushToTalk ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer
-                        colSymbol: DiscordVoice.pushToTalk ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSecondaryContainer
+                        fill: DiscordVoiceActivity.pushToTalk ? 1 : 0
+                        color: DiscordVoiceActivity.pushToTalk ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer
+                        colSymbol: DiscordVoiceActivity.pushToTalk ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSecondaryContainer
                         scale: parent?.down ? 0.88 : (parent?.hovered ? 1.08 : 1)
                         Behavior on scale { NumberAnimation { duration: Appearance.animation.elementMoveFast.duration; easing.type: Easing.OutBack } }
                     }
                     StyledToolTip {
-                        text: DiscordVoice.pushToTalk
+                        text: DiscordVoiceActivity.pushToTalk
                             ? Translation.tr("Push to talk is on · switch to voice activity")
                             : Translation.tr("Voice activity is on · switch to push to talk")
                     }
@@ -237,16 +237,16 @@ Rectangle {
         // key is held and Discord is sending your voice.
         Rectangle {
             id: pttChip
-            readonly property bool transmitting: DiscordVoice.selfSpeaking && !DiscordVoice.muted
-            visible: root.showPttIndicator && DiscordVoice.inVoice && DiscordVoice.pushToTalk
+            readonly property bool transmitting: DiscordVoiceActivity.selfSpeaking && !DiscordVoiceActivity.muted
+            visible: root.showPttIndicator && DiscordVoiceActivity.inVoice && DiscordVoiceActivity.pushToTalk
             Layout.fillWidth: true
             implicitHeight: pttRow.implicitHeight + 12
             radius: Appearance.rounding.full
             color: transmitting ? Appearance.colors.colPrimary
-                : (DiscordVoice.muted ? Appearance.colors.colErrorContainer : Appearance.colors.colLayer2)
+                : (DiscordVoiceActivity.muted ? Appearance.colors.colErrorContainer : Appearance.colors.colLayer2)
             Behavior on color { ColorAnimation { duration: Appearance.animation.elementMoveFast.duration } }
             readonly property color contentColor: transmitting ? Appearance.colors.colOnPrimary
-                : (DiscordVoice.muted ? Appearance.colors.colOnErrorContainer : Appearance.colors.colOnLayer2)
+                : (DiscordVoiceActivity.muted ? Appearance.colors.colOnErrorContainer : Appearance.colors.colOnLayer2)
 
             RowLayout {
                 id: pttRow
@@ -254,17 +254,17 @@ Rectangle {
                 width: Math.min(implicitWidth, parent.width - 24)
                 spacing: 6
                 MaterialSymbol {
-                    text: DiscordVoice.muted ? "mic_off" : (pttChip.transmitting ? "mic" : "touch_app")
+                    text: DiscordVoiceActivity.muted ? "mic_off" : (pttChip.transmitting ? "mic" : "touch_app")
                     iconSize: Appearance.font.pixelSize.large
                     fill: pttChip.transmitting ? 1 : 0
                     color: pttChip.contentColor
                 }
                 StyledText {
                     Layout.fillWidth: true
-                    text: DiscordVoice.muted ? Translation.tr("Push to talk · muted")
+                    text: DiscordVoiceActivity.muted ? Translation.tr("Push to talk · muted")
                         : (pttChip.transmitting ? Translation.tr("Transmitting")
-                        : (DiscordVoice.pttShortcut !== ""
-                            ? Translation.tr("Hold %1 to talk").arg(DiscordVoice.pttShortcut)
+                        : (DiscordVoiceActivity.pttShortcut !== ""
+                            ? Translation.tr("Hold %1 to talk").arg(DiscordVoiceActivity.pttShortcut)
                             : Translation.tr("Push to talk")))
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: pttChip.transmitting ? Font.DemiBold : Font.Normal
@@ -275,14 +275,14 @@ Rectangle {
         }
 
         GridLayout {
-            visible: DiscordVoice.participantCount > 0
+            visible: DiscordVoiceActivity.participantCount > 0
             Layout.fillWidth: root.columnMode || root.gridMode
             Layout.alignment: Qt.AlignHCenter
             columns: root.participantColumns
             rowSpacing: 6
             columnSpacing: root.columnMode ? 6 : (root.gridMode ? 12 : 16)
             Repeater {
-                model: DiscordVoice.participantModel
+                model: DiscordVoiceActivity.participantModel
                 ParticipantAvatar {
                     id: participantDelegate
                     required property int index
@@ -298,7 +298,7 @@ Rectangle {
                     Layout.fillHeight: root.gridMode
 
                     readonly property string userId: String(participant?.id ?? "")
-                    readonly property bool adjustable: root.canAdjustUsers && userId !== "" && userId !== DiscordVoice.selfId
+                    readonly property bool adjustable: root.canAdjustUsers && userId !== "" && userId !== DiscordVoiceActivity.selfId
                     readonly property bool selected: userId !== "" && userId === root.selectedUserId
 
                     Rectangle {
@@ -334,11 +334,11 @@ Rectangle {
         // Join/leave and DM/mention notices, newest last, like Discord's own
         // overlay. Which kinds get queued is decided by the service's options.
         ColumnLayout {
-            visible: DiscordVoice.noticeModel.count > 0
+            visible: DiscordVoiceActivity.noticeModel.count > 0
             Layout.fillWidth: true
             spacing: 4
             Repeater {
-                model: DiscordVoice.noticeModel
+                model: DiscordVoiceActivity.noticeModel
                 VoiceNotice {
                     Layout.fillWidth: true
                 }
@@ -348,7 +348,7 @@ Rectangle {
         RippleButton {
             // The running companion is proof enough: the install-time client
             // check can miss a Vesktop outside PATH (e.g. /opt/Vesktop).
-            visible: DiscordVoice.companionOutdated
+            visible: DiscordVoiceActivity.companionOutdated
             enabled: !installProcess.running
             Layout.fillWidth: true
             implicitHeight: 40
@@ -373,8 +373,8 @@ Rectangle {
         }
 
         RippleButton {
-            visible: DiscordVoice.status === "auth_required" || DiscordVoice.status === "authorizing" || (!root.companionReady && root.isVencordClient)
-            enabled: DiscordVoice.status !== "authorizing" && !installProcess.running
+            visible: DiscordVoiceActivity.status === "auth_required" || DiscordVoiceActivity.status === "authorizing" || (!root.companionReady && root.isVencordClient)
+            enabled: DiscordVoiceActivity.status !== "authorizing" && !installProcess.running
             Layout.fillWidth: true
             implicitHeight: 40
             buttonRadius: Appearance.rounding.full
@@ -396,7 +396,7 @@ Rectangle {
                 text: {
                     if (installProcess.running) return "Installing Companion…";
                     if (root.installMessage !== "") return root.installMessage;
-                    if (DiscordVoice.status === "authorizing") return "Waiting for Discord…";
+                    if (DiscordVoiceActivity.status === "authorizing") return "Waiting for Discord…";
                     if (root.isVencordClient && !root.companionReady) return "Install Companion";
                     return "Authorize Discord";
                 }

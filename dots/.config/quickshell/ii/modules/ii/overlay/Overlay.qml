@@ -19,7 +19,8 @@ Scope {
     
     Loader {
         id: overlayLoader
-        active: GlobalStates.overlayOpen || OverlayContext.hasPinnedWidgets
+        // Pinned widgets stay up all day, but not over the lock screen
+        active: (GlobalStates.overlayOpen || OverlayContext.hasPinnedWidgets) && !GlobalStates.screenLocked
         sourceComponent: PanelWindow {
             id: overlayWindow
             exclusionMode: ExclusionMode.Ignore

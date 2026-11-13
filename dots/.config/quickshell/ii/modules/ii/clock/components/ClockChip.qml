@@ -10,6 +10,8 @@ RippleButton {
     property string symbol: ""
     property string label: ""
     property bool selected: false
+    /// A number shown dimmer after the label (filters: how many match). -1 shows none.
+    property int count: -1
     property real height_: ClockStyle.chipHeight
     property color colIdle: ClockStyle.colSurfaceHigh
     property color colIdleHover: ClockStyle.colSurfaceHover
@@ -18,6 +20,7 @@ RippleButton {
     property color colSelectedHover: ClockStyle.colSecondaryContainerHover
     property color colOnSelected: ClockStyle.colOnSecondaryContainer
 
+    opacity: root.count === 0 && !root.selected ? 0.55 : 1
     implicitHeight: root.height_
     implicitWidth: chipRow.implicitWidth + ClockStyle.gapLarge * 2
     buttonRadius: root.selected ? ClockStyle.radiusSmall : ClockStyle.pill(root.height_)
@@ -45,6 +48,15 @@ RippleButton {
                 font.pixelSize: ClockStyle.textNormal
                 font.weight: Font.Medium
                 color: root.selected ? root.colOnSelected : root.colOnIdle
+            }
+
+            StyledText {
+                visible: root.count >= 0
+                text: root.count
+                font.pixelSize: ClockStyle.textSmall
+                font.features: ({ "tnum": 1 })
+                color: root.selected ? root.colOnSelected : root.colOnIdle
+                opacity: 0.65
             }
         }
     }

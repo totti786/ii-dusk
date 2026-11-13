@@ -789,13 +789,13 @@ function moveToTrashFile(modelData) {
 
         Behavior on scale {
             NumberAnimation {
-                duration: 260
+                duration: Appearance.dur(260)
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on opacity {
             NumberAnimation {
-                duration: 220
+                duration: Appearance.dur(220)
                 easing.type: Easing.OutCubic
             }
         }
@@ -966,14 +966,14 @@ function moveToTrashFile(modelData) {
                                                 target: navRailTrans
                                                 property: "x"
                                                 to: 0
-                                                duration: 250
+                                                duration: Appearance.dur(250)
                                                 easing.type: Easing.OutCubic
                                             }
                                             NumberAnimation {
                                                 target: quickDirButton
                                                 property: "opacity"
                                                 to: 1
-                                                duration: 250
+                                                duration: Appearance.dur(250)
                                                 easing.type: Easing.OutCubic
                                             }
                                         }
@@ -1030,10 +1030,10 @@ function moveToTrashFile(modelData) {
                     }
 
                     Behavior on opacity {
-                        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic }
                     }
                     Behavior on transform {
-                        NumberAnimation { duration: 280; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Appearance.dur(280); easing.type: Easing.OutCubic }
                     }
 
                     AddressBar {
@@ -1156,7 +1156,7 @@ function moveToTrashFile(modelData) {
                         clip: true
 
                         Behavior on implicitWidth {
-                            NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(220); easing.type: Easing.OutCubic }
                         }
 
                         RippleButton {
@@ -1227,7 +1227,7 @@ function moveToTrashFile(modelData) {
                             enabled: wallpaperSelectorContent.compactSearchExpanded
                             opacity: wallpaperSelectorContent.compactSearchExpanded ? 1 : 0
                             Behavior on opacity {
-                                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                                NumberAnimation { duration: Appearance.dur(220); easing.type: Easing.OutCubic }
                             }
 
                             colBackground: Appearance.colors.colLayer2
@@ -1354,7 +1354,7 @@ function moveToTrashFile(modelData) {
                         height: 42
                         opacity: (grid.atYBeginning || !grid.visible) ? 0.0 : 1.0
                         Behavior on opacity {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic }
                         }
                         gradient: Gradient {
                             GradientStop { position: 0.0; color: Appearance.colors.colLayer0 }
@@ -1375,7 +1375,7 @@ function moveToTrashFile(modelData) {
                         bottomRightRadius: wallpaperGridBackground.radius - 4
                         opacity: (grid.atYEnd || !grid.visible) ? 0.0 : 1.0
                         Behavior on opacity {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic }
                         }
                         gradient: Gradient {
                             GradientStop { position: 0.0; color: "transparent" }
@@ -1843,14 +1843,14 @@ function moveToTrashFile(modelData) {
                                     target: wpTrans
                                     property: "x"
                                     to: 0
-                                    duration: 320
+                                    duration: Appearance.dur(320)
                                     easing.type: Easing.OutCubic
                                 }
                                 NumberAnimation {
                                     target: wpItemDelegate
                                     property: "scale"
                                     to: 1.0
-                                    duration: 350
+                                    duration: Appearance.dur(350)
                                     easing.type: Easing.OutBack
                                     easing.overshoot: 1.15
                                 }
@@ -1858,7 +1858,7 @@ function moveToTrashFile(modelData) {
                                     target: wpItemDelegate
                                     property: "opacity"
                                     to: 1.0
-                                    duration: 260
+                                    duration: Appearance.dur(260)
                                     easing.type: Easing.OutCubic
                                 }
                             }
@@ -2254,7 +2254,7 @@ function moveToTrashFile(modelData) {
                                 opacity: carouselItem.isCurrent ? 1 : 0
                                 visible: opacity > 0
                                 Behavior on opacity {
-                                    NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                                    NumberAnimation { duration: Appearance.dur(160); easing.type: Easing.OutCubic }
                                 }
                             }
                         }
@@ -2349,10 +2349,10 @@ function moveToTrashFile(modelData) {
                             y: wallpaperGridBackground.animateIn ? 0 : 25
                         }
                         Behavior on opacity {
-                            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic }
                         }
                         Behavior on transform {
-                            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -2371,10 +2371,10 @@ function moveToTrashFile(modelData) {
                             y: wallpaperGridBackground.animateIn ? 0 : 25
                         }
                         Behavior on opacity {
-                            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic }
                         }
                         Behavior on transform {
-                            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -2395,10 +2395,10 @@ function moveToTrashFile(modelData) {
                             y: wallpaperGridBackground.animateIn ? 0 : 25
                         }
                         Behavior on opacity {
-                            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic }
                         }
                         Behavior on transform {
-                            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -2419,10 +2419,10 @@ function moveToTrashFile(modelData) {
                             y: wallpaperGridBackground.animateIn ? 0 : 25
                         }
                         Behavior on opacity {
-                            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic }
                         }
                         Behavior on transform {
-                            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -2440,10 +2440,10 @@ function moveToTrashFile(modelData) {
                             y: wallpaperGridBackground.animateIn ? 0 : 25
                         }
                         Behavior on opacity {
-                            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic }
                         }
                         Behavior on transform {
-                            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic }
                         }
                     }
                 }

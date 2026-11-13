@@ -83,6 +83,9 @@ Item {
             if (dragActive) {
                 dragActive = false
                 if (root.dockContent) root.dockContent.endItemDrag()
+            } else if (event.button === Qt.LeftButton && !GlobalStates.editMode && containsMouse) {
+                // a press that never became a reorder drag opens the weather app
+                GlobalStates.openWeatherApp("")
             }
         }
         onCanceled: {
@@ -237,7 +240,7 @@ Item {
 
                     Behavior on anchors.rightMargin {
                         NumberAnimation {
-                            duration: 700
+                            duration: Appearance.dur(700)
                             easing.type: Easing.InOutCubic
                         }
                     }

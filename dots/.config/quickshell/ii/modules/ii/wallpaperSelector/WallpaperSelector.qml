@@ -9,6 +9,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import "deck"
 
 Scope {
     id: root
@@ -19,54 +20,67 @@ Scope {
         // same browser is the duplicate-surface bug. See IslandPolicy.ownsWallpaper.
         active: GlobalStates.wallpaperSelectorOpen && !GlobalStates.islandOwnsWallpaper
 
-        sourceComponent: PanelWindow {
-            id: panelWindow
+        sourceComponent: Config.options.wallpaperSelector.style === "deck" ? deckComponent : gridComponent
+
+    }
+
+    Component {
+        id: deckComponent
+        WallpaperDeck {
             screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
-            readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
-            property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
-
-            exclusionMode: ExclusionMode.Ignore
-            WlrLayershell.namespace: "quickshell:wallpaperSelector"
-            WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-            color: "transparent"
-
-            anchors.top: true
-            margins {
-                top: BarPlacement.vertical ? Appearance.sizes.hyprlandGapsOut : Appearance.sizes.barHeight + Appearance.sizes.hyprlandGapsOut
-            }
-
-            mask: Region {
-                item: content
-            }
-
-            implicitHeight: Appearance.sizes.wallpaperSelectorHeight
-            implicitWidth: Appearance.sizes.wallpaperSelectorWidth
-
-            Component.onCompleted: {
-                Qt.callLater(() => {
-                    if (wallpaperSelectorLoader.active) {
-                        GlobalFocusGrab.addDismissable(panelWindow);
-                    }
-                });
-            }
-            Component.onDestruction: {
-                GlobalFocusGrab.removeDismissable(panelWindow);
-            }
-            Connections {
-                target: GlobalFocusGrab
-                function onDismissed() {
-                    GlobalStates.wallpaperSelectorOpen = false;
-                }
-            }
-
-            WallpaperSelectorContent {
-                id: content
-                anchors {
-                    fill: parent
-                }
-            }
         }
+    }
+
+    Component {
+        id: gridComponent
+        PanelWindow {
+                id: panelWindow
+                screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
+                readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
+                property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
+    
+                exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.namespace: "quickshell:wallpaperSelector"
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+                color: "transparent"
+    
+                anchors.top: true
+                margins {
+                    top: BarPlacement.vertical ? Appearance.sizes.hyprlandGapsOut : Appearance.sizes.barHeight + Appearance.sizes.hyprlandGapsOut
+                }
+    
+                mask: Region {
+                    item: content
+                }
+    
+                implicitHeight: Appearance.sizes.wallpaperSelectorHeight
+                implicitWidth: Appearance.sizes.wallpaperSelectorWidth
+    
+                Component.onCompleted: {
+                    Qt.callLater(() => {
+                        if (wallpaperSelectorLoader.active) {
+                            GlobalFocusGrab.addDismissable(panelWindow);
+                        }
+                    });
+                }
+                Component.onDestruction: {
+                    GlobalFocusGrab.removeDismissable(panelWindow);
+                }
+                Connections {
+                    target: GlobalFocusGrab
+                    function onDismissed() {
+                        GlobalStates.wallpaperSelectorOpen = false;
+                    }
+                }
+    
+                WallpaperSelectorContent {
+                    id: content
+                    anchors {
+                        fill: parent
+                    }
+                }
+            }
     }
 
     function toggleWallpaperSelector(target = "desktop") {

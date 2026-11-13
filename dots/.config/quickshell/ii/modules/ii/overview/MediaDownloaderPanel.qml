@@ -359,7 +359,7 @@ Item {
 
                         // Pulse animation when active
                         SequentialAnimation {
-                            running: MediaDownloaderService.currentStatus !== "idle" && !root.animationsDisabled
+                            running: (MediaDownloaderService.currentStatus !== "idle" && !root.animationsDisabled) && !Appearance.motionOff
                             loops: Animation.Infinite
                             NumberAnimation {
                                 target: statusDot
@@ -654,7 +654,7 @@ Item {
                                 Behavior on scale {
                                     enabled: !root.animationsDisabled
                                     NumberAnimation {
-                                        duration: 220
+                                        duration: Appearance.dur(220)
                                         easing.type: Easing.OutBack
                                         easing.overshoot: 2.0
                                     }
@@ -771,7 +771,7 @@ Item {
                                     scale: isSelected ? 1.05 : 1.0
                                     Behavior on scale {
                                         enabled: !root.animationsDisabled
-                                        NumberAnimation { duration: 200; easing.type: Easing.OutBack; easing.overshoot: 2.2 }
+                                        NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutBack; easing.overshoot: 2.2 }
                                     }
 
                                     HoverHandler { cursorShape: Qt.PointingHandCursor }
@@ -819,7 +819,7 @@ Item {
                                     scale: isSelected ? 1.05 : 1.0
                                     Behavior on scale {
                                         enabled: !root.animationsDisabled
-                                        NumberAnimation { duration: 200; easing.type: Easing.OutBack; easing.overshoot: 2.2 }
+                                        NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutBack; easing.overshoot: 2.2 }
                                     }
 
                                     HoverHandler { cursorShape: Qt.PointingHandCursor }
@@ -873,7 +873,7 @@ Item {
 
                                 Behavior on fill {
                                     enabled: !root.animationsDisabled
-                                    NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                                    NumberAnimation { duration: Appearance.dur(180); easing.type: Easing.OutCubic }
                                 }
                             }
 
@@ -892,7 +892,7 @@ Item {
 
                                 Behavior on rotation {
                                     enabled: !root.animationsDisabled
-                                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                    NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic }
                                 }
                             }
                         }
