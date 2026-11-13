@@ -35,7 +35,7 @@ RippleButton {
     // scheme-auto is passed through: the script resolves it from the image the
     // same way switchwall does, instead of always previewing tonal spot.
     readonly property string fullCommand: activeWallpaperPath !== ""
-        ? `${scriptPath} --path "${activeWallpaperPath}" --scheme ${colorScheme} --preview`
+        ? `${scriptPath} --path "$(bash '${FileUtils.trimFileProtocol(Directories.scriptPath)}/colors/preview-source.sh' '${activeWallpaperPath}')" --scheme ${colorScheme} --preview`
         : ""
 
     // Widget color previews receive their colors directly and do not need a

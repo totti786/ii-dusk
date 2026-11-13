@@ -13,10 +13,10 @@ Singleton {
     readonly property var actions: [
         // Navigation & Core Shell
         { id: "none", name: "None", icon: "block" },
-        { id: "overview", name: "Overview / Search", icon: "grid_view", families: ["ii", "waffle"] },
-        { id: "overviewClipboard", name: "Clipboard History", icon: "content_paste", families: ["ii", "waffle"] },
-        { id: "overviewEmoji", name: "Emoji Picker", icon: "mood", families: ["ii", "waffle"] },
-        { id: "sidebarLeft", name: "Left Sidebar", icon: "left_panel_open", families: ["ii", "waffle"] },
+        { id: "overview", name: "Overview / Search", icon: "grid_view", families: ["ii"] },
+        { id: "overviewClipboard", name: "Clipboard History", icon: "content_paste", families: ["ii"] },
+        { id: "overviewEmoji", name: "Emoji Picker", icon: "mood", families: ["ii"] },
+        { id: "sidebarLeft", name: "Left Sidebar", icon: "left_panel_open", families: ["ii"] },
         { id: "sidebarRight", name: "Right Sidebar", icon: "right_panel_open" },
         { id: "back", name: "Back", icon: "arrow_back", families: ["tablet"] },
         { id: "appDrawer", name: "App Drawer", icon: "apps", families: ["tablet"] },
@@ -38,7 +38,7 @@ Singleton {
         { id: "cheatsheet", name: "Cheat Sheet", icon: "keyboard" },
         { id: "osk", name: "On-screen Keyboard", icon: "keyboard_alt" },
         // Tablet: the game/widget overlay is a desktop surface, permanently out.
-        { id: "overlay", name: "Game / Widget Overlay", icon: "layers" , families: ["ii", "waffle"] },
+        { id: "overlay", name: "Game / Widget Overlay", icon: "layers" , families: ["ii"] },
         { id: "session", name: "Session / Power Menu", icon: "power_settings_new" },
         { id: "shellSwitcher", name: "Switch Shell", icon: "swap_horiz" },
         { id: "settings", name: "Settings", icon: "settings" },
@@ -56,7 +56,7 @@ Singleton {
         { id: "regionOcr", name: "Character Recognition (OCR)", icon: "document_scanner" },
         { id: "screenTranslate", name: "Translate Screen Content", icon: "g_translate" },
         // Tablet: a desktop utility, permanently out.
-        { id: "colorPicker", name: "Color Picker (#HEX)", icon: "colorize" , families: ["ii", "waffle"] },
+        { id: "colorPicker", name: "Color Picker (#HEX)", icon: "colorize" , families: ["ii"] },
         { id: "regionRecord", name: "Record Region", icon: "videocam" },
         { id: "regionRecordWithSound", name: "Record Region (with Sound)", icon: "video_camera_front" },
 
@@ -77,7 +77,7 @@ Singleton {
 
         // Window & Workspace Management
         // Tablet: desktop window management. Returns as an app window in Fase 5.
-        { id: "scratchpad", name: "Toggle Scratchpad", icon: "inventory_2" , families: ["ii", "waffle"] },
+        { id: "scratchpad", name: "Toggle Scratchpad", icon: "inventory_2" , families: ["ii"] },
         { id: "closeWindow", name: "Close Active Window", icon: "close" },
         { id: "toggleFullscreen", name: "Toggle Window Fullscreen", icon: "fullscreen" },
         { id: "toggleFloating", name: "Toggle Window Floating", icon: "picture_in_picture" }

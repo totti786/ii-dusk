@@ -187,6 +187,11 @@ Singleton {
             configPage: "AiPlanUsageConfig.qml"
         },
         {
+            id: "mediator_stream",
+            icon: "live_tv",
+            title: "Anime stream"
+        },
+        {
             id: "privacy_pill",
             icon: "shield_lock",
             title: "Privacy pill",

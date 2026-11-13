@@ -294,7 +294,7 @@ Item {
 
         Behavior on buttonRadius {
             NumberAnimation {
-                duration: 160
+                duration: Appearance.dur(160)
                 easing.type: Easing.OutCubic
             }
         }
@@ -307,7 +307,7 @@ Item {
         scale: action.down ? 0.94 : (action.hovered ? 1.04 : 1.0)
         Behavior on scale {
             NumberAnimation {
-                duration: 150
+                duration: Appearance.dur(150)
                 easing.type: Easing.OutCubic
             }
         }

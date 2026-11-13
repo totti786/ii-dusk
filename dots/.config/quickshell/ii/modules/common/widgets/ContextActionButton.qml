@@ -80,7 +80,7 @@ RippleButton {
                 fill: root.symbolFill
                 color: root.foreground
                 opacity: root.enabled ? (root.hovered ? 1 : 0.85) : 0.4
-                Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                Behavior on opacity { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutQuad } }
                 Behavior on color { animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this) }
             }
             Image {
@@ -92,7 +92,7 @@ RippleButton {
                 visible: source.toString().length > 0
                 fillMode: Image.PreserveAspectFit
                 opacity: root.enabled ? (root.hovered ? 1 : 0.85) : 0.4
-                Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+                Behavior on opacity { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutQuad } }
             }
         }
         StyledText {
@@ -103,7 +103,7 @@ RippleButton {
             color: root.foreground
             elide: Text.ElideRight
             opacity: root.enabled ? (root.hovered ? 1 : 0.9) : 0.4
-            Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+            Behavior on opacity { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutQuad } }
         }
         MaterialSymbol {
             Layout.rightMargin: 12
@@ -112,7 +112,7 @@ RippleButton {
             iconSize: 22
             color: root.foreground
             opacity: root.hovered ? 1 : 0.7
-            Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+            Behavior on opacity { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutQuad } }
         }
     }
 }

@@ -26,7 +26,7 @@ Rectangle {
         : Appearance.colors.colLayer2
 
     Behavior on color {
-        ColorAnimation { duration: 150 }
+        ColorAnimation { duration: Appearance.dur(150) }
     }
 
     readonly property GroupPosition groupPosition: GroupPosition {
@@ -150,13 +150,13 @@ Rectangle {
                 Layout.alignment: Qt.AlignVCenter
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 100 }
+                    NumberAnimation { duration: Appearance.dur(100) }
                 }
 
                 // Down (0°) when expanded → right (90°) when collapsed
                 rotation: root.expanded ? 0 : -90
                 Behavior on rotation {
-                    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic }
                 }
             }
 
@@ -192,7 +192,7 @@ Rectangle {
             Behavior on implicitHeight {
                 id: subSectionAnim
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutCubic
                 }
             }

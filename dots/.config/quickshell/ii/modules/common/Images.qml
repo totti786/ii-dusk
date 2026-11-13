@@ -4,8 +4,8 @@ import Quickshell
 
 Singleton {
     // Formats
-    readonly property list<string> validImageTypes: ["jpeg", "png", "webp", "tiff", "svg"]
-    readonly property list<string> validImageExtensions: ["jpg", "jpeg", "png", "webp", "tif", "tiff", "svg"]
+    readonly property list<string> validImageTypes: ["jpeg", "png", "webp", "tiff", "svg", "jxl"]
+    readonly property list<string> validImageExtensions: ["jpg", "jpeg", "png", "webp", "tif", "tiff", "svg", "jxl"]
 
     function isValidImageByName(name: string): bool {
         return validImageExtensions.some(t => name.endsWith(`.${t}`));

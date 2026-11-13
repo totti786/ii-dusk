@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 import qs.modules.common
+import qs.modules.common.functions
 import qs.modules.common.models
 import qs.services
 import QtQuick
@@ -73,7 +74,7 @@ Item {
     Rectangle {
         id: activeIndicator
         z: 0
-        color: Appearance.colors.colSecondaryContainer
+        color: ColorUtils.solveOverlayColor(Appearance.m3colors.m3surfaceContainer, Appearance.colors.colSecondaryContainer, 1 - Appearance.contentTransparency)
         anchors.verticalCenter: contentItem.verticalCenter
         height: activeIndicator.targetItem?.height ?? root.implicitHeight
         implicitWidth: activeIndicator.targetItem?.implicitWidth ?? 0

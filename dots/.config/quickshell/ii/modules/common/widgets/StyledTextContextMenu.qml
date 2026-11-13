@@ -186,7 +186,7 @@ Menu {
                 ? Appearance.colors.colLayer1Active
                 : (itemRoot.hovered ? Appearance.colors.colLayer1Hover : "transparent")
             Behavior on color {
-                ColorAnimation { duration: 120 }
+                ColorAnimation { duration: Appearance.dur(120) }
             }
         }
 

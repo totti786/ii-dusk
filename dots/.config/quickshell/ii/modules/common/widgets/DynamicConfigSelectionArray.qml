@@ -128,7 +128,7 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.OutCubic
             }
         }

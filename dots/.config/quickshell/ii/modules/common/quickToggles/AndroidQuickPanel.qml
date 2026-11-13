@@ -653,7 +653,7 @@ AbstractQuickPanel {
                     id: snapAnimation
                     target: flickable
                     property: "contentX"
-                    duration: 350
+                    duration: Appearance.dur(350)
                     easing.type: Easing.OutQuint
                 }
 

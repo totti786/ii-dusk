@@ -82,7 +82,7 @@ Button {
         var p = parent;
         if (!p)
             return false;
-        var pStr = p.toString();
+        var pStr = String(p);
         return (pStr.indexOf("RowLayout") !== -1 || pStr.indexOf("Row") !== -1) && pStr.indexOf("Column") === -1;
     }
 
@@ -158,7 +158,7 @@ Button {
     Behavior on interactionScale {
         enabled: root.animationsEnabled && root.scaleBehaviorEnabled
         NumberAnimation {
-            duration: 150
+            duration: Appearance.dur(150)
             easing.type: Easing.OutQuad
         }
     }

@@ -127,7 +127,7 @@ Rectangle {
         Behavior on y {
             enabled: !root.pageMode
             NumberAnimation {
-                duration: 350
+                duration: Appearance.dur(350)
                 easing.type: root.show ? Easing.OutBack : Easing.InCubic
                 easing.overshoot: 1.2
             }
@@ -136,7 +136,7 @@ Rectangle {
         Behavior on scale {
             enabled: !root.pageMode
             NumberAnimation {
-                duration: 350
+                duration: Appearance.dur(350)
                 easing.type: root.show ? Easing.OutBack : Easing.InCubic
                 easing.overshoot: 1.2
             }

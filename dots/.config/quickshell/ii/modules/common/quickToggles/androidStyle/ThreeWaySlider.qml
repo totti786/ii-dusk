@@ -167,7 +167,7 @@ Item {
             anchors.horizontalCenter: parent.left
             anchors.horizontalCenterOffset: root.posLeft + (root.knobSize / 2)
             opacity: (root.hoverIndex === 0 ? 0.0 : 1.0) * entranceProgress.progress
-            Behavior on opacity { NumberAnimation { duration: 150 } }
+            Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
         }
 
         Rectangle {
@@ -179,7 +179,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
             opacity: (root.hoverIndex === 1 ? 0.0 : 1.0) * entranceProgress.progress
-            Behavior on opacity { NumberAnimation { duration: 150 } }
+            Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
         }
 
         Rectangle {
@@ -192,7 +192,7 @@ Item {
             anchors.horizontalCenter: parent.right
             anchors.horizontalCenterOffset: -(root.posLeft + (root.knobSize / 2))
             opacity: (root.hoverIndex === 2 ? 0.0 : 1.0) * entranceProgress.progress
-            Behavior on opacity { NumberAnimation { duration: 150 } }
+            Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
         }
     }
 
@@ -214,7 +214,7 @@ Item {
         Behavior on x {
             enabled: !root.isDraggingKnob
             NumberAnimation {
-                duration: 200
+                duration: Appearance.dur(200)
                 easing.type: Easing.OutCubic
             }
         }

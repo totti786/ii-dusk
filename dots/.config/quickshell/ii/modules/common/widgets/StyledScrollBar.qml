@@ -51,7 +51,7 @@ ScrollBar {
         opacity: root.policy === ScrollBar.AlwaysOn || (root.active && root.size < 1.0) ? 0.8 : 0
         Behavior on opacity {
             NumberAnimation {
-                duration: 350
+                duration: Appearance.dur(350)
                 easing.type: Appearance.animation.elementMoveFast.type
                 easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
             }
@@ -75,19 +75,19 @@ ScrollBar {
 
             Behavior on width {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutCubic
                 }
             }
             Behavior on topLeftRadius {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutCubic
                 }
             }
             Behavior on bottomLeftRadius {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -99,7 +99,7 @@ ScrollBar {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 200
+                        duration: Appearance.dur(200)
                         easing.type: Easing.InOutQuad
                     }
                 }

@@ -20,7 +20,7 @@ RippleButton {
     scale: root.down ? 0.92 : 1.0
     Behavior on scale {
         NumberAnimation {
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.OutCubic
         }
     }

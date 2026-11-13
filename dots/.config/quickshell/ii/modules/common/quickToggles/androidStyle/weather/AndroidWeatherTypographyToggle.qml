@@ -20,6 +20,8 @@ import qs.modules.common.quickToggles.androidStyle
 AndroidWidgetTileBase {
     id: root
 
+    tapAction: () => GlobalStates.openWeatherApp("")
+
     tooltipText: Translation.tr("Weather")
 
     readonly property var currentData: Weather.data

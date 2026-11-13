@@ -38,7 +38,7 @@ Rectangle {
     rotation: pullRotation + continuousRotation + leapRotation
 
     RotationAnimation on continuousRotation {
-        running: root.loading
+        running: (root.loading) && !Appearance.motionOff
         duration: 12000
         easing.type: Easing.Linear
         loops: Animation.Infinite
@@ -59,7 +59,7 @@ Rectangle {
             direction: RotationAnimation.Shortest
             property: "leapRotation"
             to: (root.leapRotation + 90) % 360
-            duration: 350
+            duration: Appearance.dur(350)
             easing.type: Easing.InOutQuad
         }
         NumberAnimation {
@@ -67,7 +67,7 @@ Rectangle {
             property: "leapZoomProgress"
             from: 0
             to: 1
-            duration: 750
+            duration: Appearance.dur(750)
             easing.type: Easing.BezierSpline
             easing.bezierCurve: Appearance.animationCurves.standard
         }

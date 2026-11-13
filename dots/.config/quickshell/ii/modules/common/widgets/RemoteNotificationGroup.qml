@@ -230,10 +230,10 @@ Item {
                            ? swipePillRadius
                            : (root.isLastInGroup ? root.outerRadius : root.innerRadius)
 
-        Behavior on topLeftRadius { enabled: !dragManager.dragging; NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-        Behavior on topRightRadius { enabled: !dragManager.dragging; NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-        Behavior on bottomLeftRadius { enabled: !dragManager.dragging; NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-        Behavior on bottomRightRadius { enabled: !dragManager.dragging; NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+        Behavior on topLeftRadius { enabled: !dragManager.dragging; NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic } }
+        Behavior on topRightRadius { enabled: !dragManager.dragging; NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic } }
+        Behavior on bottomLeftRadius { enabled: !dragManager.dragging; NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic } }
+        Behavior on bottomRightRadius { enabled: !dragManager.dragging; NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic } }
 
         anchors.leftMargin: root.xOffset
 
@@ -245,7 +245,7 @@ Item {
         scale: dragManager.dragging ? 1.0 : (dragManager.pressed ? 0.993 : 1.0)
         Behavior on scale {
             NumberAnimation {
-                duration: 120
+                duration: Appearance.dur(120)
                 easing.type: Easing.OutQuad
             }
         }
@@ -291,7 +291,7 @@ Item {
             id: implicitHeightAnim
             enabled: true
             NumberAnimation {
-                duration: 380
+                duration: Appearance.dur(380)
                 easing.type: Easing.OutQuart
             }
         }

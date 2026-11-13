@@ -360,7 +360,7 @@ AndroidWidgetTileBase {
                                 buttonRadius: root.player?.isPlaying ? Appearance.rounding.small : Appearance.rounding.full
 
                                 Behavior on buttonRadius {
-                                    NumberAnimation { duration: 250; easing.type: Easing.OutQuint }
+                                    NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutQuint }
                                 }
 
                                 contentItem: MaterialSymbol {

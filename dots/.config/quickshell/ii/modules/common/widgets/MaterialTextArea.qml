@@ -1,4 +1,5 @@
 import qs.modules.common
+import qs.modules.common.functions
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Controls
@@ -176,7 +177,7 @@ TextArea {
 
     background: Rectangle {
         implicitHeight: 56
-        color: Appearance.m3colors.m3surface
+        color: ColorUtils.transparentize(Appearance.m3colors.m3surface, Appearance.contentTransparency)
         topLeftRadius: root.topLeftRadius
         topRightRadius: root.topRightRadius
         bottomLeftRadius: root.bottomLeftRadius

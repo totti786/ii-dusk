@@ -18,7 +18,7 @@ StyledText {
     // scale/rotation/parent, so it follows animations and reparenting.
     readonly property bool transformed: {
         for (let p = root; p; p = p.parent) {
-            if (Math.abs(p.scale - 1) > 0.001 || p.rotation % 360 !== 0)
+            if (p.scale !== undefined && (Math.abs(p.scale - 1) > 0.001 || p.rotation % 360 !== 0))
                 return true;
         }
         return false;

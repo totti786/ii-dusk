@@ -61,12 +61,15 @@ Item {
         color: root.artDominantColor
     }
 
+    // LyricsService follows one player; every other card shows its own title instead of that player's lines
+    readonly property bool ownsLyrics: LyricsService.activePlayer === root.player && LyricsService.hasSyncedLines
+
     readonly property color artTextColor: Appearance.colors.colOnSurface
     readonly property color artSubtextColor: Appearance.colors.colOnSurfaceVariant
 
 
     readonly property string displaySongText: {
-        if (LyricsService.hasSyncedLines && LyricsService.statusText !== "") {
+        if (root.ownsLyrics && LyricsService.statusText !== "") {
             return LyricsService.statusText;
         }
         return root.trackTitle;
@@ -96,14 +99,14 @@ Item {
             property: "lyricYOffset"
             from: 15
             to: 0.0
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
             target: root
             property: "lyricOpacity"
             to: 1.0
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.OutCubic
         }
     }
@@ -316,18 +319,18 @@ Item {
                             width: parent.width
                             spacing: 0
                             y: lyricsContainer.baseY - lyricsContainer.rowHeight - lyricsContainer.scrollOffset
-                            visible: LyricsService.hasSyncedLines
+                            visible: root.ownsLyrics
 
                             readonly property int rowHeight: Math.floor(parent.height / 2.5)
                             readonly property real baseY: (parent.height - rowHeight) / 2
-                            readonly property int targetCurrentIndex: LyricsService.hasSyncedLines ? LyricsService.currentIndex : -1
+                            readonly property int targetCurrentIndex: root.ownsLyrics ? LyricsService.currentIndex : -1
                             property int lastIndex: -1
                             property bool isMovingForward: true
                             property real scrollOffset: 0
                             readonly property real animProgress: rowHeight > 0 ? Math.abs(scrollOffset) / rowHeight : 0
 
                             onTargetCurrentIndexChanged: {
-                                if (targetCurrentIndex !== lastIndex && LyricsService.hasSyncedLines) {
+                                if (targetCurrentIndex !== lastIndex && root.ownsLyrics) {
                                     isMovingForward = targetCurrentIndex > lastIndex;
                                     lastIndex = targetCurrentIndex;
                                     scrollAnim.stop();
@@ -341,7 +344,7 @@ Item {
                                 target: lyricsContainer
                                 property: "scrollOffset"
                                 to: 0
-                                duration: 400
+                                duration: Appearance.dur(400)
                                 easing.type: Easing.OutQuart
                             }
 
@@ -352,7 +355,7 @@ Item {
                                     required property int index
                                     property int lineOffset: index - 1
                                     property int actualIndex: lyricsContainer.targetCurrentIndex + lineOffset
-                                    property bool isValidLine: LyricsService.hasSyncedLines && actualIndex >= 0 && actualIndex < LyricsService.syncedLines.length
+                                    property bool isValidLine: root.ownsLyrics && actualIndex >= 0 && actualIndex < LyricsService.syncedLines.length
 
                                     width: parent.width
                                     height: lyricsContainer.rowHeight
@@ -398,7 +401,7 @@ Item {
                         }
 
                         StyledText {
-                            visible: !LyricsService.hasSyncedLines
+                            visible: !root.ownsLyrics
                             anchors.fill: parent
                             font.family: Appearance.font.family.main
                             font.pixelSize: Appearance.font.pixelSize.large

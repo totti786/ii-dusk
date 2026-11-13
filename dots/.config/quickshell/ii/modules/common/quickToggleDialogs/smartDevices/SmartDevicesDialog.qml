@@ -340,7 +340,7 @@ WindowDialog {
 
                     scale: badgeMouse.pressed ? 0.90 : (badgeMouse.containsMouse ? 1.05 : 1.0)
                     Behavior on scale {
-                        NumberAnimation { duration: 120 }
+                        NumberAnimation { duration: Appearance.dur(120) }
                     }
 
                     MaterialShape {
@@ -349,7 +349,7 @@ WindowDialog {
                         color: badgeButton.badgeColor
 
                         Behavior on color {
-                            ColorAnimation { duration: 180 }
+                            ColorAnimation { duration: Appearance.dur(180) }
                         }
                     }
 
@@ -360,7 +360,7 @@ WindowDialog {
                         color: badgeButton.isOn ? root.badgeIconColor(badgeButton.badgeColor) : Appearance.colors.colOnSurfaceVariant
 
                         Behavior on color {
-                            ColorAnimation { duration: 180 }
+                            ColorAnimation { duration: Appearance.dur(180) }
                         }
                     }
 
@@ -872,7 +872,7 @@ WindowDialog {
 
                             scale: dotMouse.pressed ? 0.90 : (dotMouse.containsMouse ? 1.08 : 1.0)
                             Behavior on scale {
-                                NumberAnimation { duration: 120 }
+                                NumberAnimation { duration: Appearance.dur(120) }
                             }
 
                             MouseArea {

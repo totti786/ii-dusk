@@ -75,6 +75,9 @@ Item {
     property bool clipContent: true
 
     /** The live surface, for content that needs its size while it is resized. */
+    /// A plain tap on the tile (not a drag, never in edit mode) runs this; null = the tile
+    /// is a display only. Weather tiles use it to open the weather app.
+    property var tapAction: null
     readonly property alias surface: visualButton
     default property alias content: contentHolder.data
 
@@ -155,5 +158,12 @@ Item {
         id: editableItem
         target: root
         visualItem: visualButton
+    }
+
+    TapHandler {
+        enabled: root.tapAction !== null && !root.editMode && !root.isUnused
+        acceptedButtons: Qt.LeftButton
+        gesturePolicy: TapHandler.ReleaseWithinBounds
+        onTapped: root.tapAction()
     }
 }

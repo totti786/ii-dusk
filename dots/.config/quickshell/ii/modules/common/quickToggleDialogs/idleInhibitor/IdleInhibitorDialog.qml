@@ -243,7 +243,7 @@ WindowDialog {
 
                 Behavior on border.color {
                     ColorAnimation {
-                        duration: 150
+                        duration: Appearance.dur(150)
                     }
                 }
             }
@@ -261,7 +261,7 @@ WindowDialog {
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: 150
+                        duration: Appearance.dur(150)
                     }
                 }
             }

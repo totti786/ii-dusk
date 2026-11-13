@@ -59,8 +59,8 @@ Singleton {
             "component": "modules/settings/configs/BarConfig.qml",
             "searchComponent": false,
             "searchSources": ["sections/BarPlacementSection.qml", "sections/BarAppearanceSection.qml"],
-            "subPages": ["widgets/BarAppearanceConfig.qml", "widgets/BarLayoutConfig.qml", "widgets/BarWidgetsWaffleConfig.qml", "widgets/ActiveWindowConfig.qml", "widgets/SearchBarWidgetConfig.qml", "widgets/DateBarWidgetConfig.qml", "widgets/ClockBarWidgetConfig.qml", "widgets/WeatherBarWidgetConfig.qml", "widgets/MediaPlayerConfig.qml", "widgets/UtilButtonsConfig.qml", "widgets/KeyboardLayoutConfig.qml", "widgets/SystemMonitorConfig.qml", "widgets/AiPlanUsageConfig.qml", "widgets/PortWatcherConfig.qml", "widgets/PasswordManagerConfig.qml", "widgets/NetworkSpeedConfig.qml", "widgets/PrivacyPillConfig.qml", "widgets/IndicatorsConfig.qml", "widgets/RecordIndicatorConfig.qml", "widgets/BluetoothConfig.qml", "widgets/SystemTrayConfig.qml", "widgets/BatteryConfig.qml", "widgets/DashboardButtonConfig.qml", "widgets/ClockDateWidgetConfig.qml", "widgets/WaffleTweaksConfig.qml", "widgets/DockToPanelConfig.qml", "widgets/BarScrollActionsConfig.qml", "widgets/BarTooltipsConfig.qml", "widgets/BarPopupsConfig.qml"],
-            "aliases": ["Bar & Status Bar", "Status Bar", "Shell mode", "Waffle", "Bar appearance", "Bar layout", "Bar style", "Brand icon", "Bar popups", "Floating popups", "Click bar to open sidebars"]
+            "subPages": ["widgets/BarAppearanceConfig.qml", "widgets/BarLayoutConfig.qml", "widgets/BarWidgetsConfig.qml", "widgets/ActiveWindowConfig.qml", "widgets/SearchBarWidgetConfig.qml", "widgets/DateBarWidgetConfig.qml", "widgets/ClockBarWidgetConfig.qml", "widgets/WeatherBarWidgetConfig.qml", "widgets/MediaPlayerConfig.qml", "widgets/UtilButtonsConfig.qml", "widgets/KeyboardLayoutConfig.qml", "widgets/SystemMonitorConfig.qml", "widgets/AiPlanUsageConfig.qml", "widgets/PortWatcherConfig.qml", "widgets/PasswordManagerConfig.qml", "widgets/NetworkSpeedConfig.qml", "widgets/PrivacyPillConfig.qml", "widgets/IndicatorsConfig.qml", "widgets/RecordIndicatorConfig.qml", "widgets/BluetoothConfig.qml", "widgets/SystemTrayConfig.qml", "widgets/BatteryConfig.qml", "widgets/DashboardButtonConfig.qml", "widgets/ClockDateWidgetConfig.qml", "widgets/DockToPanelConfig.qml", "widgets/BarScrollActionsConfig.qml", "widgets/BarTooltipsConfig.qml", "widgets/BarPopupsConfig.qml"],
+            "aliases": ["Bar & Status Bar", "Status Bar", "Shell mode", "Bar appearance", "Bar layout", "Bar style", "Brand icon", "Bar popups", "Floating popups", "Click bar to open sidebars"]
         },
         {
             "id": "wallpaper",
@@ -82,7 +82,7 @@ Singleton {
             "subPages": ["widgets/CustomFontsConfig.qml"],
             "searchComponent": false,
             "searchSources": ["sections/InterfaceFontsOptionsSection.qml"],
-            "aliases": ["Base Icon Themes", "Decorative Options", "Shell family", "Panel family", "Tablet mode", "Waffle", "illogical-impulse", "Switch shell"]
+            "aliases": ["Base Icon Themes", "Decorative Options", "Shell family", "Panel family", "Tablet mode", "illogical-impulse", "Switch shell"]
         },
         {
             "id": "presets",
@@ -109,6 +109,16 @@ Singleton {
             "aliases": ["Shade", "Home screen", "Dock", "App drawer", "Gestures", "Android"]
         },
         {
+            "id": "lite",
+            "name": "Lite",
+            "icon": "battery_saver",
+            "component": "modules/settings/configs/LiteConfig.qml",
+            // Only for the family it configures.
+            "families": ["lite"],
+            "subPages": [],
+            "aliases": ["Power saver", "Battery", "Low power", "Left out"]
+        },
+        {
             "id": "sidebars",
             "name": "Sidebars",
             "icon": "side_navigation",
@@ -121,7 +131,7 @@ Singleton {
         {
             "id": "dock",
             // The tablet family draws no ii dock; an Android-style dock replaces it.
-            "families": ["ii", "waffle"],
+            "families": ["ii"],
             "name": "Dock",
             "icon": "dock_to_bottom",
             "component": "modules/settings/configs/DockConfig.qml",
@@ -164,7 +174,7 @@ Singleton {
         {
             "id": "dynamicIsland",
             // No notch on a fixed tablet status bar.
-            "families": ["ii", "waffle"],
+            "families": ["ii"],
             "name": "Dynamic Island",
             "icon": "water_drop",
             "component": "modules/settings/configs/DynamicIslandConfig.qml",
@@ -195,6 +205,8 @@ Singleton {
         },
         {
             "id": "modes",
+            // Desktop automation; the tablet family loads no modes overlay.
+            "families": ["ii"],
             // Folded into Apps & Overlays as an app card (2026-11-07)
             "movedTo": "overlays",
             "hidden": true,
@@ -255,7 +267,7 @@ Singleton {
         {
             "id": "cheatSheet",
             // A keyboard-shortcut reference, on a device with no keyboard.
-            "families": ["ii", "waffle"],
+            "families": ["ii"],
             "name": "Cheat Sheet",
             "icon": "help",
             "component": "modules/settings/configs/CheatSheetConfig.qml",
@@ -275,7 +287,7 @@ Singleton {
         {
             "id": "tiling",
             // Dragging windows into a tiling grid needs a pointer.
-            "families": ["ii", "waffle"],
+            "families": ["ii"],
             "name": "Window Tiling",
             "icon": "view_quilt",
             "component": "modules/settings/configs/TilingConfig.qml",
@@ -335,7 +347,7 @@ Singleton {
             "icon": "translate",
             "component": "modules/settings/configs/LanguageTimeConfig.qml",
             "subPages": ["widgets/TimeDateFormatsConfig.qml"],
-            "aliases": ["Core Services", "Language & Translation", "Time & Date", "World Clocks", "Alarms", "Translator", "Date format", "Clock format", "Custom format strings"]
+            "aliases": ["Core Services", "Language & Translation", "Translate with AI", "AI translation", "Interface language", "Time & Date", "World Clocks", "Alarms", "Translator", "Date format", "Clock format", "Custom format strings"]
         },
         {
             "id": "apis",

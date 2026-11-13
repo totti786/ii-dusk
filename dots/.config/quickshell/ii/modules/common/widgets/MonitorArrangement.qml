@@ -266,11 +266,11 @@ Item {
 
         Behavior on x {
             enabled: !isDragging && root.width > 40
-            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutCubic }
         }
         Behavior on y {
             enabled: !isDragging && root.width > 40
-            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutCubic }
         }
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(rectRoot)

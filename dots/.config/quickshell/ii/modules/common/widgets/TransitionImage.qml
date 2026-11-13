@@ -206,7 +206,7 @@ Item {
         if (root.animated) {
             if (root.transitionShader !== "") {
                 if (root.transitionShader === "random") {
-                    let list = ["circle", "circlePit", "circleSelect", "magic", "Peel", "transition", "pixelate", "stripes"];
+                    let list = ["circlePit", "circleSelect", "magic", "Peel", "transition", "pixelate", "stripes"];
                     root.activeShader = list[Math.floor(Math.random() * list.length)];
                 } else {
                     root.activeShader = root.transitionShader;
@@ -230,7 +230,7 @@ Item {
         from: 0
         to: 1
         duration: root.animationDuration
-        easing.type: Easing.InOutQuad
+        easing.type: Easing.OutQuad
 
         onFinished: {
             var oldBack = root.imgAIsBack ? imgA : imgB;
@@ -246,7 +246,7 @@ Item {
         from: 0.0
         to: 1.0
         duration: root.animationDuration
-        easing.type: Easing.InOutCubic
+        easing.type: Easing.OutCubic
         onFinished: {
             var front = root.imgAIsBack ? imgB : imgA;
             var back = root.imgAIsBack ? imgA : imgB;

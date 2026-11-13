@@ -428,8 +428,8 @@ Item {
 
                     SequentialAnimation {
                         id: modeFlip
-                        NumberAnimation { target: modeScale; property: "yScale"; from: 1.0; to: 0.0; duration: 120; easing.type: Easing.InCubic }
-                        NumberAnimation { target: modeScale; property: "yScale"; from: 0.0; to: 1.0; duration: 180; easing.type: Easing.OutBack }
+                        NumberAnimation { target: modeScale; property: "yScale"; from: 1.0; to: 0.0; duration: Appearance.dur(120); easing.type: Easing.InCubic }
+                        NumberAnimation { target: modeScale; property: "yScale"; from: 0.0; to: 1.0; duration: Appearance.dur(180); easing.type: Easing.OutBack }
                     }
                 }
             }

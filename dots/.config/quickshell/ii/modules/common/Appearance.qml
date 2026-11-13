@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.UPower
 import qs.modules.common.functions
 import qs.services
 import "HyprlandBlur.js" as HyprlandBlur
@@ -282,7 +283,7 @@ Singleton {
         if (rgb === "")
             return;
         let hyprColor = "rgba(" + rgb + "AA)";
-        Quickshell.execDetached(["hyprctl", "eval", "hl.config({ general = { ['col.active_border'] = '" + hyprColor + "' }, group = { ['col.border_active'] = '" + hyprColor + "', groupbar = { ['col.active'] = '" + hyprColor + "' } } })"]);
+        Quickshell.execDetached(["hyprctl", "eval", "hl.config({ general = { ['col.active_border'] = '" + hyprColor + "' }, group = { ['col.border_active'] = '" + hyprColor + "', groupbar = { ['col.active'] = 'rgba(" + rgb + "FF)' } } })"]);
     }
 
     function pushBorderSize(): void {
@@ -335,6 +336,24 @@ Singleton {
                 + "|| hyprctl eval 'hl.config({ decoration = { blur = { enabled = true } } })'"]);
     }
     onCompositorBlurModeChanged: root.pushHyprlandLayerRules()
+    // The terminal's own background opacity follows the Glass tile (Alacritty reloads its config live,
+    // the compositor blurs what a translucent window leaves see-through). Written by
+    // scripts/colors/terminal_glass.py, which puts 1.0 back only when it set the value itself.
+    readonly property bool terminalGlass: (Config.options.appearance.transparency.enable ?? false) && (Config.options.appearance.transparency.terminal ?? false)
+    readonly property real terminalOpacity: root.terminalGlass ? Math.max(0.3, Math.min(1, Config.options.appearance.transparency.terminalOpacity ?? 0.8)) : 1.0
+    onTerminalOpacityChanged: root.applyTerminalOpacity()
+    function applyTerminalOpacity() {
+        if (!Config.ready)
+            return;
+        terminalGlassProc.command = ["python3", "-I", Quickshell.shellPath("scripts/colors/terminal_glass.py"), String(root.terminalOpacity)];
+        terminalGlassProc.running = false;
+        terminalGlassProc.running = true;
+    }
+    Process { id: terminalGlassProc }
+    Connections {
+        target: Config
+        function onReadyChanged() { root.applyTerminalOpacity(); }
+    }
     readonly property bool opaqueWindows: Config.options.appearance.blur?.opaqueWindows ?? false
     onOpaqueWindowsChanged: root.pushHyprlandLayerRules()
     property bool _blurUpdatePending: false
@@ -524,6 +543,9 @@ Singleton {
         // sharp holes into it. So blur follows the design that is selected.
         script += "hl.layer_rule({ name = 'ii:appearance:media-mode', match = { namespace = 'quickshell:mediaMode' }, blur = " + (root.mediaModeImmersive ? "false" : "true") + " }) ";
         script += "hl.layer_rule({ name = 'ii:appearance:corners', match = { namespace = 'quickshell:screenCorners' }, order = 10 }) ";
+        // The empty-scratchpad placeholder is a full-screen layer whose dim (30%) sits below the
+        // blanket quickshell.* threshold, so it was never blurred: blur everything under it.
+        script += "hl.layer_rule({ name = 'ii:appearance:scratchpad-empty', match = { namespace = 'quickshell:scratchpad_empty_overlay' }, blur = true, ignore_alpha = 0.0 }) ";
         script += "hl.layer_rule({ name = 'ii:appearance:session', match = { namespace = 'quickshell:session' }, blur = true, ignore_alpha = 0.0 }) ";
         script += "hl.layer_rule({ name = 'ii:appearance:task-view', match = { namespace = 'quickshell:wTaskView' }, blur = true, ignore_alpha = 0.0 }) ";
         script += "hl.layer_rule({ name = 'ii:appearance:overview-transition', match = { namespace = 'quickshell:overviewWindowTransition' }, blur = false }) ";
@@ -758,10 +780,23 @@ Singleton {
     }
 
     // Global animation speed multiplier — driven by Config.options.appearance.animationMultiplier
-    readonly property real animMultiplier: Config.options?.appearance?.animationMultiplier ?? 1.0
+    // "Reduce motion" turns every animation that goes through this multiplier off, and the Lite
+    // family always runs that way. A small value rather than 0: some timers derive their interval
+    // from it, and an interval of 0 that repeats would spin.
+    /// The power-saver profile turns animations off without changing the panel family
+    readonly property bool powerSaverMotionOff: (Config.options?.appearance?.powerSaving?.reduceMotion ?? true)
+        && PowerProfiles.profile === PowerProfile.PowerSaver
+    readonly property bool motionOff: (Config.options?.appearance?.reduceMotion ?? false) || PanelFamily.isLite
+        || root.powerSaverMotionOff
+    readonly property real animMultiplier: root.motionOff ? 0.01 : (Config.options?.appearance?.animationMultiplier ?? 1.0)
+    /// A hard-coded animation length: unchanged normally, none at all when motion is off. Use this for
+    /// literal durations instead of a bare number, so Reduce motion and Lite reach them too.
+    function dur(ms: int): int {
+        return root.motionOff ? 0 : ms;
+    }
     // Below this the shell skips animations outright rather than running them absurdly fast (the
     // sidebars' own convention); Edit Mode reads it as one flag instead of repeating the test.
-    readonly property bool reducedMotion: root.animMultiplier <= 0.25
+    readonly property bool reducedMotion: root.motionOff || root.animMultiplier <= 0.25
 
     animationCurves: QtObject {
         readonly property list<real> expressiveFastSpatial: [0.42, 1.67, 0.21, 0.90, 1, 1] // Default, 350ms

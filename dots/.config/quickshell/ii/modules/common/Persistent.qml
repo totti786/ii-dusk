@@ -244,6 +244,13 @@ Singleton {
                 property int presetUserDataVersion: 0
             }
 
+            // The calculator app's own choices: "standard" or "scientific", "deg" or "rad", digit grouping
+            property JsonObject calculator: JsonObject {
+                property string mode: "standard"
+                property string angle: "deg"
+                property bool grouping: true
+            }
+
             property JsonObject search: JsonObject {
                 property list<var> aliases: []
                 property list<string> recentEmojis: []
@@ -367,6 +374,22 @@ Singleton {
                     property string queueSortCriterion: "title"
                     property bool queueSortDescending: false
                     property bool coverExpanded: false
+                    // Folders the Audio Player indexes; empty means ~/Music.
+                    property list<string> audioLibraryDirs: []
+                    // The File Manager's view, sorting and sidebar.
+                    property string fmView: "grid"
+                    property bool fmHidden: false
+                    property bool fmFolderSizes: false
+                    property string fmSortKey: "name"
+                    property bool fmSortDesc: false
+                    property int fmZoom: 96
+                    property real fmSidebar: 184
+                    // The text editor: view options and the tabs to bring back.
+                    property bool edWrap: false
+                    property bool edLineNumbers: true
+                    property int edFontSize: 14
+                    property int edTabSize: 4
+                    property list<string> edSession: []
                     // Immersive artwork layout: "side" keeps the whole cover beside the panels, "cover" crops it to fill the screen.
                     property string immersiveArtLayout: "side"
                 }
@@ -385,6 +408,29 @@ Singleton {
                 property real height: 760
                 property string tab: "alarms"
                 property bool railExpanded: true
+            }
+            /**
+             * Grit's window, goals and sync settings.
+             *
+             * The habit, task and focus records themselves live in
+             * `Directories.gritDataPath`, not here: they are a synced document with
+             * tombstones, and mirroring them through states.json would rewrite both
+             * files on every habit tick. These are the machine-local facts around it.
+             */
+            property JsonObject grit: JsonObject {
+                property string tab: "today"
+                property bool railExpanded: true
+                property string deviceId: ""
+                property int dailyGoalMinutes: 120
+                property bool weekStartMonday: true
+                property bool showCompleted: true
+                property string syncUrl: ""
+                property string syncToken: ""
+                property bool autoSync: false
+                property int syncIntervalSec: 120
+                property int syncPort: 8765
+                property bool hostLocal: false
+                property string lastSyncAt: ""
             }
             property JsonObject easyEffectsApp: JsonObject {
                 property string tab: "presets"
@@ -791,6 +837,31 @@ Singleton {
             }
             // Bedtime tracking: one entry per night ({ night, target, lastActive,
             // lateSeconds }), newest last, and which reminders already went out.
+            // Discord voice audio choices: devices by name (empty is the default), mic gain and gate
+            // sensitivity, and each person's volume as JSON {userId: percent}.
+            property JsonObject discordoVoice: JsonObject {
+                property string input: ""
+                property string output: ""
+                property int micGain: 100
+                property real sensitivityDb: -40
+                // How long to hold a voice back while you watch that person's video, in ms
+                property int videoSyncMs: 80
+                // A short sound when people join or leave the call, and when you do
+                property bool joinSounds: true
+                // Hold the compositor-bound key to talk instead of an open mic
+                property bool pushToTalk: false
+                // Keep the helper connected so DMs and mentions toast without a call or an open window
+                property bool chatNotices: false
+                // The chat window's last place, so it opens where you left it
+                property string chatGuild: ""
+                property string chatChannel: ""
+                property string userVolumes: "{}"
+                property string sharePreset: "720p30"
+                property string cameraPreset: "720p30"
+                // Your own tile is shown like a mirror; what others see is flipped only if this is on
+                property bool mirrorPreview: true
+                property bool mirrorSent: false
+            }
             property JsonObject bedtime: JsonObject {
                 property list<var> nights: []
                 property string windDownNotified: ""
@@ -813,6 +884,10 @@ Singleton {
                 property real lastNotify: 0
                 // { "<y-m-d>": glasses } for the last two weeks (the dock card's week).
                 property string historyJson: "{}"
+            }
+            property JsonObject prayer: JsonObject {
+                // { "<city>|<country>|<method>|<y>-<m>": [{ d, t, h }] } for the current and next month.
+                property string cacheJson: "{}"
             }
             // Dock utility widgets: what they hold between sessions.
             property JsonObject dockUtilities: JsonObject {

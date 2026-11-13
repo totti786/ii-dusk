@@ -23,6 +23,11 @@ MaterialShape { // App icon
     // image://icon/<name>. Shell senders pass Material Symbol names there, which no icon
     // theme has, so draw those as a glyph instead of the missing-icon checkerboard.
     readonly property string themedImageName: image.startsWith("image://icon/") ? image.slice(13).split("?")[0] : ""
+    // The image provider drops a notification's picture once its popup is gone, so a late
+    // load fails; fall back to the app icon or glyph instead of an empty circle.
+    property bool imageFailed: false
+    onImageChanged: imageFailed = false
+    readonly property bool useImage: image !== "" && !imageFailed
     readonly property bool imageIsGlyph: themedImageName !== "" && Quickshell.iconPath(themedImageName, true) === ""
 
     implicitSize: 38 * scale
@@ -32,7 +37,7 @@ MaterialShape { // App icon
     color: isUrgent ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer
     Loader {
         id: materialSymbolLoader
-        active: (root.appIcon == "" && root.image == "") || root.imageIsGlyph
+        active: (root.appIcon == "" && !root.useImage) || root.imageIsGlyph
         anchors.fill: parent
         sourceComponent: MaterialSymbol {
             text: {
@@ -51,7 +56,7 @@ MaterialShape { // App icon
     }
     Loader {
         id: appIconLoader
-        active: root.image == "" && root.appIcon != ""
+        active: !root.useImage && root.appIcon != ""
         anchors.centerIn: parent
         sourceComponent: IconImage {
             id: appIconImage
@@ -62,7 +67,7 @@ MaterialShape { // App icon
     }
     Loader {
         id: notifImageLoader
-        active: root.image != "" && !root.imageIsGlyph
+        active: root.useImage && !root.imageIsGlyph
         anchors.fill: parent
         sourceComponent: Item {
             anchors.fill: parent
@@ -79,6 +84,7 @@ MaterialShape { // App icon
                 // decoded surface bounded to this icon as well.
                 cache: false
                 antialiasing: true
+                onStatusChanged: if (status === Image.Error) root.imageFailed = true
                 asynchronous: !source.toString().startsWith("image://icon/")
             }
             Loader {

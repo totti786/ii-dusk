@@ -104,7 +104,7 @@ Button {
     scale: root.isPressed ? 0.95 : (isHovered ? 1.01 : 1.0)
     Behavior on scale {
         NumberAnimation {
-            duration: 150
+            duration: Appearance.dur(150)
             easing.type: Easing.OutQuad
         }
     }

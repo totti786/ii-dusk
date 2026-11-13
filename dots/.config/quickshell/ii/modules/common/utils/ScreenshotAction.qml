@@ -72,7 +72,7 @@ Singleton {
             } else {
                 const targetSaveDir = saveDir.replace(/^file:\/\//, "");
                 return ["bash", "-c", `mkdir -p '${StringUtils.shellSingleQuoteEscape(targetSaveDir)}' && \
-                        saveFileName="screenshot-$(date '+%Y-%m-%d_%H.%M.%S').png" && \
+                        saveFileName="Screenshot_$(date '+%Y-%m-%d-%H-%M-%S').png" && \
                         savePath="${targetSaveDir}/$saveFileName" && \
                         ${cropToStdout} | tee >(wl-copy) > "$savePath" && \
                         notify-send -i camera-photo -t 4000 'Screenshot saved' "Saved to: $savePath" && \

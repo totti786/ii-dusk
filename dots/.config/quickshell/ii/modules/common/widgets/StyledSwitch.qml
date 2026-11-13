@@ -21,7 +21,7 @@ Switch {
     scale: (isPressed && enabled) ? 0.95 : 1.0
     Behavior on scale {
         NumberAnimation {
-            duration: 150
+            duration: Appearance.dur(150)
             easing.type: Easing.OutQuad
         }
     }

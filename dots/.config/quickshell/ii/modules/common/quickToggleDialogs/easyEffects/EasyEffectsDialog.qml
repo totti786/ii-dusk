@@ -220,7 +220,7 @@ WindowDialog {
                 radius: parent.buttonEffectiveRadius
 
                 Behavior on border.color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation { duration: Appearance.dur(150) }
                 }
             }
 
@@ -234,7 +234,7 @@ WindowDialog {
                         "wght": 500
                     })
                 color: detailsBtn.hovered ? Appearance.colors.colOnSurface : Appearance.colors.colOutline
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
             onClicked: {
                 GlobalStates.openEasyEffectsApp("presets");

@@ -6,12 +6,26 @@ import qs.modules.common
  * short ease, and once they lift it carries on for a moment at the speed they had,
  * slowing as it goes. Fingers that stop but stay on the pad hold the content still.
  * The owner feeds it each touchpad event (ScrollWheel.touchpadStep, with the event's
- * phase) and calls stop() when a mouse wheel or a drag takes over.
+ * phase) and calls stop() when a mouse wheel or a drag takes over. It follows the
+ * vertical axis by default; set horizontal for a horizontal Flickable/ListView.
  */
 QtObject {
     id: root
 
     required property Flickable flickable
+
+    // Keep the existing vertical behaviour as the default. Horizontal owners use
+    // the same finger sampling and lift physics against contentX instead.
+    property bool horizontal: false
+
+    readonly property real position: horizontal ? flickable.contentX : flickable.contentY
+    readonly property real minPosition: horizontal
+        ? flickable.originX - flickable.leftMargin
+        : flickable.originY - flickable.topMargin
+    readonly property real maxPosition: horizontal
+        ? Math.max(minPosition, flickable.originX + flickable.contentWidth - flickable.width + flickable.rightMargin)
+        : Math.max(minPosition, flickable.originY + flickable.contentHeight - flickable.height + flickable.bottomMargin)
+    readonly property bool active: frame.running || _glideSpeed !== 0 || _samples.length > 0
 
     // The content closes most of the gap to its destination in about this long
     readonly property real followTau: 0.02
@@ -57,6 +71,7 @@ QtObject {
     property double _sampleMs: 0
     // { t, v } for the last maxSamples per-event speeds, v in px/s (positive = down)
     property var _samples: []
+    property bool _writingPosition: false
 
     /**
      * One touchpad event. `step` is ScrollWheel's: positive scrolls toward the top.
@@ -69,7 +84,7 @@ QtObject {
         if (step !== 0) {
             if (!frame.running || _glideSpeed !== 0 || now - _lastEventMs > resumeMs) {
                 // A new touch starts from wherever the content is now, a glide included
-                _eventTarget = flickable.contentY;
+                _eventTarget = root.position;
                 _samples = [];
                 _fingerY = 0;
                 _sampleY = 0;
@@ -101,7 +116,7 @@ QtObject {
         if (speed === 0)
             return;
         if (!frame.running) {
-            _eventTarget = flickable.contentY;
+            _eventTarget = root.position;
             _lastTickMs = now;
             frame.running = true;
         }
@@ -111,15 +126,22 @@ QtObject {
 
     /** A drag or a mouse wheel took over: the content stays where it is. */
     function stop() {
-        if (!frame.running)
-            return;
         frame.running = false;
         _glideSpeed = 0;
         _samples = [];
     }
 
     function clamp(value) {
-        return Math.max(minY, Math.min(maxY, value));
+        return Math.max(minPosition, Math.min(maxPosition, value));
+    }
+
+    function writePosition(value) {
+        _writingPosition = true;
+        if (horizontal)
+            flickable.contentX = value;
+        else
+            flickable.contentY = value;
+        _writingPosition = false;
     }
 
     // The mean of the per-event speeds no older than relevanceMs at nowMs, zero when
@@ -149,14 +171,14 @@ QtObject {
         _lastTickMs = now;
         const destination = clamp(_eventTarget + glideAt(now));
         _target = destination;
-        const gap = destination - flickable.contentY;
+        const gap = destination - root.position;
         const speedNow = Math.abs(_glideSpeed) * Math.exp(-Math.max(0, now - _lastEventMs) / 1000 / glideTau);
         if (speedNow < stopSpeed && Math.abs(gap) < 0.5) {
-            flickable.contentY = destination;
+            root.writePosition(destination);
             frame.running = false;
             return;
         }
-        flickable.contentY += gap * (1 - Math.exp(-dt / followTau));
+        root.writePosition(root.position + gap * (1 - Math.exp(-dt / followTau)));
     }
 
     // A QtObject has no default property, so its children are declared as typed
@@ -172,5 +194,27 @@ QtObject {
         function onMovementStarted() {
             root.stop();
         }
+        function onContentXChanged() {
+            if (root.horizontal && !root._writingPosition)
+                root.stop();
+        }
+        function onContentYChanged() {
+            if (!root.horizontal && !root._writingPosition)
+                root.stop();
+        }
+        function onInteractiveChanged() {
+            if (!root.flickable.interactive)
+                root.stop();
+        }
+        function onVisibleChanged() {
+            if (!root.flickable.visible)
+                root.stop();
+        }
+        function onEnabledChanged() {
+            if (!root.flickable.enabled)
+                root.stop();
+        }
     }
+
+    Component.onDestruction: root.stop()
 }

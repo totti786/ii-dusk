@@ -71,6 +71,8 @@ var TOGGLE_TYPES = {
     notifications: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
     autoDnd: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
     powerProfile: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
+    powerSaving: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
+    icons: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
     musicRecognition: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
     antiFlashbang: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
     screenShader: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
@@ -84,6 +86,7 @@ var TOGGLE_TYPES = {
     discordVoice: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
     phoneCamera: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
     phoneMic: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
+    quickShare: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
     phoneMirror: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
     speedTest: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
     smartDevices: { kind: "toggle", defaultSize: [1, 1], maxHeight: 8 },
@@ -301,7 +304,7 @@ var TYPE_CATEGORIES = {
     network: "connectivity", bluetooth: "connectivity", vpn: "connectivity",
     tailscale: "connectivity", kdeConnect: "connectivity", dnsOverTls: "connectivity",
     cloudflareWarp: "connectivity", localSend: "connectivity",
-    phoneCamera: "connectivity", phoneMic: "connectivity", phoneMirror: "connectivity", speedTest: "connectivity",
+    phoneCamera: "connectivity", phoneMic: "connectivity", quickShare: "connectivity", phoneMirror: "connectivity", speedTest: "connectivity",
 
     // Everything else that toggles - display, audio, tools and system - is one section:
     // split further, most sections held a single row.

@@ -158,7 +158,7 @@ Item {
 
         Behavior on contentX {
             NumberAnimation {
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.OutExpo
             }
         }
@@ -199,7 +199,7 @@ Item {
                     }
 
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation { duration: Appearance.dur(150) }
                     }
 
                     layer.enabled: showBatteryFill
@@ -226,10 +226,10 @@ Item {
                         visible: parent.showBatteryFill
 
                         Behavior on width {
-                            NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Appearance.dur(400); easing.type: Easing.OutCubic }
                         }
                         Behavior on color {
-                            ColorAnimation { duration: 150 }
+                            ColorAnimation { duration: Appearance.dur(150) }
                         }
                     }
 
@@ -316,7 +316,7 @@ Item {
                             : (isActive ? Appearance.colors.colPrimary : Appearance.colors.colSurfaceContainerHighest)
 
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation { duration: Appearance.dur(150) }
                     }
 
                     MouseArea {
@@ -348,8 +348,8 @@ Item {
                             visible: !root.isProcessing
                             opacity: actionBtnMouse.containsMouse ? 0 : 1
                             scale: actionBtnMouse.containsMouse ? 0.5 : 1
-                            Behavior on opacity { NumberAnimation { duration: 150 } }
-                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                            Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                            Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
                         }
 
                         // Arrow Back
@@ -361,8 +361,8 @@ Item {
                             visible: !root.isProcessing
                             opacity: actionBtnMouse.containsMouse ? 1 : 0
                             scale: actionBtnMouse.containsMouse ? 1 : 0.5
-                            Behavior on opacity { NumberAnimation { duration: 150 } }
-                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                            Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                            Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
                         }
 
                         // Rotating Cookie Loading shape
@@ -375,15 +375,15 @@ Item {
                             visible: root.isProcessing
                             opacity: actionBtnMouse.containsMouse ? 0 : 1
                             scale: actionBtnMouse.containsMouse ? 0.5 : 1
-                            Behavior on opacity { NumberAnimation { duration: 150 } }
-                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                            Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                            Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
 
                             RotationAnimator on rotation {
                                 from: 0
                                 to: 360
                                 duration: 2000
                                 loops: Animation.Infinite
-                                running: root.isProcessing
+                                running: (root.isProcessing) && !Appearance.motionOff
                             }
                         }
 
@@ -396,8 +396,8 @@ Item {
                             visible: root.isProcessing
                             opacity: actionBtnMouse.containsMouse ? 1 : 0
                             scale: actionBtnMouse.containsMouse ? 1 : 0.5
-                            Behavior on opacity { NumberAnimation { duration: 150 } }
-                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                            Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                            Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
                         }
                     }
                 }
@@ -420,7 +420,7 @@ Item {
                             : (isActive ? Appearance.colors.colPrimary : Appearance.colors.colSurfaceContainerHighest)
 
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation { duration: Appearance.dur(150) }
                     }
 
                     MouseArea {
@@ -452,7 +452,7 @@ Item {
                     border.color: disconnectBtnMouse.containsMouse ? Appearance.colors.colOnSurface : Appearance.colors.colOutline
 
                     Behavior on border.color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation { duration: Appearance.dur(150) }
                     }
 
                     MouseArea {
@@ -480,7 +480,7 @@ Item {
                             text: isActive ? "bluetooth_disabled" : "bluetooth"
                             iconSize: 18
                             color: disconnectBtnMouse.containsMouse ? Appearance.colors.colOnSurface : Appearance.colors.colOutline
-                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
                         }
                         
                         StyledText {
@@ -489,7 +489,7 @@ Item {
                             font.bold: true
                             color: disconnectBtnMouse.containsMouse ? Appearance.colors.colOnSurface : Appearance.colors.colOutline
                             elide: Text.ElideRight
-                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
                         }
                     }
                 }
@@ -506,7 +506,7 @@ Item {
                             : Appearance.colors.colErrorContainer
 
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation { duration: Appearance.dur(150) }
                     }
 
                     MouseArea {
@@ -560,7 +560,7 @@ Item {
                : Appearance.colors.colSurfaceContainerHighest
 
         Behavior on color {
-            ColorAnimation { duration: 150 }
+            ColorAnimation { duration: Appearance.dur(150) }
         }
 
         MouseArea {
@@ -599,8 +599,8 @@ Item {
                     visible: root.hasDeviceImage && status !== Image.Error
                     opacity: root.isProcessing ? 0 : 1
                     scale: root.isProcessing ? 0.5 : 1
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
-                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                    Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
                 }
 
                 MaterialSymbol {
@@ -613,8 +613,8 @@ Item {
                     visible: !availDeviceImg.visible
                     opacity: root.isProcessing ? 0 : 1
                     scale: root.isProcessing ? 0.5 : 1
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
-                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                    Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
                 }
 
                 MaterialShape {
@@ -625,15 +625,15 @@ Item {
                     color: Appearance.colors.colOnSurface
                     opacity: root.isProcessing ? 1 : 0
                     scale: root.isProcessing ? 1 : 0.5
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
-                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                    Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
 
                     RotationAnimator on rotation {
                         from: 0
                         to: 360
                         duration: 2000
                         loops: Animation.Infinite
-                        running: root.isProcessing
+                        running: (root.isProcessing) && !Appearance.motionOff
                     }
                 }
             }
@@ -654,7 +654,7 @@ Item {
                 iconSize: 24
                 color: Appearance.colors.colSubtext
                 opacity: root.isProcessing ? 0 : 0.7
-                Behavior on opacity { NumberAnimation { duration: 150 } }
+                Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
             }
         }
     }

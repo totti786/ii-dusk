@@ -72,8 +72,8 @@ Rectangle {
                 id: iconAnim
                 PauseAnimation { duration: root.animDelay + 60 }
                 ParallelAnimation {
-                    NumberAnimation { target: iconShape; property: "scale"; from: 0.8; to: 1.0; duration: 350; easing.type: Easing.OutBack }
-                    NumberAnimation { target: iconShape; property: "rotation"; from: -10; to: 0; duration: 350; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: iconShape; property: "scale"; from: 0.8; to: 1.0; duration: Appearance.dur(350); easing.type: Easing.OutBack }
+                    NumberAnimation { target: iconShape; property: "rotation"; from: -10; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -95,7 +95,7 @@ Rectangle {
                 SequentialAnimation {
                     id: titleAnim
                     PauseAnimation { duration: root.animDelay + 120 }
-                    NumberAnimation { target: title; property: "opacity"; from: 0.0; to: 1.0; duration: 250 }
+                    NumberAnimation { target: title; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(250) }
                 }
             }
 
@@ -111,7 +111,7 @@ Rectangle {
                 SequentialAnimation {
                     id: valueAnim
                     PauseAnimation { duration: root.animDelay + 180 }
-                    NumberAnimation { target: value; property: "opacity"; from: 0.0; to: 1.0; duration: 250 }
+                    NumberAnimation { target: value; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(250) }
                 }
             }
             

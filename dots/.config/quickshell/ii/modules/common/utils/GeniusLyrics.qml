@@ -19,14 +19,24 @@ Item {
     readonly property var geniusApiKey: KeyringStorage.keyringData?.apiKeys?.genius
 
     property string _lastQueryKey: ""
+    property string _lastResult: ""
 
     function fetchLyrics(artist, title) {
         if (!title && !artist) return;
         const queryArtist = artist ?? ""
         const queryTitle = title ?? ""
         const key = queryArtist + "::" + queryTitle
-        if (key === _lastQueryKey && fetchLyricsProcess.running) return;
+        if (key === _lastQueryKey) {
+            if (fetchLyricsProcess.running) return;
+            // Same track already answered: callers (one per widget, plus the track-change
+            // handlers) all ask again, so replay the result instead of spawning another fetch.
+            if (_lastResult.length > 0) {
+                lyricsUpdated(_lastResult)
+                return;
+            }
+        }
         _lastQueryKey = key
+        _lastResult = ""
         console.log("[Genius Lyrics] Fetching lyrics for", queryArtist, "-", queryTitle)
         fetchLyricsProcess.running = false
         fetchLyricsProcess.command = ["node", Directories.geniusLyricsScriptPath, root.geniusApiKey, queryArtist, queryTitle]
@@ -39,6 +49,8 @@ Item {
         command: []
         stdout: StdioCollector {
             onStreamFinished: {
+                if (this.text.trim().length > 0)
+                    root._lastResult = this.text
                 lyricsUpdated(this.text)
             }   
         }

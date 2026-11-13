@@ -260,7 +260,7 @@ PopupWindow {
 
     component NoAnim: Transition {
         NumberAnimation {
-            duration: 0
+            duration: Appearance.dur(0)
         }
     }
 

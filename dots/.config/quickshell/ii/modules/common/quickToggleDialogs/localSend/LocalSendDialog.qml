@@ -506,7 +506,7 @@ WindowDialog {
                                     from: 0
                                     to: 360
                                     duration: 1000
-                                    running: LocalSend.scanning
+                                    running: (LocalSend.scanning) && !Appearance.motionOff
                                 }
                             }
 

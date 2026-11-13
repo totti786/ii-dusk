@@ -428,6 +428,27 @@ DelegateChooser {
     }
 
     DelegateChoice {
+        roleValue: "quickShare"
+        AndroidQuickShareToggle {
+            required property int index
+            required property var modelData
+            buttonIndex: index
+            isUnused: root.isUnused
+            buttonData: modelData
+            editMode: root.editMode
+            baseCellWidth: root.baseCellWidth
+            baseCellHeight: root.baseCellHeight
+            cellSpacing: root.spacing
+            cellSize: modelData.sizeW
+            pageIndex: root.pageIndex
+            gridColumns: root.gridColumns
+            panel: root.panel
+            gridRef: root.gridRef
+            entranceTrigger: root.entranceTrigger
+        }
+    }
+
+    DelegateChoice {
         roleValue: "phoneMirror"
         AndroidPhoneMirrorToggle {
             required property int index
@@ -2375,6 +2396,69 @@ DelegateChooser {
     DelegateChoice {
         roleValue: "photoWidget"
         AndroidPhotoWidgetToggle {
+            required property int index
+            required property var modelData
+            buttonIndex: index
+            isUnused: root.isUnused
+            buttonData: modelData
+            editMode: root.editMode
+            baseCellWidth: root.baseCellWidth
+            baseCellHeight: root.baseCellHeight
+            cellSpacing: root.spacing
+            cellSize: modelData.sizeW
+            pageIndex: root.pageIndex
+            gridColumns: root.gridColumns
+            panel: root.panel
+            gridRef: root.gridRef
+            entranceTrigger: root.entranceTrigger
+        }
+    }
+
+    DelegateChoice {
+        roleValue: "icons"
+        AndroidIconsToggle {
+            required property int index
+            required property var modelData
+            buttonIndex: index
+            isUnused: root.isUnused
+            buttonData: modelData
+            editMode: root.editMode
+            baseCellWidth: root.baseCellWidth
+            baseCellHeight: root.baseCellHeight
+            cellSpacing: root.spacing
+            cellSize: modelData.sizeW
+            pageIndex: root.pageIndex
+            gridColumns: root.gridColumns
+            panel: root.panel
+            gridRef: root.gridRef
+            entranceTrigger: root.entranceTrigger
+        }
+    }
+
+    DelegateChoice {
+        roleValue: "powerSaving"
+        AndroidPowerSavingToggle {
+            required property int index
+            required property var modelData
+            buttonIndex: index
+            isUnused: root.isUnused
+            buttonData: modelData
+            editMode: root.editMode
+            baseCellWidth: root.baseCellWidth
+            baseCellHeight: root.baseCellHeight
+            cellSpacing: root.spacing
+            cellSize: modelData.sizeW
+            pageIndex: root.pageIndex
+            gridColumns: root.gridColumns
+            panel: root.panel
+            gridRef: root.gridRef
+            entranceTrigger: root.entranceTrigger
+        }
+    }
+
+    DelegateChoice {
+        roleValue: "reduceMotion"
+        AndroidReduceMotionToggle {
             required property int index
             required property var modelData
             buttonIndex: index

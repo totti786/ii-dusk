@@ -81,7 +81,7 @@ Item {
                 id: contentYAnim
                 target: lyricsList
                 property: "contentY"
-                duration: 250
+                duration: Appearance.dur(250)
                 easing.type: Easing.InOutQuad
                 onStopped: {
                     lyricsList.highlightFollowsCurrentItem = true

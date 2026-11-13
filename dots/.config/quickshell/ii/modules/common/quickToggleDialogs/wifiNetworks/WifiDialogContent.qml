@@ -157,7 +157,7 @@ StyledFlickable {
                     property: "x"
                     from: -connectedFlick.width
                     to: 0
-                    duration: 500
+                    duration: Appearance.dur(500)
                     easing.type: Easing.OutExpo
                 }
 
@@ -175,7 +175,7 @@ StyledFlickable {
 
                 Behavior on contentX {
                     NumberAnimation {
-                        duration: 400
+                        duration: Appearance.dur(400)
                         easing.type: Easing.OutExpo
                     }
                 }
@@ -256,7 +256,7 @@ StyledFlickable {
                                    : Appearance.colors.colPrimary
 
                             Behavior on color {
-                                ColorAnimation { duration: 150 }
+                                ColorAnimation { duration: Appearance.dur(150) }
                             }
 
                             MouseArea {
@@ -291,8 +291,8 @@ StyledFlickable {
                                     color: Appearance.colors.colOnPrimary
                                     opacity: (Network.active !== null && !wifiActionMouse.containsMouse) ? 1 : 0
                                     scale: (Network.active !== null && !wifiActionMouse.containsMouse) ? 1 : 0.5
-                                    Behavior on opacity { NumberAnimation { duration: 150 } }
-                                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                                    Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
                                 }
 
                                 MaterialSymbol {
@@ -302,8 +302,8 @@ StyledFlickable {
                                     color: Appearance.colors.colOnPrimary
                                     opacity: (Network.active !== null && wifiActionMouse.containsMouse) ? 1 : 0
                                     scale: (Network.active !== null && wifiActionMouse.containsMouse) ? 1 : 0.5
-                                    Behavior on opacity { NumberAnimation { duration: 150 } }
-                                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                                    Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
                                 }
 
                                 MaterialShape {
@@ -314,14 +314,14 @@ StyledFlickable {
                                     color: Appearance.colors.colOnPrimary
                                     opacity: (Network.active === null && !wifiActionMouse.containsMouse) ? 1 : 0
                                     scale: (Network.active === null && !wifiActionMouse.containsMouse) ? 1 : 0.5
-                                    Behavior on opacity { NumberAnimation { duration: 150 } }
-                                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                                    Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
                                     RotationAnimator on rotation {
                                         from: 0
                                         to: 360
                                         duration: 2000
                                         loops: Animation.Infinite
-                                        running: (Network.active === null && !wifiActionMouse.containsMouse)
+                                        running: ((Network.active === null && !wifiActionMouse.containsMouse)) && !Appearance.motionOff
                                     }
                                 }
 
@@ -332,8 +332,8 @@ StyledFlickable {
                                     color: Appearance.colors.colOnPrimary
                                     opacity: (Network.active === null && wifiActionMouse.containsMouse) ? 1 : 0
                                     scale: (Network.active === null && wifiActionMouse.containsMouse) ? 1 : 0.5
-                                    Behavior on opacity { NumberAnimation { duration: 150 } }
-                                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                                    Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
                                 }
                             }
                         }
@@ -356,7 +356,7 @@ StyledFlickable {
                                    : Appearance.colors.colPrimary
 
                             Behavior on color {
-                                ColorAnimation { duration: 150 }
+                                ColorAnimation { duration: Appearance.dur(150) }
                             }
 
                             MouseArea {
@@ -388,7 +388,7 @@ StyledFlickable {
                             border.color: wifiDisconnectMouse.containsMouse ? Appearance.colors.colOnSurface : Appearance.colors.colOutline
 
                             Behavior on border.color {
-                                ColorAnimation { duration: 150 }
+                                ColorAnimation { duration: Appearance.dur(150) }
                             }
 
                             MouseArea {
@@ -411,7 +411,7 @@ StyledFlickable {
                                     text: "wifi_off"
                                     iconSize: 18
                                     color: wifiDisconnectMouse.containsMouse ? Appearance.colors.colOnSurface : Appearance.colors.colOutline
-                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
                                 }
                                 
                                 StyledText {
@@ -420,7 +420,7 @@ StyledFlickable {
                                     font.bold: true
                                     color: wifiDisconnectMouse.containsMouse ? Appearance.colors.colOnSurface : Appearance.colors.colOutline
                                     elide: Text.ElideRight
-                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
                                 }
                             }
                         }
@@ -438,7 +438,7 @@ StyledFlickable {
                                    : Appearance.colors.colErrorContainer
 
                             Behavior on color {
-                                ColorAnimation { duration: 150 }
+                                ColorAnimation { duration: Appearance.dur(150) }
                             }
 
                             MouseArea {

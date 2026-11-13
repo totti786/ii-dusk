@@ -662,7 +662,7 @@ Singleton {
         }
     }
 
-    // Shared gate for every OSD implementation (default, minimal/material, Waffle).
+    // Shared gate for every OSD implementation (default, minimal/material).
     // Unknown indicator ids stay enabled so a new one is opt-out, not opt-in.
     function osdIndicatorEnabled(indicatorId): bool {
         if (!root.ready || !root.options.osd)
@@ -846,6 +846,52 @@ Singleton {
         GlobalStates.editHistoryBeginBatch();
         for (const id of ids)
             root.updateWidgetLockBehavior(id, newLockBehavior);
+        GlobalStates.editHistoryEndBatch();
+    }
+
+    // A card widget's look, kept on its activeWidgets entry as `style`:
+    // { preset: "solid"|"frosted"|"clear", opacity, radius, border, scheme }. A missing key
+    // inherits the global style. By KIND like the lock behaviour, so every copy follows; the
+    // first copy answers for the settings card that shows it.
+    function getWidgetStyle(widgetId) {
+        const list = root.options.background.activeWidgets || [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i].widgetId === widgetId)
+                return list[i].style || {};
+        }
+        return {};
+    }
+
+    // `patch` keys set (or, when null, clear) one value; a null patch clears the whole style.
+    function setWidgetStyle(widgetId, patch) {
+        const list = root.options.background.activeWidgets || [];
+        const ids = [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i].widgetId === widgetId)
+                ids.push(list[i].id);
+        }
+        if (ids.length === 0)
+            return;
+        GlobalStates.editHistoryBeginBatch();
+        for (const id of ids) {
+            root._editWidgetEntry(id, entry => {
+                if (patch === null) {
+                    delete entry.style;
+                    return;
+                }
+                const next = Object.assign({}, entry.style || {});
+                for (const k in patch) {
+                    if (patch[k] === null)
+                        delete next[k];
+                    else
+                        next[k] = patch[k];
+                }
+                if (Object.keys(next).length === 0)
+                    delete entry.style;
+                else
+                    entry.style = next;
+            });
+        }
         GlobalStates.editHistoryEndBatch();
     }
 
@@ -1043,6 +1089,26 @@ Singleton {
         });
     }
 
+    // The size class of one placed widget ("1x1", "2x1", ...), on its entry so two copies of the
+    // same widget can differ. Empty clears it, and the widget falls back to its default size.
+    function updateWidgetSize(instanceId, size) {
+        root._editWidgetEntry(instanceId, entry => {
+            if (size)
+                entry.size = String(size);
+            else
+                delete entry.size;
+        });
+    }
+
+    // The same placed widget becomes its sibling in the family (another size, or another design at
+    // the size): the entry keeps its id, place and lock behaviour, only which widget it is changes.
+    function updateWidgetVariant(instanceId, newWidgetId) {
+        root._editWidgetEntry(instanceId, entry => {
+            entry.widgetId = String(newWidgetId);
+            delete entry.size;
+        });
+    }
+
     // A pinned widget ignores drags and the resize grip whatever the global
     // lock says. Stored only when set, so untouched entries stay as they were.
     function updateWidgetPinned(instanceId, pinned) {
@@ -1110,7 +1176,7 @@ Singleton {
     //
     // Bump `currentConfigVersion` and add a matching block to `migrateRaw()`
     // whenever an existing key changes type or meaning.
-    readonly property int currentConfigVersion: 31
+    readonly property int currentConfigVersion: 32
     // Defaults have to be captured before the file lands, because deserializing
     // is what destroys them. FileView loads asynchronously, so at component
     // completion the adapter still holds nothing but the QML defaults.
@@ -1853,9 +1919,17 @@ Singleton {
             }
         }
 
-        // v30 -> v31: the desktop icon menu's "Open in Zed" became the editor
+        // v31 -> v32: GPU Screen Recorder is now the preferred backend, so the
+        // old implicit wf-recorder default becomes "auto" (gsr -> wf-recorder ->
+        // obs, whichever is installed). An explicit OBS choice stays OBS.
+        if (from < 32 && raw.screenRecord?.service === "wf-recorder") {
+            raw.screenRecord.service = "auto";
+            console.log("[Config] Migrated screenRecord.service wf-recorder -> auto");
+        }
+
+        // v31 -> v32: the desktop icon menu's "Open in Zed" became the editor
         // entry, which runs apps.editor; an arranged menu keeps it where it was.
-        if (from < 31 && Array.isArray(raw.contextMenu?.layouts)) {
+        if (from < 32 && Array.isArray(raw.contextMenu?.layouts)) {
             for (const layout of raw.contextMenu.layouts) {
                 if (!layout || layout.menu !== "desktopItem")
                     continue;
@@ -1967,7 +2041,7 @@ Singleton {
     // (background widget placementStrategy, which also accepts undocumented
     // aliases) is left out on purpose.
     readonly property var enumConstraints: ({
-            "panelFamily": ["ii", "tablet", "waffle"],
+            "panelFamily": ["ii", "tablet", "lite"],
             "contextMenu.style": ["comfortable", "compact"],
             "contextMenu.submenus": ["inline", "cascade"],
             "ai.tools.mode": ["functions", "search", "none"],
@@ -2336,7 +2410,32 @@ Singleton {
             // migrateRaw(). Never default this to currentConfigVersion.
             property int configVersion: 0
 
-            property string panelFamily: "ii" // "ii", "tablet", "waffle"
+            property string panelFamily: "ii" // "ii", "tablet", "lite"
+
+            // Preferences for the Lite family only: its power saver, and the apps it leaves out
+            // until they are asked for (each extra loads its panel only while its switch is on).
+            property JsonObject lite: JsonObject {
+                // What the Power Saving toggle goes back to when it is turned off
+                property string returnFamily: "ii"
+                property int returnProfile: -1
+                property JsonObject autoSaver: JsonObject {
+                    property bool enable: true
+                    property int threshold: 30
+                }
+                property JsonObject bar: JsonObject {
+                    property bool privacy: true
+                    property bool keyboardLayout: true
+                }
+                property JsonObject extras: JsonObject {
+                    property bool modes: false
+                    property bool easyEffects: false
+                    property bool usage: false
+                    property bool health: false
+                    property bool colorPicker: false
+                    property bool displayModes: false
+                    property bool wallpaperSelector: false
+                }
+            }
 
             // Preferences for surfaces that exist only in the tablet family. Keeping these
             // apart from `dock` lets the ii dock retain its desktop defaults while the two
@@ -2834,6 +2933,10 @@ Singleton {
                     property int micGain: 100
                     property bool setAsDefault: false
                 }
+                property JsonObject audio: JsonObject {
+                    property int volume: 100
+                    property bool alsoOnPhone: false
+                }
             }
 
             property JsonObject localsend: JsonObject {
@@ -2973,6 +3076,12 @@ Singleton {
                     // can reach, not only about the network, so shell commands
                     // stay off under it. Set true to disagree.
                     property bool allowShellInLocalPolicy: false
+                    // OpenCode chats only. The shell's own settings are changed without a card
+                    // (journaled, undoable); protected ones such as these permissions never are.
+                    property bool opencodeConfigWrites: true
+                    // OpenCode chats only. Commands and file edits run without a card; anything that
+                    // looks like a package, service or root change still asks. Off until chosen.
+                    property bool opencodeAuto: false
                 }
                 // Longest answer to ask for, in tokens. 0 uses whatever the
                 // model itself supports, which is what most people want;
@@ -3088,6 +3197,13 @@ Singleton {
 
             property JsonObject appearance: JsonObject {
                 property bool extraBackgroundTint: true
+                property JsonObject powerSaving: JsonObject {
+                    property bool enable: false
+                    // The power-saver profile turns animations off, in whatever panel family is running
+                    property bool reduceMotion: true
+                    // What the Power Saving toggle puts the profile back to; -1 = nothing remembered
+                    property int returnProfile: -1
+                }
                 property int fakeScreenRounding: 1 // 0: None | 1: Always | 2: When not fullscreen | 3: Wrapped
                 property int wrappedFrameThickness: 6
                 property bool sharpMode: false
@@ -3113,6 +3229,9 @@ Singleton {
                     property bool popups: false
                     property real backgroundTransparency: 0.48
                     property real contentTransparency: 0.38
+                    // The terminal's own background opacity follows the glass (Alacritty), at this level
+                    property bool terminal: false
+                    property real terminalOpacity: 0.8
                 }
                 property int blurSize: 10
                 // Keep blurSize at its existing path for presets. These defaults
@@ -3192,6 +3311,9 @@ Singleton {
                 }
                 property list<string> customColorSchemes: []
                 property real animationMultiplier: 0.8000000000000001 // 0.25 = fast, 1.0 = default, 2.0 = slow
+                // Master switch: no shell animations and no Hyprland animations. The multiplier
+                // above is left alone, so turning it off brings the user's speed back.
+                property bool reduceMotion: false
                 property bool colorfulScrollbar: false
                 property bool scrollAnimations: false
                 property bool scrollFadeMask: false
@@ -3235,6 +3357,100 @@ Singleton {
                 property string terminal: "kitty -1" // This is only for shell actions
                 property string update: "kitty -1 --hold=yes fish -i -c 'pkexec pacman -Syu'"
                 property string volumeMixer: `~/.config/hypr/hyprland/scripts/launch_first_available.sh "pavucontrol-qt" "pavucontrol"`
+            }
+
+            /// Built-in Anki reviewer. The app owns the collection while its window is
+            /// open; empty profile/path means Anki's last-used profile and default path.
+            property JsonObject anki: JsonObject {
+                property string profile: ""
+                property bool autoPlayAudio: true
+                property string collectionPath: ""
+            }
+
+            /// The Mediator browser: "overlay" is the full-screen cinematic view, "window" the app window.
+            property JsonObject mediator: JsonObject {
+                // Height anime downloads are scaled to once saved (the provider only has 1080p)
+                property string animeDownloadQuality: "1080" // "1080" | "720" | "480"
+                property string presentation: "overlay"
+                /// Empty uses the backend shipped inside the shell (scripts/mediator).
+                property string binary: ""
+            }
+
+            /// The Quran reader: Madina mushaf pages with recitation. `bookmarks` is a comma
+            /// separated list of "surah:ayah" (a list<string> does not survive a save).
+            property JsonObject quran: JsonObject {
+                /// "overlay" is the full-screen reader, "window" an ordinary floating window
+                property string presentation: "overlay"
+                property int page: 1
+                property string recitation: "mahmoud-husary/r1"
+                property string bookmarks: ""
+                /// Comma separated reciter codes: starred ones, and the last few used
+                property string favoriteReciters: ""
+                property string recentReciters: ""
+                property real volume: 0.9
+                property real speed: 1
+                property bool followAudio: true
+                /// "translation" is the verse-by-verse page, "reading" the mushaf spread
+                property string mode: "translation"
+                property int surah: 1
+                property int ayah: 1
+                /// quran.com translation id (20 is bundled, the others are fetched once)
+                property int translation: 20
+                property bool showTranslation: true
+                property int arabicSize: 36
+                property int translationSize: 17
+                /// Madani page fonts (~200 MB), fetched on request from Reading settings.
+                /// Off, the mushaf spread uses the bundled Hafs font.
+                property bool pageFonts: false
+                /// quran.com tafsir id (169 is Ibn Kathir, abridged); a surah is fetched the first time it is read
+                property int tafsir: 169
+                property int tafsirSize: 20
+            }
+
+            /// The poetry reader. `favorites` is a comma separated list of poem addresses,
+            /// newest first (a list<string> does not survive a save).
+            property JsonObject diwan: JsonObject {
+                /// "overlay" is the full-screen reader, "window" an ordinary floating window
+                property string presentation: "overlay"
+                property string lastSlug: ""
+                property string favorites: ""
+                /// Saved single verses as "slug:index", newest first
+                property string verses: ""
+                /// Poems read lately, newest first
+                property string recent: ""
+                /// Whether the diacritics (tashkeel) are shown
+                property bool tashkeel: true
+                property int fontSize: 34
+                property string fontFamily: "Amiri"
+            }
+
+            /// The Books app: a library and launcher for the document viewers.
+            /// Empty directory means ~/Documents/Books; viewer is zathura or sioyek.
+            property JsonObject books: JsonObject {
+                property string directory: ""
+                property string viewer: "zathura"
+                property string sort: "recent"
+                /// Shelf look: "covers" or "spines".
+                property string view: "covers"
+                /// Where Z-Library downloads land. Empty means
+                /// <library>/Downloaded/Z-Library.
+                property string zlibDownloadDir: ""
+            }
+
+            /// The Syncplay app: the last server, name and room (never a password).
+            /// Empty values start from the user's own ~/.config/syncplay.ini.
+            property JsonObject syncplay: JsonObject {
+                property bool enable: true
+                property string host: ""
+                property int port: 0
+                property string name: ""
+                property string room: ""
+            }
+
+            /// Quick Share: off until turned on. The daemon is scripts/quickshare/ii-quickshare, built by rust-helpers.sh.
+            property JsonObject quickShare: JsonObject {
+                property bool enable: false
+                property string downloadDir: ""
             }
 
             // Per-app usage and energy history. The sampler is a separate process
@@ -3381,8 +3597,53 @@ Singleton {
             }
 
             property JsonObject background: JsonObject {
+                // Text on the wallpaper turns dark only where the wallpaper's own colour is lighter
+                // than this (HSL lightness, 0-1); below it the text stays light. 0.5 was far too eager.
+                property real darkTextAbove: 0.72
                 property bool enable: true // if someone wants to use an external wallpaper manager, note that its not fully tested but it should just disable background.qml from being loaded
                 property bool blurGradientExperiment: false
+                // Optional live Moon Phase / Celestial Astrolabe wallpaper. It is
+                // deliberately disabled and static by default so existing wallpaper
+                // sessions keep their current render and power profile.
+                property JsonObject celestial: JsonObject {
+                    property bool enable: false
+                    property bool animate: false
+                    property int fps: 10
+                    property int updateIntervalMinutes: 1
+                    // Preview-only astronomical clock. It is intentionally
+                    // independent from the older fixed-date debug controls.
+                    property bool simulationEnabled: false
+                    property real simulationDaysPerSecond: 1.0
+                    property bool simulationPaused: false
+                    property int seasonMode: 0 // 0: automatic, 1..4: fixed season, 5: off
+                    property int backgroundStyle: 0 // planisphere, seasonal etchings, combined
+                    property real intensity: 0.65
+                    property bool showTelemetry: true
+                    property bool showOrbit: true
+                    property bool showEarth: true
+                    property bool showPrayerClock: true
+                    property bool showSeasonalGhostEarths: true
+                    property bool showObserverPin: true
+                    property int cornerSize: 230
+                    property int cornerMargin: 36
+                    property real moonScale: 0.45
+                    property real earthshineIntensity: 0.035
+                    property real craterReliefStrength: 1.2
+                    property bool followWeatherLocation: true
+                    property real latitude: 30.0
+                    property real longitude: 31.2
+                    property bool autoHemisphere: true
+                    property bool flipSouthernHemisphere: false
+                    property int prayerMethod: 5
+                    property int prayerAsrSchool: 0
+                    // PrayerTimes supplies the shared monthly cache; leave the
+                    // upstream one-day API fallback opt-in to avoid duplicate calls.
+                    property bool prayerUseApi: false
+                    property bool debugTimeOverrideEnabled: false
+                    property real debugPhaseValue: 0.35
+                    property real debugDayOfYear: 292.0
+                    property real debugUtcHour: 19.0
+                }
                 property JsonObject referenceResolution: JsonObject {
                     property int width: 1920
                     property int height: 1080
@@ -3393,6 +3654,14 @@ Singleton {
                     property string colorScheme: "default"
                     property bool tintOpacityEnabled: false
                     property real tintOpacity: 0.55
+                    // How a widget card is drawn. The presets (solid, frosted, clear) write
+                    // tintOpacityEnabled/tintOpacity and these; "custom" is any hand-set mix; "shell" follows the
+                    // Glass tile in Colors & Themes (frosted when the shell is glass, solid when it is not).
+                    property string glassPreset: "shell"
+                    property bool cardRim: false
+                    property bool cardSheen: false
+                    property real cardBorderWidth: 0
+                    property real cardRadiusScale: 1
                     property bool lightweightPreviews: true
                     property bool showOnlyOnSingleMonitor: false
                     property string targetMonitor: ""
@@ -3851,6 +4120,46 @@ Singleton {
                         property bool enableCpu: true
                         property bool enableRam: true
                         property bool enableDisk: true
+                    }
+                    property JsonObject clock_hour_shape: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 200
+                        property real y: 200
+                        property int widgetSize: 100
+                        property bool showMinutes: true
+                    }
+                    property JsonObject clock_bloom: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 200
+                        property real y: 200
+                        property int widgetSize: 100
+                        property bool filled: false
+                    }
+                    property JsonObject clock_capsule: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 200
+                        property real y: 200
+                        property int widgetSize: 100
+                        property bool showDate: true
+                    }
+                    property JsonObject clock_dome: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 200
+                        property real y: 200
+                        property int widgetSize: 100
+                        property bool showDate: true
+                    }
+                    property JsonObject clock_totem: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 200
+                        property real y: 200
+                        property int widgetSize: 100
+                        property bool showWeek: true
                     }
                     property JsonObject clock_type_weight: JsonObject {
                         property bool enable: false
@@ -4732,6 +5041,104 @@ Singleton {
                         property int intervalHours: 2
                         property string reminderText: "Time to hydrate! 💧"
                     }
+                    property JsonObject prayer_times: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 600
+                        property real y: 200
+                        property int widgetSize: 100
+                        // Aladhan calculation method; 5 is the Egyptian General Authority.
+                        property int method: 5
+                    }
+                    property JsonObject diwan_verse: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 600
+                        property real y: 460
+                        property int widgetSize: 100
+                    }
+                    property JsonObject quran_ayah: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 700
+                        property real y: 300
+                        property int widgetSize: 100
+                    }
+                    property JsonObject quran_lockup: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 760
+                        property real y: 360
+                        property int widgetSize: 100
+                        // light, accent, auto (follows the wallpaper) or dark
+                        property string ink: "light"
+                        // hafs, ruqaa, katibeh or mirza
+                        property string font: "hafs"
+                        // daily, bookmarks or last
+                        property string source: "daily"
+                        // day, 6h or hour: how often a bookmarked verse gives way to the next
+                        property string rotate: "day"
+                    }
+                    property JsonObject quran_lens: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 780
+                        property real y: 380
+                        property int widgetSize: 100
+                        // light, accent, auto (follows the wallpaper) or dark
+                        property string ink: "light"
+                        // hafs, ruqaa, katibeh or mirza
+                        property string font: "hafs"
+                        // daily, bookmarks or last
+                        property string source: "daily"
+                        // day, 6h or hour: how often a bookmarked verse gives way to the next
+                        property string rotate: "day"
+                    }
+                    property JsonObject quran_ring: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 800
+                        property real y: 400
+                        property int widgetSize: 100
+                        // light, accent, auto (follows the wallpaper) or dark
+                        property string ink: "light"
+                        // hafs, ruqaa, katibeh or mirza
+                        property string font: "hafs"
+                        // daily, bookmarks or last
+                        property string source: "daily"
+                        // day, 6h or hour: how often a bookmarked verse gives way to the next
+                        property string rotate: "day"
+                    }
+                    property JsonObject quran_hero: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 820
+                        property real y: 420
+                        property int widgetSize: 100
+                        // light, accent, auto (follows the wallpaper) or dark
+                        property string ink: "light"
+                        // hafs, ruqaa, katibeh or mirza
+                        property string font: "hafs"
+                        // daily, bookmarks or last
+                        property string source: "daily"
+                        // day, 6h or hour: how often a bookmarked verse gives way to the next
+                        property string rotate: "day"
+                    }
+                    property JsonObject quran_hilye: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 840
+                        property real y: 440
+                        property int widgetSize: 100
+                        // light, accent, auto (follows the wallpaper) or dark
+                        property string ink: "light"
+                        // hafs, ruqaa, katibeh or mirza
+                        property string font: "hafs"
+                        // daily, bookmarks or last
+                        property string source: "daily"
+                        // day, 6h or hour: how often a bookmarked verse gives way to the next
+                        property string rotate: "day"
+                    }
                     property bool enableInnerShadow: false
                     property bool enableShadows: false
                     property bool enableGrid: false
@@ -5184,6 +5591,14 @@ Singleton {
                     property JsonObject reminderSoon: JsonObject {
                         property bool enable: true
                     }
+                    // The next prayer, shortly before and after it begins.
+                    property JsonObject prayer: JsonObject {
+                        property bool enable: true
+                    }
+                    // A Grit focus session: the time left, beside the clock.
+                    property JsonObject focus: JsonObject {
+                        property bool enable: true
+                    }
                     property JsonObject songRec: JsonObject {
                         property bool enable: true
                     }
@@ -5226,6 +5641,19 @@ Singleton {
                         property string side: "right"
                     }
                     property JsonObject easyEffects: JsonObject {
+                        property bool enable: true
+                        property string side: "right"
+                    }
+                    property JsonObject soundscapes: JsonObject {
+                        property bool enable: true
+                        property string side: "right"
+                    }
+                    property JsonObject quickShare: JsonObject {
+                        property bool enable: true
+                        property string side: "right"
+                    }
+                    // CPU or memory held high for a while.
+                    property JsonObject monitorAlert: JsonObject {
                         property bool enable: true
                         property string side: "right"
                     }
@@ -5464,6 +5892,16 @@ Singleton {
                     // EasyEffects' preset as a bubble for as long as it runs: scroll to
                     // switch, rest on it for the presets, bypass and the app.
                     property bool disableEasyEffects: false
+                    // A Soundscapes mix, playing or paused, as a bubble beside the island: its lead
+                    // sound, the sleep timer's time left, and a card to mix from. Only watches the
+                    // mixer's daemon; it never starts it.
+                    property bool disableSoundscapes: false
+                    // Quick Share as a bubble: visible to nearby phones, a request, a transfer, or
+                    // files waiting for a device.
+                    property bool disableQuickShare: false
+                    property bool disableMonitorAlert: false
+                    property bool disableFocus: false
+                    property bool disablePrayer: false
                     // A new critical System Health problem (a service failed, a program
                     // crashed), with the fix as its button.
                     property bool disableHealth: false
@@ -5531,6 +5969,7 @@ Singleton {
                     property bool claudeNetworkEnabled: true
                     property list<string> enabledProviders: ["chatgpt", "claude", "antigravity"]
                     property string visualization: "resource" // resource | semicircle | circle | shape | bar | text | capsule | mood | duo
+                    property string windowKind: "both" // both | short (5h) | weekly
                     property string percentMode: "remaining" // remaining | used
                     property bool showWindowLabel: false
                     property bool hideWhenUnavailable: false
@@ -5558,6 +5997,8 @@ Singleton {
                     property bool lockWithScreen: true
                     // Put the login matching the focused window first.
                     property bool suggestForWindow: true
+                    // Unlock with a fingerprint after the master password was typed once this login.
+                    property bool fingerprint: false
                 }
 
                 property JsonObject portWatcher: JsonObject {
@@ -5737,7 +6178,7 @@ Singleton {
                 }
                 property JsonObject weather: JsonObject {
                     property bool enable: false
-                    property bool enableGPS: true // gps based location
+                    property bool enableGPS: false // gps based location
                     property string city: "" // When 'enableGPS' is false
                     property bool useUSCS: false // Instead of metric (SI) units
                     property int fetchInterval: 10 // minutes
@@ -6006,6 +6447,8 @@ Singleton {
                 property bool enableGmail: true
                 property bool enableTimetable: true
                 property bool timetableTodayFirst: false
+                // Every shell app in one grid, opened from the registry
+                property bool enableApps: true
                 property bool enablePeriodicTable: false
                 property bool enableAminoAcids: false
                 // "five" | "seven" | "four" — side chain classification scheme
@@ -6020,6 +6463,8 @@ Singleton {
                 // The Search Tools panel as a full-size page. Off by default:
                 // a developer surface most people never open.
                 property bool enableDevTools: false
+                // A GitHub dashboard read through the `gh` CLI (needs `gh auth login`)
+                property bool enableGithub: true
                 // Football overview: matches, lineups, stats, tables and teams from ESPN.
                 property bool enableFootball: false
                 property JsonObject football: JsonObject {
@@ -6051,6 +6496,11 @@ Singleton {
             // that can only ever answer "not installed".
             property JsonObject dictation: JsonObject {
                 property bool enabled: false
+                // "hex" (~/hex, falls back to Voxtype while missing) or "voxtype".
+                property string engine: "hex"
+                // Minutes of silence after which the shell quits Hex (it starts again on the
+                // next press). 0 keeps it running.
+                property int hexIdleMinutes: 10
                 // "fast" (base, 142 MB) or "accurate" (large-v3-turbo, 1.6 GB).
                 // A size/latency choice; the language below picks the variant.
                 property string quality: "fast"
@@ -6223,7 +6673,7 @@ Singleton {
                         property string to: "in"
                     }
                     property JsonObject send: JsonObject {
-                        // "kdeconnect" or "localsend".
+                        // "kdeconnect", "localsend" or "quickshare".
                         property string backend: "kdeconnect"
                         // Empty: KDE Connect's active device.
                         property string kdeDevice: ""
@@ -6278,6 +6728,9 @@ Singleton {
                 // Settings -> Hyprland shows only what a normal desktop needs until this is on.
                 // Everything the compositor can be told, and the prose explaining why, is behind it.
                 property bool advancedSettings: false
+                // Hyprland has one active layout per keyboard, not per window; the shell remembers
+                // each window's layout and restores it on focus.
+                property bool layoutPerWindow: false
             }
 
             property JsonObject idle: JsonObject {
@@ -6426,6 +6879,7 @@ Singleton {
 
             property JsonObject language: JsonObject {
                 property string ui: "en_US" // UI language. "auto" for system locale, or specific language code like "zh_CN", "en_US"
+                property string aiModel: "gemini-3.8-flash" // Model for "Translate with AI": gemini-* (API key) or claude-* (claude CLI, Claude plan)
                 property JsonObject translator: JsonObject {
                     property string engine: "auto" // Run `trans -list-engines` for available engines. auto should use google
                     property string targetLanguage: "auto" // Run `trans -list-all` for available languages
@@ -6503,6 +6957,9 @@ Singleton {
             property JsonObject lock: JsonObject {
                 property bool useHyprlock: false
                 property bool launchOnStartup: false
+                // The one desktop widget the lock screen centres, by its config entry name
+                // (e.g. "at_a_glance", "search_pill"); empty leaves each widget where it is placed.
+                property string centerWidget: ""
                 property JsonObject blur: JsonObject {
                     property bool enable: true
                     property real radius: 45
@@ -6612,6 +7069,11 @@ Singleton {
                 property string position: "top_right"
                 property int zoomPercent: 100 // 50-200, step 10
                 property bool autoDndFullscreen: true
+                // Quiet during a Grit focus session: notifications are kept, not shown, and one
+                // line says how many came in when the session ends. Urgent ones still show.
+                property bool holdDuringFocus: true
+                // Buttons for what a notification contains: copy a code, open a link.
+                property bool smartActions: true
                 property JsonObject monitor: JsonObject {
                     property bool enable: false
                     property string name: "" // Name of the monitor to show notifications on, like "eDP-1". Find out with 'hyprctl monitors' command
@@ -6844,6 +7306,25 @@ Singleton {
                 /// change colour when the wallpaper does.
                 property string boardLight: "#f7f6f2"
                 property string boardDark: "#1f2124"
+            }
+
+            /**
+             * The floating weather app. Only whether it exists lives out here; the
+             * source, places, units and alerts are edited from the app's own settings.
+             */
+            property JsonObject weatherApp: JsonObject {
+                property bool enable: true
+                property string startTab: "overview" // "overview" | "hourly" | "daily" | "charts" | "details"
+            }
+
+            /**
+             * The Soundscapes ambient mixer. Volumes, mixes and the sleep timer are saved by its
+             * daemon (~/.local/state/soundscapes); only where the sounds live is a setting.
+             */
+            property JsonObject soundscapes: JsonObject {
+                property bool enable: true
+                property string libraryDir: "~/.local/share/soundscapes" // a Noice library: metadata/, audio/, icons/
+                property string startTab: "sounds" // "sounds" | "mix" | "presets"
             }
 
             /**
@@ -7287,7 +7768,7 @@ Singleton {
             property JsonObject update: JsonObject {
                 // Whether the Settings "Update" button also overlays the fork's
                 // dots/.config/hypr onto ~/.config/hypr (passes --hypr/--no-hypr
-                // to setup-ii-p3drovfx.sh). See AboutConfig.qml.
+                // to setup-ii-dusk.sh). See AboutConfig.qml.
                 property bool replaceHyprConfig: true
                 // How often ShellUpdates probes the fork's remote for new
                 // commits: "disabled" | "10min" | "hourly" | "daily" | "weekly".
@@ -8155,7 +8636,9 @@ Singleton {
 
             property JsonObject screenRecord: JsonObject {
                 property string savePath: Directories.videos.replace("file://", "") // strip "file://"
-                property string service: "wf-recorder"
+                // "auto" picks GPU Screen Recorder, then wf-recorder, then OBS,
+                // whichever is installed; the explicit values pin one backend.
+                property string service: "auto"
                 property bool useGpu: true
                 property string codec: "auto"
                 // Recorded size, as a target box the picture is fitted into
@@ -8170,7 +8653,7 @@ Singleton {
                 // smaller but harder to cut.
                 property string frameSync: "cfr"
                 // Records desktop audio on every recording, not only the
-                // ones started with --sound (wf-recorder only).
+                // ones started with --sound.
                 property bool recordAudio: false
                 property bool useToolbar: false
                 property string format: "mp4"
@@ -8398,6 +8881,8 @@ Singleton {
 
             property JsonObject wallpaperSelector: JsonObject {
                 property bool useSystemFileDialog: false
+                property string style: "grid" // "grid" or "deck" (swatch cards fanned along the bottom of the screen)
+                property bool deckSubfolders: true // the deck lists every wallpaper under the folder, not only the folder itself
                 property list<var> directories: []
                 property bool useCustomDefaultPath: false
                 property string customDefaultPath: FileUtils.trimFileProtocol(`${Directories.pictures}/Wallpapers`)
@@ -8426,34 +8911,26 @@ Singleton {
                 }
             }
 
+            property JsonObject wallhaven: JsonObject {
+                property string apiKey: "" // optional: unlocks NSFW purity and your account's filters
+                property string purity: "100" // sfw / sketchy / nsfw as three digits; nsfw needs apiKey
+                property string categories: "100" // general / anime / people as three digits
+                property string colors: "" // one of wallhaven's palette colours as hex (no #), "" for any
+                property string atleast: "1920x1080" // minimum resolution, "" for any
+                property string ratios: "" // e.g. "16x9,16x10", "" for any
+                property string topRange: "1M" // for toplist sorting: 1d, 3d, 1w, 1M, 3M, 6M, 1y
+                property string order: "desc"
+                property string excludeTerms: "-people -portrait -face" // appended to every text search, "" to turn off
+                property bool tagSubfolders: false // save a search's downloads in a subfolder named after it
+            }
+
             property JsonObject wallpapers: JsonObject {
                 property string service: "wallhaven" // "unsplash" or "wallhaven"
-                property string sort: "favourites"
+                property string sort: "favorites"
                 property bool showAnimeResults: false // only for wallhaven service
                 property JsonObject paths: JsonObject {
                     property string download: FileUtils.trimFileProtocol(`${Directories.home}/Pictures/Wallpapers`)
                     property string nsfw: FileUtils.trimFileProtocol(`${Directories.home}/Pictures/Wallpapers/NSFW`)
-                }
-            }
-
-            property JsonObject waffles: JsonObject {
-                // Some spots are kinda janky/awkward. Setting the following to
-                // false will make (some) stuff also be like that for accuracy.
-                // Example: the right-click menu of the Start button
-                property JsonObject tweaks: JsonObject {
-                    property bool switchHandlePositionFix: true
-                    property bool smootherMenuAnimations: true
-                    property bool smootherSearchBar: true
-                }
-                property JsonObject bar: JsonObject {
-                    property bool bottom: true
-                    property bool leftAlignApps: false
-                }
-                property JsonObject actionCenter: JsonObject {
-                    property list<string> toggles: ["network", "bluetooth", "easyEffects", "powerProfile", "idleInhibitor", "nightLight", "darkMode", "antiFlashbang", "cloudflareWarp", "mic", "musicRecognition", "notifications", "onScreenKeyboard", "gameMode", "screenSnip", "colorPicker", "videoEditor"]
-                }
-                property JsonObject calendar: JsonObject {
-                    property bool force2CharDayOfWeek: true
                 }
             }
         }

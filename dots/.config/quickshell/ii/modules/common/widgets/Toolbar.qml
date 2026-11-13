@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.modules.common
+import qs.modules.common.functions
 import qs.modules.common.widgets
 
 /**
@@ -33,7 +34,7 @@ Item {
     Rectangle {
         id: background
         anchors.fill: parent
-        color: Appearance.m3colors.m3surfaceContainer
+        color: ColorUtils.solveOverlayColor(Appearance.colors.colLayer0Base, Appearance.m3colors.m3surfaceContainer, 1 - Appearance.contentTransparency)
         implicitHeight: Appearance.sizes.toolbarHeight
         implicitWidth: toolbarLayout.implicitWidth + root.padding * 2
         readonly property int fullRadius: Config.options.appearance.sharpMode ? Appearance.rounding.full : height / 2

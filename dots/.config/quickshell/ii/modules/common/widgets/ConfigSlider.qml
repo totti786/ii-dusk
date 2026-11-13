@@ -144,8 +144,8 @@ Rectangle {
                     color: slider.pressed ? Appearance.colors.colPrimaryContainer : Appearance.colors.colLayer3
                     colSymbol: slider.pressed ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer3
 
-                    Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.OutQuart } }
-                    Behavior on colSymbol { ColorAnimation { duration: 250; easing.type: Easing.OutQuart } }
+                    Behavior on color { ColorAnimation { duration: Appearance.dur(250); easing.type: Easing.OutQuart } }
+                    Behavior on colSymbol { ColorAnimation { duration: Appearance.dur(250); easing.type: Easing.OutQuart } }
                 }
             }
 

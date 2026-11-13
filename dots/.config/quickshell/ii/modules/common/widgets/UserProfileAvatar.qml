@@ -2,7 +2,9 @@ pragma ComponentBehavior: Bound
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs.modules.common
+import qs.modules.common.functions
 import qs.modules.common.widgets
 import qs.services
 
@@ -105,10 +107,33 @@ Item {
         return src.endsWith(".gif") || src.endsWith(".webp");
     }
 
+    // The picture the desktop already knows you by: ~/.face. Used when no picture is set, or the
+    // one that is set cannot be read (a profile.png that was never made, or was moved).
+    readonly property string facePath: "file://" + FileUtils.trimFileProtocol(Directories.home) + "/.face"
+    property bool pickedFailed: false
+    /// Whether the chosen picture has been looked for yet, so a missing one is never asked of the image loader.
+    property bool pickedChecked: false
+    onImagePathChanged: {
+        root.pickedFailed = false;
+        root.pickedChecked = false;
+    }
+    Process {
+        id: pickedProbe
+        readonly property string target: root.cleanImagePath.startsWith("file://") ? root.cleanImagePath.substring(7) : root.cleanImagePath
+        command: ["test", "-e", pickedProbe.target]
+        running: root.imageStyle === "custom" && pickedProbe.target.length > 0 && pickedProbe.target.startsWith("/") && !root.pickedChecked
+        onExited: code => {
+            root.pickedFailed = code !== 0;
+            root.pickedChecked = true;
+        }
+    }
+    readonly property bool pickedIsLocal: root.cleanImagePath.startsWith("/") || root.cleanImagePath.startsWith("file://")
+
     readonly property string resolvedImageSource: {
         if (root.imageStyle === "custom") {
-            const p = root.cleanImagePath;
-            if (!p) return "";
+            if (root.pickedIsLocal && !root.pickedChecked) return "";
+            const p = root.pickedFailed ? "" : root.cleanImagePath;
+            if (!p) return root.facePath;
             if (p.startsWith("file://") || p.startsWith("http://") || p.startsWith("https://") || p.startsWith("qrc:/")) {
                 return p;
             }
@@ -207,6 +232,10 @@ Item {
         mipmap: true
         sourceSize: Qt.size(Math.max(256, Math.ceil(root.width * 2)), Math.max(256, Math.ceil(root.height * 2)))
         visible: !root.isAnimated && status === Image.Ready && root.imageStyle !== "expressive"
+        onStatusChanged: {
+            if (status === Image.Error && String(source) !== root.facePath)
+                root.pickedFailed = true;
+        }
 
         layer.enabled: true
         layer.smooth: true

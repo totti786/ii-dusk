@@ -100,7 +100,7 @@ Item {
                 property: "scale"
                 from: 0.2
                 to: 1.15
-                duration: 450
+                duration: Appearance.dur(450)
                 easing.type: Easing.OutBack
             }
             NumberAnimation {
@@ -108,7 +108,7 @@ Item {
                 property: "angle"
                 from: -45
                 to: 0
-                duration: 600
+                duration: Appearance.dur(600)
                 easing.type: Easing.OutCubic
             }
             NumberAnimation {
@@ -116,7 +116,7 @@ Item {
                 property: "radius"
                 from: 30
                 to: 0
-                duration: 500
+                duration: Appearance.dur(500)
                 easing.type: Easing.OutCubic
             }
         }
@@ -124,7 +124,7 @@ Item {
             target: shapeWidget
             property: "scale"
             to: 1.0
-            duration: 150
+            duration: Appearance.dur(150)
             easing.type: Easing.InOutCubic
         }
         ParallelAnimation {
@@ -134,7 +134,7 @@ Item {
                 property: "rippleProgress"
                 from: 0.0
                 to: 1.0
-                duration: 650
+                duration: Appearance.dur(650)
                 easing.type: Easing.OutQuart
             }
             // Title reveal (text translate up inside clip)
@@ -143,7 +143,7 @@ Item {
                 property: "y"
                 from: 30
                 to: 0
-                duration: 500
+                duration: Appearance.dur(500)
                 easing.type: Easing.OutExpo
             }
             NumberAnimation {
@@ -151,7 +151,7 @@ Item {
                 property: "opacity"
                 from: 0.0
                 to: 1.0
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.OutCubic
             }
             // Description reveal (drift horizontal + blur)
@@ -160,7 +160,7 @@ Item {
                 property: "x"
                 from: -15
                 to: 0
-                duration: 500
+                duration: Appearance.dur(500)
                 easing.type: Easing.OutCubic
             }
             NumberAnimation {
@@ -168,7 +168,7 @@ Item {
                 property: "radius"
                 from: 12
                 to: 0
-                duration: 450
+                duration: Appearance.dur(450)
                 easing.type: Easing.OutCubic
             }
             NumberAnimation {
@@ -176,7 +176,7 @@ Item {
                 property: "opacity"
                 from: 0.0
                 to: 1.0
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.OutCubic
             }
         }

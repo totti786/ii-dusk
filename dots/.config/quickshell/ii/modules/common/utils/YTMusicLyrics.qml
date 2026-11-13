@@ -17,14 +17,24 @@ Item {
     readonly property alias fetching: fetchLyricsProcess.running
 
     property string _lastQueryKey: ""
+    property string _lastResult: ""
 
     function fetchLyrics(artist, title) {
         if (!title && !artist) return;
         const queryArtist = artist ?? ""
         const queryTitle = title ?? ""
         const key = queryArtist + "::" + queryTitle
-        if (key === _lastQueryKey && fetchLyricsProcess.running) return;
+        if (key === _lastQueryKey) {
+            if (fetchLyricsProcess.running) return;
+            // Same track already answered: callers (one per widget, plus the track-change
+            // handlers) all ask again, so replay the result instead of spawning another fetch.
+            if (_lastResult.length > 0) {
+                lyricsUpdated(_lastResult)
+                return;
+            }
+        }
         _lastQueryKey = key
+        _lastResult = ""
         console.log("[YTMusic Lyrics] Fetching lyrics for", queryArtist, "-", queryTitle)
         fetchLyricsProcess.running = false
         // pdeath: ytmusicapi can stall on a slow response, so even this
@@ -43,6 +53,7 @@ Item {
             onStreamFinished: {
                 const text = this.text.trim()
                 if (text.length > 0) {
+                    root._lastResult = text
                     lyricsUpdated(text)
                 } else {
                     console.log("[YTMusic Lyrics] Empty response received")

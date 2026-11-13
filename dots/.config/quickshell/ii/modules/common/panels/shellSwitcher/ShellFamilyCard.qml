@@ -10,7 +10,7 @@ import qs.modules.common.widgets
  * One panel family, as something you can look at before committing to it.
  *
  * Deliberately a card rather than the SessionScreen's icon button. Lock and Shutdown are
- * one word each and everybody already knows what they do; "Waffle" is not, and picking the
+ * one word each and everybody already knows what they do; "Lite" is not, and picking the
  * wrong one rebuilds every surface on screen. The card has room to say what it is.
  */
 RippleButton {
@@ -72,14 +72,14 @@ RippleButton {
 
     Behavior on animScale {
         NumberAnimation {
-            duration: 350
+            duration: Appearance.dur(350)
             easing.type: Easing.OutBack
             easing.overshoot: 1.2
         }
     }
     Behavior on animOpacity {
         NumberAnimation {
-            duration: 250
+            duration: Appearance.dur(250)
             easing.type: Easing.OutCubic
         }
     }
@@ -135,7 +135,7 @@ RippleButton {
 
             Behavior on radius {
                 NumberAnimation {
-                    duration: 200
+                    duration: Appearance.dur(200)
                     easing.type: Easing.OutCubic
                 }
             }

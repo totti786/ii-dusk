@@ -117,11 +117,11 @@ StyledListView {
             id: delegateAnim
             PauseAnimation { duration: 120 + Math.min(250, groupDelegate.index * 45) }
             ParallelAnimation {
-                NumberAnimation { target: groupDelegate; property: "opacity"; to: (groupDelegate._validGroup ? 1.0 : 0.0); duration: 380; easing.type: Easing.OutQuart }
-                NumberAnimation { target: groupTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutQuart }
-                NumberAnimation { target: groupScale; property: "xScale"; to: 1.0; duration: 380; easing.type: Easing.OutQuart }
-                NumberAnimation { target: groupScale; property: "yScale"; to: 1.0; duration: 380; easing.type: Easing.OutQuart }
-                NumberAnimation { target: groupDelegate; property: "itemBlurProgress"; to: 0.0; duration: 380; easing.type: Easing.OutQuart }
+                NumberAnimation { target: groupDelegate; property: "opacity"; to: (groupDelegate._validGroup ? 1.0 : 0.0); duration: Appearance.dur(380); easing.type: Easing.OutQuart }
+                NumberAnimation { target: groupTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutQuart }
+                NumberAnimation { target: groupScale; property: "xScale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutQuart }
+                NumberAnimation { target: groupScale; property: "yScale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutQuart }
+                NumberAnimation { target: groupDelegate; property: "itemBlurProgress"; to: 0.0; duration: Appearance.dur(380); easing.type: Easing.OutQuart }
             }
         }
     }

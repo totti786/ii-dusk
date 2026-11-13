@@ -131,13 +131,13 @@ Rectangle {
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: 250
+                        duration: Appearance.dur(250)
                         easing.type: Easing.OutQuart
                     }
                 }
                 Behavior on colSymbol {
                     ColorAnimation {
-                        duration: 250
+                        duration: Appearance.dur(250)
                         easing.type: Easing.OutQuart
                     }
                 }

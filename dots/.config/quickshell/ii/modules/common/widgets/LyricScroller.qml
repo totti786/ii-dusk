@@ -52,7 +52,7 @@ Item {
         target: root
         property: "scrollOffset"
         to: 0
-        duration: 400
+        duration: Appearance.dur(400)
         easing.type: Easing.OutQuart
     }
 

@@ -23,7 +23,7 @@ Singleton {
 
     readonly property bool isIi: root.current === "ii"
     readonly property bool isTablet: root.current === "tablet"
-    readonly property bool isWaffle: root.current === "waffle"
+    readonly property bool isLite: root.current === "lite"
 
     /**
      * Every family that can be switched to, in the order a chooser should show them.
@@ -57,11 +57,11 @@ Singleton {
             icon: "tablet_android"
         },
         {
-            id: "waffle",
-            name: "Waffle",
-            summary: "Windows-like",
-            description: "A taskbar, a start menu and an action centre, in the shape of a familiar desktop.",
-            icon: "window"
+            id: "lite",
+            name: "Lite",
+            summary: "Low power",
+            description: "A thin bar, a still wallpaper and a plain launcher. No dock, sidebars or effects, for old or small machines.",
+            icon: "battery_saver"
         }
     ]
 

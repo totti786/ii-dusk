@@ -76,6 +76,12 @@ Singleton {
     property string todoPath: FileUtils.trimFileProtocol(`${Directories.state}/user/todo.json`)
     property string todoDoneHistoryPath: FileUtils.trimFileProtocol(`${Directories.state}/user/todo_done.json`)
     property string remindersPath: FileUtils.trimFileProtocol(`${Directories.state}/user/reminders.json`)
+    // Grit (habits, tasks and focus sessions) keeps one mergeable document, so the
+    // optional sync server can hand the whole store to another device in one revision.
+    property string gritStateDir: FileUtils.trimFileProtocol(`${Directories.state}/user/grit`)
+    property string gritDataPath: `${Directories.gritStateDir}/data.json`
+    property string gritSyncDataPath: `${Directories.gritStateDir}/sync.json`
+    property string gritSyncServerPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/grit/sync_server.py`)
     // Images attached to reminders are copied here, so a moved or deleted original
     // doesn't leave a broken thumbnail behind.
     property string reminderAttachmentsDir: FileUtils.trimFileProtocol(`${Directories.state}/user/reminder_attachments`)
@@ -160,9 +166,7 @@ Singleton {
     property string generatedWallpaperCategoryPath: FileUtils.trimFileProtocol(`${Directories.state}/user/generated/wallpaper/category.txt`)
     property string cliphistDecode: FileUtils.trimFileProtocol(`/tmp/quickshell-${SystemInfo.username}/media/cliphist`)
     property string screenshotTemp: `/tmp/quickshell-${SystemInfo.username}/media/screenshot`
-    property string wallpaperSwitchScriptPath: FileUtils.trimFileProtocol(
-        `${Directories.scriptPath}/colors/switchwall.sh`
-    )
+    property string wallpaperSwitchScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/colors/switchwall.sh`)
     property string defaultAiPrompts: Quickshell.shellPath("defaults/ai/prompts")
     property string defaultThemes: Quickshell.shellPath("defaults/themes")
     property string customThemes: `${Directories.shellConfig}/themes`
@@ -180,6 +184,9 @@ Singleton {
     property string aiSessionsScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/ai/ai_sessions.py`)
     property string aiDraftsScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/ai/ai_drafts.py`)
     property string aiAttachScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/ai/ai_attach.py`)
+    property string opencodeBridgeScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/ai/opencode_bridge.py`)
+    // Which OpenCode session each shell chat is on, and the turns that session holds.
+    property string aiOpencodeSessionsPath: FileUtils.trimFileProtocol(`${Directories.state}/user/ai/opencode-sessions.json`)
     property string aiSettingsIndexPath: FileUtils.trimFileProtocol(`${Directories.state}/user/ai/settings_index.json`)
     property string aiLastAnswer: FileUtils.trimFileProtocol(`${Directories.state}/user/ai/last_answer.json`)
     property string aiSettingsIndexScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/ai/ai_settings_index.py`)
@@ -215,6 +222,7 @@ Singleton {
         Quickshell.execDetached(["bash", "-c", `rm -rf '${latexOutput}'; mkdir -p '${latexOutput}'`]);
         Quickshell.execDetached(["bash", "-c", `rm -rf '${cliphistDecode}'; mkdir -p '${cliphistDecode}'`]);
         Quickshell.execDetached(["mkdir", "-p", `${aiChats}`]);
+        Quickshell.execDetached(["mkdir", "-p", `${gritStateDir}`]);
         Quickshell.execDetached(["mkdir", "-p", `${FileUtils.parentDirectory(aiUsage)}`]);
         Quickshell.execDetached(["mkdir", "-p", `${FileUtils.parentDirectory(keybindsPath)}`]);
         Quickshell.execDetached(["mkdir", "-p", `${aiRagIndexDir}`]);

@@ -165,7 +165,7 @@ ColumnLayout {
         border.color: Appearance.colors.colLayer0Border
 
         Behavior on color {
-            ColorAnimation { duration: 280; easing.type: Easing.InOutQuad }
+            ColorAnimation { duration: Appearance.dur(280); easing.type: Easing.InOutQuad }
         }
 
         ColumnLayout {
@@ -229,7 +229,7 @@ ColumnLayout {
                         wrapMode: Text.Wrap
 
                         Behavior on color {
-                            ColorAnimation { duration: 150 }
+                            ColorAnimation { duration: Appearance.dur(150) }
                         }
                     }
 
@@ -264,7 +264,7 @@ ColumnLayout {
                         opacity: headerMouseArea.containsMouse ? 1.0 : 0.65
 
                         Behavior on opacity {
-                            NumberAnimation { duration: 150 }
+                            NumberAnimation { duration: Appearance.dur(150) }
                         }
 
                         StyledText {
@@ -358,7 +358,7 @@ ColumnLayout {
                 target: cardContainer
                 property: "color"
                 to: Appearance.colors.colLayer0
-                duration: 500
+                duration: Appearance.dur(500)
                 easing.type: Easing.InOutQuad
             }
         }

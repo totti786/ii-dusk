@@ -120,7 +120,7 @@ Item {
 
         Behavior on contentX {
             NumberAnimation {
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.OutExpo
             }
         }
@@ -145,13 +145,13 @@ Item {
                        : Appearance.colors.colSurfaceContainerHighest
 
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation { duration: Appearance.dur(150) }
                 }
 
-                Behavior on topLeftRadius { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
-                Behavior on topRightRadius { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
-                Behavior on bottomLeftRadius { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
-                Behavior on bottomRightRadius { NumberAnimation { duration: 200; easing.type: Easing.OutQuad } }
+                Behavior on topLeftRadius { NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutQuad } }
+                Behavior on topRightRadius { NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutQuad } }
+                Behavior on bottomLeftRadius { NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutQuad } }
+                Behavior on bottomRightRadius { NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutQuad } }
 
                 RowLayout {
                     anchors {
@@ -224,7 +224,7 @@ Item {
                                 to: 360
                                 duration: 2000
                                 loops: Animation.Infinite
-                                running: root.isConnecting
+                                running: (root.isConnecting) && !Appearance.motionOff
                             }
                         }
                     }
@@ -394,7 +394,7 @@ Item {
 
                                     SequentialAnimation {
                                         id: waveJumpAnim
-                                        running: root.isConnecting
+                                        running: (root.isConnecting) && !Appearance.motionOff
                                         loops: Animation.Infinite
 
                                         PauseAnimation {
@@ -456,7 +456,7 @@ Item {
                                                 target: materialShape
                                                 properties: "opacity"
                                                 to: 1
-                                                duration: 50
+                                                duration: Appearance.dur(50)
                                                 easing.type: Appearance.animation.elementMoveFast.type
                                                 easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                                             }
@@ -464,7 +464,7 @@ Item {
                                                 target: materialShape
                                                 properties: "scale"
                                                 to: 1
-                                                duration: 220
+                                                duration: Appearance.dur(220)
                                                 easing.type: Easing.BezierSpline
                                                 easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial
                                             }
@@ -480,7 +480,7 @@ Item {
                                                 properties: "color"
                                                 from: Appearance.colors.colPrimary
                                                 to: charsDisplay.shapeColor
-                                                duration: 1000
+                                                duration: Appearance.dur(1000)
                                                 easing.type: Appearance.animation.elementMoveFast.type
                                                 easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
                                             }
@@ -557,7 +557,7 @@ Item {
                         iconSize: 22
                         color: Appearance.colors.colOnPrimaryContainer
                         opacity: root.isConnecting ? 0 : 1
-                        Behavior on opacity { NumberAnimation { duration: 200 } }
+                        Behavior on opacity { NumberAnimation { duration: Appearance.dur(200) } }
                     }
 
                     // Spinner
@@ -568,13 +568,13 @@ Item {
                         shape: MaterialShape.Shape.Cookie7Sided
                         color: Appearance.colors.colOnPrimaryContainer
                         opacity: root.isConnecting ? 1 : 0
-                        Behavior on opacity { NumberAnimation { duration: 200 } }
+                        Behavior on opacity { NumberAnimation { duration: Appearance.dur(200) } }
                         RotationAnimator on rotation {
                             from: 0
                             to: 360
                             duration: 2000
                             loops: Animation.Infinite
-                            running: root.isConnecting
+                            running: (root.isConnecting) && !Appearance.motionOff
                         }
                     }
 
@@ -729,7 +729,7 @@ Item {
                 iconSize: 22
                 color: Appearance.colors.colOnPrimaryContainer
                 opacity: credentialStep.busy ? 0 : 1
-                Behavior on opacity { NumberAnimation { duration: 200 } }
+                Behavior on opacity { NumberAnimation { duration: Appearance.dur(200) } }
             }
 
             MaterialShape {
@@ -739,13 +739,13 @@ Item {
                 shape: MaterialShape.Shape.Cookie7Sided
                 color: Appearance.colors.colOnPrimaryContainer
                 opacity: credentialStep.busy ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 200 } }
+                Behavior on opacity { NumberAnimation { duration: Appearance.dur(200) } }
                 RotationAnimator on rotation {
                     from: 0
                     to: 360
                     duration: 2000
                     loops: Animation.Infinite
-                    running: credentialStep.busy
+                    running: (credentialStep.busy) && !Appearance.motionOff
                 }
             }
 

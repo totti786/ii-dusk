@@ -48,7 +48,7 @@ WindowDialog {
                 radius: parent.buttonEffectiveRadius
 
                 Behavior on border.color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation { duration: Appearance.dur(150) }
                 }
             }
 
@@ -62,10 +62,11 @@ WindowDialog {
                         "wght": 500
                     })
                 color: detailsBtn.hovered ? Appearance.colors.colOnSurface : Appearance.colors.colOutline
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
             onClicked: {
-                Quickshell.execDetached(["bash", "-c", `${Config.options.apps.volumeMixer}`]);
+                // The shell's own mixer replaces pavucontrol here
+                GlobalStates.openMixerApp("");
                 root.detailsRequested();
                 if (root.closeOwningSidebarOnDetails)
                     GlobalStates.sidebarRightOpen = false;
