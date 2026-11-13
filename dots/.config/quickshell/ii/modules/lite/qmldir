@@ -1,0 +1,19 @@
+module qs.modules.lite
+
+LiteBar 1.0 LiteBar.qml
+LiteWallpaper 1.0 LiteWallpaper.qml
+LiteLauncher 1.0 LiteLauncher.qml
+LiteTray 1.0 LiteTray.qml
+LiteQuickSettings 1.0 LiteQuickSettings.qml
+LiteSlider 1.0 LiteSlider.qml
+LitePageHeader 1.0 LitePageHeader.qml
+LiteListRow 1.0 LiteListRow.qml
+LiteActionButton 1.0 LiteActionButton.qml
+LiteWifiPage 1.0 LiteWifiPage.qml
+LiteBluetoothPage 1.0 LiteBluetoothPage.qml
+LiteNotificationsPage 1.0 LiteNotificationsPage.qml
+LiteNotificationShade 1.0 LiteNotificationShade.qml
+LiteBatteryPage 1.0 LiteBatteryPage.qml
+LiteShadeHeader 1.0 LiteShadeHeader.qml
+LitePowerManager 1.0 LitePowerManager.qml
+LiteTip 1.0 LiteTip.qml
