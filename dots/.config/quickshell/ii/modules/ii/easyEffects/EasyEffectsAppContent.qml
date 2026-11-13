@@ -239,7 +239,8 @@ FocusScope {
 
                             DeviceChip {
                                 required property var modelData
-                                anchors.verticalCenter: parent.verticalCenter
+                                // Centred by hand: a Repeater delegate has no parent yet while it is made
+                                y: Math.round((deviceRow.height - height) / 2)
                                 symbol: deviceView.symbolFor(modelData)
                                 label: Audio.friendlyDeviceName(modelData)
                                 preset: deviceView.savedFor(modelData)

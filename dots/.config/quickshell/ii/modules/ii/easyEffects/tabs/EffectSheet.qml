@@ -285,6 +285,7 @@ EasyEffectsSheet {
 
             // Bars fill the tile; a long equalizer scrolls sideways instead of squeezing them.
             Flickable {
+                WheelScroll {}
                 id: barsFlick
                 Layout.fillWidth: true
                 implicitHeight: EasyEffectsStyle.bandSliderHeight + EasyEffectsStyle.fieldBadge

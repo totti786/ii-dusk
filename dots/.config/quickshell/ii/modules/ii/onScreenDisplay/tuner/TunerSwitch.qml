@@ -35,7 +35,7 @@ Item {
     property real shown: root.on ? root.gap : 0
     Behavior on shown {
         NumberAnimation {
-            duration: 550
+            duration: Appearance.dur(550)
             easing.type: Easing.OutQuart
         }
     }
@@ -121,19 +121,19 @@ Item {
 
                     Behavior on size {
                         NumberAnimation {
-                            duration: 300
+                            duration: Appearance.dur(300)
                             easing.type: Easing.OutCubic
                         }
                     }
                     Behavior on weightAxis {
                         NumberAnimation {
-                            duration: 300
+                            duration: Appearance.dur(300)
                             easing.type: Easing.OutCubic
                         }
                     }
                     Behavior on color {
                         ColorAnimation {
-                            duration: 300
+                            duration: Appearance.dur(300)
                         }
                     }
                 }

@@ -85,7 +85,7 @@ Item {
 
         Behavior on color {
             ColorAnimation {
-                duration: 300
+                duration: Appearance.dur(300)
             }
         }
 
@@ -98,7 +98,7 @@ Item {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: 300
+                    duration: Appearance.dur(300)
                 }
             }
         }

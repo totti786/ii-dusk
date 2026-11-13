@@ -1,0 +1,6 @@
+module qs.modules.ii.soundscapes
+
+singleton SoundscapesStyle 1.0 SoundscapesStyle.qml
+SoundscapesApp 1.0 SoundscapesApp.qml
+SoundscapesWindow 1.0 SoundscapesWindow.qml
+SoundscapesContent 1.0 SoundscapesContent.qml

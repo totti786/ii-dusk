@@ -183,7 +183,9 @@ Scope {
         id: stateResetTimer
         interval: 150
         repeat: true
-        running: true
+        // Only an OSD window can be left stuck; without one (closed, or the tuner style) there
+        // is nothing to check, and this would wake the shell seven times a second for nothing
+        running: osdLoader.item !== null
         onTriggered: {
             // If the OSD Loader has a live item but the shell-level flags say it
             // should be fully closed, force-reset the expansion state. This catches
@@ -595,7 +597,7 @@ Scope {
                 target: osdRoot
                 property: "expandedProgress"
                 to: 1.0
-                duration: 250
+                duration: Appearance.dur(250)
                 easing.type: Easing.OutCubic
             }
 
@@ -604,7 +606,7 @@ Scope {
                 target: osdRoot
                 property: "expandedProgress"
                 to: 0.0
-                duration: 250
+                duration: Appearance.dur(250)
                 easing.type: Easing.OutCubic
             }
 

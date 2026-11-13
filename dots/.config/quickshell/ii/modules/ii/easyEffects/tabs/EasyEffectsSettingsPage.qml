@@ -309,7 +309,7 @@ Rectangle {
                         symbol: "keyboard"
                         shapeKind: MaterialShape.Shape.Cookie7Sided
                         title: Translation.tr("Keybinds")
-                        description: Translation.tr("Super+Ctrl+E opens this app. Bind the shortcuts easyEffectsNextPreset, easyEffectsPreviousPreset and easyEffectsBypassToggle, or call \"qs -c ii ipc call easyeffects next\".")
+                        description: Translation.tr("Super+Alt+E opens this app. Bind the shortcuts easyEffectsNextPreset, easyEffectsPreviousPreset and easyEffectsBypassToggle, or call \"qs -c ii ipc call easyeffects next\".")
                     }
                 }
 

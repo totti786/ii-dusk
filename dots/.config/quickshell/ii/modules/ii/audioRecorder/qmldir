@@ -1,0 +1,5 @@
+module qs.modules.ii.audioRecorder
+
+AudioRecorderApp 1.0 AudioRecorderApp.qml
+AudioRecorderWindow 1.0 AudioRecorderWindow.qml
+AudioRecorderContent 1.0 AudioRecorderContent.qml

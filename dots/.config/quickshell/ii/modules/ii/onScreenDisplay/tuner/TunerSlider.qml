@@ -33,7 +33,7 @@ Item {
     property real shown: root.value
     Behavior on shown {
         NumberAnimation {
-            duration: 550
+            duration: Appearance.dur(550)
             easing.type: Easing.OutQuart
         }
     }
@@ -129,7 +129,7 @@ Item {
 
         Behavior on color {
             ColorAnimation {
-                duration: 300
+                duration: Appearance.dur(300)
             }
         }
     }

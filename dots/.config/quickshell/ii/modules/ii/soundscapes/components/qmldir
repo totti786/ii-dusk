@@ -1,0 +1,12 @@
+module qs.modules.ii.soundscapes.components
+
+SoundIcon 1.0 SoundIcon.qml
+SoundBadge 1.0 SoundBadge.qml
+AvatarStack 1.0 AvatarStack.qml
+SoundTile 1.0 SoundTile.qml
+MixRow 1.0 MixRow.qml
+PresetCard 1.0 PresetCard.qml
+NowPlayingDock 1.0 NowPlayingDock.qml
+SoundInfoSheet 1.0 SoundInfoSheet.qml
+SleepTimerPane 1.0 SleepTimerPane.qml
+DownloadBanner 1.0 DownloadBanner.qml

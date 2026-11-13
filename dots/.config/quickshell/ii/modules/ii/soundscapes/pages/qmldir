@@ -1,0 +1,6 @@
+module qs.modules.ii.soundscapes.pages
+
+SoundsPage 1.0 SoundsPage.qml
+MixPage 1.0 MixPage.qml
+PresetsPage 1.0 PresetsPage.qml
+SoundscapesSettingsPage 1.0 SoundscapesSettingsPage.qml

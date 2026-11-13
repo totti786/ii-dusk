@@ -1,0 +1,5 @@
+module qs.modules.ii.audioPlayer
+
+AudioPlayerApp 1.0 AudioPlayerApp.qml
+AudioPlayerWindow 1.0 AudioPlayerWindow.qml
+AudioPlayerContent 1.0 AudioPlayerContent.qml

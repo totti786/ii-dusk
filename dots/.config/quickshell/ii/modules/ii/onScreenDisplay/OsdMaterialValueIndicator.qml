@@ -74,7 +74,7 @@ Item {
 
                     Behavior on rotation {
                         NumberAnimation {
-                            duration: 350
+                            duration: Appearance.dur(350)
                             easing.type: Easing.OutBack
                             easing.overshoot: 1.5
                         }
@@ -85,12 +85,12 @@ Item {
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: 150
+                            duration: Appearance.dur(150)
                         }
                     }
                     Behavior on colSymbol {
                         ColorAnimation {
-                            duration: 150
+                            duration: Appearance.dur(150)
                         }
                     }
                 }
@@ -177,7 +177,7 @@ Item {
 
                     Behavior on rotation {
                         NumberAnimation {
-                            duration: 350
+                            duration: Appearance.dur(350)
                             easing.type: Easing.OutBack
                             easing.overshoot: 1.5
                         }
@@ -188,12 +188,12 @@ Item {
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: 150
+                            duration: Appearance.dur(150)
                         }
                     }
                     Behavior on colSymbol {
                         ColorAnimation {
-                            duration: 150
+                            duration: Appearance.dur(150)
                         }
                     }
                 }

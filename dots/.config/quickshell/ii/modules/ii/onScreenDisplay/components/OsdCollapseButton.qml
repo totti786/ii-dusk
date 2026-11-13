@@ -42,7 +42,7 @@ RippleButton {
             rotation: button.isExpanded ? 180 : 0
             Behavior on rotation {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.InOutQuad
                 }
             }

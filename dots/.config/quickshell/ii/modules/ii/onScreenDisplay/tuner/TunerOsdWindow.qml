@@ -54,13 +54,13 @@ PanelWindow {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 200
+                duration: Appearance.dur(200)
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on scale {
             NumberAnimation {
-                duration: 200
+                duration: Appearance.dur(200)
                 easing.type: Easing.OutCubic
             }
         }
@@ -80,7 +80,7 @@ PanelWindow {
 
             Behavior on width {
                 NumberAnimation {
-                    duration: 450
+                    duration: Appearance.dur(450)
                     easing.type: Easing.BezierSpline
                     easing.bezierCurve: [0.3, 1.35, 0.5, 1, 1, 1]
                 }

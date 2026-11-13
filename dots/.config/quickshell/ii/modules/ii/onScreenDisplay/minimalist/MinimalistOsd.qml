@@ -214,13 +214,13 @@ Scope {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 200
+                        duration: Appearance.dur(200)
                         easing.type: Easing.OutCubic
                     }
                 }
                 Behavior on scale {
                     NumberAnimation {
-                        duration: 200
+                        duration: Appearance.dur(200)
                         easing.type: Easing.OutCubic
                     }
                 }

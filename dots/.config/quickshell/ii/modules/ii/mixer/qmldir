@@ -1,0 +1,9 @@
+module qs.modules.ii.mixer
+
+MixerApp 1.0 MixerApp.qml
+MixerContent 1.0 MixerContent.qml
+MixerWindow 1.0 MixerWindow.qml
+MixerStreamsPage 1.0 MixerStreamsPage.qml
+MixerDevicesPage 1.0 MixerDevicesPage.qml
+MixerCardsPage 1.0 MixerCardsPage.qml
+MixerVolumeCard 1.0 MixerVolumeCard.qml
