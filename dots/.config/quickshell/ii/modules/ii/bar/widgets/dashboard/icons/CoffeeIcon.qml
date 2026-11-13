@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Caffeine (idle inhibitor), split into the cup, its handle, the coffee inside
@@ -134,17 +135,17 @@ AnimatedIcon {
         onStopped: root.busy = false
 
         SequentialAnimation {
-            NumberAnimation { target: root; property: "cupLift"; to: -1.5; duration: 180; easing.type: Easing.OutCubic }
-            PauseAnimation { duration: 120 }
-            NumberAnimation { target: root; property: "cupLift"; to: 0; duration: 420; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "cupLift"; to: -1.5; duration: Appearance.dur(180); easing.type: Easing.OutCubic }
+            PauseAnimation { duration: Appearance.dur(120) }
+            NumberAnimation { target: root; property: "cupLift"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 90 }
-            NumberAnimation { target: root; property: "liquidTop"; from: root.floorY; to: root.brimY; duration: 520; easing.type: Easing.OutCubic }
+            PauseAnimation { duration: Appearance.dur(90) }
+            NumberAnimation { target: root; property: "liquidTop"; from: root.floorY; to: root.brimY; duration: Appearance.dur(520); easing.type: Easing.OutCubic }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 200 }
-            NumberAnimation { target: saucer; property: "opacity"; to: 1; duration: 300 }
+            PauseAnimation { duration: Appearance.dur(200) }
+            NumberAnimation { target: saucer; property: "opacity"; to: 1; duration: Appearance.dur(300) }
         }
     }
 
@@ -154,10 +155,10 @@ AnimatedIcon {
         onStopped: root.busy = false
 
         SequentialAnimation {
-            NumberAnimation { target: root; property: "cupLift"; to: 1.1; duration: 200; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "cupLift"; to: 0; duration: 400; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "cupLift"; to: 1.1; duration: Appearance.dur(200); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "cupLift"; to: 0; duration: Appearance.dur(400); easing.type: Easing.OutBack }
         }
-        NumberAnimation { target: root; property: "liquidTop"; to: root.floorY; duration: 440; easing.type: Easing.InCubic }
-        NumberAnimation { target: saucer; property: "opacity"; to: root.dimmed; duration: 340 }
+        NumberAnimation { target: root; property: "liquidTop"; to: root.floorY; duration: Appearance.dur(440); easing.type: Easing.InCubic }
+        NumberAnimation { target: saucer; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
     }
 }

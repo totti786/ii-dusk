@@ -116,7 +116,7 @@ Item {
 
                 scale: visible ? 1.0 : 0.0
                 Behavior on scale {
-                    NumberAnimation { duration: 250; easing.type: Easing.OutBack }
+                    NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutBack }
                 }
 
                 RowLayout {
@@ -237,7 +237,7 @@ Item {
 
                 scale: visible ? 1.0 : 0.0
                 Behavior on scale {
-                    NumberAnimation { duration: 250; easing.type: Easing.OutBack }
+                    NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutBack }
                 }
 
                 RowLayout {
@@ -299,7 +299,7 @@ Item {
         opacity: dropArea.containsDrag ? 0.95 : 0.0
 
         Behavior on opacity {
-            NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+            NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutQuad }
         }
 
         Loader {
@@ -318,7 +318,7 @@ Item {
                     
                     SequentialAnimation on scale {
                         loops: Animation.Infinite
-                        running: dropArea.containsDrag
+                        running: (dropArea.containsDrag) && !Appearance.motionOff
                         NumberAnimation { from: 1.0; to: 1.25; duration: 500; easing.type: Easing.InOutQuad }
                         NumberAnimation { from: 1.25; to: 1.0; duration: 500; easing.type: Easing.InOutQuad }
                     }
@@ -344,7 +344,7 @@ Item {
                     
                     SequentialAnimation on scale {
                         loops: Animation.Infinite
-                        running: dropArea.containsDrag
+                        running: (dropArea.containsDrag) && !Appearance.motionOff
                         NumberAnimation { from: 1.0; to: 1.25; duration: 500; easing.type: Easing.InOutQuad }
                         NumberAnimation { from: 1.25; to: 1.0; duration: 500; easing.type: Easing.InOutQuad }
                     }

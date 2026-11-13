@@ -38,7 +38,7 @@ Scope {
             // whatever the bar is doing, and stage 6 edits the bar in place.
             active: (GlobalStates.barOpen || GlobalStates.editMode) &&
                     !GlobalStates.connectModeActive &&
-                    !GlobalStates.isMediaModeActiveForScreen(barLoader.modelData ? barLoader.modelData.name : "")
+                    !GlobalStates.isMediaModeRevealingDesktop(barLoader.modelData ? barLoader.modelData.name : "")
             component: BarWindow {
                 screen: barLoader.modelData
                 monitorIndex: barLoader.monitorIndex

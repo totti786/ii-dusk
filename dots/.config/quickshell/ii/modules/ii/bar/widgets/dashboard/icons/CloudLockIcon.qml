@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Cloudflare WARP, using the proportions of Material's `cloud_lock`: a broad
@@ -131,18 +132,18 @@ AnimatedIcon {
             }
         }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "shackleLift"; to: 0; duration: 400; easing.type: Easing.OutBack }
-            NumberAnimation { target: cloud; property: "opacity"; to: 1; duration: 280 }
-            NumberAnimation { target: shackle; property: "opacity"; to: 1; duration: 280 }
-            NumberAnimation { target: lockBody; property: "opacity"; to: 1; duration: 280 }
+            NumberAnimation { target: root; property: "shackleLift"; to: 0; duration: Appearance.dur(400); easing.type: Easing.OutBack }
+            NumberAnimation { target: cloud; property: "opacity"; to: 1; duration: Appearance.dur(280) }
+            NumberAnimation { target: shackle; property: "opacity"; to: 1; duration: Appearance.dur(280) }
+            NumberAnimation { target: lockBody; property: "opacity"; to: 1; duration: Appearance.dur(280) }
             SequentialAnimation {
-                NumberAnimation { target: root; property: "cloudDrift"; to: -0.9; duration: 140; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "cloudDrift"; to: 0; duration: 360; easing.type: Easing.OutBack }
+                NumberAnimation { target: root; property: "cloudDrift"; to: -0.9; duration: Appearance.dur(140); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "cloudDrift"; to: 0; duration: Appearance.dur(360); easing.type: Easing.OutBack }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 120 }
-                NumberAnimation { target: root; property: "lockPress"; to: 0.6; duration: 120; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "lockPress"; to: 0; duration: 300; easing.type: Easing.OutBack }
+                PauseAnimation { duration: Appearance.dur(120) }
+                NumberAnimation { target: root; property: "lockPress"; to: 0.6; duration: Appearance.dur(120); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "lockPress"; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutBack }
             }
         }
     }
@@ -151,17 +152,17 @@ AnimatedIcon {
         id: disconnectAnim
         onStopped: root.busy = false
 
-        NumberAnimation { target: root; property: "shackleLift"; to: 2.2; duration: 320; easing.type: Easing.OutCubic }
-        NumberAnimation { target: cloud; property: "opacity"; to: root.dimmed; duration: 340 }
-        NumberAnimation { target: shackle; property: "opacity"; to: root.dimmed; duration: 340 }
-        NumberAnimation { target: lockBody; property: "opacity"; to: root.dimmed; duration: 340 }
+        NumberAnimation { target: root; property: "shackleLift"; to: 2.2; duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+        NumberAnimation { target: cloud; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
+        NumberAnimation { target: shackle; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
+        NumberAnimation { target: lockBody; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
         SequentialAnimation {
-            NumberAnimation { target: root; property: "cloudDrift"; to: 0.9; duration: 160; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "cloudDrift"; to: 0; duration: 380; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "cloudDrift"; to: 0.9; duration: Appearance.dur(160); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "cloudDrift"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            NumberAnimation { target: root; property: "lockPress"; to: -0.45; duration: 150; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "lockPress"; to: 0; duration: 350; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "lockPress"; to: -0.45; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "lockPress"; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutBack }
         }
     }
 }

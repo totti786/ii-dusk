@@ -1,0 +1,3 @@
+module qs.modules.ii.bar.popups.mediator
+MediatorPopup 1.0 MediatorPopup.qml
+MediatorPlayerCard 1.0 MediatorPlayerCard.qml

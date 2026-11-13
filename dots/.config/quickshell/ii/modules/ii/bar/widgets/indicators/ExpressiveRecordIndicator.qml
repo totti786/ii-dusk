@@ -118,7 +118,7 @@ Item {
                         color: capsule.colContent
 
                         RotationAnimator on rotation {
-                            running: root.loading
+                            running: (root.loading) && !Appearance.motionOff
                             from: 0
                             to: 360
                             duration: 1000
@@ -252,7 +252,7 @@ Item {
                     color: root.hovering ? theme.colOnBackground : theme.colOnBackgroundVariant
 
                     RotationAnimator on rotation {
-                        running: root.loading
+                        running: (root.loading) && !Appearance.motionOff
                         from: 0
                         to: 360
                         duration: 1000
@@ -334,7 +334,7 @@ Item {
                         color: root.hovering ? theme.colBackground : theme.colOnBackgroundVariant
 
                         RotationAnimator on rotation {
-                            running: root.loading
+                            running: (root.loading) && !Appearance.motionOff
                             from: 0
                             to: 360
                             duration: 1000

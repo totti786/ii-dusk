@@ -150,27 +150,27 @@ StyledPopup {
             SequentialAnimation {
                 id: heroAnim
                 PauseAnimation {
-                    duration: 40
+                    duration: Appearance.dur(40)
                 }
                 ParallelAnimation {
                     NumberAnimation {
                         target: hero
                         property: "opacity"
                         to: 1.0
-                        duration: 280
+                        duration: Appearance.dur(280)
                     }
                     NumberAnimation {
                         target: hero
                         property: "scale"
                         to: 1.0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutBack
                     }
                     NumberAnimation {
                         target: heroTranslate
                         property: "y"
                         to: 0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -190,7 +190,7 @@ StyledPopup {
 
             Behavior on implicitHeight {
                 NumberAnimation {
-                    duration: 280
+                    duration: Appearance.dur(280)
                     easing.type: Easing.OutQuint
                 }
             }
@@ -205,27 +205,27 @@ StyledPopup {
             SequentialAnimation {
                 id: portsCardAnim
                 PauseAnimation {
-                    duration: 110
+                    duration: Appearance.dur(110)
                 }
                 ParallelAnimation {
                     NumberAnimation {
                         target: portsCard
                         property: "opacity"
                         to: 1.0
-                        duration: 300
+                        duration: Appearance.dur(300)
                     }
                     NumberAnimation {
                         target: portsCard
                         property: "scale"
                         to: 1.0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutBack
                     }
                     NumberAnimation {
                         target: portsCardTranslate
                         property: "y"
                         to: 0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -324,7 +324,7 @@ StyledPopup {
                             color: Appearance.colors.colOnSurface
 
                             NumberAnimation on rotation {
-                                running: PortWatcher.refreshing
+                                running: (PortWatcher.refreshing) && !Appearance.motionOff
                                 from: 0
                                 to: 360
                                 duration: 900
@@ -400,7 +400,7 @@ StyledPopup {
 
                     Behavior on implicitHeight {
                         NumberAnimation {
-                            duration: 280
+                            duration: Appearance.dur(280)
                             easing.type: Easing.OutQuint
                         }
                     }

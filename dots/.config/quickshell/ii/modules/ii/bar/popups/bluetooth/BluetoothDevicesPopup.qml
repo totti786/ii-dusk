@@ -224,15 +224,15 @@ StyledPopup {
                         id: deviceCardAnim
                         PauseAnimation { duration: 40 + index * 100 }
                         ParallelAnimation {
-                            NumberAnimation { target: deviceCard; property: "opacity"; to: 1.0; duration: 300 }
-                            NumberAnimation { target: deviceCard; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                            NumberAnimation { target: deviceCardTranslate; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: deviceCard; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                            NumberAnimation { target: deviceCard; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                            NumberAnimation { target: deviceCardTranslate; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                         }
                     }
 
                     Behavior on y {
                         NumberAnimation {
-                            duration: 400
+                            duration: Appearance.dur(400)
                             easing.type: Easing.OutBack
                             easing.overshoot: 1.1
                         }
@@ -266,9 +266,9 @@ StyledPopup {
                                 id: iconContainerAnim
                                 PauseAnimation { duration: 40 + index * 100 + 60 }
                                 ParallelAnimation {
-                                    NumberAnimation { target: iconContainer; property: "scale"; from: 0.8; to: 1.0; duration: 350; easing.type: Easing.OutBack }
-                                    NumberAnimation { target: iconContainer; property: "opacity"; from: 0.0; to: 1.0; duration: 350 }
-                                    NumberAnimation { target: iconContainerTrans; property: "x"; from: -20; to: 0; duration: 350; easing.type: Easing.OutCubic }
+                                    NumberAnimation { target: iconContainer; property: "scale"; from: 0.8; to: 1.0; duration: Appearance.dur(350); easing.type: Easing.OutBack }
+                                    NumberAnimation { target: iconContainer; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(350) }
+                                    NumberAnimation { target: iconContainerTrans; property: "x"; from: -20; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
                                 }
                             }
 
@@ -298,7 +298,7 @@ StyledPopup {
                                     to: 360
                                     duration: 10000
                                     loops: Animation.Infinite
-                                    running: root.active
+                                    running: (root.active) && !Appearance.motionOff
                                 }
                             }
 
@@ -343,8 +343,8 @@ StyledPopup {
                                 id: detailsColAnim
                                 PauseAnimation { duration: 40 + index * 100 + 120 }
                                 ParallelAnimation {
-                                    NumberAnimation { target: detailsCol; property: "opacity"; from: 0.0; to: 1.0; duration: 350 }
-                                    NumberAnimation { target: detailsColTrans; property: "x"; from: 20; to: 0; duration: 350; easing.type: Easing.OutCubic }
+                                    NumberAnimation { target: detailsCol; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(350) }
+                                    NumberAnimation { target: detailsColTrans; property: "x"; from: 20; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
                                 }
                             }
 

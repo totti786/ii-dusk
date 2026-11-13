@@ -414,20 +414,20 @@ StyledPopup {
                         target: heroCard
                         property: "opacity"
                         to: 1.0
-                        duration: 300
+                        duration: Appearance.dur(300)
                     }
                     NumberAnimation {
                         target: heroCard
                         property: "scale"
                         to: 1.0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutBack
                     }
                     NumberAnimation {
                         target: heroCardTransform
                         property: "y"
                         to: 0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -490,7 +490,7 @@ StyledPopup {
                     SequentialAnimation {
                         id: heroShapeAnim
                         PauseAnimation {
-                            duration: 80
+                            duration: Appearance.dur(80)
                         }
                         ParallelAnimation {
                             NumberAnimation {
@@ -498,14 +498,14 @@ StyledPopup {
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 300
+                                duration: Appearance.dur(300)
                             }
                             NumberAnimation {
                                 target: heroShapeWrapperScale
                                 property: "xScale"
                                 from: 0.8
                                 to: 1.0
-                                duration: 420
+                                duration: Appearance.dur(420)
                                 easing.type: Easing.OutBack
                             }
                             NumberAnimation {
@@ -513,7 +513,7 @@ StyledPopup {
                                 property: "yScale"
                                 from: 0.8
                                 to: 1.0
-                                duration: 420
+                                duration: Appearance.dur(420)
                                 easing.type: Easing.OutBack
                             }
                             NumberAnimation {
@@ -521,7 +521,7 @@ StyledPopup {
                                 property: "angle"
                                 from: -15
                                 to: 0
-                                duration: 420
+                                duration: Appearance.dur(420)
                                 easing.type: Easing.OutCubic
                             }
                             NumberAnimation {
@@ -529,7 +529,7 @@ StyledPopup {
                                 property: "x"
                                 from: -30
                                 to: 0
-                                duration: 420
+                                duration: Appearance.dur(420)
                                 easing.type: Easing.OutCubic
                             }
                         }
@@ -576,7 +576,7 @@ StyledPopup {
                         SequentialAnimation {
                             id: distroPillAnim
                             PauseAnimation {
-                                duration: 120
+                                duration: Appearance.dur(120)
                             }
                             ParallelAnimation {
                                 NumberAnimation {
@@ -584,14 +584,14 @@ StyledPopup {
                                     property: "opacity"
                                     from: 0.0
                                     to: 1.0
-                                    duration: 300
+                                    duration: Appearance.dur(300)
                                 }
                                 NumberAnimation {
                                     target: distroPillTranslate
                                     property: "x"
                                     from: 30
                                     to: 0
-                                    duration: 350
+                                    duration: Appearance.dur(350)
                                     easing.type: Easing.OutCubic
                                 }
                             }
@@ -638,7 +638,7 @@ StyledPopup {
                             SequentialAnimation {
                                 id: cpuTextAnim
                                 PauseAnimation {
-                                    duration: 160
+                                    duration: Appearance.dur(160)
                                 }
                                 ParallelAnimation {
                                     NumberAnimation {
@@ -646,14 +646,14 @@ StyledPopup {
                                         property: "opacity"
                                         from: 0.0
                                         to: 1.0
-                                        duration: 300
+                                        duration: Appearance.dur(300)
                                     }
                                     NumberAnimation {
                                         target: cpuText
                                         property: "scale"
                                         from: 0.9
                                         to: 1.0
-                                        duration: 380
+                                        duration: Appearance.dur(380)
                                         easing.type: Easing.OutBack
                                     }
                                 }
@@ -675,14 +675,14 @@ StyledPopup {
                             SequentialAnimation {
                                 id: gpuTextAnim
                                 PauseAnimation {
-                                    duration: 200
+                                    duration: Appearance.dur(200)
                                 }
                                 NumberAnimation {
                                     target: gpuText
                                     property: "opacity"
                                     from: 0.0
                                     to: 0.7
-                                    duration: 320
+                                    duration: Appearance.dur(320)
                                 }
                             }
                         }
@@ -713,20 +713,20 @@ StyledPopup {
                         target: cpuGpuCardsRow
                         property: "opacity"
                         to: 1.0
-                        duration: 300
+                        duration: Appearance.dur(300)
                     }
                     NumberAnimation {
                         target: cpuGpuCardsRow
                         property: "scale"
                         to: 1.0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutBack
                     }
                     NumberAnimation {
                         target: cpuGpuCardsRowTransform
                         property: "y"
                         to: 0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -794,7 +794,7 @@ StyledPopup {
                             SequentialAnimation {
                                 id: cpuIconAnim
                                 PauseAnimation {
-                                    duration: 60
+                                    duration: Appearance.dur(60)
                                 }
                                 ParallelAnimation {
                                     NumberAnimation {
@@ -802,14 +802,14 @@ StyledPopup {
                                         property: "opacity"
                                         from: 0.0
                                         to: 1.0
-                                        duration: 280
+                                        duration: Appearance.dur(280)
                                     }
                                     NumberAnimation {
                                         target: cpuIconWrapperScale
                                         property: "xScale"
                                         from: 0.8
                                         to: 1.0
-                                        duration: 350
+                                        duration: Appearance.dur(350)
                                         easing.type: Easing.OutBack
                                     }
                                     NumberAnimation {
@@ -817,7 +817,7 @@ StyledPopup {
                                         property: "yScale"
                                         from: 0.8
                                         to: 1.0
-                                        duration: 350
+                                        duration: Appearance.dur(350)
                                         easing.type: Easing.OutBack
                                     }
                                     NumberAnimation {
@@ -825,7 +825,7 @@ StyledPopup {
                                         property: "angle"
                                         from: -10
                                         to: 0
-                                        duration: 350
+                                        duration: Appearance.dur(350)
                                         easing.type: Easing.OutCubic
                                     }
                                 }
@@ -855,7 +855,7 @@ StyledPopup {
                             SequentialAnimation {
                                 id: cpuTempAnim
                                 PauseAnimation {
-                                    duration: 100
+                                    duration: Appearance.dur(100)
                                 }
                                 ParallelAnimation {
                                     NumberAnimation {
@@ -863,14 +863,14 @@ StyledPopup {
                                         property: "opacity"
                                         from: 0.0
                                         to: 1.0
-                                        duration: 280
+                                        duration: Appearance.dur(280)
                                     }
                                     NumberAnimation {
                                         target: cpuTempRowTranslate
                                         property: "x"
                                         from: 20
                                         to: 0
-                                        duration: 320
+                                        duration: Appearance.dur(320)
                                         easing.type: Easing.OutCubic
                                     }
                                 }
@@ -909,14 +909,14 @@ StyledPopup {
                             SequentialAnimation {
                                 id: cpuLabelAnim
                                 PauseAnimation {
-                                    duration: 140
+                                    duration: Appearance.dur(140)
                                 }
                                 NumberAnimation {
                                     target: cpuLabel
                                     property: "opacity"
                                     from: 0.0
                                     to: 0.6
-                                    duration: 250
+                                    duration: Appearance.dur(250)
                                 }
                             }
                         }
@@ -933,7 +933,7 @@ StyledPopup {
                             SequentialAnimation {
                                 id: cpuValueAnim
                                 PauseAnimation {
-                                    duration: 180
+                                    duration: Appearance.dur(180)
                                 }
                                 ParallelAnimation {
                                     NumberAnimation {
@@ -941,14 +941,14 @@ StyledPopup {
                                         property: "opacity"
                                         from: 0.0
                                         to: 1.0
-                                        duration: 300
+                                        duration: Appearance.dur(300)
                                     }
                                     NumberAnimation {
                                         target: cpuValue
                                         property: "scale"
                                         from: 0.9
                                         to: 1.0
-                                        duration: 380
+                                        duration: Appearance.dur(380)
                                         easing.type: Easing.OutBack
                                     }
                                 }
@@ -1042,7 +1042,7 @@ StyledPopup {
                             SequentialAnimation {
                                 id: gpuIconAnim
                                 PauseAnimation {
-                                    duration: 60
+                                    duration: Appearance.dur(60)
                                 }
                                 ParallelAnimation {
                                     NumberAnimation {
@@ -1050,14 +1050,14 @@ StyledPopup {
                                         property: "opacity"
                                         from: 0.0
                                         to: 1.0
-                                        duration: 280
+                                        duration: Appearance.dur(280)
                                     }
                                     NumberAnimation {
                                         target: gpuIconWrapperScale
                                         property: "xScale"
                                         from: 0.8
                                         to: 1.0
-                                        duration: 350
+                                        duration: Appearance.dur(350)
                                         easing.type: Easing.OutBack
                                     }
                                     NumberAnimation {
@@ -1065,7 +1065,7 @@ StyledPopup {
                                         property: "yScale"
                                         from: 0.8
                                         to: 1.0
-                                        duration: 350
+                                        duration: Appearance.dur(350)
                                         easing.type: Easing.OutBack
                                     }
                                     NumberAnimation {
@@ -1073,7 +1073,7 @@ StyledPopup {
                                         property: "angle"
                                         from: -10
                                         to: 0
-                                        duration: 350
+                                        duration: Appearance.dur(350)
                                         easing.type: Easing.OutCubic
                                     }
                                 }
@@ -1103,7 +1103,7 @@ StyledPopup {
                             SequentialAnimation {
                                 id: gpuTempAnim
                                 PauseAnimation {
-                                    duration: 100
+                                    duration: Appearance.dur(100)
                                 }
                                 ParallelAnimation {
                                     NumberAnimation {
@@ -1111,14 +1111,14 @@ StyledPopup {
                                         property: "opacity"
                                         from: 0.0
                                         to: 1.0
-                                        duration: 280
+                                        duration: Appearance.dur(280)
                                     }
                                     NumberAnimation {
                                         target: gpuTempRowTranslate
                                         property: "x"
                                         from: 20
                                         to: 0
-                                        duration: 320
+                                        duration: Appearance.dur(320)
                                         easing.type: Easing.OutCubic
                                     }
                                 }
@@ -1157,14 +1157,14 @@ StyledPopup {
                             SequentialAnimation {
                                 id: gpuLabelAnim
                                 PauseAnimation {
-                                    duration: 140
+                                    duration: Appearance.dur(140)
                                 }
                                 NumberAnimation {
                                     target: gpuLabel
                                     property: "opacity"
                                     from: 0.0
                                     to: 0.6
-                                    duration: 250
+                                    duration: Appearance.dur(250)
                                 }
                             }
                         }
@@ -1181,7 +1181,7 @@ StyledPopup {
                             SequentialAnimation {
                                 id: gpuValueAnim
                                 PauseAnimation {
-                                    duration: 180
+                                    duration: Appearance.dur(180)
                                 }
                                 ParallelAnimation {
                                     NumberAnimation {
@@ -1189,14 +1189,14 @@ StyledPopup {
                                         property: "opacity"
                                         from: 0.0
                                         to: 1.0
-                                        duration: 300
+                                        duration: Appearance.dur(300)
                                     }
                                     NumberAnimation {
                                         target: gpuValue
                                         property: "scale"
                                         from: 0.9
                                         to: 1.0
-                                        duration: 380
+                                        duration: Appearance.dur(380)
                                         easing.type: Easing.OutBack
                                     }
                                 }
@@ -1267,7 +1267,7 @@ StyledPopup {
 
                     Behavior on width {
                         NumberAnimation {
-                            duration: 400
+                            duration: Appearance.dur(400)
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -1291,20 +1291,20 @@ StyledPopup {
                         target: ramCard
                         property: "opacity"
                         to: 1.0
-                        duration: 300
+                        duration: Appearance.dur(300)
                     }
                     NumberAnimation {
                         target: ramCard
                         property: "scale"
                         to: 1.0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutBack
                     }
                     NumberAnimation {
                         target: ramCardTransform
                         property: "y"
                         to: 0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -1366,7 +1366,7 @@ StyledPopup {
                     SequentialAnimation {
                         id: ramShapeAnim
                         PauseAnimation {
-                            duration: 60
+                            duration: Appearance.dur(60)
                         }
                         ParallelAnimation {
                             NumberAnimation {
@@ -1374,14 +1374,14 @@ StyledPopup {
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 280
+                                duration: Appearance.dur(280)
                             }
                             NumberAnimation {
                                 target: ramShapeWrapperScale
                                 property: "xScale"
                                 from: 0.8
                                 to: 1.0
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 easing.type: Easing.OutBack
                             }
                             NumberAnimation {
@@ -1389,7 +1389,7 @@ StyledPopup {
                                 property: "yScale"
                                 from: 0.8
                                 to: 1.0
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 easing.type: Easing.OutBack
                             }
                             NumberAnimation {
@@ -1397,7 +1397,7 @@ StyledPopup {
                                 property: "angle"
                                 from: -10
                                 to: 0
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 easing.type: Easing.OutCubic
                             }
                             NumberAnimation {
@@ -1405,7 +1405,7 @@ StyledPopup {
                                 property: "x"
                                 from: -30
                                 to: 0
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 easing.type: Easing.OutCubic
                             }
                         }
@@ -1439,14 +1439,14 @@ StyledPopup {
                         SequentialAnimation {
                             id: ramLabelAnim
                             PauseAnimation {
-                                duration: 120
+                                duration: Appearance.dur(120)
                             }
                             NumberAnimation {
                                 target: ramLabel
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 250
+                                duration: Appearance.dur(250)
                             }
                         }
                     }
@@ -1461,14 +1461,14 @@ StyledPopup {
                         SequentialAnimation {
                             id: ramUsageAnim
                             PauseAnimation {
-                                duration: 160
+                                duration: Appearance.dur(160)
                             }
                             NumberAnimation {
                                 target: ramUsage
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 280
+                                duration: Appearance.dur(280)
                             }
                         }
                     }
@@ -1491,7 +1491,7 @@ StyledPopup {
                     SequentialAnimation {
                         id: ramPercentAnim
                         PauseAnimation {
-                            duration: 200
+                            duration: Appearance.dur(200)
                         }
                         ParallelAnimation {
                             NumberAnimation {
@@ -1499,14 +1499,14 @@ StyledPopup {
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 300
+                                duration: Appearance.dur(300)
                             }
                             NumberAnimation {
                                 target: ramPercent
                                 property: "scale"
                                 from: 0.9
                                 to: 1.0
-                                duration: 380
+                                duration: Appearance.dur(380)
                                 easing.type: Easing.OutBack
                             }
                         }
@@ -1553,7 +1553,7 @@ StyledPopup {
 
                     Behavior on width {
                         NumberAnimation {
-                            duration: 400
+                            duration: Appearance.dur(400)
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -1577,20 +1577,20 @@ StyledPopup {
                         target: swapCard
                         property: "opacity"
                         to: 1.0
-                        duration: 300
+                        duration: Appearance.dur(300)
                     }
                     NumberAnimation {
                         target: swapCard
                         property: "scale"
                         to: 1.0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutBack
                     }
                     NumberAnimation {
                         target: swapCardTransform
                         property: "y"
                         to: 0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -1652,7 +1652,7 @@ StyledPopup {
                     SequentialAnimation {
                         id: swapShapeAnim
                         PauseAnimation {
-                            duration: 60
+                            duration: Appearance.dur(60)
                         }
                         ParallelAnimation {
                             NumberAnimation {
@@ -1660,14 +1660,14 @@ StyledPopup {
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 280
+                                duration: Appearance.dur(280)
                             }
                             NumberAnimation {
                                 target: swapShapeWrapperScale
                                 property: "xScale"
                                 from: 0.8
                                 to: 1.0
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 easing.type: Easing.OutBack
                             }
                             NumberAnimation {
@@ -1675,7 +1675,7 @@ StyledPopup {
                                 property: "yScale"
                                 from: 0.8
                                 to: 1.0
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 easing.type: Easing.OutBack
                             }
                             NumberAnimation {
@@ -1683,7 +1683,7 @@ StyledPopup {
                                 property: "angle"
                                 from: -10
                                 to: 0
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 easing.type: Easing.OutCubic
                             }
                             NumberAnimation {
@@ -1691,7 +1691,7 @@ StyledPopup {
                                 property: "x"
                                 from: -30
                                 to: 0
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 easing.type: Easing.OutCubic
                             }
                         }
@@ -1725,14 +1725,14 @@ StyledPopup {
                         SequentialAnimation {
                             id: swapLabelAnim
                             PauseAnimation {
-                                duration: 120
+                                duration: Appearance.dur(120)
                             }
                             NumberAnimation {
                                 target: swapLabel
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 250
+                                duration: Appearance.dur(250)
                             }
                         }
                     }
@@ -1747,14 +1747,14 @@ StyledPopup {
                         SequentialAnimation {
                             id: swapUsageAnim
                             PauseAnimation {
-                                duration: 160
+                                duration: Appearance.dur(160)
                             }
                             NumberAnimation {
                                 target: swapUsage
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 280
+                                duration: Appearance.dur(280)
                             }
                         }
                     }
@@ -1777,7 +1777,7 @@ StyledPopup {
                     SequentialAnimation {
                         id: swapPercentAnim
                         PauseAnimation {
-                            duration: 200
+                            duration: Appearance.dur(200)
                         }
                         ParallelAnimation {
                             NumberAnimation {
@@ -1785,14 +1785,14 @@ StyledPopup {
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 300
+                                duration: Appearance.dur(300)
                             }
                             NumberAnimation {
                                 target: swapPercent
                                 property: "scale"
                                 from: 0.9
                                 to: 1.0
-                                duration: 380
+                                duration: Appearance.dur(380)
                                 easing.type: Easing.OutBack
                             }
                         }
@@ -1838,7 +1838,7 @@ StyledPopup {
 
                     Behavior on width {
                         NumberAnimation {
-                            duration: 400
+                            duration: Appearance.dur(400)
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -1862,20 +1862,20 @@ StyledPopup {
                         target: diskCard
                         property: "opacity"
                         to: 1.0
-                        duration: 300
+                        duration: Appearance.dur(300)
                     }
                     NumberAnimation {
                         target: diskCard
                         property: "scale"
                         to: 1.0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutBack
                     }
                     NumberAnimation {
                         target: diskCardTransform
                         property: "y"
                         to: 0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -1937,7 +1937,7 @@ StyledPopup {
                     SequentialAnimation {
                         id: diskShapeAnim
                         PauseAnimation {
-                            duration: 60
+                            duration: Appearance.dur(60)
                         }
                         ParallelAnimation {
                             NumberAnimation {
@@ -1945,14 +1945,14 @@ StyledPopup {
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 280
+                                duration: Appearance.dur(280)
                             }
                             NumberAnimation {
                                 target: diskShapeWrapperScale
                                 property: "xScale"
                                 from: 0.8
                                 to: 1.0
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 easing.type: Easing.OutBack
                             }
                             NumberAnimation {
@@ -1960,7 +1960,7 @@ StyledPopup {
                                 property: "yScale"
                                 from: 0.8
                                 to: 1.0
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 easing.type: Easing.OutBack
                             }
                             NumberAnimation {
@@ -1968,7 +1968,7 @@ StyledPopup {
                                 property: "angle"
                                 from: -10
                                 to: 0
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 easing.type: Easing.OutCubic
                             }
                             NumberAnimation {
@@ -1976,7 +1976,7 @@ StyledPopup {
                                 property: "x"
                                 from: -30
                                 to: 0
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 easing.type: Easing.OutCubic
                             }
                         }
@@ -2010,14 +2010,14 @@ StyledPopup {
                         SequentialAnimation {
                             id: diskLabelAnim
                             PauseAnimation {
-                                duration: 120
+                                duration: Appearance.dur(120)
                             }
                             NumberAnimation {
                                 target: diskLabel
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 250
+                                duration: Appearance.dur(250)
                             }
                         }
                     }
@@ -2032,14 +2032,14 @@ StyledPopup {
                         SequentialAnimation {
                             id: diskUsageAnim
                             PauseAnimation {
-                                duration: 160
+                                duration: Appearance.dur(160)
                             }
                             NumberAnimation {
                                 target: diskUsage
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 280
+                                duration: Appearance.dur(280)
                             }
                         }
                     }
@@ -2062,7 +2062,7 @@ StyledPopup {
                     SequentialAnimation {
                         id: diskPercentAnim
                         PauseAnimation {
-                            duration: 200
+                            duration: Appearance.dur(200)
                         }
                         ParallelAnimation {
                             NumberAnimation {
@@ -2070,14 +2070,14 @@ StyledPopup {
                                 property: "opacity"
                                 from: 0.0
                                 to: 1.0
-                                duration: 300
+                                duration: Appearance.dur(300)
                             }
                             NumberAnimation {
                                 target: diskPercent
                                 property: "scale"
                                 from: 0.9
                                 to: 1.0
-                                duration: 380
+                                duration: Appearance.dur(380)
                                 easing.type: Easing.OutBack
                             }
                         }
@@ -2110,20 +2110,20 @@ StyledPopup {
                         target: dockerLayout
                         property: "opacity"
                         to: 1.0
-                        duration: 300
+                        duration: Appearance.dur(300)
                     }
                     NumberAnimation {
                         target: dockerLayout
                         property: "scale"
                         to: 1.0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutBack
                     }
                     NumberAnimation {
                         target: dockerLayoutTransform
                         property: "y"
                         to: 0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutCubic
                     }
                 }

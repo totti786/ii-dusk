@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Power profile, following Material's `speed`: a dial with a needle.
@@ -175,7 +176,7 @@ AnimatedIcon {
         id: sweepAnim
         target: root
         property: "level"
-        duration: 420
+        duration: Appearance.dur(420)
         // The needle arrives past its stop and settles back, the way a real one
         // does. This is the whole animation; nothing else needs to move.
         easing.type: Easing.OutBack

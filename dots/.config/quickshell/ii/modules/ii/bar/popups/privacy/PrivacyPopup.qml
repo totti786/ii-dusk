@@ -79,7 +79,7 @@ StyledPopup {
 
             Behavior on implicitHeight {
                 NumberAnimation {
-                    duration: 280
+                    duration: Appearance.dur(280)
                     easing.type: Easing.OutQuint
                 }
             }
@@ -94,27 +94,27 @@ StyledPopup {
             SequentialAnimation {
                 id: cardAnim
                 PauseAnimation {
-                    duration: 40
+                    duration: Appearance.dur(40)
                 }
                 ParallelAnimation {
                     NumberAnimation {
                         target: card
                         property: "opacity"
                         to: 1.0
-                        duration: 280
+                        duration: Appearance.dur(280)
                     }
                     NumberAnimation {
                         target: card
                         property: "scale"
                         to: 1.0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutBack
                     }
                     NumberAnimation {
                         target: cardTranslate
                         property: "y"
                         to: 0
-                        duration: 380
+                        duration: Appearance.dur(380)
                         easing.type: Easing.OutCubic
                     }
                 }

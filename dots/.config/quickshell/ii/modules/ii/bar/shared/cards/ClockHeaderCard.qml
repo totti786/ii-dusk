@@ -79,10 +79,10 @@ Rectangle {
         
         SequentialAnimation {
             id: clockCircleAnim
-            PauseAnimation { duration: 80 }
+            PauseAnimation { duration: Appearance.dur(80) }
             ParallelAnimation {
-                NumberAnimation { target: clockCircle; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
-                NumberAnimation { target: clockCircleTranslate; property: "x"; from: -50; to: 0; duration: 450; easing.type: Easing.OutCubic }
+                NumberAnimation { target: clockCircle; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
+                NumberAnimation { target: clockCircleTranslate; property: "x"; from: -50; to: 0; duration: Appearance.dur(450); easing.type: Easing.OutCubic }
             }
         }
 
@@ -149,7 +149,7 @@ Rectangle {
                 // there is no hidden ancestor to propagate from. `Window.window` is null
                 // in exactly the case that matters: not currently inside any window.
                 RotationAnimation on rotation {
-                    running: root.visible && root.Window.window !== null
+                    running: (root.visible && root.Window.window !== null) && !Appearance.motionOff
                     from: 0
                     to: 360
                     duration: 60000 // 60 seconds per full turn
@@ -257,8 +257,8 @@ Rectangle {
             
             SequentialAnimation {
                 id: clockHandAnim
-                PauseAnimation { duration: 200 }
-                NumberAnimation { target: clockHand; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
+                PauseAnimation { duration: Appearance.dur(200) }
+                NumberAnimation { target: clockHand; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
             }
         }
     }
@@ -301,10 +301,10 @@ Rectangle {
                 
                 SequentialAnimation {
                     id: timeAnim
-                    PauseAnimation { duration: 160 }
+                    PauseAnimation { duration: Appearance.dur(160) }
                     ParallelAnimation {
-                        NumberAnimation { target: timeText; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
-                        NumberAnimation { target: timeText; property: "scale"; from: 0.9; to: 1.0; duration: 380; easing.type: Easing.OutBack }
+                        NumberAnimation { target: timeText; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
+                        NumberAnimation { target: timeText; property: "scale"; from: 0.9; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
                     }
                 }
             }
@@ -331,10 +331,10 @@ Rectangle {
                 
                 SequentialAnimation {
                     id: ampmAnim
-                    PauseAnimation { duration: 220 }
+                    PauseAnimation { duration: Appearance.dur(220) }
                     ParallelAnimation {
-                        NumberAnimation { target: ampmText; property: "opacity"; from: 0.0; to: 1.0; duration: 280 }
-                        NumberAnimation { target: ampmText; property: "scale"; from: 0.9; to: 1.0; duration: 350; easing.type: Easing.OutBack }
+                        NumberAnimation { target: ampmText; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(280) }
+                        NumberAnimation { target: ampmText; property: "scale"; from: 0.9; to: 1.0; duration: Appearance.dur(350); easing.type: Easing.OutBack }
                     }
                 }
             }
@@ -366,10 +366,10 @@ Rectangle {
 
                 SequentialAnimation {
                     id: dayAnim
-                    PauseAnimation { duration: 280 }
+                    PauseAnimation { duration: Appearance.dur(280) }
                     ParallelAnimation {
-                        NumberAnimation { target: dayText; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
-                        NumberAnimation { target: dayText; property: "translateX"; from: 20; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: dayText; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
+                        NumberAnimation { target: dayText; property: "translateX"; from: 20; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                     }
                 }
             }
@@ -388,10 +388,10 @@ Rectangle {
 
                 SequentialAnimation {
                     id: dateAnim
-                    PauseAnimation { duration: 320 }
+                    PauseAnimation { duration: Appearance.dur(320) }
                     ParallelAnimation {
-                        NumberAnimation { target: dateText; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
-                        NumberAnimation { target: dateText; property: "translateX"; from: 20; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: dateText; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
+                        NumberAnimation { target: dateText; property: "translateX"; from: 20; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                     }
                 }
             }

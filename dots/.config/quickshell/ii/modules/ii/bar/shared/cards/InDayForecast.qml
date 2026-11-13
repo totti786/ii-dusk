@@ -91,9 +91,9 @@ SectionCard {
                         id: cardAnim
                         PauseAnimation { duration: dayCard.cardAnimDelay }
                         ParallelAnimation {
-                            NumberAnimation { target: dayCard; property: "cardOpacity"; from: 0.0; to: 1.0; duration: 400 }
-                            NumberAnimation { target: dayCard; property: "cardTranslateX"; from: 50; to: 0; duration: 500; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: dayCard; property: "iconScale"; from: 0.7; to: 1.0; duration: 450; easing.type: Easing.OutBack }
+                            NumberAnimation { target: dayCard; property: "cardOpacity"; from: 0.0; to: 1.0; duration: Appearance.dur(400) }
+                            NumberAnimation { target: dayCard; property: "cardTranslateX"; from: 50; to: 0; duration: Appearance.dur(500); easing.type: Easing.OutCubic }
+                            NumberAnimation { target: dayCard; property: "iconScale"; from: 0.7; to: 1.0; duration: Appearance.dur(450); easing.type: Easing.OutBack }
                         }
                     }
 

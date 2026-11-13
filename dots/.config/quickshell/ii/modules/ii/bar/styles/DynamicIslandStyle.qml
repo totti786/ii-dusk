@@ -316,7 +316,7 @@ Item {
             visible: opacity > 0.01
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -365,7 +365,7 @@ Item {
                             duration: (modeState.notchModeEnabled && modeState.expanded) ? Config.options.bar.dynamicIsland.notchMode.fadeDelay : 0
                         }
                         NumberAnimation {
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -472,7 +472,7 @@ Item {
                             duration: (modeState.notchModeEnabled && modeState.expanded) ? Config.options.bar.dynamicIsland.notchMode.fadeDelay : 0
                         }
                         NumberAnimation {
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -498,7 +498,7 @@ Item {
             opacity: modeState.notchModeEnabled && modeState._displayMode === "osd" ? 1.0 : 0.0
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 150
+                    duration: Appearance.dur(150)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -550,7 +550,7 @@ Item {
             visible: opacity > 0.01
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 150
+                    duration: Appearance.dur(150)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -620,7 +620,7 @@ Item {
             opacity: modeState.notchModeEnabled && modeState._displayMode === "search" ? 1.0 : 0.0
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -680,7 +680,7 @@ Item {
         opacity: visible ? 1 : 0
         Behavior on opacity {
             NumberAnimation {
-                duration: 250
+                duration: Appearance.dur(250)
                 easing.type: Easing.OutCubic
             }
         }
@@ -696,7 +696,7 @@ Item {
         opacity: visible ? 1 : 0
         Behavior on opacity {
             NumberAnimation {
-                duration: 250
+                duration: Appearance.dur(250)
                 easing.type: Easing.OutCubic
             }
         }
@@ -712,7 +712,7 @@ Item {
         opacity: visible ? 1 : 0
         Behavior on opacity {
             NumberAnimation {
-                duration: 250
+                duration: Appearance.dur(250)
                 easing.type: Easing.OutCubic
             }
         }
@@ -728,7 +728,7 @@ Item {
         opacity: visible ? 1 : 0
         Behavior on opacity {
             NumberAnimation {
-                duration: 250
+                duration: Appearance.dur(250)
                 easing.type: Easing.OutCubic
             }
         }

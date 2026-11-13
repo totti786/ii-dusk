@@ -436,7 +436,7 @@ LazyLoader {
         SequentialAnimation {
             id: openAnimSeq
             PauseAnimation {
-                duration: 50
+                duration: Appearance.dur(50)
             }
             NumberAnimation {
                 id: openProgressAnim
@@ -444,7 +444,7 @@ LazyLoader {
                 property: "animProgress"
                 from: 0.0
                 to: 1.0
-                duration: 380
+                duration: Appearance.dur(380)
                 easing.type: Easing.OutQuart
             }
         }
@@ -455,7 +455,7 @@ LazyLoader {
             property: "animProgress"
             from: 1.0
             to: 0.0
-            duration: 260
+            duration: Appearance.dur(260)
             easing.type: Easing.InCubic
             onFinished: {
                 popupWindow.animProgress = 0.0;

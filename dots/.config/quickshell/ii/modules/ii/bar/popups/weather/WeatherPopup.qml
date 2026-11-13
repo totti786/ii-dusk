@@ -1,3 +1,4 @@
+import qs
 import qs.modules.ii.bar.shared
 import qs.services
 import qs.modules.common
@@ -195,9 +196,9 @@ StyledPopup {
                 id: weatherHeroAnim
                 PauseAnimation { duration: contentLayout.getDelay(0) }
                 ParallelAnimation {
-                    NumberAnimation { target: weatherHero; property: "opacity"; to: 1.0; duration: 300 }
-                    NumberAnimation { target: weatherHero; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                    NumberAnimation { target: weatherHeroTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: weatherHero; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                    NumberAnimation { target: weatherHero; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                    NumberAnimation { target: weatherHeroTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -231,9 +232,9 @@ StyledPopup {
                 id: hourlyForecastAnim
                 PauseAnimation { duration: contentLayout.getDelay(1) }
                 ParallelAnimation {
-                    NumberAnimation { target: hourlyForecast; property: "opacity"; to: 1.0; duration: 300 }
-                    NumberAnimation { target: hourlyForecast; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                    NumberAnimation { target: hourlyForecastTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: hourlyForecast; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                    NumberAnimation { target: hourlyForecast; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                    NumberAnimation { target: hourlyForecastTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -260,9 +261,9 @@ StyledPopup {
                 id: metricsGridAnim
                 PauseAnimation { duration: contentLayout.getDelay(2) }
                 ParallelAnimation {
-                    NumberAnimation { target: metricsGrid; property: "opacity"; to: 1.0; duration: 300 }
-                    NumberAnimation { target: metricsGrid; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                    NumberAnimation { target: metricsGridTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: metricsGrid; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                    NumberAnimation { target: metricsGrid; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                    NumberAnimation { target: metricsGridTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -293,10 +294,40 @@ StyledPopup {
                 id: inDayForecastAnim
                 PauseAnimation { duration: contentLayout.getDelay(3) }
                 ParallelAnimation {
-                    NumberAnimation { target: inDayForecast; property: "opacity"; to: 1.0; duration: 300 }
-                    NumberAnimation { target: inDayForecast; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                    NumberAnimation { target: inDayForecastTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: inDayForecast; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                    NumberAnimation { target: inDayForecast; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                    NumberAnimation { target: inDayForecastTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                 }
+            }
+        }
+
+        // The way into the full forecast, from every bar widget that shows this popup
+        RippleButton {
+            Layout.fillWidth: true
+            implicitHeight: 44
+            buttonRadius: height / 2
+            colBackground: Appearance.colors.colPrimaryContainer
+            colBackgroundHover: Appearance.colors.colPrimaryContainerHover
+            colRipple: Appearance.colors.colPrimaryContainerActive
+            onClicked: {
+                root.close?.();
+                GlobalStates.openWeatherApp("");
+            }
+            contentItem: RowLayout {
+                spacing: 8
+                Item { Layout.fillWidth: true }
+                MaterialSymbol {
+                    text: "open_in_new"
+                    iconSize: 18
+                    color: Appearance.colors.colOnPrimaryContainer
+                }
+                StyledText {
+                    text: Translation.tr("Open Weather")
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    font.weight: Font.DemiBold
+                    color: Appearance.colors.colOnPrimaryContainer
+                }
+                Item { Layout.fillWidth: true }
             }
         }
     }

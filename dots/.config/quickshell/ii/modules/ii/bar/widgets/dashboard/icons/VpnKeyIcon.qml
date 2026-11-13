@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * VPN key, split into the bow (the ring you hold) and the blade with its teeth.
@@ -136,12 +137,12 @@ AnimatedIcon {
             }
         }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "keyShift"; to: 0; duration: 340; easing.type: Easing.OutCubic }
-            NumberAnimation { target: bow; property: "opacity"; to: 1; duration: 260 }
-            NumberAnimation { target: blade; property: "opacity"; to: 1; duration: 260 }
+            NumberAnimation { target: root; property: "keyShift"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutCubic }
+            NumberAnimation { target: bow; property: "opacity"; to: 1; duration: Appearance.dur(260) }
+            NumberAnimation { target: blade; property: "opacity"; to: 1; duration: Appearance.dur(260) }
         }
-        NumberAnimation { target: root; property: "keyTurn"; to: -19; duration: 220; easing.type: Easing.OutCubic }
-        NumberAnimation { target: root; property: "keyTurn"; to: 0; duration: 420; easing.type: Easing.OutBack }
+        NumberAnimation { target: root; property: "keyTurn"; to: -19; duration: Appearance.dur(220); easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "keyTurn"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutBack }
     }
 
     // ── Disconnected: turned back and pulled out ────────────────────────────
@@ -149,17 +150,17 @@ AnimatedIcon {
         id: disconnectAnim
         onStopped: root.busy = false
 
-        NumberAnimation { target: root; property: "keyTurn"; to: 15; duration: 200; easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "keyTurn"; to: 15; duration: Appearance.dur(200); easing.type: Easing.OutCubic }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "keyTurn"; to: 0; duration: 380; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "keyTurn"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
             SequentialAnimation {
-                PauseAnimation { duration: 80 }
+                PauseAnimation { duration: Appearance.dur(80) }
                 ParallelAnimation {
-                    NumberAnimation { target: root; property: "keyShift"; to: -4.2; duration: 320; easing.type: Easing.InCubic }
-                    NumberAnimation { target: bow; property: "opacity"; to: root.dimmed; duration: 300 }
-                    NumberAnimation { target: blade; property: "opacity"; to: root.dimmed; duration: 300 }
+                    NumberAnimation { target: root; property: "keyShift"; to: -4.2; duration: Appearance.dur(320); easing.type: Easing.InCubic }
+                    NumberAnimation { target: bow; property: "opacity"; to: root.dimmed; duration: Appearance.dur(300) }
+                    NumberAnimation { target: blade; property: "opacity"; to: root.dimmed; duration: Appearance.dur(300) }
                 }
-                NumberAnimation { target: root; property: "keyShift"; to: 0; duration: 1; }
+                NumberAnimation { target: root; property: "keyShift"; to: 0; duration: Appearance.dur(1); }
             }
         }
     }

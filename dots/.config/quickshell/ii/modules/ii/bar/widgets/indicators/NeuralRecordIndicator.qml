@@ -164,7 +164,7 @@ Item {
                     color: root.hovering ? theme.colOnBackground : theme.colOnBackgroundVariant
 
                     RotationAnimator on rotation {
-                        running: root.loading
+                        running: (root.loading) && !Appearance.motionOff
                         from: 0
                         to: 360
                         duration: 1000
@@ -230,7 +230,7 @@ Item {
                 color: slab.colContent
 
                 RotationAnimator on rotation {
-                    running: root.loading
+                    running: (root.loading) && !Appearance.motionOff
                     from: 0
                     to: 360
                     duration: 1000
@@ -368,7 +368,7 @@ Item {
                         color: theme.colBareAccent
 
                         RotationAnimator on rotation {
-                            running: root.loading
+                            running: (root.loading) && !Appearance.motionOff
                             from: 0
                             to: 360
                             duration: 1000

@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Game mode, following Material's `gamepad`: four pentagon arms whose points
@@ -103,36 +104,36 @@ AnimatedIcon {
         onStopped: root.busy = false
 
         SequentialAnimation {
-            PauseAnimation { duration: 0 }
+            PauseAnimation { duration: Appearance.dur(0) }
             ParallelAnimation {
-                NumberAnimation { target: upArm; property: "push"; from: 0; to: 1.5; duration: 150; easing.type: Easing.OutCubic }
-                NumberAnimation { target: upArm; property: "opacity"; to: 1; duration: 200 }
+                NumberAnimation { target: upArm; property: "push"; from: 0; to: 1.5; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                NumberAnimation { target: upArm; property: "opacity"; to: 1; duration: Appearance.dur(200) }
             }
-            NumberAnimation { target: upArm; property: "push"; to: 0; duration: 340; easing.type: Easing.OutBack }
+            NumberAnimation { target: upArm; property: "push"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 90 }
+            PauseAnimation { duration: Appearance.dur(90) }
             ParallelAnimation {
-                NumberAnimation { target: rightArm; property: "push"; from: 0; to: 1.5; duration: 150; easing.type: Easing.OutCubic }
-                NumberAnimation { target: rightArm; property: "opacity"; to: 1; duration: 200 }
+                NumberAnimation { target: rightArm; property: "push"; from: 0; to: 1.5; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                NumberAnimation { target: rightArm; property: "opacity"; to: 1; duration: Appearance.dur(200) }
             }
-            NumberAnimation { target: rightArm; property: "push"; to: 0; duration: 340; easing.type: Easing.OutBack }
+            NumberAnimation { target: rightArm; property: "push"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 180 }
+            PauseAnimation { duration: Appearance.dur(180) }
             ParallelAnimation {
-                NumberAnimation { target: downArm; property: "push"; from: 0; to: 1.5; duration: 150; easing.type: Easing.OutCubic }
-                NumberAnimation { target: downArm; property: "opacity"; to: 1; duration: 200 }
+                NumberAnimation { target: downArm; property: "push"; from: 0; to: 1.5; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                NumberAnimation { target: downArm; property: "opacity"; to: 1; duration: Appearance.dur(200) }
             }
-            NumberAnimation { target: downArm; property: "push"; to: 0; duration: 340; easing.type: Easing.OutBack }
+            NumberAnimation { target: downArm; property: "push"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 270 }
+            PauseAnimation { duration: Appearance.dur(270) }
             ParallelAnimation {
-                NumberAnimation { target: leftArm; property: "push"; from: 0; to: 1.5; duration: 150; easing.type: Easing.OutCubic }
-                NumberAnimation { target: leftArm; property: "opacity"; to: 1; duration: 200 }
+                NumberAnimation { target: leftArm; property: "push"; from: 0; to: 1.5; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                NumberAnimation { target: leftArm; property: "opacity"; to: 1; duration: Appearance.dur(200) }
             }
-            NumberAnimation { target: leftArm; property: "push"; to: 0; duration: 340; easing.type: Easing.OutBack }
+            NumberAnimation { target: leftArm; property: "push"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutBack }
         }
     }
 
@@ -142,24 +143,24 @@ AnimatedIcon {
         onStopped: root.busy = false
 
         SequentialAnimation {
-            NumberAnimation { target: upArm; property: "push"; to: -1.2; duration: 220; easing.type: Easing.OutCubic }
-            NumberAnimation { target: upArm; property: "push"; to: 0; duration: 360; easing.type: Easing.OutBack }
+            NumberAnimation { target: upArm; property: "push"; to: -1.2; duration: Appearance.dur(220); easing.type: Easing.OutCubic }
+            NumberAnimation { target: upArm; property: "push"; to: 0; duration: Appearance.dur(360); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            NumberAnimation { target: rightArm; property: "push"; to: -1.2; duration: 220; easing.type: Easing.OutCubic }
-            NumberAnimation { target: rightArm; property: "push"; to: 0; duration: 360; easing.type: Easing.OutBack }
+            NumberAnimation { target: rightArm; property: "push"; to: -1.2; duration: Appearance.dur(220); easing.type: Easing.OutCubic }
+            NumberAnimation { target: rightArm; property: "push"; to: 0; duration: Appearance.dur(360); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            NumberAnimation { target: downArm; property: "push"; to: -1.2; duration: 220; easing.type: Easing.OutCubic }
-            NumberAnimation { target: downArm; property: "push"; to: 0; duration: 360; easing.type: Easing.OutBack }
+            NumberAnimation { target: downArm; property: "push"; to: -1.2; duration: Appearance.dur(220); easing.type: Easing.OutCubic }
+            NumberAnimation { target: downArm; property: "push"; to: 0; duration: Appearance.dur(360); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            NumberAnimation { target: leftArm; property: "push"; to: -1.2; duration: 220; easing.type: Easing.OutCubic }
-            NumberAnimation { target: leftArm; property: "push"; to: 0; duration: 360; easing.type: Easing.OutBack }
+            NumberAnimation { target: leftArm; property: "push"; to: -1.2; duration: Appearance.dur(220); easing.type: Easing.OutCubic }
+            NumberAnimation { target: leftArm; property: "push"; to: 0; duration: Appearance.dur(360); easing.type: Easing.OutBack }
         }
-        NumberAnimation { target: upArm; property: "opacity"; to: root.dimmed; duration: 300 }
-        NumberAnimation { target: rightArm; property: "opacity"; to: root.dimmed; duration: 300 }
-        NumberAnimation { target: downArm; property: "opacity"; to: root.dimmed; duration: 300 }
-        NumberAnimation { target: leftArm; property: "opacity"; to: root.dimmed; duration: 300 }
+        NumberAnimation { target: upArm; property: "opacity"; to: root.dimmed; duration: Appearance.dur(300) }
+        NumberAnimation { target: rightArm; property: "opacity"; to: root.dimmed; duration: Appearance.dur(300) }
+        NumberAnimation { target: downArm; property: "opacity"; to: root.dimmed; duration: Appearance.dur(300) }
+        NumberAnimation { target: leftArm; property: "opacity"; to: root.dimmed; duration: Appearance.dur(300) }
     }
 }

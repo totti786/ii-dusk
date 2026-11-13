@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Hotspot, drawn as the Material `wifi_tethering` glyph in three parts: the
@@ -157,23 +158,23 @@ AnimatedIcon {
 
         ParallelAnimation {
             SequentialAnimation {
-                NumberAnimation { target: dot; property: "lift"; to: 0.9; duration: 100; easing.type: Easing.OutCubic }
-                NumberAnimation { target: dot; property: "lift"; to: 0; duration: 300; easing.type: Easing.OutBack }
+                NumberAnimation { target: dot; property: "lift"; to: 0.9; duration: Appearance.dur(100); easing.type: Easing.OutCubic }
+                NumberAnimation { target: dot; property: "lift"; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutBack }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 60 }
+                PauseAnimation { duration: Appearance.dur(60) }
                 ParallelAnimation {
-                    NumberAnimation { target: inner; property: "radius"; to: inner.rest; duration: 420; easing.type: Easing.OutBack }
-                    NumberAnimation { target: inner; property: "sweep"; to: inner.restSweep; duration: 420; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: inner; property: "opacity"; to: 1; duration: 200 }
+                    NumberAnimation { target: inner; property: "radius"; to: inner.rest; duration: Appearance.dur(420); easing.type: Easing.OutBack }
+                    NumberAnimation { target: inner; property: "sweep"; to: inner.restSweep; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: inner; property: "opacity"; to: 1; duration: Appearance.dur(200) }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 170 }
+                PauseAnimation { duration: Appearance.dur(170) }
                 ParallelAnimation {
-                    NumberAnimation { target: outer; property: "radius"; to: outer.rest; duration: 460; easing.type: Easing.OutBack }
-                    NumberAnimation { target: outer; property: "sweep"; to: outer.restSweep; duration: 460; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: outer; property: "opacity"; to: 1; duration: 220 }
+                    NumberAnimation { target: outer; property: "radius"; to: outer.rest; duration: Appearance.dur(460); easing.type: Easing.OutBack }
+                    NumberAnimation { target: outer; property: "sweep"; to: outer.restSweep; duration: Appearance.dur(460); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: outer; property: "opacity"; to: 1; duration: Appearance.dur(220) }
                 }
             }
         }
@@ -186,22 +187,22 @@ AnimatedIcon {
 
         ParallelAnimation {
             ParallelAnimation {
-                NumberAnimation { target: outer; property: "radius"; to: outer.foldedRadius; duration: 340; easing.type: Easing.InCubic }
-                NumberAnimation { target: outer; property: "sweep"; to: 120; duration: 340; easing.type: Easing.InCubic }
-                NumberAnimation { target: outer; property: "opacity"; to: root.ghost; duration: 320 }
+                NumberAnimation { target: outer; property: "radius"; to: outer.foldedRadius; duration: Appearance.dur(340); easing.type: Easing.InCubic }
+                NumberAnimation { target: outer; property: "sweep"; to: 120; duration: Appearance.dur(340); easing.type: Easing.InCubic }
+                NumberAnimation { target: outer; property: "opacity"; to: root.ghost; duration: Appearance.dur(320) }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 90 }
+                PauseAnimation { duration: Appearance.dur(90) }
                 ParallelAnimation {
-                    NumberAnimation { target: inner; property: "radius"; to: inner.foldedRadius; duration: 320; easing.type: Easing.InCubic }
-                    NumberAnimation { target: inner; property: "sweep"; to: 100; duration: 320; easing.type: Easing.InCubic }
-                    NumberAnimation { target: inner; property: "opacity"; to: root.ghost; duration: 300 }
+                    NumberAnimation { target: inner; property: "radius"; to: inner.foldedRadius; duration: Appearance.dur(320); easing.type: Easing.InCubic }
+                    NumberAnimation { target: inner; property: "sweep"; to: 100; duration: Appearance.dur(320); easing.type: Easing.InCubic }
+                    NumberAnimation { target: inner; property: "opacity"; to: root.ghost; duration: Appearance.dur(300) }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 280 }
-                NumberAnimation { target: dot; property: "lift"; to: -0.8; duration: 140; easing.type: Easing.OutCubic }
-                NumberAnimation { target: dot; property: "lift"; to: 0; duration: 260; easing.type: Easing.OutBack }
+                PauseAnimation { duration: Appearance.dur(280) }
+                NumberAnimation { target: dot; property: "lift"; to: -0.8; duration: Appearance.dur(140); easing.type: Easing.OutCubic }
+                NumberAnimation { target: dot; property: "lift"; to: 0; duration: Appearance.dur(260); easing.type: Easing.OutBack }
             }
         }
     }

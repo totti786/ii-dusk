@@ -48,6 +48,7 @@ QtObject {
             case "phone_scrcpy_indicator":
             case "mode_indicator":
             case "easyeffects_indicator":
+            case "mediator_stream":
                 return "expressive";
             default:
                 return "default";

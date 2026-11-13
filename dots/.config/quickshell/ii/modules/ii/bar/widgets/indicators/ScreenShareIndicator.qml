@@ -82,7 +82,7 @@ MouseArea {
         anchors.centerIn: parent
 
         Behavior on color {
-            ColorAnimation { duration: 150 }
+            ColorAnimation { duration: Appearance.dur(150) }
         }
 
         MaterialSymbol {

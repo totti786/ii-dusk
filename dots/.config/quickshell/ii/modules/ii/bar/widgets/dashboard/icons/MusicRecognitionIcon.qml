@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Identify Music, based on Material's `music_cast`: the note stays on the
@@ -208,21 +209,21 @@ AnimatedIcon {
         id: foundAnim
         onStopped: root.busy = false
 
-        NumberAnimation { target: nearWave; property: "waveTravel"; to: 0; duration: 300; easing.type: Easing.OutCubic }
-        NumberAnimation { target: farWave; property: "waveTravel"; to: 0; duration: 360; easing.type: Easing.OutCubic }
-        NumberAnimation { target: nearWave; property: "opacity"; to: 1; duration: 200 }
-        NumberAnimation { target: farWave; property: "opacity"; to: 1; duration: 240 }
-        NumberAnimation { target: root; property: "noteOpacity"; to: 1; duration: 180 }
-        NumberAnimation { target: root; property: "noteSway"; to: 0; duration: 220; easing.type: Easing.OutCubic }
+        NumberAnimation { target: nearWave; property: "waveTravel"; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
+        NumberAnimation { target: farWave; property: "waveTravel"; to: 0; duration: Appearance.dur(360); easing.type: Easing.OutCubic }
+        NumberAnimation { target: nearWave; property: "opacity"; to: 1; duration: Appearance.dur(200) }
+        NumberAnimation { target: farWave; property: "opacity"; to: 1; duration: Appearance.dur(240) }
+        NumberAnimation { target: root; property: "noteOpacity"; to: 1; duration: Appearance.dur(180) }
+        NumberAnimation { target: root; property: "noteSway"; to: 0; duration: Appearance.dur(220); easing.type: Easing.OutCubic }
 
         SequentialAnimation {
-            NumberAnimation { target: root; property: "noteBob"; to: -1.8; duration: 170; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "noteBob"; to: 0; duration: 390; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "noteBob"; to: -1.8; duration: Appearance.dur(170); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "noteBob"; to: 0; duration: Appearance.dur(390); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 75 }
-            NumberAnimation { target: root; property: "flagKick"; to: -7; duration: 135; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "flagKick"; to: 0; duration: 330; easing.type: Easing.OutBack }
+            PauseAnimation { duration: Appearance.dur(75) }
+            NumberAnimation { target: root; property: "flagKick"; to: -7; duration: Appearance.dur(135); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "flagKick"; to: 0; duration: Appearance.dur(330); easing.type: Easing.OutBack }
         }
     }
 
@@ -231,30 +232,30 @@ AnimatedIcon {
         id: offAnim
         onStopped: root.busy = false
 
-        NumberAnimation { target: root; property: "noteSway"; to: 0; duration: 220; easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "noteSway"; to: 0; duration: Appearance.dur(220); easing.type: Easing.OutCubic }
 
         ParallelAnimation {
-            NumberAnimation { target: farWave; property: "waveTravel"; to: -1.7; duration: 340; easing.type: Easing.InCubic }
-            NumberAnimation { target: farWave; property: "opacity"; to: 0; duration: 300 }
+            NumberAnimation { target: farWave; property: "waveTravel"; to: -1.7; duration: Appearance.dur(340); easing.type: Easing.InCubic }
+            NumberAnimation { target: farWave; property: "opacity"; to: 0; duration: Appearance.dur(300) }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 70 }
+            PauseAnimation { duration: Appearance.dur(70) }
             ParallelAnimation {
-                NumberAnimation { target: nearWave; property: "waveTravel"; to: -1.45; duration: 320; easing.type: Easing.InCubic }
-                NumberAnimation { target: nearWave; property: "opacity"; to: 0; duration: 280 }
+                NumberAnimation { target: nearWave; property: "waveTravel"; to: -1.45; duration: Appearance.dur(320); easing.type: Easing.InCubic }
+                NumberAnimation { target: nearWave; property: "opacity"; to: 0; duration: Appearance.dur(280) }
             }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 110 }
+            PauseAnimation { duration: Appearance.dur(110) }
             ParallelAnimation {
-                NumberAnimation { target: root; property: "noteOpacity"; to: root.dimmed; duration: 280 }
+                NumberAnimation { target: root; property: "noteOpacity"; to: root.dimmed; duration: Appearance.dur(280) }
                 SequentialAnimation {
-                    NumberAnimation { target: root; property: "noteBob"; to: 1.1; duration: 170; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: root; property: "noteBob"; to: 0; duration: 330; easing.type: Easing.OutBack }
+                    NumberAnimation { target: root; property: "noteBob"; to: 1.1; duration: Appearance.dur(170); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: root; property: "noteBob"; to: 0; duration: Appearance.dur(330); easing.type: Easing.OutBack }
                 }
                 SequentialAnimation {
-                    NumberAnimation { target: root; property: "flagKick"; to: 4; duration: 150; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: root; property: "flagKick"; to: 0; duration: 310; easing.type: Easing.OutBack }
+                    NumberAnimation { target: root; property: "flagKick"; to: 4; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: root; property: "flagKick"; to: 0; duration: Appearance.dur(310); easing.type: Easing.OutBack }
                 }
             }
         }

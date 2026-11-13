@@ -138,126 +138,126 @@ AnimatedIcon {
         onFinished: root.settle(true)
 
         SequentialAnimation {
-            PauseAnimation { duration: 160 }
+            PauseAnimation { duration: Appearance.dur(160) }
             ParallelAnimation {
                 NumberAnimation {
                     target: bar0
                     property: "half"
                     from: root.quiet
                     to: root.restHalf[0]
-                    duration: 420
+                    duration: Appearance.dur(420)
                     easing.type: Easing.OutBack
                 }
                 NumberAnimation {
                     target: bar0
                     property: "opacity"
                     to: 1
-                    duration: 220
+                    duration: Appearance.dur(220)
                 }
                 SequentialAnimation {
-                    NumberAnimation { target: bar0; property: "offset"; to: 2.1; duration: 155; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: bar0; property: "offset"; to: -0.9; duration: 145; easing.type: Easing.InOutCubic }
-                    NumberAnimation { target: bar0; property: "offset"; to: 0; duration: 210; easing.type: Easing.OutBack }
+                    NumberAnimation { target: bar0; property: "offset"; to: 2.1; duration: Appearance.dur(155); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: bar0; property: "offset"; to: -0.9; duration: Appearance.dur(145); easing.type: Easing.InOutCubic }
+                    NumberAnimation { target: bar0; property: "offset"; to: 0; duration: Appearance.dur(210); easing.type: Easing.OutBack }
                 }
             }
         }
 
         SequentialAnimation {
-            PauseAnimation { duration: 80 }
+            PauseAnimation { duration: Appearance.dur(80) }
             ParallelAnimation {
                 NumberAnimation {
                     target: bar1
                     property: "half"
                     from: root.quiet
                     to: root.restHalf[1]
-                    duration: 420
+                    duration: Appearance.dur(420)
                     easing.type: Easing.OutBack
                 }
                 NumberAnimation {
                     target: bar1
                     property: "opacity"
                     to: 1
-                    duration: 220
+                    duration: Appearance.dur(220)
                 }
                 SequentialAnimation {
-                    NumberAnimation { target: bar1; property: "offset"; to: -1.8; duration: 150; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: bar1; property: "offset"; to: 1.1; duration: 150; easing.type: Easing.InOutCubic }
-                    NumberAnimation { target: bar1; property: "offset"; to: 0; duration: 205; easing.type: Easing.OutBack }
+                    NumberAnimation { target: bar1; property: "offset"; to: -1.8; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: bar1; property: "offset"; to: 1.1; duration: Appearance.dur(150); easing.type: Easing.InOutCubic }
+                    NumberAnimation { target: bar1; property: "offset"; to: 0; duration: Appearance.dur(205); easing.type: Easing.OutBack }
                 }
             }
         }
 
         SequentialAnimation {
-            PauseAnimation { duration: 0 }
+            PauseAnimation { duration: Appearance.dur(0) }
             ParallelAnimation {
                 NumberAnimation {
                     target: bar2
                     property: "half"
                     from: root.quiet
                     to: root.restHalf[2]
-                    duration: 420
+                    duration: Appearance.dur(420)
                     easing.type: Easing.OutBack
                 }
                 NumberAnimation {
                     target: bar2
                     property: "opacity"
                     to: 1
-                    duration: 220
+                    duration: Appearance.dur(220)
                 }
                 SequentialAnimation {
-                    NumberAnimation { target: bar2; property: "offset"; to: 1.5; duration: 145; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: bar2; property: "offset"; to: -1.3; duration: 155; easing.type: Easing.InOutCubic }
-                    NumberAnimation { target: bar2; property: "offset"; to: 0; duration: 200; easing.type: Easing.OutBack }
+                    NumberAnimation { target: bar2; property: "offset"; to: 1.5; duration: Appearance.dur(145); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: bar2; property: "offset"; to: -1.3; duration: Appearance.dur(155); easing.type: Easing.InOutCubic }
+                    NumberAnimation { target: bar2; property: "offset"; to: 0; duration: Appearance.dur(200); easing.type: Easing.OutBack }
                 }
             }
         }
 
         SequentialAnimation {
-            PauseAnimation { duration: 80 }
+            PauseAnimation { duration: Appearance.dur(80) }
             ParallelAnimation {
                 NumberAnimation {
                     target: bar3
                     property: "half"
                     from: root.quiet
                     to: root.restHalf[3]
-                    duration: 420
+                    duration: Appearance.dur(420)
                     easing.type: Easing.OutBack
                 }
                 NumberAnimation {
                     target: bar3
                     property: "opacity"
                     to: 1
-                    duration: 220
+                    duration: Appearance.dur(220)
                 }
                 SequentialAnimation {
-                    NumberAnimation { target: bar3; property: "offset"; to: -1.8; duration: 150; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: bar3; property: "offset"; to: 1.1; duration: 150; easing.type: Easing.InOutCubic }
-                    NumberAnimation { target: bar3; property: "offset"; to: 0; duration: 205; easing.type: Easing.OutBack }
+                    NumberAnimation { target: bar3; property: "offset"; to: -1.8; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: bar3; property: "offset"; to: 1.1; duration: Appearance.dur(150); easing.type: Easing.InOutCubic }
+                    NumberAnimation { target: bar3; property: "offset"; to: 0; duration: Appearance.dur(205); easing.type: Easing.OutBack }
                 }
             }
         }
 
         SequentialAnimation {
-            PauseAnimation { duration: 160 }
+            PauseAnimation { duration: Appearance.dur(160) }
             ParallelAnimation {
                 NumberAnimation {
                     target: bar4
                     property: "half"
                     from: root.quiet
                     to: root.restHalf[4]
-                    duration: 420
+                    duration: Appearance.dur(420)
                     easing.type: Easing.OutBack
                 }
                 NumberAnimation {
                     target: bar4
                     property: "opacity"
                     to: 1
-                    duration: 220
+                    duration: Appearance.dur(220)
                 }
                 SequentialAnimation {
-                    NumberAnimation { target: bar4; property: "offset"; to: 2.1; duration: 155; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: bar4; property: "offset"; to: -0.9; duration: 145; easing.type: Easing.InOutCubic }
-                    NumberAnimation { target: bar4; property: "offset"; to: 0; duration: 210; easing.type: Easing.OutBack }
+                    NumberAnimation { target: bar4; property: "offset"; to: 2.1; duration: Appearance.dur(155); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: bar4; property: "offset"; to: -0.9; duration: Appearance.dur(145); easing.type: Easing.InOutCubic }
+                    NumberAnimation { target: bar4; property: "offset"; to: 0; duration: Appearance.dur(210); easing.type: Easing.OutBack }
                 }
             }
         }
@@ -270,116 +270,116 @@ AnimatedIcon {
         onFinished: root.settle(false)
 
         SequentialAnimation {
-            PauseAnimation { duration: 0 }
+            PauseAnimation { duration: Appearance.dur(0) }
             ParallelAnimation {
                 NumberAnimation {
                     target: bar0
                     property: "half"
                     to: root.quiet
-                    duration: 340
+                    duration: Appearance.dur(340)
                     easing.type: Easing.InCubic
                 }
                 NumberAnimation {
                     target: bar0
                     property: "opacity"
                     to: root.dimmed
-                    duration: 300
+                    duration: Appearance.dur(300)
                 }
                 SequentialAnimation {
-                    NumberAnimation { target: bar0; property: "offset"; to: -1.8; duration: 145; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: bar0; property: "offset"; to: 0; duration: 255; easing.type: Easing.OutBack }
+                    NumberAnimation { target: bar0; property: "offset"; to: -1.8; duration: Appearance.dur(145); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: bar0; property: "offset"; to: 0; duration: Appearance.dur(255); easing.type: Easing.OutBack }
                 }
             }
         }
 
         SequentialAnimation {
-            PauseAnimation { duration: 70 }
+            PauseAnimation { duration: Appearance.dur(70) }
             ParallelAnimation {
                 NumberAnimation {
                     target: bar1
                     property: "half"
                     to: root.quiet
-                    duration: 340
+                    duration: Appearance.dur(340)
                     easing.type: Easing.InCubic
                 }
                 NumberAnimation {
                     target: bar1
                     property: "opacity"
                     to: root.dimmed
-                    duration: 300
+                    duration: Appearance.dur(300)
                 }
                 SequentialAnimation {
-                    NumberAnimation { target: bar1; property: "offset"; to: 1.5; duration: 145; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: bar1; property: "offset"; to: 0; duration: 255; easing.type: Easing.OutBack }
+                    NumberAnimation { target: bar1; property: "offset"; to: 1.5; duration: Appearance.dur(145); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: bar1; property: "offset"; to: 0; duration: Appearance.dur(255); easing.type: Easing.OutBack }
                 }
             }
         }
 
         SequentialAnimation {
-            PauseAnimation { duration: 140 }
+            PauseAnimation { duration: Appearance.dur(140) }
             ParallelAnimation {
                 NumberAnimation {
                     target: bar2
                     property: "half"
                     to: root.quiet
-                    duration: 340
+                    duration: Appearance.dur(340)
                     easing.type: Easing.InCubic
                 }
                 NumberAnimation {
                     target: bar2
                     property: "opacity"
                     to: root.dimmed
-                    duration: 300
+                    duration: Appearance.dur(300)
                 }
                 SequentialAnimation {
-                    NumberAnimation { target: bar2; property: "offset"; to: -1.35; duration: 145; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: bar2; property: "offset"; to: 0; duration: 255; easing.type: Easing.OutBack }
+                    NumberAnimation { target: bar2; property: "offset"; to: -1.35; duration: Appearance.dur(145); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: bar2; property: "offset"; to: 0; duration: Appearance.dur(255); easing.type: Easing.OutBack }
                 }
             }
         }
 
         SequentialAnimation {
-            PauseAnimation { duration: 70 }
+            PauseAnimation { duration: Appearance.dur(70) }
             ParallelAnimation {
                 NumberAnimation {
                     target: bar3
                     property: "half"
                     to: root.quiet
-                    duration: 340
+                    duration: Appearance.dur(340)
                     easing.type: Easing.InCubic
                 }
                 NumberAnimation {
                     target: bar3
                     property: "opacity"
                     to: root.dimmed
-                    duration: 300
+                    duration: Appearance.dur(300)
                 }
                 SequentialAnimation {
-                    NumberAnimation { target: bar3; property: "offset"; to: 1.5; duration: 145; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: bar3; property: "offset"; to: 0; duration: 255; easing.type: Easing.OutBack }
+                    NumberAnimation { target: bar3; property: "offset"; to: 1.5; duration: Appearance.dur(145); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: bar3; property: "offset"; to: 0; duration: Appearance.dur(255); easing.type: Easing.OutBack }
                 }
             }
         }
 
         SequentialAnimation {
-            PauseAnimation { duration: 0 }
+            PauseAnimation { duration: Appearance.dur(0) }
             ParallelAnimation {
                 NumberAnimation {
                     target: bar4
                     property: "half"
                     to: root.quiet
-                    duration: 340
+                    duration: Appearance.dur(340)
                     easing.type: Easing.InCubic
                 }
                 NumberAnimation {
                     target: bar4
                     property: "opacity"
                     to: root.dimmed
-                    duration: 300
+                    duration: Appearance.dur(300)
                 }
                 SequentialAnimation {
-                    NumberAnimation { target: bar4; property: "offset"; to: -1.8; duration: 145; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: bar4; property: "offset"; to: 0; duration: 255; easing.type: Easing.OutBack }
+                    NumberAnimation { target: bar4; property: "offset"; to: -1.8; duration: Appearance.dur(145); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: bar4; property: "offset"; to: 0; duration: Appearance.dur(255); easing.type: Easing.OutBack }
                 }
             }
         }

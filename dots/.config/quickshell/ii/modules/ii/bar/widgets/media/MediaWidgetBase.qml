@@ -64,7 +64,11 @@ Item {
      */
     readonly property bool bubbled: !root.previewMode && IslandGeometry.bubbled("media")
     /** Whether the bar shows this widget at all. */
-    readonly property bool present: root.hasTrack && !root.bubbled
+    /** Mediator's own playback has its own widget; the same mpv must not show up twice. */
+    readonly property bool mediatorOwned: !root.previewMode && root.activePlayer !== null
+        && MediatorService.nativePillVisible && MediatorService.nativeMprisPlayer !== null
+        && String(MediatorService.nativeMprisPlayer.dbusName ?? "") === String(root.activePlayer.dbusName ?? "")
+    readonly property bool present: root.hasTrack && !root.bubbled && !root.mediatorOwned
 
     visible: root.present
 

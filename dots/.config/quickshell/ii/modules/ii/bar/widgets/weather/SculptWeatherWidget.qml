@@ -1,5 +1,6 @@
 pragma ComponentBehavior: Bound
 
+import qs
 import QtQuick
 import qs.modules.common
 import qs.modules.common.widgets
@@ -116,6 +117,13 @@ MouseArea {
     implicitWidth: root.vertical ? Appearance.sizes.verticalBarWidth : (variantLoader.item?.implicitWidth ?? 0)
     implicitHeight: root.vertical ? (variantLoader.item?.implicitHeight ?? 0) : Appearance.sizes.baseBarHeight
     hoverEnabled: !BarInteraction.clickToShow
+
+    // Hover shows the popup; a left click goes on to the full app. In click-to-show mode
+    // the click belongs to the popup, which carries an "Open Weather" button instead.
+    onClicked: mouse => {
+        if (mouse.button === Qt.LeftButton && !BarInteraction.clickToShow)
+            GlobalStates.openWeatherApp("");
+    }
     acceptedButtons: Qt.LeftButton | Qt.RightButton
 
     onPressed: mouse => {

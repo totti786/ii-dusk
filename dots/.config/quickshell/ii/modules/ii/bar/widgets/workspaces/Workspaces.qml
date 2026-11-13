@@ -315,7 +315,7 @@ Item {
                         // direction on the way there.
                         enabled: !root.directionArrowEnabled
                         RotationAnimation {
-                            duration: 350
+                            duration: Appearance.dur(350)
                             direction: RotationAnimation.Clockwise
                             easing.type: Easing.OutBack
                         }
@@ -654,7 +654,7 @@ Item {
 
             SequentialAnimation on opacity {
                 loops: Animation.Infinite
-                running: root.scratchpadOpen
+                running: (root.scratchpadOpen) && !Appearance.motionOff
                 NumberAnimation {
                     to: 0.3
                     duration: 1500

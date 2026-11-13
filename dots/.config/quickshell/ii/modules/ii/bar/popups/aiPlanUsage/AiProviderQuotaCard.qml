@@ -90,20 +90,20 @@ SectionCard {
                 target: root
                 property: "opacity"
                 to: 1.0
-                duration: 300
+                duration: Appearance.dur(300)
             }
             NumberAnimation {
                 target: root
                 property: "scale"
                 to: 1.0
-                duration: 380
+                duration: Appearance.dur(380)
                 easing.type: Easing.OutBack
             }
             NumberAnimation {
                 target: cardTranslate
                 property: "y"
                 to: 0
-                duration: 380
+                duration: Appearance.dur(380)
                 easing.type: Easing.OutCubic
             }
         }

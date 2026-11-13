@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Volume, split into the speaker body and two sound waves.
@@ -187,18 +188,18 @@ AnimatedIcon {
         }
         ParallelAnimation {
             SequentialAnimation {
-                NumberAnimation { target: body; property: "x"; to: -1.3; duration: 120; easing.type: Easing.OutCubic }
-                NumberAnimation { target: body; property: "x"; to: 0; duration: 380; easing.type: Easing.OutBack }
+                NumberAnimation { target: body; property: "x"; to: -1.3; duration: Appearance.dur(120); easing.type: Easing.OutCubic }
+                NumberAnimation { target: body; property: "x"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
             }
             ParallelAnimation {
-                NumberAnimation { target: wave1; property: "radius"; from: wave1.rest - 1.9; to: wave1.rest; duration: 380; easing.type: Easing.OutBack }
-                NumberAnimation { target: wave1; property: "opacity"; to: 1; duration: 180 }
+                NumberAnimation { target: wave1; property: "radius"; from: wave1.rest - 1.9; to: wave1.rest; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                NumberAnimation { target: wave1; property: "opacity"; to: 1; duration: Appearance.dur(180) }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 100 }
+                PauseAnimation { duration: Appearance.dur(100) }
                 ParallelAnimation {
-                    NumberAnimation { target: wave2; property: "radius"; from: wave2.rest - 2.0; to: wave2.rest; duration: 400; easing.type: Easing.OutBack }
-                    NumberAnimation { target: wave2; property: "opacity"; to: root.waves >= 2 ? 1 : 0; duration: 200 }
+                    NumberAnimation { target: wave2; property: "radius"; from: wave2.rest - 2.0; to: wave2.rest; duration: Appearance.dur(400); easing.type: Easing.OutBack }
+                    NumberAnimation { target: wave2; property: "opacity"; to: root.waves >= 2 ? 1 : 0; duration: Appearance.dur(200) }
                 }
             }
         }
@@ -217,18 +218,18 @@ AnimatedIcon {
         }
         ParallelAnimation {
             SequentialAnimation {
-                NumberAnimation { target: body; property: "x"; to: 1.3; duration: 120; easing.type: Easing.OutCubic }
-                NumberAnimation { target: body; property: "x"; to: 0; duration: 380; easing.type: Easing.OutBack }
+                NumberAnimation { target: body; property: "x"; to: 1.3; duration: Appearance.dur(120); easing.type: Easing.OutCubic }
+                NumberAnimation { target: body; property: "x"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
             }
             ParallelAnimation {
-                NumberAnimation { target: wave2; property: "radius"; from: wave2.rest + 2.0; to: wave2.rest; duration: 400; easing.type: Easing.OutBack }
-                NumberAnimation { target: wave2; property: "opacity"; to: root.waves >= 2 ? 1 : 0; duration: 240 }
+                NumberAnimation { target: wave2; property: "radius"; from: wave2.rest + 2.0; to: wave2.rest; duration: Appearance.dur(400); easing.type: Easing.OutBack }
+                NumberAnimation { target: wave2; property: "opacity"; to: root.waves >= 2 ? 1 : 0; duration: Appearance.dur(240) }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 100 }
+                PauseAnimation { duration: Appearance.dur(100) }
                 ParallelAnimation {
-                    NumberAnimation { target: wave1; property: "radius"; from: wave1.rest + 1.9; to: wave1.rest; duration: 380; easing.type: Easing.OutBack }
-                    NumberAnimation { target: wave1; property: "opacity"; to: root.waves >= 1 ? 1 : 0; duration: 240 }
+                    NumberAnimation { target: wave1; property: "radius"; from: wave1.rest + 1.9; to: wave1.rest; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                    NumberAnimation { target: wave1; property: "opacity"; to: root.waves >= 1 ? 1 : 0; duration: Appearance.dur(240) }
                 }
             }
         }
@@ -242,21 +243,21 @@ AnimatedIcon {
         ScriptAction { script: root.slashProgress = 0 }
         ParallelAnimation {
             SequentialAnimation {
-                NumberAnimation { target: body; property: "x"; to: 1.1; duration: 130; easing.type: Easing.OutCubic }
-                NumberAnimation { target: body; property: "x"; to: 0; duration: 340; easing.type: Easing.OutBack }
+                NumberAnimation { target: body; property: "x"; to: 1.1; duration: Appearance.dur(130); easing.type: Easing.OutCubic }
+                NumberAnimation { target: body; property: "x"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutBack }
             }
-            NumberAnimation { target: wave2; property: "radius"; to: wave2.shrunk; duration: 360; easing.type: Easing.InCubic }
+            NumberAnimation { target: wave2; property: "radius"; to: wave2.shrunk; duration: Appearance.dur(360); easing.type: Easing.InCubic }
             SequentialAnimation {
-                PauseAnimation { duration: 70 }
-                NumberAnimation { target: wave1; property: "radius"; to: wave1.shrunk; duration: 360; easing.type: Easing.InCubic }
+                PauseAnimation { duration: Appearance.dur(70) }
+                NumberAnimation { target: wave1; property: "radius"; to: wave1.shrunk; duration: Appearance.dur(360); easing.type: Easing.InCubic }
             }
             // Everything but the slash goes quiet.
-            NumberAnimation { target: body; property: "opacity"; to: root.dimmed; duration: 340 }
-            NumberAnimation { target: wave1; property: "opacity"; to: root.dimmed; duration: 340 }
-            NumberAnimation { target: wave2; property: "opacity"; to: root.dimmed; duration: 340 }
+            NumberAnimation { target: body; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
+            NumberAnimation { target: wave1; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
+            NumberAnimation { target: wave2; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
             SequentialAnimation {
-                PauseAnimation { duration: 170 }
-                NumberAnimation { target: root; property: "slashProgress"; from: 0; to: 1; duration: 300; easing.type: Easing.OutCubic }
+                PauseAnimation { duration: Appearance.dur(170) }
+                NumberAnimation { target: root; property: "slashProgress"; from: 0; to: 1; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
             }
         }
     }
@@ -276,22 +277,22 @@ AnimatedIcon {
                 wave2.opacity = root.dimmed;
             }
         }
-        NumberAnimation { target: root; property: "slashProgress"; to: 0; duration: 250; easing.type: Easing.InCubic }
+        NumberAnimation { target: root; property: "slashProgress"; to: 0; duration: Appearance.dur(250); easing.type: Easing.InCubic }
         ParallelAnimation {
             SequentialAnimation {
-                NumberAnimation { target: body; property: "x"; to: -1.1; duration: 120; easing.type: Easing.OutCubic }
-                NumberAnimation { target: body; property: "x"; to: 0; duration: 360; easing.type: Easing.OutBack }
+                NumberAnimation { target: body; property: "x"; to: -1.1; duration: Appearance.dur(120); easing.type: Easing.OutCubic }
+                NumberAnimation { target: body; property: "x"; to: 0; duration: Appearance.dur(360); easing.type: Easing.OutBack }
             }
-            NumberAnimation { target: body; property: "opacity"; to: 1; duration: 280 }
+            NumberAnimation { target: body; property: "opacity"; to: 1; duration: Appearance.dur(280) }
             ParallelAnimation {
-                NumberAnimation { target: wave1; property: "radius"; to: wave1.rest; duration: 400; easing.type: Easing.OutBack }
-                NumberAnimation { target: wave1; property: "opacity"; to: 1; duration: 260 }
+                NumberAnimation { target: wave1; property: "radius"; to: wave1.rest; duration: Appearance.dur(400); easing.type: Easing.OutBack }
+                NumberAnimation { target: wave1; property: "opacity"; to: 1; duration: Appearance.dur(260) }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 90 }
+                PauseAnimation { duration: Appearance.dur(90) }
                 ParallelAnimation {
-                    NumberAnimation { target: wave2; property: "radius"; to: wave2.rest; duration: 420; easing.type: Easing.OutBack }
-                    NumberAnimation { target: wave2; property: "opacity"; to: 1; duration: 260 }
+                    NumberAnimation { target: wave2; property: "radius"; to: wave2.rest; duration: Appearance.dur(420); easing.type: Easing.OutBack }
+                    NumberAnimation { target: wave2; property: "opacity"; to: 1; duration: Appearance.dur(260) }
                 }
             }
         }

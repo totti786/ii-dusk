@@ -277,7 +277,7 @@ Item {
 
                         Behavior on blur {
                             NumberAnimation {
-                                duration: 500
+                                duration: Appearance.dur(500)
                                 easing.type: Easing.OutCubic
                             }
                         }
@@ -379,7 +379,7 @@ Item {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 400
+                    duration: Appearance.dur(400)
                     easing.type: Easing.OutQuad
                 }
             }
@@ -402,7 +402,7 @@ Item {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 500
+                        duration: Appearance.dur(500)
                         easing.type: Easing.OutCubic
                     }
                 }

@@ -96,13 +96,13 @@ Item {
                 target: root
                 property: "opacity"
                 to: 1.0
-                duration: 260
+                duration: Appearance.dur(260)
             }
             NumberAnimation {
                 target: rowTranslate
                 property: "y"
                 to: 0
-                duration: 340
+                duration: Appearance.dur(340)
                 easing.type: Easing.OutCubic
             }
         }
@@ -121,7 +121,7 @@ Item {
 
         Behavior on contentX {
             NumberAnimation {
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.OutExpo
             }
         }
@@ -148,30 +148,30 @@ Item {
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: 150
+                        duration: Appearance.dur(150)
                     }
                 }
                 Behavior on topLeftRadius {
                     NumberAnimation {
-                        duration: 200
+                        duration: Appearance.dur(200)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on topRightRadius {
                     NumberAnimation {
-                        duration: 200
+                        duration: Appearance.dur(200)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on bottomLeftRadius {
                     NumberAnimation {
-                        duration: 200
+                        duration: Appearance.dur(200)
                         easing.type: Easing.OutQuad
                     }
                 }
                 Behavior on bottomRightRadius {
                     NumberAnimation {
-                        duration: 200
+                        duration: Appearance.dur(200)
                         easing.type: Easing.OutQuad
                     }
                 }
@@ -253,7 +253,7 @@ Item {
 
                         Behavior on opacity {
                             NumberAnimation {
-                                duration: 150
+                                duration: Appearance.dur(150)
                             }
                         }
                     }
@@ -294,7 +294,7 @@ Item {
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: 150
+                            duration: Appearance.dur(150)
                         }
                     }
 
@@ -332,7 +332,7 @@ Item {
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: 150
+                            duration: Appearance.dur(150)
                         }
                     }
 
@@ -374,7 +374,7 @@ Item {
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: 150
+                            duration: Appearance.dur(150)
                         }
                     }
 
@@ -417,7 +417,7 @@ Item {
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: 150
+                            duration: Appearance.dur(150)
                         }
                     }
 
@@ -440,7 +440,7 @@ Item {
 
                         Behavior on opacity {
                             NumberAnimation {
-                                duration: 150
+                                duration: Appearance.dur(150)
                             }
                         }
 
@@ -469,7 +469,7 @@ Item {
 
                         Behavior on opacity {
                             NumberAnimation {
-                                duration: 150
+                                duration: Appearance.dur(150)
                             }
                         }
 
@@ -478,7 +478,7 @@ Item {
                             to: 360
                             duration: 2000
                             loops: Animation.Infinite
-                            running: root.busy
+                            running: (root.busy) && !Appearance.motionOff
                         }
                     }
 
@@ -504,7 +504,7 @@ Item {
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: 150
+                            duration: Appearance.dur(150)
                         }
                     }
 

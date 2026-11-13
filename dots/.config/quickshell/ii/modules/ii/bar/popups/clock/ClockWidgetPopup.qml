@@ -186,9 +186,9 @@ StyledPopup {
                 
                 PauseAnimation { duration: columnLayout.getDelay(0) }
                 ParallelAnimation {
-                    NumberAnimation { target: clockHero; property: "opacity"; to: 1.0; duration: 300 }
-                    NumberAnimation { target: clockHero; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                    NumberAnimation { target: clockHeroTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: clockHero; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                    NumberAnimation { target: clockHero; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                    NumberAnimation { target: clockHeroTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -213,9 +213,9 @@ StyledPopup {
                 
                 PauseAnimation { duration: columnLayout.getDelay(1) }
                 ParallelAnimation {
-                    NumberAnimation { target: worldClocksLoader; property: "opacity"; to: 1.0; duration: 300 }
-                    NumberAnimation { target: worldClocksLoader; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                    NumberAnimation { target: worldClocksTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: worldClocksLoader; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                    NumberAnimation { target: worldClocksLoader; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                    NumberAnimation { target: worldClocksTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -249,9 +249,9 @@ StyledPopup {
                 
                 PauseAnimation { duration: columnLayout.getDelay(2) }
                 ParallelAnimation {
-                    NumberAnimation { target: infoColumn; property: "opacity"; to: 1.0; duration: 300 }
-                    NumberAnimation { target: infoColumn; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                    NumberAnimation { target: infoColumnTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: infoColumn; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                    NumberAnimation { target: infoColumn; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                    NumberAnimation { target: infoColumnTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                 }
             }
 
@@ -342,9 +342,9 @@ StyledPopup {
                 
                 PauseAnimation { duration: columnLayout.getDelay(3) }
                 ParallelAnimation {
-                    NumberAnimation { target: localSendLoader; property: "opacity"; to: 1.0; duration: 300 }
-                    NumberAnimation { target: localSendLoader; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                    NumberAnimation { target: localSendTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: localSendLoader; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                    NumberAnimation { target: localSendLoader; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                    NumberAnimation { target: localSendTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -368,9 +368,9 @@ StyledPopup {
                 
                 PauseAnimation { duration: columnLayout.getDelay(4) }
                 ParallelAnimation {
-                    NumberAnimation { target: alarmsCard; property: "opacity"; to: 1.0; duration: 300 }
-                    NumberAnimation { target: alarmsCard; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                    NumberAnimation { target: alarmsCardTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: alarmsCard; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                    NumberAnimation { target: alarmsCard; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                    NumberAnimation { target: alarmsCardTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -406,7 +406,7 @@ StyledPopup {
                 spacing: 0
 
                 SequentialAnimation {
-                    running: root.stopwatchPaused
+                    running: (root.stopwatchPaused) && !Appearance.motionOff
                     loops: Animation.Infinite
 
                     ScriptAction { script: textLayout.visible = true }

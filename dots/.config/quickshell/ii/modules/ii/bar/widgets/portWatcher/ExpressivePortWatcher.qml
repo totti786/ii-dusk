@@ -111,7 +111,7 @@ MouseArea {
                 property: "rotation"
                 from: -40
                 to: 0
-                duration: 340
+                duration: Appearance.dur(340)
                 easing.type: Easing.OutBack
             }
 
@@ -181,7 +181,7 @@ MouseArea {
                 property: "rotation"
                 from: -40
                 to: 0
-                duration: 340
+                duration: Appearance.dur(340)
                 easing.type: Easing.OutBack
             }
 

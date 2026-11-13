@@ -86,9 +86,9 @@ SectionCard {
                         id: barAnim
                         PauseAnimation { duration: barItem.barAnimDelay }
                         ParallelAnimation {
-                            NumberAnimation { target: barItem; property: "barOpacity"; from: 0.0; to: 1.0; duration: 280 }
-                            NumberAnimation { target: barItem; property: "barScale"; from: 0.8; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                            NumberAnimation { target: barItem; property: "barHeightAnim"; from: 0; to: barItem.barHeight; duration: 450; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: barItem; property: "barOpacity"; from: 0.0; to: 1.0; duration: Appearance.dur(280) }
+                            NumberAnimation { target: barItem; property: "barScale"; from: 0.8; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                            NumberAnimation { target: barItem; property: "barHeightAnim"; from: 0; to: barItem.barHeight; duration: Appearance.dur(450); easing.type: Easing.OutCubic }
                         }
                     }
 

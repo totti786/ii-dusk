@@ -122,7 +122,7 @@ Item {
                             to: 360
                             duration: 10000
                             loops: Animation.Infinite
-                            running: root.player?.isPlaying
+                            running: (root.player?.isPlaying) && !Appearance.motionOff
                         }
 
                         Image {
@@ -330,7 +330,7 @@ Item {
 
                                 Behavior on buttonRadius {
                                     NumberAnimation {
-                                        duration: 250
+                                        duration: Appearance.dur(250)
                                         easing.type: Easing.OutQuint
                                     }
                                 }

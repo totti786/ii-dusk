@@ -121,18 +121,18 @@ MouseArea {
         PropertyAction { target: root; property: "verticalOffset"; value: vertical ? 0 : -10 }
         PropertyAction { target: root; property: "horizontalOffset"; value: vertical ? -10 : 0 }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "opacity"; to: 1; duration: 250; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "verticalOffset"; to: 0; duration: 250; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "horizontalOffset"; to: 0; duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "opacity"; to: 1; duration: Appearance.dur(250); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "verticalOffset"; to: 0; duration: Appearance.dur(250); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "horizontalOffset"; to: 0; duration: Appearance.dur(250); easing.type: Easing.OutCubic }
         }
     }
 
     SequentialAnimation {
         id: exitAnim
         ParallelAnimation {
-            NumberAnimation { target: root; property: "opacity"; to: 0; duration: 200; easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "verticalOffset"; to: vertical ? 0 : 10; duration: 200; easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "horizontalOffset"; to: vertical ? 10 : 0; duration: 200; easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "opacity"; to: 0; duration: Appearance.dur(200); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "verticalOffset"; to: vertical ? 0 : 10; duration: Appearance.dur(200); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "horizontalOffset"; to: vertical ? 10 : 0; duration: Appearance.dur(200); easing.type: Easing.InCubic }
         }
         ScriptAction {
             script: {
@@ -144,9 +144,9 @@ MouseArea {
     SequentialAnimation {
         id: switchAnim
         ParallelAnimation {
-            NumberAnimation { target: root; property: "opacity"; to: 0; duration: 150; easing.type: Easing.InSine }
-            NumberAnimation { target: root; property: "verticalOffset"; to: vertical ? 0 : 8; duration: 150; easing.type: Easing.InSine }
-            NumberAnimation { target: root; property: "horizontalOffset"; to: vertical ? 8 : 0; duration: 150; easing.type: Easing.InSine }
+            NumberAnimation { target: root; property: "opacity"; to: 0; duration: Appearance.dur(150); easing.type: Easing.InSine }
+            NumberAnimation { target: root; property: "verticalOffset"; to: vertical ? 0 : 8; duration: Appearance.dur(150); easing.type: Easing.InSine }
+            NumberAnimation { target: root; property: "horizontalOffset"; to: vertical ? 8 : 0; duration: Appearance.dur(150); easing.type: Easing.InSine }
         }
         ScriptAction {
             script: {
@@ -159,9 +159,9 @@ MouseArea {
         PropertyAction { target: root; property: "verticalOffset"; value: vertical ? 0 : -8 }
         PropertyAction { target: root; property: "horizontalOffset"; value: vertical ? -8 : 0 }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "opacity"; to: 1; duration: 150; easing.type: Easing.OutSine }
-            NumberAnimation { target: root; property: "verticalOffset"; to: 0; duration: 150; easing.type: Easing.OutSine }
-            NumberAnimation { target: root; property: "horizontalOffset"; to: 0; duration: 150; easing.type: Easing.OutSine }
+            NumberAnimation { target: root; property: "opacity"; to: 1; duration: Appearance.dur(150); easing.type: Easing.OutSine }
+            NumberAnimation { target: root; property: "verticalOffset"; to: 0; duration: Appearance.dur(150); easing.type: Easing.OutSine }
+            NumberAnimation { target: root; property: "horizontalOffset"; to: 0; duration: Appearance.dur(150); easing.type: Easing.OutSine }
         }
     }
 

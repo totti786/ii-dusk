@@ -241,7 +241,7 @@ MouseArea {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: 150
+                    duration: Appearance.dur(150)
                 }
             }
 
@@ -262,7 +262,7 @@ MouseArea {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: 150
+                    duration: Appearance.dur(150)
                 }
             }
 

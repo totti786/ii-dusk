@@ -34,6 +34,7 @@ import qs.modules.ii.bar.widgets.passwordManager
 import qs.modules.ii.bar.widgets.networkSpeed
 import qs.modules.ii.bar.widgets.privacy
 import qs.modules.ii.bar.widgets.aiPlanUsage
+import qs.modules.ii.bar.widgets.mediator
 import "widgets/search"
 import "widgets/date"
 
@@ -154,7 +155,7 @@ Item {
             property: rootItem.vertical ? "x" : "y"
             from: rootItem.vertical ? 15 : 15
             to: 0
-            duration: 400
+            duration: Appearance.dur(400)
             easing.type: Easing.OutExpo
         }
         NumberAnimation {
@@ -162,7 +163,7 @@ Item {
             property: "opacity"
             from: 0.0
             to: 1.0
-            duration: 350
+            duration: Appearance.dur(350)
             easing.type: Easing.OutCubic
         }
     }
@@ -397,7 +398,6 @@ Item {
     // not the persisted layout flags. A configured widget can stay in the
     // model while its loaded component is invisible (for example, an idle timer).
     readonly property bool hasActiveLeftNeighbor: {
-        console.log("[DEBUG NEIGHBOR]", modelData?.id, "isDefault:", rootItem.isDefault, "hasContent:", rootItem.hasActiveLayoutContent, "parent:", rootItem.parent, "childrenCount:", rootItem.parent?.children?.length);
         if (!rootItem.isDefault || !rootItem.hasActiveLayoutContent)
             return false;
 
@@ -644,6 +644,8 @@ Item {
         if (modelData.id === "mode_indicator")
             return true;
         if (modelData.id === "easyeffects_indicator")
+            return true;
+        if (modelData.id === "mediator_stream")
             return true;
         if (modelData.id === "port_watcher" && Config.options.bar.styles.portWatcher === "expressive")
             return true;
@@ -948,6 +950,8 @@ Item {
             if (isExp)
                 return aiPlanUsageCompExpressive;
             return aiPlanUsageComp;
+        case "mediator_stream":
+            return mediatorStreamComp;
         case "privacy_pill":
             return privacyPillComp;
         case "search":
@@ -1361,6 +1365,12 @@ Item {
     Component {
         id: aiPlanUsageCompExpressive
         ExpressiveAiPlanUsage {
+            vertical: rootItem.vertical
+        }
+    }
+    Component {
+        id: mediatorStreamComp
+        MediatorWidget {
             vertical: rootItem.vertical
         }
     }

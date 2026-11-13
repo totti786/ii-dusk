@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Encrypted DNS, following Material's `encrypted` / `no_encryption`: a padlock
@@ -133,11 +134,11 @@ AnimatedIcon {
                 lockBody.opacity = root.dimmed;
             }
         }
-        NumberAnimation { target: root; property: "slashProgress"; to: 0; duration: 240; easing.type: Easing.InCubic }
+        NumberAnimation { target: root; property: "slashProgress"; to: 0; duration: Appearance.dur(240); easing.type: Easing.InCubic }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "shackleLift"; to: 0; duration: 380; easing.type: Easing.OutBack }
-            NumberAnimation { target: shackle; property: "opacity"; to: 1; duration: 280 }
-            NumberAnimation { target: lockBody; property: "opacity"; to: 1; duration: 280 }
+            NumberAnimation { target: root; property: "shackleLift"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+            NumberAnimation { target: shackle; property: "opacity"; to: 1; duration: Appearance.dur(280) }
+            NumberAnimation { target: lockBody; property: "opacity"; to: 1; duration: Appearance.dur(280) }
         }
     }
 
@@ -147,12 +148,12 @@ AnimatedIcon {
 
         ScriptAction { script: root.slashProgress = 0 }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "shackleLift"; to: 2.6; duration: 320; easing.type: Easing.OutCubic }
-            NumberAnimation { target: shackle; property: "opacity"; to: root.dimmed; duration: 320 }
-            NumberAnimation { target: lockBody; property: "opacity"; to: root.dimmed; duration: 320 }
+            NumberAnimation { target: root; property: "shackleLift"; to: 2.6; duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+            NumberAnimation { target: shackle; property: "opacity"; to: root.dimmed; duration: Appearance.dur(320) }
+            NumberAnimation { target: lockBody; property: "opacity"; to: root.dimmed; duration: Appearance.dur(320) }
             SequentialAnimation {
-                PauseAnimation { duration: 150 }
-                NumberAnimation { target: root; property: "slashProgress"; from: 0; to: 1; duration: 300; easing.type: Easing.OutCubic }
+                PauseAnimation { duration: Appearance.dur(150) }
+                NumberAnimation { target: root; property: "slashProgress"; from: 0; to: 1; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
             }
         }
     }

@@ -88,9 +88,9 @@ StyledPopup {
         SequentialAnimation {
             id: mainCardAnim
             ParallelAnimation {
-                NumberAnimation { target: mainCard; property: "opacity"; to: 1.0; duration: 300 }
-                NumberAnimation { target: mainCard; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                NumberAnimation { target: mainCardTrans; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                NumberAnimation { target: mainCard; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                NumberAnimation { target: mainCard; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                NumberAnimation { target: mainCardTrans; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
             }
         }
 
@@ -120,10 +120,10 @@ StyledPopup {
 
                     SequentialAnimation {
                         id: appNameContainerAnim
-                        PauseAnimation { duration: 80 }
+                        PauseAnimation { duration: Appearance.dur(80) }
                         ParallelAnimation {
-                            NumberAnimation { target: appNameContainer; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
-                            NumberAnimation { target: appNameContainerTrans; property: "x"; from: -15; to: 0; duration: 300; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: appNameContainer; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
+                            NumberAnimation { target: appNameContainerTrans; property: "x"; from: -15; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -165,10 +165,10 @@ StyledPopup {
 
                 SequentialAnimation {
                     id: popupTextAnim
-                    PauseAnimation { duration: 140 }
+                    PauseAnimation { duration: Appearance.dur(140) }
                     ParallelAnimation {
-                        NumberAnimation { target: popupText; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
-                        NumberAnimation { target: popupText; property: "scale"; from: 0.95; to: 1.0; duration: 300; easing.type: Easing.OutBack }
+                        NumberAnimation { target: popupText; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
+                        NumberAnimation { target: popupText; property: "scale"; from: 0.95; to: 1.0; duration: Appearance.dur(300); easing.type: Easing.OutBack }
                     }
                 }
             }
@@ -191,10 +191,10 @@ StyledPopup {
 
                 SequentialAnimation {
                     id: bottomRowAnim
-                    PauseAnimation { duration: 200 }
+                    PauseAnimation { duration: Appearance.dur(200) }
                     ParallelAnimation {
-                        NumberAnimation { target: bottomRow; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
-                        NumberAnimation { target: bottomRowTrans; property: "y"; from: 10; to: 0; duration: 300; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: bottomRow; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
+                        NumberAnimation { target: bottomRowTrans; property: "y"; from: 10; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
                     }
                 }
 

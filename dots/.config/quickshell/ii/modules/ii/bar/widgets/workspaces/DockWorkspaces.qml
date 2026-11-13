@@ -149,7 +149,7 @@ Item {
                         rotation: root.useRandomShape ? wsModel.randomRotation : 0
                         Behavior on rotation {
                             RotationAnimation {
-                                duration: 350
+                                duration: Appearance.dur(350)
                                 direction: RotationAnimation.Clockwise
                                 easing.type: Easing.OutBack
                             }
@@ -190,14 +190,14 @@ Item {
                         scale: wsItem.baseScale * (Config.options.bar.workspaces.dockHoverEffect && wsButton.hovered && !wsItem.isActive ? 1.08 : 1.0)
                         Behavior on scale {
                             NumberAnimation {
-                                duration: 200
+                                duration: Appearance.dur(200)
                                 easing.type: Easing.OutCubic
                             }
                         }
 
                         // ── Scratchpad dimming ──────────────────────────────
                         opacity: root.scratchpadOpen && !wsItem.isActive ? 0.35 : 1.0
-                        Behavior on opacity { NumberAnimation { duration: 110 } }
+                        Behavior on opacity { NumberAnimation { duration: Appearance.dur(110) } }
 
                         RippleButton {
                             id: wsButton
@@ -288,7 +288,7 @@ Item {
                                     }
                                     Behavior on color {
                                         ColorAnimation {
-                                            duration: 150
+                                            duration: Appearance.dur(150)
                                         }
                                     }
                                 }

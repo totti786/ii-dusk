@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Wi-Fi, drawn as four separate parts: the dot and three arcs.
@@ -204,28 +205,28 @@ AnimatedIcon {
 
         ParallelAnimation {
             SequentialAnimation {
-                NumberAnimation { target: dot; property: "lift"; to: 1.2; duration: 110; easing.type: Easing.OutCubic }
-                NumberAnimation { target: dot; property: "lift"; to: 0; duration: 300; easing.type: Easing.OutBack }
+                NumberAnimation { target: dot; property: "lift"; to: 1.2; duration: Appearance.dur(110); easing.type: Easing.OutCubic }
+                NumberAnimation { target: dot; property: "lift"; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutBack }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 60 }
+                PauseAnimation { duration: Appearance.dur(60) }
                 ParallelAnimation {
-                    NumberAnimation { target: arc1; property: "radius"; from: arc1.rest - 2.8; to: arc1.rest; duration: 400; easing.type: Easing.OutBack }
-                    NumberAnimation { target: arc1; property: "opacity"; to: 1.0; duration: 200 }
+                    NumberAnimation { target: arc1; property: "radius"; from: arc1.rest - 2.8; to: arc1.rest; duration: Appearance.dur(400); easing.type: Easing.OutBack }
+                    NumberAnimation { target: arc1; property: "opacity"; to: 1.0; duration: Appearance.dur(200) }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 135 }
+                PauseAnimation { duration: Appearance.dur(135) }
                 ParallelAnimation {
-                    NumberAnimation { target: arc2; property: "radius"; from: arc2.rest - 3.0; to: arc2.rest; duration: 400; easing.type: Easing.OutBack }
-                    NumberAnimation { target: arc2; property: "opacity"; to: root.restOpacity(2); duration: 200 }
+                    NumberAnimation { target: arc2; property: "radius"; from: arc2.rest - 3.0; to: arc2.rest; duration: Appearance.dur(400); easing.type: Easing.OutBack }
+                    NumberAnimation { target: arc2; property: "opacity"; to: root.restOpacity(2); duration: Appearance.dur(200) }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 210 }
+                PauseAnimation { duration: Appearance.dur(210) }
                 ParallelAnimation {
-                    NumberAnimation { target: arc3; property: "radius"; from: arc3.rest - 3.2; to: arc3.rest; duration: 400; easing.type: Easing.OutBack }
-                    NumberAnimation { target: arc3; property: "opacity"; to: root.restOpacity(3); duration: 200 }
+                    NumberAnimation { target: arc3; property: "radius"; from: arc3.rest - 3.2; to: arc3.rest; duration: Appearance.dur(400); easing.type: Easing.OutBack }
+                    NumberAnimation { target: arc3; property: "opacity"; to: root.restOpacity(3); duration: Appearance.dur(200) }
                 }
             }
         }
@@ -239,47 +240,47 @@ AnimatedIcon {
         ParallelAnimation {
             SequentialAnimation {
                 ParallelAnimation {
-                    NumberAnimation { target: arc3; property: "radius"; to: arc3.rest + 3.4; duration: 420; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: arc3; property: "lift"; to: -1.6; duration: 420; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: arc3; property: "opacity"; to: root.ghost; duration: 380 }
+                    NumberAnimation { target: arc3; property: "radius"; to: arc3.rest + 3.4; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: arc3; property: "lift"; to: -1.6; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: arc3; property: "opacity"; to: root.ghost; duration: Appearance.dur(380) }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 80 }
+                PauseAnimation { duration: Appearance.dur(80) }
                 ParallelAnimation {
-                    NumberAnimation { target: arc2; property: "radius"; to: arc2.rest + 3.0; duration: 420; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: arc2; property: "lift"; to: -1.2; duration: 420; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: arc2; property: "opacity"; to: root.ghost; duration: 380 }
+                    NumberAnimation { target: arc2; property: "radius"; to: arc2.rest + 3.0; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: arc2; property: "lift"; to: -1.2; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: arc2; property: "opacity"; to: root.ghost; duration: Appearance.dur(380) }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 160 }
+                PauseAnimation { duration: Appearance.dur(160) }
                 ParallelAnimation {
-                    NumberAnimation { target: arc1; property: "radius"; to: arc1.rest + 2.4; duration: 420; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: arc1; property: "opacity"; to: root.dimmed; duration: 380 }
+                    NumberAnimation { target: arc1; property: "radius"; to: arc1.rest + 2.4; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: arc1; property: "opacity"; to: root.dimmed; duration: Appearance.dur(380) }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 120 }
-                NumberAnimation { target: dot; property: "lift"; to: 1.4; duration: 200; easing.type: Easing.OutCubic }
-                NumberAnimation { target: dot; property: "lift"; to: 0; duration: 320; easing.type: Easing.OutBack }
+                PauseAnimation { duration: Appearance.dur(120) }
+                NumberAnimation { target: dot; property: "lift"; to: 1.4; duration: Appearance.dur(200); easing.type: Easing.OutCubic }
+                NumberAnimation { target: dot; property: "lift"; to: 0; duration: Appearance.dur(320); easing.type: Easing.OutBack }
             }
         }
         // Settle: the arcs ease back to where they live, still ghosted. Without
         // this second phase the first one ended in a teleport.
         ParallelAnimation {
-            NumberAnimation { target: arc3; property: "radius"; to: arc3.rest; duration: 420; easing.type: Easing.OutCubic }
-            NumberAnimation { target: arc3; property: "lift"; to: 0; duration: 420; easing.type: Easing.OutCubic }
+            NumberAnimation { target: arc3; property: "radius"; to: arc3.rest; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
+            NumberAnimation { target: arc3; property: "lift"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
             SequentialAnimation {
-                PauseAnimation { duration: 60 }
+                PauseAnimation { duration: Appearance.dur(60) }
                 ParallelAnimation {
-                    NumberAnimation { target: arc2; property: "radius"; to: arc2.rest; duration: 420; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: arc2; property: "lift"; to: 0; duration: 420; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: arc2; property: "radius"; to: arc2.rest; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: arc2; property: "lift"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 120 }
-                NumberAnimation { target: arc1; property: "radius"; to: arc1.rest; duration: 420; easing.type: Easing.OutCubic }
+                PauseAnimation { duration: Appearance.dur(120) }
+                NumberAnimation { target: arc1; property: "radius"; to: arc1.rest; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
             }
         }
     }
@@ -292,28 +293,28 @@ AnimatedIcon {
         ParallelAnimation {
             SequentialAnimation {
                 ParallelAnimation {
-                    NumberAnimation { target: arc3; property: "radius"; to: arc3.rest; duration: 340; easing.type: Easing.InCubic }
-                    NumberAnimation { target: arc3; property: "opacity"; to: root.ghost; duration: 300 }
+                    NumberAnimation { target: arc3; property: "radius"; to: arc3.rest; duration: Appearance.dur(340); easing.type: Easing.InCubic }
+                    NumberAnimation { target: arc3; property: "opacity"; to: root.ghost; duration: Appearance.dur(300) }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 70 }
+                PauseAnimation { duration: Appearance.dur(70) }
                 ParallelAnimation {
-                    NumberAnimation { target: arc2; property: "radius"; to: arc2.rest; duration: 340; easing.type: Easing.InCubic }
-                    NumberAnimation { target: arc2; property: "opacity"; to: root.ghost; duration: 300 }
+                    NumberAnimation { target: arc2; property: "radius"; to: arc2.rest; duration: Appearance.dur(340); easing.type: Easing.InCubic }
+                    NumberAnimation { target: arc2; property: "opacity"; to: root.ghost; duration: Appearance.dur(300) }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 140 }
+                PauseAnimation { duration: Appearance.dur(140) }
                 ParallelAnimation {
-                    NumberAnimation { target: arc1; property: "radius"; to: arc1.rest; duration: 340; easing.type: Easing.InCubic }
-                    NumberAnimation { target: arc1; property: "opacity"; to: root.ghost; duration: 300 }
+                    NumberAnimation { target: arc1; property: "radius"; to: arc1.rest; duration: Appearance.dur(340); easing.type: Easing.InCubic }
+                    NumberAnimation { target: arc1; property: "opacity"; to: root.ghost; duration: Appearance.dur(300) }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 200 }
-                NumberAnimation { target: dot; property: "lift"; to: -0.9; duration: 160; easing.type: Easing.OutCubic }
-                NumberAnimation { target: dot; property: "lift"; to: 0; duration: 260; easing.type: Easing.OutBack }
+                PauseAnimation { duration: Appearance.dur(200) }
+                NumberAnimation { target: dot; property: "lift"; to: -0.9; duration: Appearance.dur(160); easing.type: Easing.OutCubic }
+                NumberAnimation { target: dot; property: "lift"; to: 0; duration: Appearance.dur(260); easing.type: Easing.OutBack }
             }
         }
     }

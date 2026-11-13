@@ -226,10 +226,10 @@ Rectangle {
                     
                     SequentialAnimation {
                         id: alarmIconAnim
-                        PauseAnimation { duration: 80 }
+                        PauseAnimation { duration: Appearance.dur(80) }
                         ParallelAnimation {
-                            NumberAnimation { target: alarmIcon; property: "scale"; from: 0.8; to: 1.0; duration: 350; easing.type: Easing.OutBack }
-                            NumberAnimation { target: alarmIconRotation; property: "angle"; from: -10; to: 0; duration: 350; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: alarmIcon; property: "scale"; from: 0.8; to: 1.0; duration: Appearance.dur(350); easing.type: Easing.OutBack }
+                            NumberAnimation { target: alarmIconRotation; property: "angle"; from: -10; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
                         }
                     }
                 }
@@ -246,8 +246,8 @@ Rectangle {
                         
                         SequentialAnimation {
                             id: alarmsTitleAnim
-                            PauseAnimation { duration: 120 }
-                            NumberAnimation { target: alarmsTitle; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
+                            PauseAnimation { duration: Appearance.dur(120) }
+                            NumberAnimation { target: alarmsTitle; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
                         }
                     }
 
@@ -261,8 +261,8 @@ Rectangle {
                         
                         SequentialAnimation {
                             id: alarmsCountAnim
-                            PauseAnimation { duration: 160 }
-                            NumberAnimation { target: alarmsCount; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
+                            PauseAnimation { duration: Appearance.dur(160) }
+                            NumberAnimation { target: alarmsCount; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
                         }
                     }
                 }
@@ -284,10 +284,10 @@ Rectangle {
                     
                     SequentialAnimation {
                         id: deleteBtnAnim
-                        PauseAnimation { duration: 200 }
+                        PauseAnimation { duration: Appearance.dur(200) }
                         ParallelAnimation {
-                            NumberAnimation { target: deleteButton; property: "scale"; from: 0.8; to: 1.0; duration: 320; easing.type: Easing.OutBack }
-                            NumberAnimation { target: deleteButton; property: "opacity"; from: 0.0; to: 1.0; duration: 280 }
+                            NumberAnimation { target: deleteButton; property: "scale"; from: 0.8; to: 1.0; duration: Appearance.dur(320); easing.type: Easing.OutBack }
+                            NumberAnimation { target: deleteButton; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(280) }
                         }
                     }
 
@@ -316,10 +316,10 @@ Rectangle {
                     
                     SequentialAnimation {
                         id: addBtnAnim
-                        PauseAnimation { duration: 240 }
+                        PauseAnimation { duration: Appearance.dur(240) }
                         ParallelAnimation {
-                            NumberAnimation { target: addButton; property: "scale"; from: 0.8; to: 1.0; duration: 320; easing.type: Easing.OutBack }
-                            NumberAnimation { target: addButton; property: "opacity"; from: 0.0; to: 1.0; duration: 280 }
+                            NumberAnimation { target: addButton; property: "scale"; from: 0.8; to: 1.0; duration: Appearance.dur(320); easing.type: Easing.OutBack }
+                            NumberAnimation { target: addButton; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(280) }
                         }
                     }
 
@@ -338,6 +338,7 @@ Rectangle {
 
             // Horizontal list of alarm cards
             ListView {
+                WheelScroll {}
                 id: listView
                 Layout.fillWidth: true
                 Layout.preferredHeight: count > 0 ? 96 : 0
@@ -347,13 +348,13 @@ Rectangle {
                 model: AlarmService.alarms
 
                 add: Transition {
-                    NumberAnimation { properties: "scale,opacity"; from: 0; to: 1.0; duration: 250; easing.type: Easing.OutQuad }
+                    NumberAnimation { properties: "scale,opacity"; from: 0; to: 1.0; duration: Appearance.dur(250); easing.type: Easing.OutQuad }
                 }
                 remove: Transition {
-                    NumberAnimation { properties: "scale,opacity"; to: 0; duration: 200; easing.type: Easing.OutQuad }
+                    NumberAnimation { properties: "scale,opacity"; to: 0; duration: Appearance.dur(200); easing.type: Easing.OutQuad }
                 }
                 displaced: Transition {
-                    NumberAnimation { properties: "x,y"; duration: 250; easing.type: Easing.OutQuad }
+                    NumberAnimation { properties: "x,y"; duration: Appearance.dur(250); easing.type: Easing.OutQuad }
                 }
 
                 delegate: Rectangle {
@@ -382,15 +383,15 @@ Rectangle {
                         id: cardAnim
                         PauseAnimation { duration: alarmCard.cardAnimDelay }
                         ParallelAnimation {
-                            NumberAnimation { target: alarmCard; property: "cardOpacity"; from: 0.0; to: 1.0; duration: 350 }
-                            NumberAnimation { target: alarmCard; property: "cardTranslateX"; from: 80; to: 0; duration: 450; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: alarmCard; property: "cardOpacity"; from: 0.0; to: 1.0; duration: Appearance.dur(350) }
+                            NumberAnimation { target: alarmCard; property: "cardTranslateX"; from: 80; to: 0; duration: Appearance.dur(450); easing.type: Easing.OutCubic }
                         }
                     }
 
                     Behavior on opacity {
                         id: opacityBehavior
                         enabled: AlarmService.ringingAlarmIndex !== index
-                        NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                        NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.InOutQuad }
                     }
 
                     required property var modelData
@@ -486,7 +487,7 @@ Rectangle {
 
                     // Pulse animation for ringing card
                     SequentialAnimation {
-                        running: AlarmService.ringingAlarmIndex === alarmCard.index
+                        running: (AlarmService.ringingAlarmIndex === alarmCard.index) && !Appearance.motionOff
                         loops: Animation.Infinite
 
                         NumberAnimation {

@@ -49,11 +49,11 @@ Rectangle {
         
         SequentialAnimation {
             id: shapeAnim
-            PauseAnimation { duration: 60 }
+            PauseAnimation { duration: Appearance.dur(60) }
             ParallelAnimation {
-                NumberAnimation { target: shapeTranslate; property: "x"; from: -30; to: 0; duration: 350; easing.type: Easing.OutCubic }
-                NumberAnimation { target: shapeItem; property: "scale"; from: 0.8; to: 1.0; duration: 350; easing.type: Easing.OutBack }
-                NumberAnimation { target: shapeItem; property: "rotation"; from: -10; to: 0; duration: 350; easing.type: Easing.OutCubic }
+                NumberAnimation { target: shapeTranslate; property: "x"; from: -30; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
+                NumberAnimation { target: shapeItem; property: "scale"; from: 0.8; to: 1.0; duration: Appearance.dur(350); easing.type: Easing.OutBack }
+                NumberAnimation { target: shapeItem; property: "rotation"; from: -10; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
             }
         }
 
@@ -92,8 +92,8 @@ Rectangle {
             
             SequentialAnimation {
                 id: textAnim
-                PauseAnimation { duration: 120 }
-                NumberAnimation { target: statusText; property: "opacity"; from: 0.0; to: 1.0; duration: 250 }
+                PauseAnimation { duration: Appearance.dur(120) }
+                NumberAnimation { target: statusText; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(250) }
             }
         }
     }
@@ -111,10 +111,10 @@ Rectangle {
         
         SequentialAnimation {
             id: btnAnim
-            PauseAnimation { duration: 180 }
+            PauseAnimation { duration: Appearance.dur(180) }
             ParallelAnimation {
-                NumberAnimation { target: toggleBtn; property: "scale"; from: 0.8; to: 1.0; duration: 320; easing.type: Easing.OutBack }
-                NumberAnimation { target: toggleBtn; property: "opacity"; from: 0.0; to: 1.0; duration: 280 }
+                NumberAnimation { target: toggleBtn; property: "scale"; from: 0.8; to: 1.0; duration: Appearance.dur(320); easing.type: Easing.OutBack }
+                NumberAnimation { target: toggleBtn; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(280) }
             }
         }
         

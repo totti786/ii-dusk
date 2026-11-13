@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Microphone, split into the capsule, the stand and the stem.
@@ -134,17 +135,17 @@ AnimatedIcon {
             }
         }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "capsuleDrop"; to: 2.7; duration: 300; easing.type: Easing.OutCubic }
-            NumberAnimation { target: capsule; property: "opacity"; to: root.dimmed; duration: 340 }
-            NumberAnimation { target: stand; property: "opacity"; to: root.dimmed; duration: 340 }
+            NumberAnimation { target: root; property: "capsuleDrop"; to: 2.7; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
+            NumberAnimation { target: capsule; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
+            NumberAnimation { target: stand; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
             SequentialAnimation {
-                PauseAnimation { duration: 120 }
-                NumberAnimation { target: root; property: "standDrop"; to: 0.8; duration: 140; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "standDrop"; to: 0; duration: 280; easing.type: Easing.OutBack }
+                PauseAnimation { duration: Appearance.dur(120) }
+                NumberAnimation { target: root; property: "standDrop"; to: 0.8; duration: Appearance.dur(140); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "standDrop"; to: 0; duration: Appearance.dur(280); easing.type: Easing.OutBack }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 160 }
-                NumberAnimation { target: root; property: "slashProgress"; from: 0; to: 1; duration: 300; easing.type: Easing.OutCubic }
+                PauseAnimation { duration: Appearance.dur(160) }
+                NumberAnimation { target: root; property: "slashProgress"; from: 0; to: 1; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
             }
         }
     }
@@ -162,11 +163,11 @@ AnimatedIcon {
                 stand.opacity = root.dimmed;
             }
         }
-        NumberAnimation { target: root; property: "slashProgress"; to: 0; duration: 250; easing.type: Easing.InCubic }
+        NumberAnimation { target: root; property: "slashProgress"; to: 0; duration: Appearance.dur(250); easing.type: Easing.InCubic }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "capsuleDrop"; to: 0; duration: 440; easing.type: Easing.OutBack }
-            NumberAnimation { target: capsule; property: "opacity"; to: 1; duration: 300 }
-            NumberAnimation { target: stand; property: "opacity"; to: 1; duration: 300 }
+            NumberAnimation { target: root; property: "capsuleDrop"; to: 0; duration: Appearance.dur(440); easing.type: Easing.OutBack }
+            NumberAnimation { target: capsule; property: "opacity"; to: 1; duration: Appearance.dur(300) }
+            NumberAnimation { target: stand; property: "opacity"; to: 1; duration: Appearance.dur(300) }
         }
     }
 }

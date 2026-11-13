@@ -159,7 +159,7 @@ Item { // Bar content region
         Behavior on height {
             enabled: !root.isDynamicIsland
             NumberAnimation {
-                duration: 450
+                duration: Appearance.dur(450)
                 easing.type: Easing.OutExpo
             }
         }

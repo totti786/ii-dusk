@@ -36,7 +36,7 @@ Scope {
             // Preserve the mapped PanelWindow through lock entry so the
             // compositor does not reflow the screen while WlSessionLock appears.
             // Edit Mode holds the bar mapped and revealed, as Bar.qml does.
-            active: (GlobalStates.barOpen || GlobalStates.editMode) && !GlobalStates.connectModeActive && !GlobalStates.isMediaModeActiveForScreen(barLoader.modelData ? barLoader.modelData.name : "")
+            active: (GlobalStates.barOpen || GlobalStates.editMode) && !GlobalStates.connectModeActive && !GlobalStates.isMediaModeRevealingDesktop(barLoader.modelData ? barLoader.modelData.name : "")
             component: Scope {
                 id: barScope
 

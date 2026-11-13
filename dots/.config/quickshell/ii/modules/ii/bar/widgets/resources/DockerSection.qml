@@ -192,7 +192,7 @@ Item {
                         from: 0
                         to: 360
                         duration: 1000
-                        running: DockerService.isLoading
+                        running: (DockerService.isLoading) && !Appearance.motionOff
                         loops: Animation.Infinite
                     }
                 }
@@ -421,14 +421,14 @@ Item {
 
                     Behavior on width {
                         NumberAnimation {
-                            duration: 350
+                            duration: Appearance.dur(350)
                             easing.type: Easing.BezierSpline
                             easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
                         }
                     }
                     Behavior on color {
                         ColorAnimation {
-                            duration: 150
+                            duration: Appearance.dur(150)
                         }
                     }
 
@@ -556,7 +556,7 @@ Item {
 
                                             Behavior on color {
                                                 ColorAnimation {
-                                                    duration: 100
+                                                    duration: Appearance.dur(100)
                                                 }
                                             }
 

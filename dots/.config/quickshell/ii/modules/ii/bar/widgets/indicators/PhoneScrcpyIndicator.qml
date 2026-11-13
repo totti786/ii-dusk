@@ -88,7 +88,7 @@ MouseArea {
                 : Appearance.colors.colPrimaryContainer
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: Appearance.dur(150) }
             }
 
             MaterialSymbol {
@@ -110,7 +110,7 @@ MouseArea {
                 : Appearance.colors.colPrimaryContainer
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: Appearance.dur(150) }
             }
 
             RowLayout {
@@ -147,7 +147,7 @@ MouseArea {
             Layout.alignment: Qt.AlignHCenter
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: Appearance.dur(150) }
             }
 
             MaterialSymbol {
@@ -170,7 +170,7 @@ MouseArea {
             Layout.alignment: Qt.AlignHCenter
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: Appearance.dur(150) }
             }
 
             ColumnLayout {

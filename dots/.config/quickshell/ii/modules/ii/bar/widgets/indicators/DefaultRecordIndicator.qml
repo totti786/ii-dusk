@@ -60,7 +60,7 @@ Item {
             // Sanctioned rotation: it runs only while the portal request is
             // outstanding, and stops the moment the recorder actually starts.
             RotationAnimator on rotation {
-                running: root.loading
+                running: (root.loading) && !Appearance.motionOff
                 from: 0
                 to: 360
                 duration: 1000

@@ -256,27 +256,27 @@ MouseArea {
                 SequentialAnimation {
                     id: bodyAnim
                     PauseAnimation {
-                        duration: 100
+                        duration: Appearance.dur(100)
                     }
                     ParallelAnimation {
                         NumberAnimation {
                             target: bodyCard
                             property: "opacity"
                             to: 1.0
-                            duration: 300
+                            duration: Appearance.dur(300)
                         }
                         NumberAnimation {
                             target: bodyCard
                             property: "scale"
                             to: 1.0
-                            duration: 380
+                            duration: Appearance.dur(380)
                             easing.type: Easing.OutBack
                         }
                         NumberAnimation {
                             target: bodyTranslate
                             property: "y"
                             to: 0
-                            duration: 380
+                            duration: Appearance.dur(380)
                             easing.type: Easing.OutCubic
                         }
                     }

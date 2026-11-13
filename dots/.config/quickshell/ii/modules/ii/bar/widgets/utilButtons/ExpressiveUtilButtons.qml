@@ -176,8 +176,8 @@ Item {
                             ? [Directories.recordScriptPath]
                             : [Directories.recordScriptPath, "--region"])
 
-                        Behavior on colBackground { ColorAnimation { duration: 200 } }
-                        Behavior on buttonRadius { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                        Behavior on colBackground { ColorAnimation { duration: Appearance.dur(200) } }
+                        Behavior on buttonRadius { NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic } }
 
                         MaterialSymbol {
                             horizontalAlignment: Qt.AlignHCenter
@@ -185,7 +185,7 @@ Item {
                             text: recordingItem.isRecording ? "stop" : "screen_record"
                             iconSize: Appearance.font.pixelSize.large
                             color: recordingItem.isRecording ? widgetPalette.colOnBackgroundVariant : Appearance.colors.colOnLayer2
-                            Behavior on color { ColorAnimation { duration: 200 } }
+                            Behavior on color { ColorAnimation { duration: Appearance.dur(200) } }
                         }
                     }
 

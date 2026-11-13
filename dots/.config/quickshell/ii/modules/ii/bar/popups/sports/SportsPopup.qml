@@ -155,43 +155,43 @@ StyledPopup {
                                 SequentialAnimation {
                                     PauseAnimation { duration: card.delayBase }
                                     ParallelAnimation {
-                                        NumberAnimation { target: card; property: "opacity"; to: 1.0; duration: 300 }
-                                        NumberAnimation { target: card; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                                        NumberAnimation { target: cardTranslate; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                                        NumberAnimation { target: card; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                                        NumberAnimation { target: card; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                                        NumberAnimation { target: cardTranslate; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                                     }
                                 }
                                 SequentialAnimation {
                                     PauseAnimation { duration: card.delayBase + 60 }
                                     ParallelAnimation {
-                                        NumberAnimation { target: homeLogoCont; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                                        NumberAnimation { target: awayLogoCont; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
+                                        NumberAnimation { target: homeLogoCont; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                                        NumberAnimation { target: awayLogoCont; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
                                     }
                                 }
                                 SequentialAnimation {
                                     PauseAnimation { duration: card.delayBase + 100 }
                                     ParallelAnimation {
-                                        NumberAnimation { target: statusPill; property: "opacity"; to: 1.0; duration: 250 }
-                                        NumberAnimation { target: statusPill; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.OutBack }
+                                        NumberAnimation { target: statusPill; property: "opacity"; to: 1.0; duration: Appearance.dur(250) }
+                                        NumberAnimation { target: statusPill; property: "scale"; to: 1.0; duration: Appearance.dur(250); easing.type: Easing.OutBack }
                                     }
                                 }
                                 SequentialAnimation {
                                     PauseAnimation { duration: card.delayBase + 120 }
                                     ParallelAnimation {
-                                        NumberAnimation { target: homeTeamName; property: "opacity"; to: 1.0; duration: 250 }
-                                        NumberAnimation { target: awayTeamName; property: "opacity"; to: 1.0; duration: 250 }
+                                        NumberAnimation { target: homeTeamName; property: "opacity"; to: 1.0; duration: Appearance.dur(250) }
+                                        NumberAnimation { target: awayTeamName; property: "opacity"; to: 1.0; duration: Appearance.dur(250) }
                                     }
                                 }
                                 SequentialAnimation {
                                     PauseAnimation { duration: card.delayBase + 140 }
-                                    NumberAnimation { target: leagueText; property: "opacity"; to: 1.0; duration: 250 }
+                                    NumberAnimation { target: leagueText; property: "opacity"; to: 1.0; duration: Appearance.dur(250) }
                                 }
                                 SequentialAnimation {
                                     PauseAnimation { duration: card.delayBase + 180 }
                                     ParallelAnimation {
-                                        NumberAnimation { target: homeScore; property: "opacity"; to: 1.0; duration: 250 }
-                                        NumberAnimation { target: homeScore; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.OutBack }
-                                        NumberAnimation { target: awayScore; property: "opacity"; to: 1.0; duration: 250 }
-                                        NumberAnimation { target: awayScore; property: "scale"; to: 1.0; duration: 250; easing.type: Easing.OutBack }
+                                        NumberAnimation { target: homeScore; property: "opacity"; to: 1.0; duration: Appearance.dur(250) }
+                                        NumberAnimation { target: homeScore; property: "scale"; to: 1.0; duration: Appearance.dur(250); easing.type: Easing.OutBack }
+                                        NumberAnimation { target: awayScore; property: "opacity"; to: 1.0; duration: Appearance.dur(250) }
+                                        NumberAnimation { target: awayScore; property: "scale"; to: 1.0; duration: Appearance.dur(250); easing.type: Easing.OutBack }
                                     }
                                 }
                             }
@@ -201,7 +201,7 @@ StyledPopup {
                                 radius: parent.radius
                                 color: Appearance.colors.colPrimaryContainer
                                 opacity: card.isCurrent ? 1 : 0
-                                Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
+                                Behavior on opacity { NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.InOutQuad } }
                             }
 
                             MouseArea {
@@ -236,7 +236,7 @@ StyledPopup {
                                             height: 72
                                             radius: root.radFull
                                             color: card.isCurrent ? Appearance.colors.colPrimary : Appearance.colors.colLayer3
-                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                            Behavior on color { ColorAnimation { duration: Appearance.dur(200) } }
                                             anchors.top: parent.top
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             scale: 0.8
@@ -260,7 +260,7 @@ StyledPopup {
                                             text: card.model.homeName
                                             font.pixelSize: Appearance.font.pixelSize.normal
                                             color: card.isCurrent ? Appearance.colors.colOnPrimaryContainer : root.colText
-                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                            Behavior on color { ColorAnimation { duration: Appearance.dur(200) } }
                                             elide: Text.ElideRight
                                             width: 130
                                             horizontalAlignment: Text.AlignHCenter
@@ -276,7 +276,7 @@ StyledPopup {
                                             font.pixelSize: (text.length > 3) ? 16 : 32
                                             font.weight: Font.DemiBold
                                             color: card.isCurrent ? Appearance.colors.colOnPrimaryContainer : root.colText
-                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                            Behavior on color { ColorAnimation { duration: Appearance.dur(200) } }
                                             visible: card.showScores
                                             opacity: 0
                                             scale: 0.9
@@ -295,7 +295,7 @@ StyledPopup {
                                             height: 32
                                             radius: root.radFull
                                             color: card.isCurrent ? Appearance.colors.colPrimary : root.colPill
-                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                            Behavior on color { ColorAnimation { duration: Appearance.dur(200) } }
                                             readonly property int dynamicPadding: card.model.matchState === "in" ? 20 : 6
                                             width: statusLabel.implicitWidth + (dynamicPadding * 2)
                                             opacity: 0
@@ -308,7 +308,7 @@ StyledPopup {
                                                 font.pixelSize: 14
                                                 font.weight: Font.Bold
                                                 color: card.isCurrent ? Appearance.colors.colOnPrimary : root.colOnPill
-                                                Behavior on color { ColorAnimation { duration: 200 } }
+                                                Behavior on color { ColorAnimation { duration: Appearance.dur(200) } }
                                             }
                                         }
 
@@ -319,7 +319,7 @@ StyledPopup {
                                             font.pixelSize: Appearance.font.pixelSize.smaller
                                             font.weight: Font.Light
                                             color: card.isCurrent ? Appearance.colors.colOnPrimaryContainer : root.colSubtext
-                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                            Behavior on color { ColorAnimation { duration: Appearance.dur(200) } }
                                             elide: Text.ElideRight
                                             width: 120
                                             horizontalAlignment: Text.AlignHCenter
@@ -340,7 +340,7 @@ StyledPopup {
                                             height: 72
                                             radius: root.radFull
                                             color: card.isCurrent ? Appearance.colors.colPrimary : Appearance.colors.colLayer3
-                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                            Behavior on color { ColorAnimation { duration: Appearance.dur(200) } }
                                             anchors.top: parent.top
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             scale: 0.8
@@ -364,7 +364,7 @@ StyledPopup {
                                             text: card.model.awayName
                                             font.pixelSize: Appearance.font.pixelSize.normal
                                             color: card.isCurrent ? Appearance.colors.colOnPrimaryContainer : root.colText
-                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                            Behavior on color { ColorAnimation { duration: Appearance.dur(200) } }
                                             elide: Text.ElideRight
                                             width: 130
                                             horizontalAlignment: Text.AlignHCenter
@@ -380,7 +380,7 @@ StyledPopup {
                                             font.pixelSize: (text.length > 3) ? 16 : 32
                                             font.weight: Font.DemiBold
                                             color: card.isCurrent ? Appearance.colors.colOnPrimaryContainer : root.colText
-                                            Behavior on color { ColorAnimation { duration: 200 } }
+                                            Behavior on color { ColorAnimation { duration: Appearance.dur(200) } }
                                             visible: card.showScores
                                             opacity: 0
                                             scale: 0.9
@@ -412,7 +412,7 @@ StyledPopup {
                                 text: card.model.lastPlay
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                                 color: card.isCurrent ? Appearance.colors.colOnPrimaryContainer : root.colSubtext
-                                Behavior on color { ColorAnimation { duration: 200 } }
+                                Behavior on color { ColorAnimation { duration: Appearance.dur(200) } }
                                 visible: card.hasLastPlay
                             }
                         }

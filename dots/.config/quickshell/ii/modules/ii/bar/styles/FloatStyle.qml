@@ -50,7 +50,7 @@ Item {
 
         radius: Appearance.rounding.full
 
-        Behavior on radius { NumberAnimation { duration: 450; easing.type: Easing.OutExpo } }
+        Behavior on radius { NumberAnimation { duration: Appearance.dur(450); easing.type: Easing.OutExpo } }
 
         layer.enabled: !root.isIslandMode && Config.options.bar.dropShadow && !ShellModePolicy.barDropShadowBlocked
         layer.effect: MultiEffect {

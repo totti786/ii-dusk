@@ -28,6 +28,26 @@ ColumnLayout {
 
     spacing: 0
 
+    // ── Fingerprint ──────────────────────────────────────────────────────────
+    readonly property bool fpWaiting: PasswordManager.fpWaiting
+    readonly property bool fpOffer: root.vaultState === "locked" && PasswordManager.fpReady
+    // The sensor starts by itself while the locked gate is on screen and the
+    // password is remembered; a failed touch is retried by hand, never in a loop.
+    readonly property bool fpWanted: root.visible && root.fpOffer && PasswordManager.fpStashed
+    onFpWantedChanged: {
+        if (root.fpWanted)
+            fpStart.restart();
+        else
+            PasswordManager.cancelFingerprint();
+    }
+    Component.onCompleted: if (root.fpWanted) fpStart.restart()
+    Component.onDestruction: PasswordManager.cancelFingerprint()
+    Timer {
+        id: fpStart
+        interval: 300
+        onTriggered: if (root.fpWanted && !PasswordManager.busy) PasswordManager.unlockWithFingerprint()
+    }
+
     function focusField(): void {
         if (root.wantsPassword)
             passwordInput.forceActiveFocus();
@@ -80,6 +100,8 @@ ColumnLayout {
             anchors.centerIn: parent
             visible: !root.unlocking
             text: {
+                if (root.fpWaiting)
+                    return "fingerprint";
                 if (root.failed && root.vaultState === "locked")
                     return "password";
                 switch (root.vaultState) {
@@ -110,7 +132,8 @@ ColumnLayout {
         Layout.topMargin: 16
         text: {
             switch (root.vaultState) {
-            case "locked": return root.unlocking ? Translation.tr("Unlocking…") : Translation.tr("Vault locked");
+            case "locked": return root.fpWaiting ? Translation.tr("Touch the sensor")
+                : (root.unlocking ? Translation.tr("Unlocking…") : Translation.tr("Vault locked"));
             case "unauthenticated": return Translation.tr("Not signed in");
             case "missing": return Translation.tr("No password manager");
             default: return Translation.tr("Checking vault…");
@@ -220,6 +243,48 @@ ColumnLayout {
                 color: Appearance.colors.colOnPrimary
             }
         }
+    }
+
+    // Fingerprint: a way back after a miss, or why it is not on yet.
+    RippleButton {
+        visible: root.wantsPassword && root.fpOffer && PasswordManager.fpStashed && !root.fpWaiting && !root.unlocking
+        Layout.alignment: Qt.AlignHCenter
+        Layout.topMargin: 10
+        implicitHeight: 36
+        implicitWidth: fpRetryRow.implicitWidth + 32
+        buttonRadius: Appearance.rounding.full
+        colBackground: Appearance.colors.colSecondaryContainer
+        colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+        colRipple: Appearance.colors.colSecondaryContainerActive
+        onClicked: PasswordManager.unlockWithFingerprint()
+
+        RowLayout {
+            id: fpRetryRow
+            anchors.centerIn: parent
+            spacing: 8
+            MaterialSymbol {
+                text: "fingerprint"
+                iconSize: Appearance.font.pixelSize.larger
+                color: Appearance.colors.colOnSecondaryContainer
+            }
+            StyledText {
+                text: Translation.tr("Use fingerprint")
+                font.pixelSize: Appearance.font.pixelSize.small
+                font.weight: Font.DemiBold
+                color: Appearance.colors.colOnSecondaryContainer
+            }
+        }
+    }
+    StyledText {
+        visible: root.wantsPassword && root.fpOffer && !PasswordManager.fpStashed && !root.unlocking
+        Layout.alignment: Qt.AlignHCenter
+        Layout.topMargin: 10
+        Layout.maximumWidth: root.contentWidth - 24
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+        text: Translation.tr("Fingerprint unlock starts after you type the password once this session")
+        font.pixelSize: Appearance.font.pixelSize.small
+        color: Appearance.colors.colSubtext
     }
 
     // ── rbw unlock / sign-in buttons ─────────────────────────────────────────

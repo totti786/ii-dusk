@@ -62,7 +62,8 @@ QtObject {
         return id >= model.rangeStart && (model.rangeEnd < 0 || id <= model.rangeEnd);
     }
 
-    readonly property int activeId: model.monitor?.activeWorkspace?.id ?? model.rangeStart
+    // hyprctl's answer first: Quickshell's own model stops moving when its event stream dies
+    readonly property int activeId: model.monitorData?.activeWorkspace?.id ?? model.monitor?.activeWorkspace?.id ?? model.rangeStart
 
     // First id of the page of `size` that holds the active workspace.
     function pageStart(size) {

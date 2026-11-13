@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Tailscale's own mark: a 3×3 grid of dots, four of them solid and the rest
@@ -44,7 +45,7 @@ AnimatedIcon {
         // The colour change is the sweep; the lean is what keeps it from being
         // a pure fade. Both live on the dot so the sweep can just poke it.
         Behavior on opacity {
-            NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Appearance.dur(220); easing.type: Easing.OutCubic }
         }
 
         function nudge(): void {
@@ -53,8 +54,8 @@ AnimatedIcon {
 
         SequentialAnimation {
             id: nudgeAnim
-            NumberAnimation { target: dot; property: "lean"; from: 0; to: 0.12; duration: 130; easing.type: Easing.OutCubic }
-            NumberAnimation { target: dot; property: "lean"; to: 0; duration: 260; easing.type: Easing.OutBack }
+            NumberAnimation { target: dot; property: "lean"; from: 0; to: 0.12; duration: Appearance.dur(130); easing.type: Easing.OutCubic }
+            NumberAnimation { target: dot; property: "lean"; to: 0; duration: Appearance.dur(260); easing.type: Easing.OutBack }
         }
 
         ShapePath {

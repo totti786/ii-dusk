@@ -68,7 +68,7 @@ Item {
         onDashOffsetChanged: requestPaint()
 
         Behavior on pillColor {
-            ColorAnimation { duration: 150 }
+            ColorAnimation { duration: Appearance.dur(150) }
         }
 
         onPaint: {
@@ -112,7 +112,7 @@ Item {
         property: "dashOffset"
         from: 0
         to: 20
-        duration: 800
+        duration: Appearance.dur(800)
         easing.type: Easing.OutCubic
     }
 

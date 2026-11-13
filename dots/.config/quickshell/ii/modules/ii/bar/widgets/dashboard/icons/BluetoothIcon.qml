@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Bluetooth, split into the stem, the two wings of the rune, and two scan dots.
@@ -244,24 +245,24 @@ AnimatedIcon {
         ParallelAnimation {
             SequentialAnimation {
                 ParallelAnimation {
-                    NumberAnimation { target: dotRight; property: "cx"; from: 12; to: 24 - root.dotRestX; duration: 420; easing.type: Easing.OutBack }
-                    NumberAnimation { target: dotRight; property: "opacity"; from: 0; to: 1; duration: 200 }
+                    NumberAnimation { target: dotRight; property: "cx"; from: 12; to: 24 - root.dotRestX; duration: Appearance.dur(420); easing.type: Easing.OutBack }
+                    NumberAnimation { target: dotRight; property: "opacity"; from: 0; to: 1; duration: Appearance.dur(200) }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 70 }
+                PauseAnimation { duration: Appearance.dur(70) }
                 ParallelAnimation {
-                    NumberAnimation { target: dotLeft; property: "cx"; from: 12; to: root.dotRestX; duration: 420; easing.type: Easing.OutBack }
-                    NumberAnimation { target: dotLeft; property: "opacity"; from: 0; to: 1; duration: 200 }
+                    NumberAnimation { target: dotLeft; property: "cx"; from: 12; to: root.dotRestX; duration: Appearance.dur(420); easing.type: Easing.OutBack }
+                    NumberAnimation { target: dotLeft; property: "opacity"; from: 0; to: 1; duration: Appearance.dur(200) }
                 }
             }
             SequentialAnimation {
-                NumberAnimation { target: upperWing; property: "rotation"; to: -6; duration: 160; easing.type: Easing.OutCubic }
-                NumberAnimation { target: upperWing; property: "rotation"; to: 0; duration: 440; easing.type: Easing.OutBack }
+                NumberAnimation { target: upperWing; property: "rotation"; to: -6; duration: Appearance.dur(160); easing.type: Easing.OutCubic }
+                NumberAnimation { target: upperWing; property: "rotation"; to: 0; duration: Appearance.dur(440); easing.type: Easing.OutBack }
             }
             SequentialAnimation {
-                NumberAnimation { target: lowerWing; property: "rotation"; to: 6; duration: 160; easing.type: Easing.OutCubic }
-                NumberAnimation { target: lowerWing; property: "rotation"; to: 0; duration: 440; easing.type: Easing.OutBack }
+                NumberAnimation { target: lowerWing; property: "rotation"; to: 6; duration: Appearance.dur(160); easing.type: Easing.OutCubic }
+                NumberAnimation { target: lowerWing; property: "rotation"; to: 0; duration: Appearance.dur(440); easing.type: Easing.OutBack }
             }
         }
         ScriptAction { script: root.applyRest() }
@@ -282,25 +283,25 @@ AnimatedIcon {
         }
         ParallelAnimation {
             ParallelAnimation {
-                NumberAnimation { target: dotLeft; property: "cy"; from: 12; to: 18.5; duration: 400; easing.type: Easing.InCubic }
-                NumberAnimation { target: dotLeft; property: "opacity"; to: 0; duration: 360 }
+                NumberAnimation { target: dotLeft; property: "cy"; from: 12; to: 18.5; duration: Appearance.dur(400); easing.type: Easing.InCubic }
+                NumberAnimation { target: dotLeft; property: "opacity"; to: 0; duration: Appearance.dur(360) }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 70 }
+                PauseAnimation { duration: Appearance.dur(70) }
                 ParallelAnimation {
-                    NumberAnimation { target: dotRight; property: "cy"; from: 12; to: 18.5; duration: 400; easing.type: Easing.InCubic }
-                    NumberAnimation { target: dotRight; property: "opacity"; to: 0; duration: 360 }
+                    NumberAnimation { target: dotRight; property: "cy"; from: 12; to: 18.5; duration: Appearance.dur(400); easing.type: Easing.InCubic }
+                    NumberAnimation { target: dotRight; property: "opacity"; to: 0; duration: Appearance.dur(360) }
                 }
             }
             // A single nudge of the whole rune, kept small: the two wings must
             // never come apart, that reads as the glyph breaking.
             SequentialAnimation {
-                NumberAnimation { target: upperWing; property: "rotation"; to: 4; duration: 150; easing.type: Easing.OutCubic }
-                NumberAnimation { target: upperWing; property: "rotation"; to: 0; duration: 420; easing.type: Easing.OutBack }
+                NumberAnimation { target: upperWing; property: "rotation"; to: 4; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                NumberAnimation { target: upperWing; property: "rotation"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutBack }
             }
             SequentialAnimation {
-                NumberAnimation { target: lowerWing; property: "rotation"; to: 4; duration: 150; easing.type: Easing.OutCubic }
-                NumberAnimation { target: lowerWing; property: "rotation"; to: 0; duration: 420; easing.type: Easing.OutBack }
+                NumberAnimation { target: lowerWing; property: "rotation"; to: 4; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                NumberAnimation { target: lowerWing; property: "rotation"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutBack }
             }
         }
         ScriptAction { script: root.applyRest() }
@@ -312,18 +313,18 @@ AnimatedIcon {
         onStopped: root.busy = false
 
         ParallelAnimation {
-            NumberAnimation { target: upperWing; property: "opacity"; to: root.dimmed; duration: 340 }
-            NumberAnimation { target: lowerWing; property: "opacity"; to: root.dimmed; duration: 340 }
-            NumberAnimation { target: stem; property: "opacity"; to: root.dimmed; duration: 340 }
+            NumberAnimation { target: upperWing; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
+            NumberAnimation { target: lowerWing; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
+            NumberAnimation { target: stem; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
             ParallelAnimation {
-                NumberAnimation { target: dotLeft; property: "cx"; to: 12; duration: 260; easing.type: Easing.InCubic }
-                NumberAnimation { target: dotRight; property: "cx"; to: 12; duration: 260; easing.type: Easing.InCubic }
-                NumberAnimation { target: dotLeft; property: "opacity"; to: 0; duration: 220 }
-                NumberAnimation { target: dotRight; property: "opacity"; to: 0; duration: 220 }
+                NumberAnimation { target: dotLeft; property: "cx"; to: 12; duration: Appearance.dur(260); easing.type: Easing.InCubic }
+                NumberAnimation { target: dotRight; property: "cx"; to: 12; duration: Appearance.dur(260); easing.type: Easing.InCubic }
+                NumberAnimation { target: dotLeft; property: "opacity"; to: 0; duration: Appearance.dur(220) }
+                NumberAnimation { target: dotRight; property: "opacity"; to: 0; duration: Appearance.dur(220) }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 100 }
-                NumberAnimation { target: root; property: "slashProgress"; from: 0; to: 1; duration: 300; easing.type: Easing.OutCubic }
+                PauseAnimation { duration: Appearance.dur(100) }
+                NumberAnimation { target: root; property: "slashProgress"; from: 0; to: 1; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
             }
         }
     }
@@ -341,18 +342,18 @@ AnimatedIcon {
                 stem.opacity = root.dimmed;
             }
         }
-        NumberAnimation { target: root; property: "slashProgress"; to: 0; duration: 260; easing.type: Easing.InCubic }
+        NumberAnimation { target: root; property: "slashProgress"; to: 0; duration: Appearance.dur(260); easing.type: Easing.InCubic }
         ParallelAnimation {
-            NumberAnimation { target: upperWing; property: "opacity"; to: 1; duration: 300 }
-            NumberAnimation { target: lowerWing; property: "opacity"; to: 1; duration: 300 }
-            NumberAnimation { target: stem; property: "opacity"; to: 1; duration: 300 }
+            NumberAnimation { target: upperWing; property: "opacity"; to: 1; duration: Appearance.dur(300) }
+            NumberAnimation { target: lowerWing; property: "opacity"; to: 1; duration: Appearance.dur(300) }
+            NumberAnimation { target: stem; property: "opacity"; to: 1; duration: Appearance.dur(300) }
             SequentialAnimation {
-                NumberAnimation { target: upperWing; property: "rotation"; to: -4; duration: 150; easing.type: Easing.OutCubic }
-                NumberAnimation { target: upperWing; property: "rotation"; to: 0; duration: 380; easing.type: Easing.OutBack }
+                NumberAnimation { target: upperWing; property: "rotation"; to: -4; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                NumberAnimation { target: upperWing; property: "rotation"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
             }
             SequentialAnimation {
-                NumberAnimation { target: lowerWing; property: "rotation"; to: 4; duration: 150; easing.type: Easing.OutCubic }
-                NumberAnimation { target: lowerWing; property: "rotation"; to: 0; duration: 380; easing.type: Easing.OutBack }
+                NumberAnimation { target: lowerWing; property: "rotation"; to: 4; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                NumberAnimation { target: lowerWing; property: "rotation"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
             }
         }
         ScriptAction { script: root.applyRest() }

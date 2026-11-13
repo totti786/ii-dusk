@@ -86,6 +86,9 @@ MouseArea {
         }
     }
 
+    Component.onCompleted: GlobalStates.passwordWidgetCount++
+    Component.onDestruction: GlobalStates.passwordWidgetCount--
+
     PopupLoader {
         active: BarInteraction.enablePopups
             && (BarInteraction.clickToShow || root.containsMouse || held

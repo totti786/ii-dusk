@@ -322,27 +322,27 @@ Item {
                     SequentialAnimation {
                         id: recCardAnim
                         PauseAnimation {
-                            duration: 40
+                            duration: Appearance.dur(40)
                         }
                         ParallelAnimation {
                             NumberAnimation {
                                 target: recCard
                                 property: "opacity"
                                 to: 1.0
-                                duration: 300
+                                duration: Appearance.dur(300)
                             }
                             NumberAnimation {
                                 target: recCard
                                 property: "scale"
                                 to: 1.0
-                                duration: 380
+                                duration: Appearance.dur(380)
                                 easing.type: Easing.OutBack
                             }
                             NumberAnimation {
                                 target: recCardTransform
                                 property: "y"
                                 to: 0
-                                duration: 380
+                                duration: Appearance.dur(380)
                                 easing.type: Easing.OutCubic
                             }
                         }
@@ -390,27 +390,27 @@ Item {
                     SequentialAnimation {
                         id: controlsRowAnim
                         PauseAnimation {
-                            duration: 100
+                            duration: Appearance.dur(100)
                         }
                         ParallelAnimation {
                             NumberAnimation {
                                 target: controlsRow
                                 property: "opacity"
                                 to: 1.0
-                                duration: 300
+                                duration: Appearance.dur(300)
                             }
                             NumberAnimation {
                                 target: controlsRow
                                 property: "scale"
                                 to: 1.0
-                                duration: 380
+                                duration: Appearance.dur(380)
                                 easing.type: Easing.OutBack
                             }
                             NumberAnimation {
                                 target: controlsRowTransform
                                 property: "y"
                                 to: 0
-                                duration: 380
+                                duration: Appearance.dur(380)
                                 easing.type: Easing.OutCubic
                             }
                         }

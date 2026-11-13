@@ -148,35 +148,35 @@ Item {
 
                     Behavior on glowOpacity {
                         NumberAnimation {
-                            duration: 180
+                            duration: Appearance.dur(180)
                             easing.type: Easing.OutCubic
                         }
                     }
 
                     Behavior on width {
                         NumberAnimation {
-                            duration: 180
+                            duration: Appearance.dur(180)
                             easing.type: Easing.OutCubic
                         }
                     }
 
                     Behavior on height {
                         NumberAnimation {
-                            duration: 180
+                            duration: Appearance.dur(180)
                             easing.type: Easing.OutCubic
                         }
                     }
 
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: 180
+                            duration: Appearance.dur(180)
                             easing.type: Easing.OutCubic
                         }
                     }
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: 180
+                            duration: Appearance.dur(180)
                             easing.type: Easing.OutCubic
                         }
                     }

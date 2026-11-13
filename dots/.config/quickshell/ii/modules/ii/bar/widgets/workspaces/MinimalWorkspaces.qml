@@ -103,7 +103,7 @@ Item {
                 rotation: root.useRandomShape ? wsModel.randomRotation : 0
                 Behavior on rotation {
                     RotationAnimation {
-                        duration: 350
+                        duration: Appearance.dur(350)
                         direction: RotationAnimation.Clockwise
                         easing.type: Easing.OutBack
                     }
@@ -186,7 +186,7 @@ Item {
                         opacity: isActive ? 1.0 : 0.0
 
                         Behavior on color { ColorAnimation { duration: Appearance.animation.elementMoveFast.duration } }
-                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                        Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
                     }
                 }
 
@@ -250,7 +250,7 @@ Item {
 
             SequentialAnimation on opacity {
                 loops: Animation.Infinite
-                running: root.scratchpadOpen
+                running: (root.scratchpadOpen) && !Appearance.motionOff
                 NumberAnimation {
                     to: 0.3
                     duration: 1500

@@ -84,11 +84,11 @@ Rectangle {
         
         SequentialAnimation {
             id: shapeAnim
-            PauseAnimation { duration: 60 }
+            PauseAnimation { duration: Appearance.dur(60) }
             ParallelAnimation {
-                NumberAnimation { target: shapeTranslate; property: "x"; from: -30; to: 0; duration: 350; easing.type: Easing.OutCubic }
-                NumberAnimation { target: shapeItem; property: "scale"; from: 0.8; to: 1.0; duration: 350; easing.type: Easing.OutBack }
-                NumberAnimation { target: shapeItem; property: "rotation"; from: -10; to: 0; duration: 350; easing.type: Easing.OutCubic }
+                NumberAnimation { target: shapeTranslate; property: "x"; from: -30; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
+                NumberAnimation { target: shapeItem; property: "scale"; from: 0.8; to: 1.0; duration: Appearance.dur(350); easing.type: Easing.OutBack }
+                NumberAnimation { target: shapeItem; property: "rotation"; from: -10; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
             }
         }
 
@@ -102,10 +102,10 @@ Rectangle {
             rotation: 0
 
             Behavior on scale {
-                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutCubic }
             }
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: Appearance.dur(150) }
             }
 
             MaterialSymbol {
@@ -147,10 +147,10 @@ Rectangle {
 
         SequentialAnimation {
             id: rightShapeAnim
-            PauseAnimation { duration: 60 }
+            PauseAnimation { duration: Appearance.dur(60) }
             ParallelAnimation {
-                NumberAnimation { target: rightShapeTranslate; property: "x"; from: 30; to: 0; duration: 350; easing.type: Easing.OutCubic }
-                NumberAnimation { target: rightShapeItem; property: "scale"; from: 0.8; to: 1.0; duration: 350; easing.type: Easing.OutBack }
+                NumberAnimation { target: rightShapeTranslate; property: "x"; from: 30; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
+                NumberAnimation { target: rightShapeItem; property: "scale"; from: 0.8; to: 1.0; duration: Appearance.dur(350); easing.type: Easing.OutBack }
             }
         }
 
@@ -163,10 +163,10 @@ Rectangle {
             scale: root.rightHovered ? 1.08 : 1.0
 
             Behavior on scale {
-                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutCubic }
             }
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: Appearance.dur(150) }
             }
 
             MaterialSymbol {
@@ -200,13 +200,13 @@ Rectangle {
         opacity: 1.0
         
         Behavior on anchors.horizontalCenterOffset {
-            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic }
         }
 
         SequentialAnimation {
             id: textAnim
-            PauseAnimation { duration: 120 }
-            NumberAnimation { target: textContainer; property: "opacity"; from: 0.0; to: 1.0; duration: 250 }
+            PauseAnimation { duration: Appearance.dur(120) }
+            NumberAnimation { target: textContainer; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(250) }
         }
 
         StyledText {

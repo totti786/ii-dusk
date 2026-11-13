@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Stopwatch: the timer's dial plus the side knob you press to lap it.
@@ -154,10 +155,10 @@ AnimatedIcon {
         ScriptAction { script: dial.opacity = 1 }
         ParallelAnimation {
             SequentialAnimation {
-                NumberAnimation { target: root; property: "crownDrop"; to: 1.3; duration: 110; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "crownDrop"; to: 0; duration: 320; easing.type: Easing.OutBack }
+                NumberAnimation { target: root; property: "crownDrop"; to: 1.3; duration: Appearance.dur(110); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "crownDrop"; to: 0; duration: Appearance.dur(320); easing.type: Easing.OutBack }
             }
-            NumberAnimation { target: root; property: "handAngle"; from: 0; to: 300; duration: 720; easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "handAngle"; from: 0; to: 300; duration: Appearance.dur(720); easing.type: Easing.OutCubic }
         }
     }
 
@@ -167,14 +168,14 @@ AnimatedIcon {
         onStopped: root.busy = false
 
         SequentialAnimation {
-            NumberAnimation { target: root; property: "knobPress"; to: 1.5; duration: 110; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "knobPress"; to: 0; duration: 300; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "knobPress"; to: 1.5; duration: Appearance.dur(110); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "knobPress"; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            NumberAnimation { target: root; property: "handAngle"; to: root.handAngle + 14; duration: 170; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "handAngle"; to: root.handAngle + 8; duration: 340; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "handAngle"; to: root.handAngle + 14; duration: Appearance.dur(170); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "handAngle"; to: root.handAngle + 8; duration: Appearance.dur(340); easing.type: Easing.OutBack }
         }
-        NumberAnimation { target: dial; property: "opacity"; to: root.dimmed; duration: 280 }
+        NumberAnimation { target: dial; property: "opacity"; to: root.dimmed; duration: Appearance.dur(280) }
     }
 
     // ── Lap: a press and one tick forward ───────────────────────────────────
@@ -183,10 +184,10 @@ AnimatedIcon {
         onStopped: root.busy = false
 
         SequentialAnimation {
-            NumberAnimation { target: root; property: "knobPress"; to: 1.5; duration: 90; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "knobPress"; to: 0; duration: 260; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "knobPress"; to: 1.5; duration: Appearance.dur(90); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "knobPress"; to: 0; duration: Appearance.dur(260); easing.type: Easing.OutBack }
         }
-        NumberAnimation { target: root; property: "handAngle"; to: root.handAngle + 60; duration: 380; easing.type: Easing.OutBack }
+        NumberAnimation { target: root; property: "handAngle"; to: root.handAngle + 60; duration: Appearance.dur(380); easing.type: Easing.OutBack }
     }
 
     // ── Reset: everything walks home ────────────────────────────────────────
@@ -194,11 +195,11 @@ AnimatedIcon {
         id: resetAnim
         onStopped: root.busy = false
 
-        NumberAnimation { target: root; property: "handAngle"; to: 0; duration: 460; easing.type: Easing.OutBack }
-        NumberAnimation { target: dial; property: "opacity"; to: 1; duration: 300 }
+        NumberAnimation { target: root; property: "handAngle"; to: 0; duration: Appearance.dur(460); easing.type: Easing.OutBack }
+        NumberAnimation { target: dial; property: "opacity"; to: 1; duration: Appearance.dur(300) }
         SequentialAnimation {
-            NumberAnimation { target: root; property: "crownDrop"; to: 1.1; duration: 110; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "crownDrop"; to: 0; duration: 300; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "crownDrop"; to: 1.1; duration: Appearance.dur(110); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "crownDrop"; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutBack }
         }
     }
 }

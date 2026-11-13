@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Pomodoro timer, following Material's `timer`: the crown bar, the dial, and
@@ -146,10 +147,10 @@ AnimatedIcon {
 
         ParallelAnimation {
             SequentialAnimation {
-                NumberAnimation { target: root; property: "crownDrop"; to: 1.2; duration: 110; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "crownDrop"; to: 0; duration: 320; easing.type: Easing.OutBack }
+                NumberAnimation { target: root; property: "crownDrop"; to: 1.2; duration: Appearance.dur(110); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "crownDrop"; to: 0; duration: Appearance.dur(320); easing.type: Easing.OutBack }
             }
-            NumberAnimation { target: root; property: "handAngle"; from: 0; to: 360; duration: 780; easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "handAngle"; from: 0; to: 360; duration: Appearance.dur(780); easing.type: Easing.OutCubic }
         }
         ScriptAction { script: root.handAngle = 0 }
     }
@@ -166,11 +167,11 @@ AnimatedIcon {
         onStopped: root.busy = false
 
         SequentialAnimation {
-            NumberAnimation { target: root; property: "handAngle"; to: root.handAngle + 26; duration: 200; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "handAngle"; to: root.handAngle + 18; duration: 380; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "handAngle"; to: root.handAngle + 26; duration: Appearance.dur(200); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "handAngle"; to: root.handAngle + 18; duration: Appearance.dur(380); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            NumberAnimation { target: dial; property: "opacity"; to: root.dimmed; duration: 260 }
+            NumberAnimation { target: dial; property: "opacity"; to: root.dimmed; duration: Appearance.dur(260) }
         }
     }
 
@@ -181,12 +182,12 @@ AnimatedIcon {
 
         ScriptAction { script: dial.opacity = 1 }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "handAngle"; to: 360; duration: 420; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "handAngle"; to: 360; duration: Appearance.dur(420); easing.type: Easing.OutBack }
             SequentialAnimation {
-                NumberAnimation { target: root; property: "crownDrop"; to: -1.4; duration: 130; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "crownDrop"; to: 0.8; duration: 150; easing.type: Easing.InOutSine }
-                NumberAnimation { target: root; property: "crownDrop"; to: -0.5; duration: 130; easing.type: Easing.InOutSine }
-                NumberAnimation { target: root; property: "crownDrop"; to: 0; duration: 180; easing.type: Easing.OutSine }
+                NumberAnimation { target: root; property: "crownDrop"; to: -1.4; duration: Appearance.dur(130); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "crownDrop"; to: 0.8; duration: Appearance.dur(150); easing.type: Easing.InOutSine }
+                NumberAnimation { target: root; property: "crownDrop"; to: -0.5; duration: Appearance.dur(130); easing.type: Easing.InOutSine }
+                NumberAnimation { target: root; property: "crownDrop"; to: 0; duration: Appearance.dur(180); easing.type: Easing.OutSine }
             }
         }
         ScriptAction { script: root.applyRest() }
@@ -198,8 +199,8 @@ AnimatedIcon {
         onStopped: root.busy = false
 
         ParallelAnimation {
-            NumberAnimation { target: root; property: "handAngle"; to: 0; duration: 460; easing.type: Easing.OutBack }
-            NumberAnimation { target: dial; property: "opacity"; to: 1; duration: 300 }
+            NumberAnimation { target: root; property: "handAngle"; to: 0; duration: Appearance.dur(460); easing.type: Easing.OutBack }
+            NumberAnimation { target: dial; property: "opacity"; to: 1; duration: Appearance.dur(300) }
         }
     }
 }

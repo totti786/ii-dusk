@@ -110,7 +110,7 @@ MouseArea {
         // The only thing saying the microphone is open right now, so it must
         // not keep running once it is not.
         SequentialAnimation on opacity {
-            running: indicator.recording
+            running: (indicator.recording) && !Appearance.motionOff
             loops: Animation.Infinite
             NumberAnimation { from: 1.0; to: 0.45; duration: 700; easing.type: Easing.InOutSine }
             NumberAnimation { from: 0.45; to: 1.0; duration: 700; easing.type: Easing.InOutSine }
@@ -135,7 +135,7 @@ MouseArea {
             color: indicator.colContainer
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: Appearance.dur(150) }
             }
 
             RowLayout {
@@ -180,7 +180,7 @@ MouseArea {
             color: indicator.colContainer
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: Appearance.dur(150) }
             }
 
             ColumnLayout {
@@ -313,11 +313,11 @@ MouseArea {
 
                 SequentialAnimation {
                     id: heroCardAnim
-                    PauseAnimation { duration: 40 }
+                    PauseAnimation { duration: Appearance.dur(40) }
                     ParallelAnimation {
-                        NumberAnimation { target: heroCard; property: "opacity"; to: 1.0; duration: 300 }
-                        NumberAnimation { target: heroCard; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                        NumberAnimation { target: heroCardTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: heroCard; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                        NumberAnimation { target: heroCard; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                        NumberAnimation { target: heroCardTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                     }
                 }
 
@@ -376,11 +376,11 @@ MouseArea {
 
                 SequentialAnimation {
                     id: targetCardAnim
-                    PauseAnimation { duration: 100 }
+                    PauseAnimation { duration: Appearance.dur(100) }
                     ParallelAnimation {
-                        NumberAnimation { target: targetCard; property: "opacity"; to: 1.0; duration: 300 }
-                        NumberAnimation { target: targetCard; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                        NumberAnimation { target: targetCardTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: targetCard; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                        NumberAnimation { target: targetCard; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                        NumberAnimation { target: targetCardTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                     }
                 }
 
@@ -430,11 +430,11 @@ MouseArea {
 
                 SequentialAnimation {
                     id: actionsRowAnim
-                    PauseAnimation { duration: 160 }
+                    PauseAnimation { duration: Appearance.dur(160) }
                     ParallelAnimation {
-                        NumberAnimation { target: actionsRow; property: "opacity"; to: 1.0; duration: 300 }
-                        NumberAnimation { target: actionsRow; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                        NumberAnimation { target: actionsRowTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: actionsRow; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                        NumberAnimation { target: actionsRow; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                        NumberAnimation { target: actionsRowTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                     }
                 }
 

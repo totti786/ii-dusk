@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Countdown timer, drawn as a filled hourglass with separately articulated
@@ -40,11 +41,11 @@ AnimatedIcon {
     // Rest changes glide; the cue animations write past these Behaviors.
     Behavior on topSandAmount {
         enabled: !root.busy
-        NumberAnimation { duration: 420; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Appearance.dur(420); easing.type: Easing.OutCubic }
     }
     Behavior on bottomSandAmount {
         enabled: !root.busy
-        NumberAnimation { duration: 420; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Appearance.dur(420); easing.type: Easing.OutCubic }
     }
 
     function shouldFlow(): bool {
@@ -269,14 +270,14 @@ AnimatedIcon {
         id: startAnim
 
         ParallelAnimation {
-            NumberAnimation { target: glyph; property: "opacity"; to: 1; duration: 150 }
-            NumberAnimation { target: root; property: "topCapShift"; from: 2.6; to: 0; duration: 430; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "bottomCapShift"; from: -2.6; to: 0; duration: 430; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "leftRailLean"; from: 14; to: 0; duration: 460; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "rightRailLean"; from: -14; to: 0; duration: 460; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "topSandAmount"; from: 0.18; to: 0.78; duration: 420; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "bottomSandAmount"; from: 0.06; to: 0.22; duration: 420; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "grainY"; from: 10.9; to: 16.7; duration: 390; easing.type: Easing.InCubic }
+            NumberAnimation { target: glyph; property: "opacity"; to: 1; duration: Appearance.dur(150) }
+            NumberAnimation { target: root; property: "topCapShift"; from: 2.6; to: 0; duration: Appearance.dur(430); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "bottomCapShift"; from: -2.6; to: 0; duration: Appearance.dur(430); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "leftRailLean"; from: 14; to: 0; duration: Appearance.dur(460); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "rightRailLean"; from: -14; to: 0; duration: Appearance.dur(460); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "topSandAmount"; from: 0.18; to: 0.78; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "bottomSandAmount"; from: 0.06; to: 0.22; duration: Appearance.dur(420); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "grainY"; from: 10.9; to: 16.7; duration: Appearance.dur(390); easing.type: Easing.InCubic }
         }
         ScriptAction { script: root.settle() }
     }
@@ -286,15 +287,15 @@ AnimatedIcon {
         id: pauseAnim
 
         ParallelAnimation {
-            NumberAnimation { target: root; property: "bodyTurn"; to: 0; duration: 360; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "grainY"; to: 12.1; duration: 180; easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "bodyTurn"; to: 0; duration: Appearance.dur(360); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "grainY"; to: 12.1; duration: Appearance.dur(180); easing.type: Easing.OutCubic }
             SequentialAnimation {
-                NumberAnimation { target: root; property: "leftRailLean"; to: 4; duration: 150; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "leftRailLean"; to: 0; duration: 260; easing.type: Easing.OutBack }
+                NumberAnimation { target: root; property: "leftRailLean"; to: 4; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "leftRailLean"; to: 0; duration: Appearance.dur(260); easing.type: Easing.OutBack }
             }
             SequentialAnimation {
-                NumberAnimation { target: root; property: "rightRailLean"; to: -4; duration: 150; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "rightRailLean"; to: 0; duration: 260; easing.type: Easing.OutBack }
+                NumberAnimation { target: root; property: "rightRailLean"; to: -4; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "rightRailLean"; to: 0; duration: Appearance.dur(260); easing.type: Easing.OutBack }
             }
         }
         ScriptAction {
@@ -310,10 +311,10 @@ AnimatedIcon {
         id: resumeAnim
 
         ParallelAnimation {
-            NumberAnimation { target: root; property: "bodyTurn"; from: 0; to: 180; duration: 560; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "topSandAmount"; to: 0.18; duration: 460; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "bottomSandAmount"; to: 0.82; duration: 460; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "grainY"; from: 11.5; to: 16.9; duration: 430; easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "bodyTurn"; from: 0; to: 180; duration: Appearance.dur(560); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "topSandAmount"; to: 0.18; duration: Appearance.dur(460); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "bottomSandAmount"; to: 0.82; duration: Appearance.dur(460); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "grainY"; from: 11.5; to: 16.9; duration: Appearance.dur(430); easing.type: Easing.InCubic }
         }
         ScriptAction {
             script: {
@@ -329,15 +330,15 @@ AnimatedIcon {
         id: completeAnim
 
         ParallelAnimation {
-            NumberAnimation { target: root; property: "bodyTurn"; to: 7; duration: 180; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "topSandAmount"; to: 0.08; duration: 360; easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "bottomSandAmount"; to: 0.92; duration: 420; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "grainY"; to: 16.9; duration: 300; easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "bottomCapShift"; to: 0.75; duration: 210; easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "bodyTurn"; to: 7; duration: Appearance.dur(180); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "topSandAmount"; to: 0.08; duration: Appearance.dur(360); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "bottomSandAmount"; to: 0.92; duration: Appearance.dur(420); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "grainY"; to: 16.9; duration: Appearance.dur(300); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "bottomCapShift"; to: 0.75; duration: Appearance.dur(210); easing.type: Easing.OutCubic }
         }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "bodyTurn"; to: 0; duration: 360; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "bottomCapShift"; to: 0; duration: 360; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "bodyTurn"; to: 0; duration: Appearance.dur(360); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "bottomCapShift"; to: 0; duration: Appearance.dur(360); easing.type: Easing.OutBack }
         }
         ScriptAction {
             script: {
@@ -352,20 +353,20 @@ AnimatedIcon {
         id: removedAnim
 
         ParallelAnimation {
-            NumberAnimation { target: root; property: "topCapShift"; to: 4.6; duration: 260; easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "bottomCapShift"; to: -4.6; duration: 260; easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "leftRailLean"; to: 15; duration: 280; easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "rightRailLean"; to: -15; duration: 280; easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "topSandAmount"; to: 0.05; duration: 250; easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "bottomSandAmount"; to: 0.05; duration: 250; easing.type: Easing.InCubic }
-            NumberAnimation { target: root; property: "grainY"; to: 12; duration: 180; easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "topCapShift"; to: 4.6; duration: Appearance.dur(260); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "bottomCapShift"; to: -4.6; duration: Appearance.dur(260); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "leftRailLean"; to: 15; duration: Appearance.dur(280); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "rightRailLean"; to: -15; duration: Appearance.dur(280); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "topSandAmount"; to: 0.05; duration: Appearance.dur(250); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "bottomSandAmount"; to: 0.05; duration: Appearance.dur(250); easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "grainY"; to: 12; duration: Appearance.dur(180); easing.type: Easing.OutCubic }
         }
         ParallelAnimation {
-            NumberAnimation { target: glyph; property: "opacity"; to: root.dimmed; duration: 230 }
-            NumberAnimation { target: root; property: "topCapShift"; to: 0; duration: 330; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "bottomCapShift"; to: 0; duration: 330; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "leftRailLean"; to: 0; duration: 340; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "rightRailLean"; to: 0; duration: 340; easing.type: Easing.OutBack }
+            NumberAnimation { target: glyph; property: "opacity"; to: root.dimmed; duration: Appearance.dur(230) }
+            NumberAnimation { target: root; property: "topCapShift"; to: 0; duration: Appearance.dur(330); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "bottomCapShift"; to: 0; duration: Appearance.dur(330); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "leftRailLean"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "rightRailLean"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutBack }
         }
         ScriptAction {
             script: {

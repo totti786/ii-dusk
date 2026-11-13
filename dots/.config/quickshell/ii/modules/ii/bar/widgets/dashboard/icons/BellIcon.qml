@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Notification bell, split into the hood and the clapper.
@@ -138,23 +139,23 @@ AnimatedIcon {
         onStopped: root.busy = false
 
         SequentialAnimation {
-            NumberAnimation { target: root; property: "hoodAngle"; to: 13; duration: 130; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "hoodAngle"; to: -9.5; duration: 190; easing.type: Easing.InOutSine }
-            NumberAnimation { target: root; property: "hoodAngle"; to: 6; duration: 165; easing.type: Easing.InOutSine }
-            NumberAnimation { target: root; property: "hoodAngle"; to: -3.4; duration: 145; easing.type: Easing.InOutSine }
-            NumberAnimation { target: root; property: "hoodAngle"; to: 1.4; duration: 130; easing.type: Easing.InOutSine }
-            NumberAnimation { target: root; property: "hoodAngle"; to: 0; duration: 160; easing.type: Easing.OutSine }
+            NumberAnimation { target: root; property: "hoodAngle"; to: 13; duration: Appearance.dur(130); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "hoodAngle"; to: -9.5; duration: Appearance.dur(190); easing.type: Easing.InOutSine }
+            NumberAnimation { target: root; property: "hoodAngle"; to: 6; duration: Appearance.dur(165); easing.type: Easing.InOutSine }
+            NumberAnimation { target: root; property: "hoodAngle"; to: -3.4; duration: Appearance.dur(145); easing.type: Easing.InOutSine }
+            NumberAnimation { target: root; property: "hoodAngle"; to: 1.4; duration: Appearance.dur(130); easing.type: Easing.InOutSine }
+            NumberAnimation { target: root; property: "hoodAngle"; to: 0; duration: Appearance.dur(160); easing.type: Easing.OutSine }
         }
 
         // The clapper trails the hood by a beat and swings a little wider.
         SequentialAnimation {
-            PauseAnimation { duration: 75 }
-            NumberAnimation { target: root; property: "clapperAngle"; to: 17.5; duration: 150; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "clapperAngle"; to: -12.5; duration: 200; easing.type: Easing.InOutSine }
-            NumberAnimation { target: root; property: "clapperAngle"; to: 7.5; duration: 170; easing.type: Easing.InOutSine }
-            NumberAnimation { target: root; property: "clapperAngle"; to: -4; duration: 150; easing.type: Easing.InOutSine }
-            NumberAnimation { target: root; property: "clapperAngle"; to: 1.6; duration: 130; easing.type: Easing.InOutSine }
-            NumberAnimation { target: root; property: "clapperAngle"; to: 0; duration: 170; easing.type: Easing.OutSine }
+            PauseAnimation { duration: Appearance.dur(75) }
+            NumberAnimation { target: root; property: "clapperAngle"; to: 17.5; duration: Appearance.dur(150); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "clapperAngle"; to: -12.5; duration: Appearance.dur(200); easing.type: Easing.InOutSine }
+            NumberAnimation { target: root; property: "clapperAngle"; to: 7.5; duration: Appearance.dur(170); easing.type: Easing.InOutSine }
+            NumberAnimation { target: root; property: "clapperAngle"; to: -4; duration: Appearance.dur(150); easing.type: Easing.InOutSine }
+            NumberAnimation { target: root; property: "clapperAngle"; to: 1.6; duration: Appearance.dur(130); easing.type: Easing.InOutSine }
+            NumberAnimation { target: root; property: "clapperAngle"; to: 0; duration: Appearance.dur(170); easing.type: Easing.OutSine }
         }
     }
 
@@ -170,21 +171,21 @@ AnimatedIcon {
             }
         }
         ParallelAnimation {
-            NumberAnimation { target: hood; property: "opacity"; to: root.dimmed; duration: 340 }
+            NumberAnimation { target: hood; property: "opacity"; to: root.dimmed; duration: Appearance.dur(340) }
             SequentialAnimation {
-                NumberAnimation { target: root; property: "hoodAngle"; to: 6.5; duration: 130; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "hoodAngle"; to: 0; duration: 380; easing.type: Easing.OutBack }
+                NumberAnimation { target: root; property: "hoodAngle"; to: 6.5; duration: Appearance.dur(130); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "hoodAngle"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 60 }
+                PauseAnimation { duration: Appearance.dur(60) }
                 ParallelAnimation {
-                    NumberAnimation { target: root; property: "clapperDrop"; to: 3.2; duration: 320; easing.type: Easing.InCubic }
-                    NumberAnimation { target: clapper; property: "opacity"; to: 0; duration: 300 }
+                    NumberAnimation { target: root; property: "clapperDrop"; to: 3.2; duration: Appearance.dur(320); easing.type: Easing.InCubic }
+                    NumberAnimation { target: clapper; property: "opacity"; to: 0; duration: Appearance.dur(300) }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 170 }
-                NumberAnimation { target: root; property: "slashProgress"; from: 0; to: 1; duration: 300; easing.type: Easing.OutCubic }
+                PauseAnimation { duration: Appearance.dur(170) }
+                NumberAnimation { target: root; property: "slashProgress"; from: 0; to: 1; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
             }
         }
     }
@@ -202,14 +203,14 @@ AnimatedIcon {
                 hood.opacity = root.dimmed;
             }
         }
-        NumberAnimation { target: root; property: "slashProgress"; to: 0; duration: 250; easing.type: Easing.InCubic }
+        NumberAnimation { target: root; property: "slashProgress"; to: 0; duration: Appearance.dur(250); easing.type: Easing.InCubic }
         ParallelAnimation {
-            NumberAnimation { target: hood; property: "opacity"; to: 1; duration: 300 }
-            NumberAnimation { target: clapper; property: "opacity"; to: 1; duration: 180 }
-            NumberAnimation { target: root; property: "clapperDrop"; to: 0; duration: 420; easing.type: Easing.OutBack }
+            NumberAnimation { target: hood; property: "opacity"; to: 1; duration: Appearance.dur(300) }
+            NumberAnimation { target: clapper; property: "opacity"; to: 1; duration: Appearance.dur(180) }
+            NumberAnimation { target: root; property: "clapperDrop"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutBack }
             SequentialAnimation {
-                NumberAnimation { target: root; property: "hoodAngle"; to: -5; duration: 140; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "hoodAngle"; to: 0; duration: 360; easing.type: Easing.OutBack }
+                NumberAnimation { target: root; property: "hoodAngle"; to: -5; duration: Appearance.dur(140); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "hoodAngle"; to: 0; duration: Appearance.dur(360); easing.type: Easing.OutBack }
             }
         }
     }

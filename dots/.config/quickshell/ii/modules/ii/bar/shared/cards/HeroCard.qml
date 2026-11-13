@@ -97,10 +97,10 @@ Rectangle {
             
             SequentialAnimation {
                 id: shapeAnim
-                PauseAnimation { duration: 80 }
+                PauseAnimation { duration: Appearance.dur(80) }
                 ParallelAnimation {
-                    NumberAnimation { target: shapeItem; property: "scale"; from: 0.8; to: 1.0; duration: 1120; easing.type: Easing.OutBack }
-                    NumberAnimation { target: shapeItem; property: "rotation"; from: -15; to: 0; duration: 1120; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: shapeItem; property: "scale"; from: 0.8; to: 1.0; duration: Appearance.dur(1120); easing.type: Easing.OutBack }
+                    NumberAnimation { target: shapeItem; property: "rotation"; from: -15; to: 0; duration: Appearance.dur(1120); easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -145,10 +145,10 @@ Rectangle {
         
         SequentialAnimation {
             id: pillAnim
-            PauseAnimation { duration: 120 }
+            PauseAnimation { duration: Appearance.dur(120) }
             ParallelAnimation {
-                NumberAnimation { target: pill; property: "opacity"; from: 0.0; to: 1.0; duration: 280 }
-                NumberAnimation { target: pillTranslate; property: "x"; from: 30; to: 0; duration: 350; easing.type: Easing.OutCubic }
+                NumberAnimation { target: pill; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(280) }
+                NumberAnimation { target: pillTranslate; property: "x"; from: 30; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
             }
         }
 
@@ -238,10 +238,10 @@ Rectangle {
                     
                     SequentialAnimation {
                         id: titleAnim
-                        PauseAnimation { duration: 160 }
+                        PauseAnimation { duration: Appearance.dur(160) }
                         ParallelAnimation {
-                            NumberAnimation { target: mainText; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
-                            NumberAnimation { target: mainText; property: "scale"; from: 0.9; to: 1.0; duration: 380; easing.type: Easing.OutBack }
+                            NumberAnimation { target: mainText; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
+                            NumberAnimation { target: mainText; property: "scale"; from: 0.9; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
                         }
                     }
                 }
@@ -265,8 +265,8 @@ Rectangle {
                 
                 SequentialAnimation {
                     id: subtitleAnim
-                    PauseAnimation { duration: 200 }
-                    NumberAnimation { target: subtitleText; property: "opacity"; from: 0.0; to: 1.0; duration: 320 }
+                    PauseAnimation { duration: Appearance.dur(200) }
+                    NumberAnimation { target: subtitleText; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(320) }
                 }
             }
         }

@@ -249,7 +249,7 @@ Item {
 
                     Behavior on buttonRadius {
                         NumberAnimation {
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutQuint
                         }
                     }
@@ -372,13 +372,13 @@ Item {
 
                     Behavior on scale {
                         NumberAnimation {
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutQuint
                         }
                     }
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutQuint
                         }
                     }
@@ -429,7 +429,7 @@ Item {
                     Layout.preferredWidth: visible ? -1 : 0
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutQuint
                         }
                     }
@@ -450,7 +450,7 @@ Item {
                                     target: artistText
                                     property: "opacity"
                                     to: 0
-                                    duration: 150
+                                    duration: Appearance.dur(150)
                                     easing.type: Easing.OutQuad
                                 }
                                 PropertyAction {
@@ -461,7 +461,7 @@ Item {
                                     target: artistText
                                     property: "opacity"
                                     to: 1
-                                    duration: 150
+                                    duration: Appearance.dur(150)
                                     easing.type: Easing.OutQuad
                                 }
                             }
@@ -482,7 +482,7 @@ Item {
                                     target: titleText
                                     property: "opacity"
                                     to: 0
-                                    duration: 150
+                                    duration: Appearance.dur(150)
                                     easing.type: Easing.OutQuad
                                 }
                                 PropertyAction {
@@ -493,7 +493,7 @@ Item {
                                     target: titleText
                                     property: "opacity"
                                     to: 0.7
-                                    duration: 150
+                                    duration: Appearance.dur(150)
                                     easing.type: Easing.OutQuad
                                 }
                             }
@@ -514,7 +514,7 @@ Item {
                     opacity: visible ? 1 : 0
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutQuint
                         }
                     }
@@ -568,7 +568,7 @@ Item {
 
                     Behavior on buttonRadius {
                         NumberAnimation {
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutQuint
                         }
                     }
@@ -601,13 +601,13 @@ Item {
                     Layout.preferredWidth: visible ? implicitWidth : 0
                     Behavior on scale {
                         NumberAnimation {
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutQuint
                         }
                     }
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutQuint
                         }
                     }

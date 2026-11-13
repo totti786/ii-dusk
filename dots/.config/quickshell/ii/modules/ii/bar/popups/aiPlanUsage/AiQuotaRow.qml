@@ -59,13 +59,13 @@ Rectangle {
                 target: root
                 property: "opacity"
                 to: 1.0
-                duration: 260
+                duration: Appearance.dur(260)
             }
             NumberAnimation {
                 target: rowTranslate
                 property: "y"
                 to: 0
-                duration: 340
+                duration: Appearance.dur(340)
                 easing.type: Easing.OutCubic
             }
         }

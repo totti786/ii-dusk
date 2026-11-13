@@ -411,7 +411,7 @@ Item {
             property: "scale"
             from: 1.0
             to: 1.08
-            duration: 700
+            duration: Appearance.dur(700)
             easing.type: Easing.InOutSine
             running: false
         }

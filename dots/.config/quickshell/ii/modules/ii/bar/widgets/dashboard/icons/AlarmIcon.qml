@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * System alarm, based on Material's `alarm` silhouette and articulated into
@@ -264,34 +265,34 @@ AnimatedIcon {
         id: openAnim
         onStopped: root.busy = false
 
-        NumberAnimation { target: glyph; property: "opacity"; to: 1; duration: 150 }
+        NumberAnimation { target: glyph; property: "opacity"; to: 1; duration: Appearance.dur(150) }
         SequentialAnimation {
-            NumberAnimation { target: root; property: "bodyLift"; from: 2.4; to: -0.8; duration: 210; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "bodyLift"; to: 0; duration: 270; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "bodyLift"; from: 2.4; to: -0.8; duration: Appearance.dur(210); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "bodyLift"; to: 0; duration: Appearance.dur(270); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            NumberAnimation { target: root; property: "bodyRock"; from: -6; to: 3.5; duration: 250; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "bodyRock"; to: 0; duration: 300; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "bodyRock"; from: -6; to: 3.5; duration: Appearance.dur(250); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "bodyRock"; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            NumberAnimation { target: leftBell; property: "bellSwing"; from: 22; to: -5; duration: 250; easing.type: Easing.OutCubic }
-            NumberAnimation { target: leftBell; property: "bellSwing"; to: 0; duration: 300; easing.type: Easing.OutBack }
+            NumberAnimation { target: leftBell; property: "bellSwing"; from: 22; to: -5; duration: Appearance.dur(250); easing.type: Easing.OutCubic }
+            NumberAnimation { target: leftBell; property: "bellSwing"; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            NumberAnimation { target: rightBell; property: "bellSwing"; from: -22; to: 5; duration: 250; easing.type: Easing.OutCubic }
-            NumberAnimation { target: rightBell; property: "bellSwing"; to: 0; duration: 300; easing.type: Easing.OutBack }
+            NumberAnimation { target: rightBell; property: "bellSwing"; from: -22; to: 5; duration: Appearance.dur(250); easing.type: Easing.OutCubic }
+            NumberAnimation { target: rightBell; property: "bellSwing"; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            NumberAnimation { target: root; property: "handJolt"; from: -36; to: 8; duration: 280; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "handJolt"; to: 0; duration: 320; easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "handJolt"; from: -36; to: 8; duration: Appearance.dur(280); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "handJolt"; to: 0; duration: Appearance.dur(320); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            NumberAnimation { target: leftFoot; property: "legDrop"; from: -2; to: 0.7; duration: 230; easing.type: Easing.OutCubic }
-            NumberAnimation { target: leftFoot; property: "legDrop"; to: 0; duration: 280; easing.type: Easing.OutBack }
+            NumberAnimation { target: leftFoot; property: "legDrop"; from: -2; to: 0.7; duration: Appearance.dur(230); easing.type: Easing.OutCubic }
+            NumberAnimation { target: leftFoot; property: "legDrop"; to: 0; duration: Appearance.dur(280); easing.type: Easing.OutBack }
         }
         SequentialAnimation {
-            NumberAnimation { target: rightFoot; property: "legDrop"; from: -2; to: 0.7; duration: 230; easing.type: Easing.OutCubic }
-            NumberAnimation { target: rightFoot; property: "legDrop"; to: 0; duration: 280; easing.type: Easing.OutBack }
+            NumberAnimation { target: rightFoot; property: "legDrop"; from: -2; to: 0.7; duration: Appearance.dur(230); easing.type: Easing.OutCubic }
+            NumberAnimation { target: rightFoot; property: "legDrop"; to: 0; duration: Appearance.dur(280); easing.type: Easing.OutBack }
         }
     }
 
@@ -357,13 +358,13 @@ AnimatedIcon {
             root.applyRest();
         }
 
-        NumberAnimation { target: root; property: "bodyRock"; to: 0; duration: 380; easing.type: Easing.OutBack }
-        NumberAnimation { target: root; property: "bodyLift"; to: 0; duration: 300; easing.type: Easing.OutBack }
-        NumberAnimation { target: root; property: "handJolt"; to: 0; duration: 400; easing.type: Easing.OutBack }
-        NumberAnimation { target: leftBell; property: "bellSwing"; to: 0; duration: 420; easing.type: Easing.OutBack }
-        NumberAnimation { target: rightBell; property: "bellSwing"; to: 0; duration: 420; easing.type: Easing.OutBack }
-        NumberAnimation { target: leftFoot; property: "legDrop"; to: 0; duration: 330; easing.type: Easing.OutBack }
-        NumberAnimation { target: rightFoot; property: "legDrop"; to: 0; duration: 330; easing.type: Easing.OutBack }
+        NumberAnimation { target: root; property: "bodyRock"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+        NumberAnimation { target: root; property: "bodyLift"; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutBack }
+        NumberAnimation { target: root; property: "handJolt"; to: 0; duration: Appearance.dur(400); easing.type: Easing.OutBack }
+        NumberAnimation { target: leftBell; property: "bellSwing"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutBack }
+        NumberAnimation { target: rightBell; property: "bellSwing"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutBack }
+        NumberAnimation { target: leftFoot; property: "legDrop"; to: 0; duration: Appearance.dur(330); easing.type: Easing.OutBack }
+        NumberAnimation { target: rightFoot; property: "legDrop"; to: 0; duration: Appearance.dur(330); easing.type: Easing.OutBack }
     }
 
     // ── Removed: bells and feet fold inward, then the glyph settles ─────────
@@ -375,23 +376,23 @@ AnimatedIcon {
         }
 
         ParallelAnimation {
-            NumberAnimation { target: root; property: "bodyRock"; to: -3; duration: 180; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "bodyLift"; to: 1.25; duration: 190; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "handJolt"; to: -28; duration: 210; easing.type: Easing.InCubic }
-            NumberAnimation { target: leftBell; property: "bellSwing"; to: 18; duration: 210; easing.type: Easing.InCubic }
-            NumberAnimation { target: rightBell; property: "bellSwing"; to: -18; duration: 210; easing.type: Easing.InCubic }
-            NumberAnimation { target: leftFoot; property: "legDrop"; to: -1.7; duration: 200; easing.type: Easing.InCubic }
-            NumberAnimation { target: rightFoot; property: "legDrop"; to: -1.7; duration: 200; easing.type: Easing.InCubic }
+            NumberAnimation { target: root; property: "bodyRock"; to: -3; duration: Appearance.dur(180); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "bodyLift"; to: 1.25; duration: Appearance.dur(190); easing.type: Easing.OutCubic }
+            NumberAnimation { target: root; property: "handJolt"; to: -28; duration: Appearance.dur(210); easing.type: Easing.InCubic }
+            NumberAnimation { target: leftBell; property: "bellSwing"; to: 18; duration: Appearance.dur(210); easing.type: Easing.InCubic }
+            NumberAnimation { target: rightBell; property: "bellSwing"; to: -18; duration: Appearance.dur(210); easing.type: Easing.InCubic }
+            NumberAnimation { target: leftFoot; property: "legDrop"; to: -1.7; duration: Appearance.dur(200); easing.type: Easing.InCubic }
+            NumberAnimation { target: rightFoot; property: "legDrop"; to: -1.7; duration: Appearance.dur(200); easing.type: Easing.InCubic }
         }
         ParallelAnimation {
-            NumberAnimation { target: root; property: "bodyRock"; to: 0; duration: 300; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "bodyLift"; to: 0; duration: 320; easing.type: Easing.OutBack }
-            NumberAnimation { target: root; property: "handJolt"; to: 0; duration: 330; easing.type: Easing.OutBack }
-            NumberAnimation { target: leftBell; property: "bellSwing"; to: 0; duration: 340; easing.type: Easing.OutBack }
-            NumberAnimation { target: rightBell; property: "bellSwing"; to: 0; duration: 340; easing.type: Easing.OutBack }
-            NumberAnimation { target: leftFoot; property: "legDrop"; to: 0; duration: 320; easing.type: Easing.OutBack }
-            NumberAnimation { target: rightFoot; property: "legDrop"; to: 0; duration: 320; easing.type: Easing.OutBack }
-            NumberAnimation { target: glyph; property: "opacity"; to: (root.scheduled || root.ringing) ? 1 : root.dimmed; duration: 300 }
+            NumberAnimation { target: root; property: "bodyRock"; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "bodyLift"; to: 0; duration: Appearance.dur(320); easing.type: Easing.OutBack }
+            NumberAnimation { target: root; property: "handJolt"; to: 0; duration: Appearance.dur(330); easing.type: Easing.OutBack }
+            NumberAnimation { target: leftBell; property: "bellSwing"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutBack }
+            NumberAnimation { target: rightBell; property: "bellSwing"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutBack }
+            NumberAnimation { target: leftFoot; property: "legDrop"; to: 0; duration: Appearance.dur(320); easing.type: Easing.OutBack }
+            NumberAnimation { target: rightFoot; property: "legDrop"; to: 0; duration: Appearance.dur(320); easing.type: Easing.OutBack }
+            NumberAnimation { target: glyph; property: "opacity"; to: (root.scheduled || root.ringing) ? 1 : root.dimmed; duration: Appearance.dur(300) }
         }
     }
 }

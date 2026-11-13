@@ -973,9 +973,9 @@ Item {
                         id: winBtnAnim
                         PauseAnimation { duration: 40 + winBtn.index * 60 }
                         ParallelAnimation {
-                            NumberAnimation { target: winBtn; property: "opacity"; to: 1.0; duration: 300 }
-                            NumberAnimation { target: winBtn; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                            NumberAnimation { target: winBtnTransform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: winBtn; property: "opacity"; to: 1.0; duration: Appearance.dur(300) }
+                            NumberAnimation { target: winBtn; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                            NumberAnimation { target: winBtnTransform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                         }
                     }
 

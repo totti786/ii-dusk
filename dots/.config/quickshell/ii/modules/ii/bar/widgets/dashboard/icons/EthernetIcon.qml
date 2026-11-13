@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import qs.modules.common
 
 /**
  * Ethernet, drawn as the Material `lan` glyph in five parts: the host box on
@@ -211,21 +212,21 @@ AnimatedIcon {
 
         ParallelAnimation {
             SequentialAnimation {
-                NumberAnimation { target: root; property: "hostLift"; to: 0.7; duration: 110; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "hostLift"; to: 0; duration: 300; easing.type: Easing.OutBack }
+                NumberAnimation { target: root; property: "hostLift"; to: 0.7; duration: Appearance.dur(110); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "hostLift"; to: 0; duration: Appearance.dur(300); easing.type: Easing.OutBack }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 90 }
-                NumberAnimation { target: root; property: "stemProgress"; to: 1; duration: 170; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "spread"; to: 1; duration: 330; easing.type: Easing.InOutCubic }
+                PauseAnimation { duration: Appearance.dur(90) }
+                NumberAnimation { target: root; property: "stemProgress"; to: 1; duration: Appearance.dur(170); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "spread"; to: 1; duration: Appearance.dur(330); easing.type: Easing.InOutCubic }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 540 }
+                PauseAnimation { duration: Appearance.dur(540) }
                 ParallelAnimation {
-                    NumberAnimation { target: root; property: "clientDrop"; to: 0.8; duration: 100; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: root; property: "clientsOpacity"; to: 1; duration: 180 }
+                    NumberAnimation { target: root; property: "clientDrop"; to: 0.8; duration: Appearance.dur(100); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: root; property: "clientsOpacity"; to: 1; duration: Appearance.dur(180) }
                 }
-                NumberAnimation { target: root; property: "clientDrop"; to: 0; duration: 320; easing.type: Easing.OutBack }
+                NumberAnimation { target: root; property: "clientDrop"; to: 0; duration: Appearance.dur(320); easing.type: Easing.OutBack }
             }
         }
     }
@@ -237,27 +238,27 @@ AnimatedIcon {
 
         ParallelAnimation {
             SequentialAnimation {
-                NumberAnimation { target: root; property: "spread"; to: 0; duration: 300; easing.type: Easing.InCubic }
-                NumberAnimation { target: root; property: "stemProgress"; to: 0; duration: 160; easing.type: Easing.InCubic }
+                NumberAnimation { target: root; property: "spread"; to: 0; duration: Appearance.dur(300); easing.type: Easing.InCubic }
+                NumberAnimation { target: root; property: "stemProgress"; to: 0; duration: Appearance.dur(160); easing.type: Easing.InCubic }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 60 }
+                PauseAnimation { duration: Appearance.dur(60) }
                 ParallelAnimation {
-                    NumberAnimation { target: root; property: "clientDrift"; to: 0.9; duration: 260; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: root; property: "clientDrop"; to: 0.7; duration: 260; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: root; property: "clientsOpacity"; to: root.dimmed; duration: 300 }
+                    NumberAnimation { target: root; property: "clientDrift"; to: 0.9; duration: Appearance.dur(260); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: root; property: "clientDrop"; to: 0.7; duration: Appearance.dur(260); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: root; property: "clientsOpacity"; to: root.dimmed; duration: Appearance.dur(300) }
                 }
                 // Ease back home, still dimmed: without it the drift would end
                 // in a jump when the rest pose is applied.
                 ParallelAnimation {
-                    NumberAnimation { target: root; property: "clientDrift"; to: 0; duration: 340; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: root; property: "clientDrop"; to: 0; duration: 340; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: root; property: "clientDrift"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: root; property: "clientDrop"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutCubic }
                 }
             }
             SequentialAnimation {
-                PauseAnimation { duration: 300 }
-                NumberAnimation { target: root; property: "hostLift"; to: -0.7; duration: 140; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "hostLift"; to: 0; duration: 260; easing.type: Easing.OutBack }
+                PauseAnimation { duration: Appearance.dur(300) }
+                NumberAnimation { target: root; property: "hostLift"; to: -0.7; duration: Appearance.dur(140); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "hostLift"; to: 0; duration: Appearance.dur(260); easing.type: Easing.OutBack }
             }
         }
     }
