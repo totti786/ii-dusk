@@ -191,6 +191,11 @@ Scope {
     }
 
     function buildScript(): string {
+        // A dialect that runs its own script (see ApiStrategy.buildScript) gets this whole
+        // request; everything below is the plain curl call that the others use.
+        const scripted = root.strategy.buildScript(root.bodyPath, root.statusMarker);
+        if (scripted.length > 0)
+            return scripted;
         const headers = {
             "Content-Type": "application/json"
         };

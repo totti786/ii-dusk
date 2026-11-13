@@ -8,6 +8,15 @@ QtObject {
     function parseResponseLine(line: string, message: AiMessageData) { throw new Error("Not implemented") }
     function onRequestFinished(message: AiMessageData): var { return {} } // Default: no special handling
 
+    /** The chat the request is for. Strategies that keep server-side history key on it. */
+    property string chatSessionId: ""
+
+    /**
+     * A whole request script, for a dialect that is more than one call. Empty means
+     * AiRequest builds the plain curl call itself, which every other dialect uses.
+     */
+    function buildScript(bodyPath: string, statusMarker: string): string { return "" }
+
     // ── Attachments ───────────────────────────────────────────────────────
     // A file never travels through the request body as it is built here: the
     // body carries a marker, and the file is written into it just before the

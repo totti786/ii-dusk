@@ -113,7 +113,7 @@ Item {
                         // The stagger is what makes three dots read as one
                         // wave instead of three things blinking.
                         SequentialAnimation {
-                            running: root.active
+                            running: (root.active) && !Appearance.motionOff
                             loops: Animation.Infinite
 
                             PauseAnimation {

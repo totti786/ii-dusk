@@ -27,6 +27,9 @@ QtObject {
     /** Capability records reported by the local Ollama daemon. Set by Ai. */
     property var ollamaModelNames: []
 
+    /** Models the local OpenCode server can run, reported by the boot index. Set by Ai. */
+    property var opencodeModelNames: []
+
     /** Keys accepted from a standalone `ai.customModels` entry. */
     readonly property var customModelKeys: ["name", "title", "icon", "description", "homepage", "endpoint", "model", "value", "requires_key", "key_id", "key_get_link", "key_get_description", "api_format", "extraParams", "modelProvider", "thinking", "thinkingKind", "thinkingAlwaysOn", "quirks", "attachments", "vision", "embeddings", "tools", "builtinSearch", "samplingParams", "maxTemperature", "contextWindow", "maxOutput", "promptPrice", "completionPrice", "promptPriceIsFree", "completionPriceIsFree", "capabilitySource"]
 
@@ -338,6 +341,28 @@ QtObject {
             models: []
         },
         {
+            // The OpenCode server on this machine. Its models and sessions are its own: the
+            // bridge keeps each chat on one session and the server holds the history.
+            // Loopback, so the local-only policy keeps it.
+            id: "opencode-server",
+            name: Translation.tr("OpenCode server"),
+            icon: "opencode-logo-light.svg",
+            description: Translation.tr("Local | Models from your OpenCode server, which keeps the chat history"),
+            homepage: "https://opencode.ai",
+            endpoint: "http://127.0.0.1",
+            api_format: "opencode",
+            requires_key: false,
+            local: true,
+            // Each session runs with every permission denied, so the shell's own tools stay off.
+            capabilities: {
+                tools: false,
+                attachments: false,
+                thinking: false,
+                contextWindow: 0
+            },
+            models: []
+        },
+        {
             id: "others",
             name: Translation.tr("Others"),
             materialIcon: "more_horiz",
@@ -358,6 +383,8 @@ QtObject {
             let entries = (def.models ?? []).slice();
             if (def.id === "ollama")
                 entries = catalog.ollamaEntries;
+            else if (def.id === "opencode-server")
+                entries = catalog.opencodeEntries;
             else if (def.id === "others")
                 entries = catalog.customEntries;
             if (extras[def.id])
@@ -495,6 +522,29 @@ QtObject {
                 embeddings: capabilities.indexOf("embedding") >= 0,
                 contextWindow: Number(discovered.context_length ?? 0),
                 capabilitySource: detected ? "detected" : "userOverride"
+            });
+        }
+        return result;
+    }
+
+    /** Models of the running OpenCode server, as model definitions. */
+    readonly property var opencodeEntries: {
+        const result = [];
+        const models = catalog.opencodeModelNames ?? [];
+        for (let i = 0; i < models.length; i++) {
+            const model = models[i];
+            const providerId = String(model?.providerID ?? "");
+            const modelId = String(model?.modelID ?? "");
+            if (providerId.length === 0 || modelId.length === 0)
+                continue;
+            result.push({
+                value: `${providerId}/${modelId}`,
+                title: String(model.name || modelId),
+                vision: model.vision === true,
+                tools: model.tools === true,
+                contextWindow: Number(model.contextWindow ?? 0),
+                maxOutput: Number(model.maxOutput ?? 0),
+                capabilitySource: "detected"
             });
         }
         return result;

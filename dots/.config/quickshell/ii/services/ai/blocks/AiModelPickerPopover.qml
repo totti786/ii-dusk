@@ -24,6 +24,11 @@ Item {
     property string query: ""
     property bool openRouterModelsOpen: false
     property bool ollamaModelsOpen: false
+
+    onVisibleChanged: {
+        if (visible)
+            Ai.refreshOpencodeModels();
+    }
     // Canvas hosts already provide the title and back action. OpenRouter also
     // receives the canvas refresh action; other hosts retain a standalone
     // catalogue header by default.

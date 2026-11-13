@@ -80,7 +80,7 @@ Item {
                 : Appearance.colors.colOnSurface
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: Appearance.dur(150) }
             }
 
             MouseArea {

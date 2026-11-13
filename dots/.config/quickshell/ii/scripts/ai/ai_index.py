@@ -4,6 +4,7 @@
 Returns a single JSON document combining:
 
   - installed local Ollama models (if `ollama` is reachable)
+  - models of a running local OpenCode server (never started here)
   - default prompt file names (.md/.txt) under the repo's defaults/ai/prompts
   - user prompt file names (.md/.txt) under the user's ai/prompts
 
@@ -16,6 +17,7 @@ Usage:
 Output (one JSON object on stdout):
     {
         "ollama_models": ["llama3.1:8b", "qwen:7b", ...],
+        "opencode_models": [{"providerID": "opencode-go", "modelID": "...", ...}, ...],
         "default_prompts": ["/abs/path/p1.md", ...],
         "user_prompts":    ["/abs/path/u1.md", ...]
     }
@@ -27,6 +29,8 @@ import subprocess
 import sys
 import urllib.request
 from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
 def list_files(directory: str, suffixes: tuple[str, ...]) -> list[str]:
@@ -110,6 +114,16 @@ def list_ollama_models() -> list[dict]:
         return []
 
 
+def list_opencode_models() -> list[dict]:
+    # Asks only a server that is already running; starting one is the bridge's job, on a chat turn.
+    try:
+        import opencode_bridge
+
+        return opencode_bridge.list_models()
+    except Exception:
+        return []
+
+
 def main() -> int:
     argv = sys.argv[1:]
 
@@ -118,6 +132,7 @@ def main() -> int:
             json.dumps(
                 {
                     "ollama_models": [],
+                    "opencode_models": [],
                     "default_prompts": [],
                     "user_prompts": [],
                 }
@@ -128,6 +143,7 @@ def main() -> int:
     default_dir, user_dir = argv[0], argv[1]
     payload = {
         "ollama_models": list_ollama_models(),
+        "opencode_models": list_opencode_models(),
         "default_prompts": list_files(default_dir, (".md", ".txt")),
         "user_prompts": list_files(user_dir, (".md", ".txt")),
     }

@@ -229,7 +229,7 @@ Item {
                             color: Appearance.colors.colOnLayer1
 
                             RotationAnimator on rotation {
-                                running: card.testing
+                                running: (card.testing) && !Appearance.motionOff
                                 loops: Animation.Infinite
                                 from: 0
                                 to: 360

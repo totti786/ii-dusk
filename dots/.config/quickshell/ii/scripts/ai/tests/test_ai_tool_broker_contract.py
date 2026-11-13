@@ -108,9 +108,18 @@ class HostWiringTests(unittest.TestCase):
         raw = registry.split("rawDefinitions: [", 1)[1].split("\n    ]\n", 1)[0]
         declared = set(re.findall(r'id: "([a-z_]+)",', raw))
         retired = {"get_shell_config"}
+        # Declared for OpenCode alone: the tool runs in scripts/ai/shell_tools_mcp.py, which the
+        # OpenCode server calls itself, so the host has nothing to dispatch. test_opencode_bridge_rules
+        # pins that the tool server and the bridge really serve every one of these.
+        served_elsewhere = set()
+        for block in re.split(r"\n        \{\n", raw):
+            ident = re.search(r'id: "([a-z_]+)",', block)
+            formats = re.search(r"formats: \[([^\]]*)\]", block)
+            if ident and formats and re.findall(r'"(\w+)"', formats.group(1)) == ["opencode"]:
+                served_elsewhere.add(ident.group(1))
         handlers = body_between(AI_QML, "readonly property var toolHandlers: ({", "\n        })")
         registered = set(re.findall(r'"([a-z_]+)":', handlers))
-        self.assertEqual(declared - retired - registered, set())
+        self.assertEqual(declared - retired - served_elsewhere - registered, set())
 
     def test_no_completion_path_bypasses_the_record(self):
         # Every finished call has to go through settle(), or the log and the
