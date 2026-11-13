@@ -49,6 +49,7 @@ HELPERS=(
     "sni_watcher:tray"
     "health_watch:health"
     "ii-quickshare:quickshare"
+    "mediator-rs:mediatorRs"
 )
 
 # name:former name, in the same directory. An updater from before the rename
