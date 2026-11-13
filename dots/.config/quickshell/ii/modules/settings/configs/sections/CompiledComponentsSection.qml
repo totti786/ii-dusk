@@ -35,6 +35,7 @@ ContentSection {
     // name, folder under scripts/, title, what uses it. The binary is <folder>/<name>, the
     // source <folder>/<name>_src: the same table rust-helpers.sh keeps.
     readonly property var helpers: [
+        { name: "mediator-rs", dir: "mediatorRs", title: Translation.tr("Mediator backend"), usedBy: Translation.tr("The media launcher and its daemon") },
         { name: "ii-quickshare", dir: "quickshare", title: Translation.tr("Quick Share daemon"), usedBy: Translation.tr("Sending files to and from Android phones") },
         { name: "health_watch", dir: "health", title: Translation.tr("System Health helper"), usedBy: Translation.tr("The System Health app: services, crashes, drives") },
         { name: "osk_autoshow", dir: "osk", title: Translation.tr("Keyboard auto-show"), usedBy: Translation.tr("On-screen keyboard that raises itself on text fields") },
@@ -48,7 +49,6 @@ ContentSection {
     // Bundled and rebuilt by hand: not part of rust-helpers.sh, because their sources live
     // outside this folder.
     readonly property var bundles: [
-        { file: "vendor/mediator-rs", title: Translation.tr("Mediator backend"), usedBy: Translation.tr("The media launcher"), command: "scripts/build-mediator-rust.sh" },
         { file: "vendor/books.pyz", title: Translation.tr("Books bundle"), usedBy: Translation.tr("The Books app"), command: "scripts/build-books-zipapp.sh" }
     ]
 
