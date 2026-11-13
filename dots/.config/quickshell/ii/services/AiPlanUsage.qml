@@ -116,6 +116,10 @@ Singleton {
             ? root.activeTargetId
             : String(providerIds[0]);
     }
+    /// Which quota window the bar indicator shows: both, short (5h) or weekly.
+    /// The popup keeps listing every window the provider publishes.
+    readonly property string windowKind: String(root._cfg?.windowKind ?? "both")
+
     readonly property var selectedItems: {
         const provider = root.displayProviderById(root.displayedProviderId);
         const selected = [];
@@ -124,7 +128,11 @@ Singleton {
             return selected;
 
         const providerItems = Array.from(provider.items ?? []);
-        const kindOrder = ["balance", "short", "weekly", "daily", "monthly"];
+        const choice = root.windowKind;
+        const kindOrder = choice === "short" ? ["short"]
+            : choice === "weekly" ? ["weekly"]
+            : ["balance", "short", "weekly", "daily", "monthly"];
+        const limit = choice === "both" ? 2 : 1;
         for (const kind of kindOrder) {
             let best = null;
             for (const item of providerItems) {
@@ -137,14 +145,23 @@ Singleton {
                 selected.push(Object.assign({available: true}, best));
                 seen[String(best.id)] = true;
             }
-            if (selected.length >= 2)
+            if (selected.length >= limit)
                 break;
         }
         if (selected.length === 0) {
-            selected.push(root.windowPlaceholder(provider, "short"));
-            selected.push(root.windowPlaceholder(provider, "weekly"));
+            // The chosen window is not published (credits-only providers, a pool
+            // that only reports weekly): show what the provider does publish
+            // instead of an empty placeholder.
+            const first = providerItems.find(item => item && !item.deleted) ?? null;
+            if (choice !== "both" && first) {
+                selected.push(Object.assign({available: true}, first));
+            } else {
+                selected.push(root.windowPlaceholder(provider, choice === "weekly" ? "weekly" : "short"));
+                if (limit > 1)
+                    selected.push(root.windowPlaceholder(provider, "weekly"));
+            }
         }
-        return selected.slice(0, 2);
+        return selected.slice(0, limit);
     }
 
     function enabledProviderIds(): var {

@@ -25,10 +25,27 @@ Singleton {
     property var providerList: ["unsplash", "wallhaven"]  
     property var currentProvider: Config.options.wallpapers.service ?? "wallhaven" // defaulting to wallhaven bc it doesnt require api key
 
-    property string currentSortType: Config.options.wallpapers.sort ?? "favourites" // Options for wallhaven: date_added, relevance, random, views, favourites, toplist // Options for unsplash: relevant, latest
+    // Wallhaven spells the sort "favorites"; its API ignores "favourites" without an error.
+    function normalizeSort(sort) {
+        const s = String(sort ?? "").toLowerCase()
+        return s === "favourites" ? "favorites" : s
+    }
+    property string currentSortType: normalizeSort(Config.options.wallpapers.sort ?? "favorites") // Options for wallhaven: date_added, relevance, random, views, favourites, toplist // Options for unsplash: relevant, latest
     property bool showAnimeResults: Config.options.wallpapers.showAnimeResults ?? false
 
     property string similarImageId: ""
+    property string randomSeed: ""
+    // NSFW needs an API key; without one wallhaven would answer 401 for the whole search.
+    readonly property string effectivePurity: {
+        const p = String(Config.options.wallhaven?.purity ?? "100")
+        return (p[2] === "1" && !root.wallhavenApiToken) ? p.substring(0, 2) + "0" : p
+    }
+    // general / anime / people; the older "show anime" switch still turns the middle one on.
+    readonly property string effectiveCategories: {
+        const c = String(Config.options.wallhaven?.categories ?? "100").padEnd(3, "0").substring(0, 3)
+        const withAnime = root.showAnimeResults ? c[0] + "1" + c[2] : c
+        return withAnime === "000" ? "100" : withAnime
+    }
     property var currentSearchTags: []
     
     property var providers: {  
@@ -123,7 +140,7 @@ Singleton {
     }  
 
     function setSort(sort) {
-        sort = sort.toLowerCase() 
+        sort = root.normalizeSort(sort)
         Config.options.wallpapers.sort = sort
     }
 
@@ -140,7 +157,7 @@ Singleton {
                 root.currentSortType = "relevance" // default value
             } 
             if (provider === "wallhaven") {
-                root.currentSortType = "favourites" // default value
+                root.currentSortType = "favorites" // default value
             }
         } else {  
             root.addSystemMessage(Translation.tr("Invalid API provider. Supported: \n- ") + providerList.join("\n- "))  
@@ -174,6 +191,38 @@ Singleton {
         })]  
     }  
   
+    // The query for one page of Wallhaven results, whichever service the sidebar is on: the deck
+    // picker asks for it too. `tags` is a list of search words (empty for the plain sorted list).
+    function wallhavenParams(tags, page, imageId = "") {
+        const params = []
+        const tagString = tags.join(" ")
+        const wh = Config.options.wallhaven
+        if (imageId !== "") { // 'More like this picture' feature
+            params.push(`q=like%3A${imageId}`) // idk why but api has to be configured like this, learned it in the hard way
+            params.push(`sorting=relevance`)
+            params.push(`order=desc`)
+            root.similarImageId = imageId
+        } else { // a search, or with no tags the plain sorted list
+            const query = tagString.trim().length > 0 ? `${tagString} ${wh.excludeTerms ?? ""}`.trim() : ""
+            if (query.length > 0)
+                params.push("q=" + encodeURIComponent(query))
+            params.push(`sorting=${root.currentSortType}`)
+            params.push(`order=${wh.order || "desc"}`)
+            if (root.currentSortType === "toplist")
+                params.push(`topRange=${wh.topRange || "1M"}`)
+            if (root.currentSortType === "random" && page > 1 && root.randomSeed.length > 0)
+                params.push(`seed=${root.randomSeed}`) // pages through the shuffle page 1 gave
+            if (wh.atleast) params.push(`atleast=${encodeURIComponent(wh.atleast)}`)
+            if (wh.ratios) params.push(`ratios=${encodeURIComponent(wh.ratios)}`)
+            root.similarImageId = ""
+        }
+        if (imageId === "" && wh.colors) params.push(`colors=${encodeURIComponent(wh.colors)}`)
+        params.push(`categories=${root.effectiveCategories}`)
+        params.push(`purity=${root.effectivePurity}`)
+        params.push(`page=${page}`)
+        return params
+    }
+
     function constructRequestUrl(tags, limit=20, page=1, imageId="") {
         var provider = providers[currentProvider]  
         var baseUrl = provider.api  
@@ -193,38 +242,10 @@ Singleton {
              params.push("client_id=" + encodeURIComponent(root.unsplashApiToken))
          }
 
-        else if (currentProvider === "wallhaven") {  
-            if (tagString.trim().length > 0 && imageId == "") {  // normal search
+        else if (currentProvider === "wallhaven") {
+            params = root.wallhavenParams(tags, page, imageId)
+        }
 
-                const safeQuery = `${tagString} -people -portrait -face` // filter to not see people and faces
-                if (tagString.trim().length > 0) {  
-                    params.push("q=" + encodeURIComponent(safeQuery))  
-                }  
-
-                if (root.showAnimeResults) {
-                    params.push("categories=110")
-                } else {
-                    params.push("categories=100")
-                }
-                
-                params.push("purity=100")      //swf
-                params.push("page=" + page)
-                params.push(`sorting=${root.currentSortType}`)
-                params.push("atleast=1920x1080")
-                root.similarImageId = ""
-            }
-
-            if (imageId !== "") { // 'More like this picture' feature
-                // console.log("[Wallpapers] Searching for more images like: " + imageId)
-
-                params.push(`q=like%3A${imageId}`) // idk why but api has to be configured like this, learned it in the hard way
-                params.push(`sorting=relevance`)
-                params.push(`page=${page}`)
-                params.push(`order=desc`)
-                root.similarImageId = imageId
-            }
-        }  
-          
         if (baseUrl.indexOf("?") === -1) {  
             url += "?" + params.join("&")  
         } else {  
@@ -295,6 +316,14 @@ Singleton {
         }
     }
   
+    function httpFailMessage(status) {
+        if (status === 401) return Translation.tr("Wallhaven rejected the API key (HTTP 401). Check it with the api command.")
+        if (status === 429) return Translation.tr("Wallhaven is rate limiting you (HTTP 429). Wait a minute and try again.")
+        if (status >= 500) return Translation.tr("Wallhaven had a server error (HTTP %1). Try again later.").arg(status)
+        if (status === 0) return Translation.tr("Couldn't reach the wallpaper service. Check your connection.")
+        return root.failMessage
+    }
+
     function makeRequest(tags, limit=20, page=1, imageId="") { // image id is used for "more like this" feature
         if (imageId === "") {
             root.currentSearchTags = tags;
@@ -318,6 +347,8 @@ Singleton {
                 try {  
                     const provider = providers[currentProvider]  
                     let response = JSON.parse(xhr.responseText)  
+                    if (currentProvider === "wallhaven" && page === 1)
+                        root.randomSeed = response.meta?.seed ?? ""
                     response = provider.mapFunc(response)  
 
                     /* if (currentProvider === "wallhaven") { // can be used to set a limit to wallhaven (currently there is not), but not using it as it breaks the page sync
@@ -338,8 +369,9 @@ Singleton {
             }  
             else if (xhr.readyState === XMLHttpRequest.DONE) {  
                 console.log("[Wallpapers] Request failed with status: " + xhr.status)  
-                newResponse.message = root.failMessage
-                root.errorMessage = root.failMessage;
+                const reason = root.httpFailMessage(xhr.status)
+                newResponse.message = reason
+                root.errorMessage = reason;
                 root.runningRequests--;  
                 root.responses = [...root.responses, newResponse]  
             }  
@@ -361,6 +393,53 @@ Singleton {
         }     
     }  
   
+    // Download one result. Skips what is already on disk, writes through a .part file so a
+    // half-written or HTTP-error download never shows up as a wallpaper, and records the id in
+    // the same history file the walldl script keeps, so neither downloads it again.
+    // $1 dir, $2 url, $3 file name, $4 wallhaven id, $5 "print" to write the saved path to stdout
+    // instead of notifying (the deck picker sets the wallpaper from it).
+    readonly property string downloadScript: `
+        dir="$1"; url="$2"; name="$3"; id="$4"; quiet="$5"; hist="$HOME/.local/share/walldl/history"
+        mkdir -p "$dir" "$(dirname "$hist")"
+        note() { [ -n "$id" ] && ! grep -qxF "$id" "$hist" 2>/dev/null && echo "$id" >> "$hist"; }
+        done_msg() { if [ -n "$quiet" ]; then printf '%s' "$dir/$name"; else notify-send -a Shell -i "$dir/$name" "$1" "$dir/$name"; fi; }
+        if [ -s "$dir/$name" ]; then note; done_msg "${Translation.tr("Already downloaded")}"; exit 0; fi
+        if curl -fsSL "$url" -o "$dir/$name.part" && [ -s "$dir/$name.part" ]; then
+            mv "$dir/$name.part" "$dir/$name" && note && done_msg "${Translation.tr("Download complete")}"
+        else
+            rm -f "$dir/$name.part"; notify-send -a Shell -u critical "${Translation.tr("Download failed")}" "$name"; exit 1
+        fi`
+
+    // Where a search's downloads go: the download folder, or a subfolder named after the search.
+    function downloadDirFor(targetDir, tags) {
+        const words = (tags ?? root.currentSearchTags).join(" ")
+        if (Config.options.wallhaven?.tagSubfolders && words.trim().length > 0)
+            return targetDir + "/" + words.replace(/\//g, "_").replace(/\.\./g, "").trim().substring(0, 100)
+        return targetDir
+    }
+
+    function downloadImage(imageData, targetDir) {
+        const fileName = decodeURIComponent(imageData.file_url.substring(imageData.file_url.lastIndexOf('/') + 1))
+        const dir = currentProvider === "wallhaven" ? root.downloadDirFor(targetDir) : targetDir
+        Quickshell.execDetached(["bash", "-c", root.downloadScript, "_", dir, imageData.file_url, fileName, imageData.id ?? "", ""])
+    }
+
+    // Saves the key and asks wallhaven whether it knows it.
+    signal apiKeyChecked(string status) // "ok" | "rejected" | "unreachable" | "cleared"
+    function setWallhavenApiKey(key) {
+        key = String(key ?? "").trim()
+        Config.options.wallhaven.apiKey = key
+        if (key.length === 0) { root.apiKeyChecked("cleared"); return }
+        const xhr = new XMLHttpRequest()
+        xhr.open("GET", "https://wallhaven.cc/api/v1/settings")
+        xhr.setRequestHeader("X-API-Key", key)
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE) return
+            root.apiKeyChecked(xhr.status === 200 ? "ok" : ([401, 403, 404].includes(xhr.status) ? "rejected" : "unreachable")) // an unknown key answers 404
+        }
+        xhr.send()
+    }
+
     property var currentTagRequest: null  
     function triggerTagSearch(query) {  
         if (currentTagRequest) {  

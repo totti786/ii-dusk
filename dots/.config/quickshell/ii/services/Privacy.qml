@@ -45,9 +45,12 @@ Singleton {
         return inBucket(layouts.left) || inBucket(layouts.center) || inBucket(layouts.right);
     }
 
+    // The Lite bar draws its own indicator
+    readonly property bool liteBarPresent: PanelFamily.isLite && (Config.options?.lite?.bar?.privacy ?? true)
+
     readonly property bool islandWidgetPresent: IslandPolicy.enabled && IslandPolicy.widgetEnabled("privacy")
 
-    readonly property bool needed: root.enabled && root.watchedKinds.length > 0 && (root.barWidgetPresent || root.islandWidgetPresent)
+    readonly property bool needed: root.enabled && root.watchedKinds.length > 0 && (root.barWidgetPresent || root.islandWidgetPresent || root.liteBarPresent)
 
     readonly property var watchedKinds: {
         const cfg = root._cfg;

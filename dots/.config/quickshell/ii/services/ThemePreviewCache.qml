@@ -34,7 +34,35 @@ Singleton {
     property int consumers: 0
 
     function acquire() {
-        root.consumers++;
+        if (root.consumers++ === 0)
+            staleCheck.running = true;
+    }
+
+    /// The swatches read a file a wallpaper switch writes. When a switch changed the colours
+    /// without rewriting it (a failed or skipped preview write), it still describes the
+    /// previous wallpaper, so the page showed colours the shell no longer has. Newer
+    /// wallpaper state than previews means they are stale: make them again.
+    Process {
+        id: staleCheck
+        command: ["bash", "-c", `p="$1"; w="$2"; [ -f "$w" ] && { [ ! -f "$p" ] || [ "$p" -ot "$w" ]; } && echo stale`,
+            "_", Directories.wallpaperPreviewColorsPath, `${Directories.state}/user/generated/wallpaper/path.txt`]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (String(this.text).trim() === "stale" && root.consumers > 0)
+                    root.regeneratePreviews();
+            }
+        }
+    }
+
+    function regeneratePreviews() {
+        const wallpaper = Wallpapers.effectiveWallpaperPath;
+        if (wallpaper === "" || root.generatingWallpaperPreviews)
+            return;
+        const mode = root._previewMode();
+        root.generatedFor = PreviewLogic.generationKey(mode, wallpaper);
+        root.generatingWallpaperPreviews = true;
+        generation.command = ["bash", "-c", root._generationCommand(wallpaper, mode)];
+        generation.running = true;
     }
 
     function relinquish() {
@@ -192,7 +220,8 @@ Singleton {
             + `venv="\${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-\${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/.venv}"; `
             + `source "$(eval echo "$venv")/bin/activate" 2>/dev/null; `
             + `token=${PreviewLogic.shellQuote(token)}; tok=$(cat "$token" 2>/dev/null || echo 0); `
-            + `exec python3 ${PreviewLogic.shellQuote(script)} --path ${PreviewLogic.shellQuote(wallpaper)} `
+            + `src="$(bash ${PreviewLogic.shellQuote(Directories.scriptPath + "/colors/preview-source.sh")} ${PreviewLogic.shellQuote(wallpaper)})"; `
+            + `exec python3 ${PreviewLogic.shellQuote(script)} --path "$src" `
             + `--mode ${mode} --termscheme ${PreviewLogic.shellQuote(termscheme)} --blend_bg_fg `
             + `--all-previews ${PreviewLogic.shellQuote(out)} `
             + `--request-token "$token" --request-value "$tok" > /dev/null`;

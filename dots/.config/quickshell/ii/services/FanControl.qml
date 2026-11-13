@@ -21,6 +21,7 @@ Singleton {
     readonly property string repoScript: FileUtils.trimFileProtocol(Quickshell.shellPath("scripts/thermal/ii-fand"))
     readonly property string installScript: FileUtils.trimFileProtocol(Quickshell.shellPath("scripts/thermal/install.sh"))
     readonly property string daemonPath: "/usr/local/bin/ii-fand"
+    readonly property string ecPath: "/usr/local/bin/ii-fand-ec"   // same program, polkit asks for a password
     readonly property string statusPath: "/run/ii-fand/status.json"
 
     // Pages bump this while they are visible.
@@ -29,6 +30,8 @@ Singleton {
     property var caps: null          // ii-fand detect
     property var status: null        // /run/ii-fand/status.json
     property bool daemonInstalled: false
+    // The installed daemon/unit differ from the copies in the shell repo (new backend, fix…)
+    property bool updateAvailable: false
     readonly property bool daemonRunning: root.status !== null && (Date.now() / 1000 - root.status.time) < 15
     readonly property bool ready: root.caps !== null
 
@@ -44,16 +47,35 @@ Singleton {
     // Live values: the daemon's when it runs, detect's otherwise
     readonly property var temps: (root.daemonRunning ? root.status.temps : root.caps?.temps) ?? []
     readonly property var fans: (root.daemonRunning ? root.status.fans : root.caps?.fans) ?? []
-    readonly property real hottest: root.temps.reduce((m, t) => Math.max(m, t.c), 0)
+    // Board-ambient sensors (Framework EC: ambient, charger) are shown but don't drive the curve
+    readonly property var curveTemps: root.temps.filter(t => t.drive !== false)
+    readonly property real hottest: root.curveTemps.reduce((m, t) => Math.max(m, t.c), 0)
     readonly property real appliedPct: root.daemonRunning && root.status.targetPct !== null ? root.status.targetPct : -1
     readonly property bool turboEnabled: (root.daemonRunning ? root.status.turbo : root.caps?.turbo?.enabled) ?? true
     readonly property int tccOffset: (root.daemonRunning ? root.status.tcc : root.caps?.tcc?.current) ?? 0
+
+    // ── Framework laptops ──
+    // Detection runs as the user: DMI vendor, the cros_ec hwmon and framework_tool on PATH.
+    // Everything framework_tool reads needs root, so the values come from the daemon only.
+    readonly property var frameworkCaps: root.caps?.framework ?? null
+    readonly property bool isFramework: root.frameworkCaps?.detected ?? false
+    readonly property bool frameworkToolInstalled: root.frameworkCaps?.tool ?? false
+    readonly property bool frameworkEcDriver: root.frameworkCaps?.ec ?? false
+    readonly property bool frameworkReady: root.isFramework && root.frameworkToolInstalled && root.frameworkEcDriver
+    readonly property bool frameworkLaptop16: root.frameworkCaps?.laptop16 ?? false
+    readonly property var frameworkStatus: root.daemonRunning ? (root.status.framework ?? null) : null
+    readonly property var frameworkConfig: root.config.framework ?? ({ "chargeLimit": null, "fpLevel": null })
+
+    function applyFramework(changes) {
+        root.apply(Object.assign({}, root.config, { "framework": Object.assign({}, root.frameworkConfig, changes) }));
+    }
 
     // The stored config, or the curve the old g15-fancurve shipped with
     readonly property var defaultConfig: ({
         "enabled": true,
         "curve": { "tStart": 60, "tMax": 80, "minPct": 40, "maxPct": 100, "steepness": 2.0 },
-        "hysteresis": 4, "interval": 2, "turbo": null, "tccOffset": null
+        "hysteresis": 4, "interval": 2, "turbo": null, "tccOffset": null,
+        "framework": { "chargeLimit": null, "fpLevel": null }
     })
     readonly property var config: root.status?.config ?? root.defaultConfig
 
@@ -104,6 +126,52 @@ Singleton {
         setProc.running = true;
     }
 
+    // ── EC profile setup (laptops with no kernel fan driver) ──
+    // nbfc configs found on disk, the one picked, what ii-fand made of it, and what the
+    // registers hold. Enabling is a separate, authenticated step.
+    property var ecConfigs: []          // [{ name, path }]
+    property string ecSelected: ""      // path
+    property var ecImported: null       // { key, profile } from `ii-fand ec-import`
+    property string ecImportError: ""
+    property string ecCheckText: ""
+    property bool ecChecked: false
+    property bool ecBusy: false
+    readonly property bool ecReady: root.daemonInstalled && !root.updateAvailable
+
+    function ecScan() {
+        if (!scanProc.running)
+            scanProc.running = true;
+    }
+
+    function ecPick(path) {
+        root.ecSelected = path;
+        root.ecImported = null;
+        root.ecImportError = "";
+        root.ecCheckText = "";
+        root.ecChecked = false;
+        importProc.command = ["python3", "-I", root.repoScript, "ec-import", path];
+        importProc.running = true;
+    }
+
+    // Read-only, but root: the debugfs file is not readable otherwise
+    function ecReadRegisters() {
+        if (root.ecBusy || root.ecImported === null)
+            return;
+        root.ecBusy = true;
+        // checks the candidate profile before anything is stored
+        checkProc.command = ["pkexec", root.ecPath, "ec-check", JSON.stringify(root.ecImported)];
+        checkProc.running = true;
+    }
+
+    function ecEnable() {
+        if (root.ecBusy || root.ecImported === null || !root.ecChecked)
+            return;
+        root.ecBusy = true;
+        root.lastError = "";
+        addProc.command = ["pkexec", root.ecPath, "ec-add", JSON.stringify(root.ecImported)];
+        addProc.running = true;
+    }
+
     function install() {
         if (root.busy)
             return;
@@ -117,6 +185,8 @@ Singleton {
             detectProc.running = true;
         statusFile.reload();
         installedCheck.reload();
+        if (!diffProc.running)
+            diffProc.running = true;
     }
 
     onWatchersChanged: if (root.watchers > 0) root.refresh()
@@ -162,6 +232,16 @@ Singleton {
         onLoadFailed: root.status = null
     }
 
+    Process {
+        id: diffProc
+        command: ["sh", "-c", "cmp -s \"$1\" \"$2\" && cmp -s \"$1\" \"$5\" && cmp -s \"$3\" \"$4\"",
+            "sh", root.repoScript, root.daemonPath,
+            root.repoScript.replace(/ii-fand$/, "ii-fand.service"), "/etc/systemd/system/ii-fand.service",
+            root.ecPath]
+        // a missing installed file also counts as different; the install prompt covers that case
+        onExited: (code, status) => root.updateAvailable = code !== 0
+    }
+
     FileView {
         id: installedCheck
         path: root.daemonPath
@@ -200,6 +280,70 @@ Singleton {
             if (code !== 0)
                 root.lastError = installErr.text.trim().split("\n").pop() || `install.sh exited with ${code}`;
             reloadSoon.restart();
+        }
+    }
+
+    Process {
+        id: scanProc
+        command: ["sh", "-c", "for d in /opt/nbfc/Configs \"$HOME/.local/share/ii-fand/nbfc-configs\"; do [ -d \"$d\" ] && find \"$d\" -maxdepth 1 -name '*.xml'; done | sort"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.ecConfigs = text.split("\n").filter(l => l.length > 0).map(p => ({
+                    "name": p.split("/").pop().replace(/\.xml$/, ""), "path": p
+                }));
+            }
+        }
+    }
+
+    Process {
+        id: importProc
+        stdout: StdioCollector { id: importOut }
+        stderr: StdioCollector { id: importErr }
+        onExited: (code, status) => {
+            if (code === 0) {
+                try {
+                    root.ecImported = JSON.parse(importOut.text);
+                    return;
+                } catch (e) {}
+            }
+            root.ecImported = null;
+            root.ecImportError = importErr.text.trim() || `ec-import exited with ${code}`;
+        }
+    }
+
+    Process {
+        id: checkProc
+        stdout: StdioCollector { id: checkOut }
+        stderr: StdioCollector { id: checkErr }
+        onExited: (code, status) => {
+            root.ecBusy = false;
+            if (code === 0) {
+                root.ecCheckText = checkOut.text.trim();
+                root.ecChecked = true;
+            } else {
+                root.ecChecked = false;
+                root.ecCheckText = "";
+                root.ecImportError = code === 126 || code === 127
+                    ? Translation.tr("Authorisation was refused")
+                    : (checkErr.text.trim().split("\n").pop() || `ec-check exited with ${code}`);
+            }
+        }
+    }
+
+    Process {
+        id: addProc
+        stderr: StdioCollector { id: addErr }
+        onExited: (code, status) => {
+            root.ecBusy = false;
+            if (code === 0) {
+                root.ecImported = null;
+                root.ecChecked = false;
+                reloadSoon.restart();
+            } else {
+                root.lastError = code === 126 || code === 127
+                    ? Translation.tr("Authorisation was refused")
+                    : (addErr.text.trim().split("\n").pop() || `ec-add exited with ${code}`);
+            }
         }
     }
 

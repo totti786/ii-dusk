@@ -24,7 +24,7 @@ Singleton {
 
     readonly property string depsScript: `${Directories.scriptPath}/deps/deps.py`
     // Next to the setup script's own record of what it installed.
-    readonly property string notifiedFile: FileUtils.trimFileProtocol(Directories.home + "/.local/state/ii-p3drovfx/deps-notified")
+    readonly property string notifiedFile: FileUtils.trimFileProtocol(Directories.home + "/.local/state/ii-dusk/deps-notified")
 
     // Each {id, tier, label, description, status, installable, packages}, with
     // status one of installed, partial, missing or unavailable.
@@ -71,7 +71,7 @@ Singleton {
         // ask again about the same packages; a different set does.
         notifyProc.command = ["bash", "-c",
             'f="$1"; [ "$(cat "$f" 2>/dev/null)" = "$2" ] && exit 0; mkdir -p "$(dirname "$f")"; printf %s "$2" > "$f"; ' +
-            'exec notify-send -a "II-P3DROVFX" -i system-software-install -A "install=$3" "$4" "$5"',
+            'exec notify-send -a "II-DUSK" -i system-software-install -A "install=$3" "$4" "$5"',
             "ii-deps", root.notifiedFile, key, Translation.tr("Install"),
             Translation.tr("Missing core packages"),
             Translation.tr("Some features of the shell need %1. Install opens a terminal.").arg(names)];

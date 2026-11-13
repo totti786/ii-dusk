@@ -163,7 +163,7 @@ Singleton {
         Behavior on multipliedBrightness {
             enabled: monitor.animateChanges && !monitor.adopting
             NumberAnimation {
-                duration: 200
+                duration: Appearance.dur(200)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveEffects
             }
@@ -366,6 +366,14 @@ Singleton {
 
         function decrement() {
             root.decreaseBrightness();
+        }
+
+        // An explicit level from 0 to 100 on the focused monitor, for the shell's own tools (scripts/ai/shell_tools_mcp.py).
+        function set(percent: string) {
+            const value = Number(percent);
+            const monitor = root.getTargetMonitor();
+            if (monitor && Number.isFinite(value))
+                monitor.setBrightness(value / 100);
         }
 
         // A brightness key that writes the backlight itself reports the press here; see

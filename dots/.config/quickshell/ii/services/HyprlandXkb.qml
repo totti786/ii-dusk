@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import qs.modules.common
 
 /**
  * Exposes the active Hyprland Xkb keyboard layout name and code for indicators.
@@ -180,9 +181,46 @@ Singleton {
         }
     }
 
+    /**
+     * Per-window layouts. Hyprland keeps one active layout per keyboard, so the shell remembers
+     * which index each window last had and puts it back when the window takes focus. A window it
+     * has not seen starts on the first layout. Windows are forgotten when they close.
+     */
+    readonly property bool perWindow: Config.options?.hyprland?.layoutPerWindow ?? false
+    property var _windowLayouts: ({})
+    property string _focusedWindow: ""
+
+    function _focusChanged(address) {
+        const previous = root._focusedWindow;
+        root._focusedWindow = address;
+        if (previous === address || root.layoutCodes.length < 2)
+            return;
+        const saved = Object.assign({}, root._windowLayouts);
+        if (root.activeLayoutIndex >= 0)
+            saved[previous] = root.activeLayoutIndex;
+        root._windowLayouts = saved;
+        const wanted = saved[address] ?? 0;
+        if (wanted !== root.activeLayoutIndex && wanted < root.layoutCodes.length)
+            Quickshell.execDetached(["hyprctl", "switchxkblayout", "all", String(wanted)]);
+    }
+
+    onPerWindowChanged: {
+        root._windowLayouts = ({});
+        root._focusedWindow = Hyprland.activeToplevel?.address ?? "";
+    }
+
     Connections {
         target: Hyprland
         function onRawEvent(event) {
+            if (root.perWindow) {
+                if (event.name === "activewindowv2")
+                    root._focusChanged(event.data.trim());
+                else if (event.name === "closewindow") {
+                    const gone = Object.assign({}, root._windowLayouts);
+                    delete gone[event.data.trim()];
+                    root._windowLayouts = gone;
+                }
+            }
             if (event.name === "activelayout" || event.name === "configreloaded") {
                 root.needsLayoutRefresh = true;
                 layoutRefresh.restart();

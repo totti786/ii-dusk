@@ -69,6 +69,34 @@ Singleton {
     }
 
     /**
+     * Special workspaces have no numeric id in Hyprland's JSON since 0.57 (`hyprctl workspaces`
+     * reports it as null, clients and monitors leave the field out). Everything here compares
+     * workspaces by id, so a window on a scratchpad looked like it was on no workspace at all:
+     * not on screen, and the desktop under it empty. Which is exactly when type-to-search
+     * arms, and it took the keys meant for the drop-down terminal.
+     *
+     * A special workspace is therefore given an id derived from its name: negative so it can
+     * never meet a real one, and stable so the same scratchpad always compares equal. Nothing
+     * dispatches on it - Hyprland is always asked for these by name.
+     */
+    function specialWorkspaceId(name) {
+        const text = String(name ?? "");
+        let hash = 0;
+        for (let i = 0; i < text.length; ++i)
+            hash = (hash * 31 + text.charCodeAt(i)) % 100000;
+        return -(1000 + hash);
+    }
+
+    function withWorkspaceId(workspace) {
+        if (!workspace || typeof workspace !== "object")
+            return workspace;
+        const special = workspace.type === "special" || String(workspace.name ?? "").startsWith("special:");
+        if (special && (workspace.id === undefined || workspace.id === null) && String(workspace.name ?? "") !== "")
+            workspace.id = root.specialWorkspaceId(workspace.name);
+        return workspace;
+    }
+
+    /**
      * Whether a toplevel sits on a workspace the user is currently looking at.
      *
      * Hyprland leaves keyboard focus - and with it the toplevel's `activated` flag - on a
@@ -249,6 +277,51 @@ Singleton {
         }
     }
 
+    // ── Dead event stream ──────────────────────────────────────────────────
+    // Quickshell reads Hyprland's events from one socket and never reconnects it once it
+    // drops (Hyprland closes clients that fall behind, as a title-spinner flood can make
+    // them). From then on the workspace bar, the window list and the wallpaper blur all
+    // stand still. `hyprctl` still answers, so it is asked every second and a half: when
+    // its active workspaces differ from Quickshell's own model twice in a row, the stream
+    // is taken to be dead and everything is polled from hyprctl until the shell restarts.
+    property bool eventsStale: false
+    property int _staleHits: 0
+
+    function checkEventStream() {
+        const known = Hyprland.monitors?.values ?? [];
+        let differs = false;
+        for (const mon of root.monitors) {
+            const other = known.find(m => m.name === mon.name);
+            const a = Number(other?.activeWorkspace?.id ?? NaN);
+            const b = Number(mon.activeWorkspace?.id ?? NaN);
+            if (isFinite(a) && isFinite(b) && a !== b)
+                differs = true;
+        }
+        root._staleHits = differs ? root._staleHits + 1 : 0;
+        if (differs && root._staleHits >= 2) {
+            if (!root.eventsStale)
+                console.warn("[HyprlandData] Hyprland's event stream looks dead; polling hyprctl instead");
+            root.eventsStale = true;
+        }
+        if (root.eventsStale) {
+            Hyprland.refreshMonitors();
+            Hyprland.refreshWorkspaces();
+        }
+    }
+
+    Timer {
+        interval: root.eventsStale ? 500 : 1500
+        running: true
+        repeat: true
+        onTriggered: {
+            root.updateMonitors();
+            if (root.eventsStale) {
+                root.updateWorkspaces();
+                root.updateWindowList();
+            }
+        }
+    }
+
     // Window titles can change at very high frequency (browsers,
     // terminals, media applications, etc.). Debounce these events
     // and refresh only the client/window list after title activity settles.
@@ -369,7 +442,8 @@ Singleton {
                 // a task list offering to raise it would be offering to raise
                 // something that cannot be seen.
                 root.windowList = JSON.parse(clientsCollector.text)
-                    .filter(win => !String(win?.title ?? "").startsWith("ii-phone-embed-"));
+                    .filter(win => !String(win?.title ?? "").startsWith("ii-phone-embed-"))
+                    .map(win => { root.withWorkspaceId(win?.workspace); return win; });
                 root.windowListLoaded = true;
                 let tempWinByAddress = {};
                 for (var i = 0; i < root.windowList.length; ++i) {
@@ -396,7 +470,12 @@ Singleton {
                 // Ordered by Hyprland's monitor id, not by `hyprctl` order: a monitor that
                 // reconnects (e.g. HDMI on resume) keeps its id but is listed last, and the
                 // workspace map is indexed by this position.
-                root.monitors = JSON.parse(monitorsCollector.text).sort((a, b) => a.id - b.id);
+                root.monitors = JSON.parse(monitorsCollector.text).sort((a, b) => a.id - b.id).map(monitor => {
+                    root.withWorkspaceId(monitor?.activeWorkspace);
+                    root.withWorkspaceId(monitor?.specialWorkspace);
+                    return monitor;
+                });
+                root.checkEventStream();
 
                 if (root._monitorsNeedsUpdate) {
                     root._monitorsNeedsUpdate = false;
@@ -453,7 +532,7 @@ Singleton {
         stdout: StdioCollector {
             id: activeWorkspaceCollector
             onStreamFinished: {
-                root.activeWorkspace = JSON.parse(activeWorkspaceCollector.text);
+                root.activeWorkspace = root.withWorkspaceId(JSON.parse(activeWorkspaceCollector.text));
 
                 if (root._activeWorkspaceNeedsUpdate) {
                     root._activeWorkspaceNeedsUpdate = false;

@@ -17,12 +17,12 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    readonly property string setupScript: FileUtils.trimFileProtocol(Directories.home + "/.local/share/ii-p3drovfx/setup-ii-p3drovfx.sh")
+    readonly property string setupScript: FileUtils.trimFileProtocol(Directories.home + "/.local/share/ii-dusk/setup-ii-dusk.sh")
     readonly property string stateDir: FileUtils.trimFileProtocol(Directories.home + "/.config/quickshell/ii")
 
     property string activeRemote: ""
     property string activeBranch: "main"
-    property string activeFork: "p3drovfx"
+    property string activeFork: "dusk"
     property string activeCommit: ""
     property string remoteCommit: ""
 
@@ -122,8 +122,10 @@ Singleton {
     // Display name for a fork preset id; a custom remote shows its repo slug.
     function forkLabel(fork) {
         switch (fork) {
-        case "p3drovfx":
+        case "dusk":
         case "mine":
+            return "ii-dusk";
+        case "p3drovfx":
             return "II-P3DROVFX";
         case "end4":
             return "end-4";
@@ -272,7 +274,7 @@ Singleton {
                 const parts = text.split("---");
                 root.activeRemote = (parts[0] ?? "").trim();
                 root.activeBranch = (parts[1] ?? "").trim() || "main";
-                root.activeFork = (parts[2] ?? "").trim() || "p3drovfx";
+                root.activeFork = (parts[2] ?? "").trim() || "dusk";
                 root.activeCommit = (parts[3] ?? "").trim();
 
                 if (!root._probeAfterState) return;

@@ -222,8 +222,13 @@ Singleton {
         path: Quickshell.env("HOME") + "/.local/share/icons/DynamicTheme.colhash"
         watchChanges: true
         onFileChanged: {
-            if (!root.iconPackApplying)
-                iconRedrawTimer.restart()
+            console.log("[DBG-icon] colhash changed applying=" + root.iconPackApplying);
+            if (!root.iconPackApplying) {
+                // Written last, once everything is in place: the one authoritative redraw, so the
+                // slower catch-all below (for other tools) is dropped and nothing redraws twice
+                iconRedrawTimer.stop()
+                iconHashRedrawTimer.restart()
+            }
         }
     }
 
@@ -239,7 +244,9 @@ Singleton {
             "type='signal',interface='org.kde.KIconLoader',member='iconChanged'"])
         stdout: SplitParser {
             onRead: data => {
-                if (String(data).includes("member=iconChanged") && !root.iconPackApplying)
+                if (String(data).includes("member=iconChanged"))
+                    console.log("[DBG-icon] iconChanged applying=" + root.iconPackApplying + " hashTimer=" + iconHashRedrawTimer.running);
+                if (String(data).includes("member=iconChanged") && !root.iconPackApplying && !iconHashRedrawTimer.running)
                     iconRedrawTimer.restart()
             }
         }
@@ -253,10 +260,21 @@ Singleton {
 
     // A single bounded toggle invalidates the icon bindings without making sourceSize grow
     // after every theme change. The delay lets the loader finish rebuilding the theme first.
+    // The revision cycles through 6 values (it is added to icon sourceSize, so it must stay tiny) instead of
+    // flipping 0/1. A rebuild fires several of the triggers
+    // above (the colour hash, plus two iconChanged signals 0.4 s apart): an even number of flips landed
+    // back on the first value, whose pixmaps were still cached from the previous colour, so folders
+    // showed the new colour and then jumped back to an old one. The interval also spans that 0.4 s
+    // gap, so one rebuild is one redraw.
+    Timer {
+        id: iconHashRedrawTimer
+        interval: 250
+        onTriggered: { root.iconThemeRevision = (root.iconThemeRevision + 1) % 6; console.log("[DBG-icon] REDRAW(hash) rev=" + root.iconThemeRevision); }
+    }
     Timer {
         id: iconRedrawTimer
-        interval: 250
-        onTriggered: root.iconThemeRevision = 1 - root.iconThemeRevision
+        interval: 900
+        onTriggered: { root.iconThemeRevision = (root.iconThemeRevision + 1) % 6; console.log("[DBG-icon] REDRAW(signal) rev=" + root.iconThemeRevision); }
     }
 
     // ── XDG user directories ──────────────────────────────────────────────

@@ -65,7 +65,7 @@ Item {
         }
 
         SequentialAnimation {
-            running: root.visible && WelcomeMotion.motionEnabled
+            running: (root.visible && WelcomeMotion.motionEnabled) && !Appearance.motionOff
             loops: Animation.Infinite
 
             ParallelAnimation {
@@ -163,7 +163,7 @@ Item {
         }
 
         SequentialAnimation {
-            running: root.visible && WelcomeMotion.motionEnabled
+            running: (root.visible && WelcomeMotion.motionEnabled) && !Appearance.motionOff
             loops: Animation.Infinite
 
             ParallelAnimation {

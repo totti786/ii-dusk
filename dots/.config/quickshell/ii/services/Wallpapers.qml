@@ -48,7 +48,7 @@ Singleton {
     property alias folderModel: folderModel // Expose for direct binding when needed
     property string searchQuery: ""
     readonly property list<string> extensions: [ // TODO: add videos
-        "jpg", "jpeg", "png", "webp", "avif", "bmp", "svg", "mp4", "mkv", "webm", "avi", "mov", "m4v", "ogv"
+        "jpg", "jpeg", "png", "webp", "avif", "jxl", "bmp", "svg", "mp4", "mkv", "webm", "avi", "mov", "m4v", "ogv"
     ]
     property list<string> wallpapers: [] // List of absolute file paths (without file://)
     readonly property bool thumbnailGenerationRunning: thumbgenProc.running
@@ -555,21 +555,29 @@ Singleton {
         }
     }
 
+    // A random picture from the folder the picker is in. The folder is listed on disk rather than
+    // read from the picker's model, which only holds what the search box lets through, and the
+    // search goes down into the sub-folders too (up to 8 levels).
     function randomFromCurrentFolder(darkMode = Appearance.m3colors.darkmode) {
-        const candidates = [];
-        for (let i = 0; i < folderModel.count; i++) {
-            if (Boolean(folderModel.get(i, "fileIsDir"))) continue;
+        const dir = FileUtils.trimFileProtocol(String(root.directory)).replace(/\/+$/, "");
+        if (!dir) return;
+        randomPickProc.darkMode = darkMode;
+        randomPickProc.exec(["bash", "-c",
+            `d="$1"; shift; for depth in 8; do f=$(find "$d" -maxdepth $depth -type f \\( "$@" \\) 2>/dev/null | shuf -n1); [ -n "$f" ] && { printf '%s' "$f"; exit 0; }; done; exit 1`,
+            "_", dir, ...root.extensions.map(ext => `-iname *.${ext}`).join(" -o ").split(" ")]);
+    }
 
-            const filePath = String(folderModel.get(i, "filePath") || FileUtils.trimFileProtocol(folderModel.get(i, "fileUrl") || folderModel.get(i, "fileURL") || ""));
-            const fileName = String(folderModel.get(i, "fileName") || filePath).toLowerCase();
-            if (!filePath || !root.extensions.some(ext => fileName.endsWith("." + ext))) continue;
-            candidates.push(filePath);
+    Process {
+        id: randomPickProc
+        property bool darkMode: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const filePath = text.trim();
+                if (filePath.length === 0) return;
+                print("Randomly selected wallpaper:", filePath);
+                root.select(filePath, randomPickProc.darkMode);
+            }
         }
-
-        if (candidates.length === 0) return;
-        const filePath = candidates[Math.floor(Math.random() * candidates.length)];
-        print("Randomly selected wallpaper:", filePath);
-        root.select(filePath, darkMode);
     }
 
     Process {

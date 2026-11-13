@@ -120,6 +120,7 @@ Singleton {
         || GlobalStates.oskOpen || GlobalStates.overlayOpen || GlobalStates.settingsOpen
         || GlobalStates.dashboardPanelOpen || GlobalStates.policiesPanelOpen
         || GlobalStates.scratchpadOpen
+        || (GlobalStates.monitorOpen && GlobalStates.monitorOverlay)
         // Edit Mode owns the keyboard even before its catalogue search field is focused.
         // Its own search bars must receive printable keys instead of the Overview's
         // compositor-level type-to-search binds consuming them.
@@ -129,19 +130,63 @@ Singleton {
         // The wallpaper search field takes the keys too, island-hosted or not: an empty
         // desktop would otherwise arm the binds under it and open the launcher instead.
         || GlobalStates.wallpaperSelectorOpen
+        // The full-screen app overlays hold the keyboard through layer-shell too; their
+        // windowed forms are real toplevels and are covered by the focused-window check.
+        || (GlobalStates.mediatorAppOpen && !GlobalStates.mediatorWindowed)
+        || (GlobalStates.quranOpen && !GlobalStates.quranWindowed)
+        || (GlobalStates.diwanOpen && !GlobalStates.diwanWindowed)
+        || GlobalStates.mediaModeActive
         // A bar popup that takes typing (Passwords): hovering it may hand it the keyboard.
         || GlobalStates.barPopupTypingOpen
+
+    /// Whether the focused monitor is showing a special workspace. Its own windows are what
+    /// the keyboard is for, and a drop-down terminal is still launching for a moment after the
+    /// workspace opens: with nothing focused yet and the workspace under it empty, the binds
+    /// would arm and take the first keystrokes into the launcher.
+    readonly property bool specialWorkspaceShown: root.specialEventShown || root.specialDataShown
+
+    readonly property bool specialDataShown: {
+        const monitorId = Number(Hyprland.focusedMonitor?.id ?? NaN);
+        const monitor = Array.from(HyprlandData.monitors ?? [])
+            .find(candidate => Number(candidate?.id ?? NaN) === monitorId);
+        return String(monitor?.specialWorkspace?.name ?? "") !== "";
+    }
+
+    /// The monitor list is a hyprctl round trip behind the event, and the first keystrokes
+    /// after Alt + Return land inside that gap. The event itself says it at once; the next
+    /// monitor refresh takes over and clears this.
+    property bool specialEventShown: false
+
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name !== "activespecial")
+                return;
+            // "workspace name,monitor name"; the name is empty when a special workspace closes.
+            const parts = String(event.data ?? "").split(",");
+            const monitorName = parts.length > 1 ? parts[parts.length - 1] : "";
+            if (monitorName !== String(Hyprland.focusedMonitor?.name ?? ""))
+                return;
+            root.specialEventShown = parts[0] !== "";
+        }
+    }
+
+    Connections {
+        target: HyprlandData
+        function onMonitorsChanged() {
+            root.specialEventShown = false;
+        }
+    }
 
     // Not under an open Alt+Tab: its typing submap binds the bare letters, and arming or
     // disarming here (hl.unbind reaches into every submap) would take them away mid-search.
     readonly property bool armed: root.enabled && !PanelFamily.isTablet
         && !root.focusedWindowOnScreen && !root.shellSurfaceFocused && !WindowSwitcher.active
+        && !root.specialWorkspaceShown
         && (root.trigger === "noFocusedWindow" || root.workspaceEmpty)
 
     // ------------------------------------------------------------------ typing
 
-    /// The start menu clears the query as it opens, so the Waffle seed has to land after it.
-    property string pendingWaffleQuery: ""
 
     /**
      * Unbinding is a round trip through hyprctl, so a fast typist lands more keys while the
@@ -157,27 +202,6 @@ Singleton {
         const text = String(character ?? "");
         if (text.length === 0)
             return;
-
-        if (PanelFamily.isWaffle) {
-            if (!GlobalStates.searchOpen) {
-                root.pendingWaffleQuery = text;
-                root.openedByTyping = true;
-                root.typedQuerySeen = false;
-                GlobalStates.searchOpen = true;
-                Qt.callLater(() => {
-                    if (root.pendingWaffleQuery.length === 0)
-                        return;
-                    LauncherSearch.query = root.pendingWaffleQuery;
-                    root.pendingWaffleQuery = "";
-                });
-                return;
-            }
-            if (root.pendingWaffleQuery.length > 0)
-                root.pendingWaffleQuery += text;
-            else
-                LauncherSearch.query = LauncherSearch.query + text;
-            return;
-        }
 
         if (GlobalStates.overviewUsesAppDrawer && GlobalStates.appDrawerOpen) {
             GlobalStates.appDrawerQuery = GlobalStates.appDrawerQuery + text;
@@ -217,14 +241,14 @@ Singleton {
     /// field is momentarily empty on the way in, before the opening character is read.
     property bool typedQuerySeen: false
 
-    readonly property bool launcherOpen: PanelFamily.isWaffle ? GlobalStates.searchOpen : GlobalStates.overviewSurfaceOpen
+    readonly property bool launcherOpen: GlobalStates.overviewSurfaceOpen
 
     onLauncherOpenChanged: {
         if (root.launcherOpen) {
             // The ii launchers read the opening character while they open, before the
             // connection below is attached, so that query is never reported to it. Without
             // this, deleting a one-letter query left the launcher open.
-            if (root.openedByTyping && !PanelFamily.isWaffle && !GlobalStates.overviewUsesAppDrawer
+            if (root.openedByTyping && !GlobalStates.overviewUsesAppDrawer
                     && GlobalStates.activeSearchQuery === "" && LauncherSearch.query.length > 0)
                 root.typedQuerySeen = true;
             return;
@@ -252,10 +276,7 @@ Singleton {
             // there would take the launcher away from under a panel the user just opened.
             if (!root.typedQuerySeen || GlobalStates.searchPanelActive)
                 return;
-            if (PanelFamily.isWaffle)
-                GlobalStates.searchOpen = false;
-            else
-                GlobalStates.closeOverview();
+            GlobalStates.closeOverview();
         }
     }
 

@@ -100,10 +100,10 @@ Singleton {
     onCityChanged: requestRefetch()
     onGpsActiveChanged: {
         if (root.gpsActive) {
-            positionSource.start();
+            positionLoader.item?.start();
             fallbackTimer.restart();
         } else {
-            positionSource.stop();
+            positionLoader.item?.stop();
             fallbackTimer.stop();
             requestRefetch();
         }
@@ -327,7 +327,7 @@ Singleton {
                     });
                 }
             } else {
-                positionSource.start();
+                positionLoader.item?.start();
                 fallbackTimer.restart();
             }
         } else if (root.city !== "") {
@@ -515,7 +515,7 @@ Singleton {
     Component.onCompleted: {
         if (root.gpsActive) {
             console.info("[WeatherService] Starting the GPS service.");
-            positionSource.start();
+            positionLoader.item?.start();
             fallbackTimer.start();
         } else {
             root.requestRefetch();
@@ -529,49 +529,56 @@ Singleton {
         onTriggered: {
             if (!root.location.valid) {
                 console.info("[WeatherService] GPS timed out or invalid. Falling back to IP-based location.");
-                positionSource.stop();
+                positionLoader.item?.stop();
                 fetchIpLocation();
             }
         }
     }
 
-    PositionSource {
-        id: positionSource
-        updateInterval: root.fetchInterval
+    // Created only when GPS is on: building a PositionSource makes a blocking D-Bus call to
+    // geoclue, which stalls the whole shell (~25 s at start) while that service is not answering.
+    Loader {
+        id: positionLoader
+        active: root.gpsActive
+        onLoaded: item.start()
+        sourceComponent: PositionSource {
+            id: positionSource
+            updateInterval: root.fetchInterval
 
-        onPositionChanged: {
-            if (position.latitudeValid && position.longitudeValid) {
-                fallbackTimer.stop();
-                const newLat = position.coordinate.latitude;
-                const newLon = position.coordinate.longitude;
-                const coordsChanged = Math.abs(root.location.lat - newLat) > 0.05 || Math.abs(root.location.lon - newLon) > 0.05;
+            onPositionChanged: {
+                if (position.latitudeValid && position.longitudeValid) {
+                    fallbackTimer.stop();
+                    const newLat = position.coordinate.latitude;
+                    const newLon = position.coordinate.longitude;
+                    const coordsChanged = Math.abs(root.location.lat - newLat) > 0.05 || Math.abs(root.location.lon - newLon) > 0.05;
 
-                root.location.lat = newLat;
-                root.location.lon = newLon;
-                root.location.long = newLon;
-                root.location.valid = true;
+                    root.location.lat = newLat;
+                    root.location.lon = newLon;
+                    root.location.long = newLon;
+                    root.location.valid = true;
 
-                if (coordsChanged || !root.location.city || root.location.city === "" || root.location.city === "Current Location" || root.location.city === "City") {
-                    reverseGeocode(newLat, newLon, cityName => {
-                        const resolvedCity = cityName || "Current Location";
-                        root.location.city = resolvedCity;
-                        fetchWeather(newLat, newLon, resolvedCity);
-                    });
+                    if (coordsChanged || !root.location.city || root.location.city === "" || root.location.city === "Current Location" || root.location.city === "City") {
+                        reverseGeocode(newLat, newLon, cityName => {
+                            const resolvedCity = cityName || "Current Location";
+                            root.location.city = resolvedCity;
+                            fetchWeather(newLat, newLon, resolvedCity);
+                        });
+                    } else {
+                        root.getData();
+                    }
                 } else {
-                    root.getData();
+                    console.error("[WeatherService] Failed to get the GPS location.");
                 }
-            } else {
-                console.error("[WeatherService] Failed to get the GPS location.");
             }
-        }
 
-        onValidityChanged: {
-            if (!positionSource.valid) {
-                positionSource.stop();
-                fallbackTimer.stop();
-                Quickshell.execDetached(["notify-send", Translation.tr("Weather Service"), Translation.tr("Cannot find a GPS service. Using the fallback method instead."), "-a", "Shell"]);
-                console.error("[WeatherService] Could not aquire a valid backend plugin.");
-                fetchIpLocation();
+            onValidityChanged: {
+                if (!positionSource.valid) {
+                    positionSource.stop();
+                    fallbackTimer.stop();
+                    Quickshell.execDetached(["notify-send", Translation.tr("Weather Service"), Translation.tr("Cannot find a GPS service. Using the fallback method instead."), "-a", "Shell"]);
+                    console.error("[WeatherService] Could not aquire a valid backend plugin.");
+                    fetchIpLocation();
+                }
             }
         }
     }

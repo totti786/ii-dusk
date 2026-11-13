@@ -306,7 +306,7 @@ Item {
         id: scrollAnim
         target: flickable
         property: "contentX"
-        duration: 320
+        duration: Appearance.dur(320)
         easing.type: Easing.OutCubic
     }
 

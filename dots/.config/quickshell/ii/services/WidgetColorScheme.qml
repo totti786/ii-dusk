@@ -21,7 +21,103 @@ Singleton {
     // The alpha a widget card's background is drawn with: the scheme's surface
     // (the surface roles follow the global content transparency) times the tint.
     // Appearance sets the compositor blur behind the widgets from it.
-    readonly property real backgroundAlpha: root.getCardBgColor(root.currentScheme).a * root.backgroundTintOpacity
+    readonly property real backgroundAlpha: root.getCardBgColor(root.currentScheme).a * root.cardAlphaFloor
+
+    // ── Card style ──
+    // The presets, as what they mean for one card: its fill alpha, the hairline rim and the
+    // sheen. Setting a preset globally writes these into the config (applyGlassPreset), a
+    // widget's own preset resolves through the same table.
+    readonly property var glassPresets: ({
+        "solid": { "alpha": 1, "rim": false, "sheen": false, "border": 0 },
+        "frosted": { "alpha": 0.55, "rim": false, "sheen": true, "border": 0 },
+        "clear": { "alpha": 0.30, "rim": false, "sheen": true, "border": 0 }
+    })
+    // The fill alpha a card takes when it follows the shell's glass: tracks the shell's own content
+    // transparency (the scheme's secondary surfaces carry no alpha of their own), kept readable.
+    readonly property real shellCardAlpha: (Config.options.appearance.transparency.enable ?? false)
+        ? Math.max(0.45, Math.min(0.75, 1 - Appearance.contentTransparency * 0.6)) : 1
+    // The alpha cards have unless they say otherwise
+    readonly property real globalCardAlpha: (Config.options.background.widgets.glassPreset ?? "shell") === "shell" ? root.shellCardAlpha : root.backgroundTintOpacity
+
+    // A translucent card below this is not blurred at all: the compositor's ignore_alpha
+    // has to sit under it, and a lower one blurs the shadow pixels into a frosted halo.
+    readonly property real minGlassAlpha: 0.2
+
+    function applyGlassPreset(name) {
+        const w = Config.options.background.widgets;
+        if (name === "custom") {
+            w.glassPreset = "custom";
+            return;
+        }
+        if (name === "shell") {
+            // The scheme's own surface alpha already follows the shell's transparency
+            w.glassPreset = "shell";
+            w.tintOpacityEnabled = false;
+            return;
+        }
+        const p = root.glassPresets[name];
+        if (!p)
+            return;
+        w.glassPreset = name;
+        w.tintOpacityEnabled = p.alpha < 1;
+        w.tintOpacity = p.alpha;
+        w.cardRim = p.rim;
+        w.cardSheen = p.sheen;
+        w.cardBorderWidth = p.border;
+    }
+
+    // A widget's style merged over the global one: { alpha, rim, sheen, border, radiusScale, scheme }.
+    // Reads Config inside, so a binding that calls it follows every setting it depends on.
+    function resolveStyle(own) {
+        const w = Config.options.background.widgets;
+        const o = own || {};
+        const preset = o.preset ? root.glassPresets[o.preset] : null;
+        const out = {
+            "alpha": root.backgroundTintOpacity,
+            "rim": w.cardRim ?? false,
+            "sheen": w.cardSheen ?? false,
+            "border": w.cardBorderWidth ?? 0,
+            "radiusScale": w.cardRadiusScale ?? 1,
+            "scheme": root.currentScheme
+        };
+        if (w.glassPreset === "shell") {
+            // The Glass tile in Colors & Themes: a glass shell gets glass cards. The fill keeps the
+            // scheme's own alpha (it follows the shell's transparency), the rim and sheen come with it.
+            const glass = Config.options.appearance.transparency.enable ?? false;
+            out.alpha = root.shellCardAlpha;
+            out.rim = false;
+            out.sheen = glass;
+            out.border = 0;
+        }
+        if (preset) {
+            out.alpha = preset.alpha;
+            out.rim = preset.rim;
+            out.sheen = preset.sheen;
+            out.border = preset.border;
+        }
+        if (typeof o.opacity === "number")
+            out.alpha = o.opacity;
+        if (typeof o.border === "number")
+            out.border = o.border;
+        if (typeof o.radius === "number")
+            out.radiusScale = o.radius;
+        if (o.scheme && root.schemeNames[o.scheme] !== undefined)
+            out.scheme = o.scheme;
+        out.alpha = Math.max(0, Math.min(1, out.alpha));
+        return out;
+    }
+
+    // The most see-through any card on the desktop is meant to be: the compositor rule is per
+    // screen layer, so it has to let the clearest card through. Floored, see minGlassAlpha.
+    readonly property real cardAlphaFloor: {
+        let lowest = root.globalCardAlpha;
+        const list = Config.options.background.activeWidgets || [];
+        for (let i = 0; i < list.length; i++) {
+            if (list[i].style)
+                lowest = Math.min(lowest, root.resolveStyle(list[i].style).alpha);
+        }
+        return lowest < 1 ? Math.max(root.minGlassAlpha, lowest) : 1;
+    }
 
     // Apply at the background paint site, after selecting the palette/album
     // color. Keep raw palette tokens opaque: clocks also use them for hands,

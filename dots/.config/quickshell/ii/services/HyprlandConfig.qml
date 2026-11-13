@@ -28,6 +28,13 @@ Singleton {
         args += root._extraArgs(extras)
         root._queueShellOverridesCommand(`${root.configuratorScriptPath} --file ${root.shellOverridesPath} ${args}`);
     }
+    function applyOverrides(entries: var, resetKeys: list<string>, extras: var) {
+        let args = ""
+        for (let key in entries) args += `--set "${key}" "${entries[key]}" `
+        for (let i = 0; i < resetKeys.length; i++) args += `--reset "${resetKeys[i]}" `
+        args += root._extraArgs(extras)
+        root._queueShellOverridesCommand(`${root.configuratorScriptPath} --file ${root.shellOverridesPath} ${args}`);
+    }
     // This is deliberately separate from set/setMany: the latter belongs to
     // transient shellOverrides, while Welcome owns only its marker-delimited
     // block in custom/input.lua.

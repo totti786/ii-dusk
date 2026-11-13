@@ -943,6 +943,7 @@ Item {
         // menu is thousands of entries deep, and the categories are already in the .desktop
         // files — not offering them means the only way through the list is scrolling.
         Flickable {
+            WheelScroll {}
             id: categoryStrip
             Layout.fillWidth: true
             Layout.preferredHeight: categoryStrip.shown ? categoryRow.implicitHeight : 0

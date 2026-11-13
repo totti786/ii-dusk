@@ -23,7 +23,7 @@ Singleton {
 	property MprisPlayer localPlayer: null;
 	property MprisPlayer lastExternalPlayer: null;
 	property bool localPlayerSelected: false;
-	readonly property string localPlayerBusName: "org.mpris.MediaPlayer2.ii_local";
+	readonly property string localPlayerBusName: "org.mpris.MediaPlayer2.audioplayer";
 
 	function updatePlayersList() {
 		allPlayers = Mpris.players.values;
@@ -495,6 +495,14 @@ Singleton {
 			&& root._sameTrack(other, player));
 	}
 
+	function isShadowedNativeBrowser(player: MprisPlayer): bool {
+		const bus = player?.dbusName ?? "";
+		if (!bus.startsWith("org.mpris.MediaPlayer2.firefox.instance"))
+			return false;
+		const extension = Mpris.players.values.filter(p => (p.dbusName ?? "").startsWith("org.mpris.MediaPlayer2.firefox_bridge."));
+		return extension.length > 0 && !(player.isPlaying && !extension.some(p => p.isPlaying));
+	}
+
 	/** A bus with nothing to show and nothing to control (e.g. GeForce NOW's idle "Untitled" player). */
 	function isEmptyPlayer(player: MprisPlayer): bool {
 		if (!player || root.isLocalPlayer(player))
@@ -509,6 +517,11 @@ Singleton {
 			return true;
 		const bus = player?.dbusName ?? "";
 		return !root.isBrowserDuplicate(player)
+			// Firefox's own bus says less than the browser extension's per-tab players, so it steps aside
+			// while those exist - unless it is the only one playing
+			&& !root.isShadowedNativeBrowser(player)
+			// A player that is stopped with nothing loaded has nothing to show
+			&& !(player.playbackState === MprisPlaybackState.Stopped && !(player.trackTitle ?? ""))
 			&& !root.isEmptyPlayer(player)
 			// playerctld just copies other buses and we don't need duplicates
 			&& !bus.startsWith('org.mpris.MediaPlayer2.playerctld')

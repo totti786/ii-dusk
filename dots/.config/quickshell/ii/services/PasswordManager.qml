@@ -24,6 +24,14 @@ Singleton {
 
     readonly property var _cfg: Config.options?.bar?.passwordManager ?? null
     readonly property string configuredProvider: root._cfg?.provider ?? "auto"
+    // Opt-in: remember the master password for this login session and unlock on a fingerprint match.
+    readonly property bool fingerprintEnabled: root._cfg?.fingerprint ?? false
+    property bool fpAvailable: false
+    property bool fpEnrolled: false
+    property bool fpStashed: false
+    property bool fpCancelled: false
+    readonly property bool fpReady: root.needsPassword && root.fingerprintEnabled && root.fpAvailable && root.fpEnrolled
+    readonly property bool fpWaiting: root.busy && root.busyAction === "fingerprint"
     readonly property int clipboardClearSeconds: Math.max(0, root._cfg?.clipboardClear ?? 30)
     readonly property int autoLockMinutes: Math.max(0, root._cfg?.autoLock ?? 15)
     readonly property bool lockWithScreen: root._cfg?.lockWithScreen ?? true
@@ -262,7 +270,32 @@ Singleton {
         root.busyAction = "unlock";
         actionProc.pendingStdin = root.needsPassword ? String(password ?? "") + "\n" : "";
         actionProc.stdinEnabled = root.needsPassword;
-        actionProc.exec(root._cmd(["unlock"]));
+        actionProc.exec(root._cmd(root.fingerprintEnabled ? ["unlock", "--remember"] : ["unlock"]));
+    }
+
+    function refreshFingerprint(): void {
+        if (!fpStatusProc.running)
+            fpStatusProc.exec(["python3", Directories.scriptPath + "/password_manager.py", "fp-status"]);
+    }
+
+    function unlockWithFingerprint(): void {
+        if (actionProc.running || !root.fpReady)
+            return;
+        root.clearError();
+        root.fpCancelled = false;
+        root.busy = true;
+        root.busyAction = "fingerprint";
+        actionProc.pendingStdin = "";
+        actionProc.stdinEnabled = false;
+        actionProc.exec(root._cmd(["fingerprint"]));
+    }
+
+    // The popup closed or the user typed instead: stop waiting for the sensor.
+    function cancelFingerprint(): void {
+        if (root.fpWaiting && actionProc.running) {
+            root.fpCancelled = true;
+            actionProc.running = false;
+        }
     }
 
     function lock(): void {
@@ -364,6 +397,33 @@ Singleton {
     }
 
     Process {
+        id: fpStatusProc
+        stdout: StdioCollector { id: fpStatusOut }
+        onExited: {
+            try {
+                const payload = JSON.parse(fpStatusOut.text || "{}");
+                root.fpAvailable = payload.available ?? false;
+                root.fpEnrolled = payload.enrolled ?? false;
+                root.fpStashed = payload.stashed ?? false;
+            } catch (error) {
+                root.fpAvailable = false;
+            }
+        }
+    }
+
+    Process { id: fpForgetProc }
+
+    // Turning the option off must not leave the password in the keyring.
+    onFingerprintEnabledChanged: {
+        if (!root.fingerprintEnabled) {
+            fpForgetProc.exec(["python3", Directories.scriptPath + "/password_manager.py", "fp-forget"]);
+            root.fpStashed = false;
+        } else {
+            root.refreshFingerprint();
+        }
+    }
+
+    Process {
         id: actionProc
         property string pendingStdin: ""
         property var lastItem: null
@@ -387,8 +447,14 @@ Singleton {
             } catch (error) {
                 payload = { ok: false, error: Translation.tr("The helper returned invalid data") };
             }
+            if (action === "fingerprint" && root.fpCancelled) {
+                root.fpCancelled = false;
+                return;
+            }
             if (!payload.ok) {
                 root._fail(payload);
+                if (action === "fingerprint" || action === "unlock")
+                    root.refreshFingerprint();
                 if (payload.code === "locked") {
                     root.state = "locked";
                     root.items = [];
@@ -398,8 +464,10 @@ Singleton {
             root.clearError();
             switch (action) {
             case "unlock":
+            case "fingerprint":
                 root.state = "unlocked";
                 root.refresh();
+                root.refreshFingerprint();
                 break;
             case "lock":
                 root.items = [];
@@ -491,5 +559,6 @@ Singleton {
     Component.onCompleted: {
         root.refresh();
         root.detect();
+        root.refreshFingerprint();
     }
 }

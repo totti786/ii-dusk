@@ -42,8 +42,12 @@ Singleton {
         : (root.activePlayer?.trackTitle ?? "")
     readonly property string localLyricsPath: localSessionActive
         ? LocalMediaService.player.trackLyricsPath : ""
-    readonly property bool localLyricsLoading: localSessionActive && LocalLyrics.loading
-    readonly property string localLyricsText: localSessionActive ? LocalLyrics.lyricsText : ""
+    readonly property bool localLyricsLoading: (localSessionActive && LocalLyrics.loading)
+        || MusicLyricsBridge.loadingFor(root.activePlayer)
+    // The Music app's own player brings its lyrics with it (see MusicLyricsBridge), so they
+    // ride the same path as a local file: first in line, online providers kept quiet.
+    readonly property string localLyricsText: localSessionActive ? LocalLyrics.lyricsText
+        : MusicLyricsBridge.textFor(root.activePlayer)
     readonly property bool hasLocalLyricsFile: localLyricsText.trim().length > 0
     readonly property string customLyricsText: CustomLyricsStore.get(root.activePlayer?.trackTitle ?? "",
         root.activePlayer?.trackArtist ?? "")
@@ -67,10 +71,21 @@ Singleton {
         && (root.lyricsProvider === "netease"
             || (root.lyricsProvider === "auto" && betterlyrics.settled && !root.betterlyricsHasWords
                 && lrcmux.settled && !(lrcmux.enabled && lrcmux.hasSyncedLines)))
-    readonly property bool effectiveGeniusEnabled: lyricsEnabled && geniusEnabled && isInitialized
+    // Genius and YouTube Music only supply plain text, the last links of the "auto" chain
+    // (see plainLyricsText), so in "auto" they wait for BetterLyrics and LRCLIB to finish
+    // empty-handed instead of costing a node and a Python process on every track.
+    readonly property bool lrclibSettled: !lrclib.enabled || lrclib.loadedKey === lrclib.fetchKey
+        || (!lrclib.loading && lrclib.error.length > 0)
+    readonly property bool textFallbackNeeded: betterlyrics.settled && lrclibSettled
+        && betterlyrics.plainLyricsText.length === 0 && lrclib.plainLyricsText.length === 0
+        && !hasSyncedLines
+    readonly property bool textFallbackAllowed: lyricsEnabled && isInitialized
         && !localLyricsLoading && !hasLocalLyricsFile
-    readonly property bool effectiveYtmusicEnabled: lyricsEnabled && ytmusicEnabled && isInitialized
-        && (root.activePlayer?.trackTitle?.length > 0) && !localLyricsLoading && !hasLocalLyricsFile
+    readonly property bool effectiveGeniusEnabled: textFallbackAllowed && geniusEnabled
+        && (root.lyricsProvider === "genius" || (root.lyricsProvider === "auto" && textFallbackNeeded))
+    readonly property bool effectiveYtmusicEnabled: textFallbackAllowed && ytmusicEnabled
+        && (root.activePlayer?.trackTitle?.length > 0)
+        && (root.lyricsProvider === "ytmusic" || (root.lyricsProvider === "auto" && textFallbackNeeded))
 
     // Active synced provider resolution:
     // Local / custom lyrics take ultimate precedence (via lrclib overrideLines).
@@ -126,7 +141,7 @@ Singleton {
 
     // LRCLib flags a track as instrumental. That is a real answer, not a
     // failure, and deserves its own UI state instead of "no lyrics found".
-    readonly property bool instrumental: !root.usingLocalLyrics && !root.usingBetterlyrics && lrclib.instrumental && !root.hasSyncedLines
+    readonly property bool instrumental: !root.usingLocalLyrics && !root.usingBetterlyrics && lrclib.instrumental === true && !root.hasSyncedLines
     readonly property bool hasPlainLyrics: root.plainLyrics.trim().length > 0
     readonly property bool hasAnyLyrics: root.hasSyncedLines || root.hasPlainLyrics
     readonly property bool usingCustomLyrics: customLyricsText.length > 0 && lrclib.hasOverride
@@ -280,6 +295,10 @@ Singleton {
 
     // We use this flag to change shell color just once, otherwise it will be called 3-4 times depending on the user's monitor count
     property bool shellColorChanged: false
+    // Unlike shellColorChanged, not reset on track change or when the last media mode closes: it
+    // stays set until the wallpaper palette has been restored, so closing without ever having
+    // recoloured the shell does not regenerate the whole theme.
+    property bool shellNeedsRestore: false
 
     // Function to initialize the lyrics service, to prevent unnecessary API calls when no lyrics UI is being use
     // Its being called in LyricsStatic, LyricsScroller and LyricsFlickable files
@@ -420,8 +439,9 @@ Singleton {
         readonly property string trackTitle: root.activePlayer?.trackTitle ?? ""
         onTrackTitleChanged: {
             if (root.activePlayer) {
-                if (!effectiveGeniusEnabled) return;
                 genius.hasString = false
+                genius.lyricsString = ""
+                if (!effectiveGeniusEnabled) return;
                 genius.fetchLyrics(root.activePlayer.trackArtist, root.activePlayer.trackTitle)
             }
         }
@@ -443,13 +463,22 @@ Singleton {
         }
     }
 
+    onEffectiveGeniusEnabledChanged: {
+        if (effectiveGeniusEnabled && root.activePlayer)
+            genius.fetchLyrics(root.activePlayer.trackArtist ?? "", root.activePlayer.trackTitle ?? "")
+    }
+    onEffectiveYtmusicEnabledChanged: {
+        if (effectiveYtmusicEnabled && root.activePlayer)
+            ytmusic.fetchLyrics(root.activePlayer.trackArtist ?? "", root.activePlayer.trackTitle ?? "")
+    }
+
     YTMusicLyrics {
         id: ytmusic
         readonly property string trackTitle: root.activePlayer?.trackTitle ?? ""
         onTrackTitleChanged: {
             if (root.activePlayer) {
-                if (!effectiveYtmusicEnabled) return;
                 ytmusic.lyricsString = ""
+                if (!effectiveYtmusicEnabled) return;
                 ytmusic.fetchLyrics(root.activePlayer?.trackArtist ?? "", root.activePlayer?.trackTitle ?? "")
             }
         }
@@ -494,6 +523,7 @@ Singleton {
         Quickshell.execDetached([`${Directories.wallpaperSwitchScriptPath}`, "--noswitch", "--color", colorStr]);
         lastAppliedShellColor = colorStr;
         shellColorChanged = true;
+        shellNeedsRestore = true;
     }
 }
 

@@ -295,4 +295,13 @@ Singleton {
             root.stack = [];
         }
     }
+
+    /** Super+Q asks this before closing: media mode covers the screen without a layer of its own. */
+    IpcHandler {
+        target: "windowGuard"
+
+        function blocked(): bool {
+            return GlobalStates.mediaModeActive;
+        }
+    }
 }

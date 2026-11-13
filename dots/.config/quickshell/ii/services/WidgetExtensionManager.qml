@@ -215,8 +215,10 @@ Singleton {
             let wj = entry.widgetJson || {};
             let qmlFile = root._getComponent(wj);
             let qmlPath = entry.installedPath + "/" + qmlFile;
+            let hasSchema = !!wj.configSchema && Object.keys(wj.configSchema).length > 0;
             result.push({
                 "widgetId": "ext:" + extId,
+                "configPage": hasSchema ? "widgets/ExtensionWidgetConfigPage.qml" : "",
                 "name": entry.name || extId,
                 "category": wj.category || "Utility",
                 "qmlPath": "file://" + qmlPath,

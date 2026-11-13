@@ -10,6 +10,7 @@ Item {
     property bool nextButtonHovered: false
 
     readonly property var languageNames: ({
+        "ar_SY": "العربية",
         "de_DE": "Deutsch",
         "en_US": "English (United States)",
         "es_MX": "Español (México)",
@@ -33,6 +34,7 @@ Item {
      * line to find their way back out.
      */
     readonly property var languageEndonyms: ({
+        "ar_SY": Translation.tr("Arabic"),
         "de_DE": Translation.tr("German"),
         "en_US": Translation.tr("English (United States)"),
         "es_MX": Translation.tr("Spanish (Mexico)"),

@@ -1376,6 +1376,27 @@ Singleton {
         });
     }
 
+    function mediatorMatches(queryText: string): var {
+        const query = String(queryText ?? "").trim().toLocaleLowerCase();
+        if (query.length < 2)
+            return [];
+        // The library is scanned once, the first time a search could need it
+        if (MediatorService.titles.length === 0 && !MediatorService.loading)
+            Qt.callLater(() => MediatorService.refresh());
+        return MediatorService.titles.filter(t => String(t.display ?? t.name ?? "").toLocaleLowerCase().includes(query)).slice(0, 5);
+    }
+
+    function createMediatorResult(title: var): var {
+        const next = title?.next;
+        return resultComp.createObject(null, {
+            key: "mediator:" + String(title?.id ?? ""), name: String(title?.display ?? title?.name ?? ""),
+            type: Translation.tr("Mediator"), verb: next?.reason === "resume" ? Translation.tr("Resume") : Translation.tr("Play"),
+            iconName: "movie", iconType: LauncherSearchResult.IconType.Material,
+            comment: next?.label ? String(next.label) : String(title?.lib ?? ""),
+            execute: () => MediatorService.continueTitle(String(title.id))
+        });
+    }
+
     function fallbackResults() {
         if (!Config.options.search.fallbacks.enable)
             return [];
@@ -2887,10 +2908,9 @@ Singleton {
      * index refresh, a keybind reload, the bar opening — all schedule a full
      * recomputation, and they keep doing it when no launcher is on screen.
      *
-     * The II Search is the `overviewOpen` case. The Waffle start menu has no
-     * flag of its own but drives `query` directly, and shows its start page
-     * rather than results while that query is empty — so a typed query is the
-     * signal that it, too, is watching.
+     * The II Search is the `overviewOpen` case. Other launchers have no
+     * flag of their own but drive `query` directly, so a typed query is the
+     * signal that they, too, are watching.
      */
     readonly property bool hasResultConsumer: !root.fileResultsOnly
         && (GlobalStates.overviewOpen || root.query.length > 0)
@@ -3206,7 +3226,7 @@ Singleton {
             // The ii Search answers this prefix with its clipboard panel, which reads
             // the history itself; these rows were built behind it and never shown -
             // sixty result objects, each with its actions, on the frame the launcher
-            // opens. The tablet drawer and the Waffle menu have no such panel and
+            // opens. The tablet drawer has no such panel and
             // still list the rows.
             if (GlobalStates.classicOverviewOpen && PanelFamily.isIi)
                 return [];
@@ -3785,6 +3805,10 @@ Singleton {
         ////////// Bluetooth devices ///////////
         for (const device of root.bluetoothMatches(root.query))
             result.push(root.createBluetoothResult(device));
+
+        ////////// Mediator titles ///////////
+        for (const title of root.mediatorMatches(root.query))
+            result.push(root.createMediatorResult(title));
 
         ////////// Local tools & generators ////////////
         for (const match of root.toolEntries(root.query))

@@ -69,10 +69,14 @@ Singleton {
         "notifications": notificationComp,
         "autoDnd": autoDndComp,
         "powerProfile": powerProfilesComp,
+        "powerSaving": powerSavingComp,
+        "reduceMotion": reduceMotionComp,
+        "icons": iconsComp,
         "musicRecognition": musicRecognitionComp,
         "discordVoice": discordVoiceComp,
         "phoneCamera": phoneCameraComp,
         "phoneMic": phoneMicComp,
+        "quickShare": quickShareComp,
         "phoneMirror": phoneMirrorComp,
         "speedTest": speedTestComp,
         "antiFlashbang": antiFlashbangComp,
@@ -110,9 +114,13 @@ Singleton {
         { id: "notifications", keywords: ["notifications", "dnd", "notificacoes"], get model() { return root.getModel("notifications"); } },
         { id: "autoDnd", keywords: ["auto dnd", "focus", "nao perturbe"], get model() { return root.getModel("autoDnd"); } },
         { id: "powerProfile", keywords: ["power", "battery", "energia"], get model() { return root.getModel("powerProfile"); } },
+        { id: "reduceMotion", keywords: ["motion", "animations", "reduce motion", "animation off"], get model() { return root.getModel("reduceMotion"); } },
+        { id: "powerSaving", keywords: ["power saving", "power saver", "eco", "battery saver", "blur"], get model() { return root.getModel("powerSaving"); } },
+        { id: "icons", keywords: ["icons", "icon theme", "themed icons", "icon tint"], get model() { return root.getModel("icons"); } },
         { id: "musicRecognition", keywords: ["music", "recognition", "musica"], get model() { return root.getModel("musicRecognition"); } },
         { id: "discordVoice", keywords: ["discord", "voice", "call", "mute", "deafen"], get model() { return root.getModel("discordVoice"); } },
         { id: "phoneCamera", keywords: ["phone", "camera", "webcam", "droidcam"], get model() { return root.getModel("phoneCamera"); } },
+        { id: "quickShare", keywords: ["quick share", "nearby share", "android", "send", "receive", "files", "phone"], get model() { return root.getModel("quickShare"); } },
         { id: "phoneMic", keywords: ["phone", "microphone", "mic"], get model() { return root.getModel("phoneMic"); } },
         { id: "phoneMirror", keywords: ["phone", "mirror", "scrcpy", "screen", "espelhamento", "celular", "tela"], get model() { return root.getModel("phoneMirror"); } },
         { id: "speedTest", keywords: ["speed", "test", "internet", "bandwidth"], get model() { return root.getModel("speedTest"); } },
@@ -156,10 +164,14 @@ Singleton {
     Component { id: notificationComp; NotificationToggle {} }
     Component { id: autoDndComp; AutoDndToggle {} }
     Component { id: powerProfilesComp; PowerProfilesToggle {} }
+    Component { id: powerSavingComp; PowerSavingToggle {} }
+    Component { id: reduceMotionComp; ReduceMotionToggle {} }
+    Component { id: iconsComp; IconsToggle {} }
     Component { id: musicRecognitionComp; MusicRecognitionToggle {} }
     Component { id: discordVoiceComp; DiscordVoiceToggle {} }
     Component { id: phoneCameraComp; PhoneCameraToggle {} }
     Component { id: phoneMicComp; PhoneMicToggle {} }
+    Component { id: quickShareComp; QuickShareToggle {} }
     Component { id: phoneMirrorComp; PhoneMirrorToggle {} }
     Component { id: speedTestComp; SpeedTestToggle {} }
     Component { id: antiFlashbangComp; AntiFlashbangToggle {} }

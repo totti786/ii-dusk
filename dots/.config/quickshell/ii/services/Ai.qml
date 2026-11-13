@@ -27,6 +27,7 @@ Singleton {
     property Component geminiApiStrategy: GeminiApiStrategy {}
     property Component openAiCompatStrategy: OpenAiCompatStrategy {}
     property Component anthropicApiStrategy: AnthropicApiStrategy {}
+    property Component opencodeApiStrategy: OpencodeStrategy {}
     readonly property string interfaceRole: "interface"
     readonly property string apiKeyEnvVarName: "API_KEY"
 
@@ -1333,6 +1334,8 @@ Singleton {
             return root.geminiApiStrategy.createObject(parent);
         if (normalized === "anthropic")
             return root.anthropicApiStrategy.createObject(parent);
+        if (normalized === "opencode")
+            return root.opencodeApiStrategy.createObject(parent);
         return root.openAiCompatStrategy.createObject(parent);
     }
 
@@ -2013,8 +2016,52 @@ Singleton {
         return touched;
     }
 
+    /**
+     * Cards a streamed answer reports. A card already there is updated. A new one is added only when
+     * it says what it is, so a late update for a card that is gone is dropped.
+     */
+    function applyToolCards(message, cards): void {
+        if (!message || !Array.isArray(cards) || cards.length === 0)
+            return;
+        let list = Array.from(message.toolCards ?? []);
+        for (const change of cards) {
+            const callId = String(change?.callId ?? "");
+            const index = list.findIndex(card => String(card.callId) === callId);
+            if (index >= 0)
+                list[index] = Object.assign({}, list[index], change);
+            else if (change.kind)
+                list = [...list, change];
+        }
+        message.toolCards = list;
+    }
+
     function toolCardFor(message, callId: string): var {
         return Array.from(message?.toolCards ?? []).find(card => String(card.callId) === String(callId)) ?? null;
+    }
+
+    /**
+     * Allows (`once`) or refuses (`reject`) one of the shell's tools that OpenCode is waiting on.
+     * The answer goes to the bridge, which passes it to the server. There is no standing allow.
+     */
+    function answerShellApproval(message: AiMessageData, callId: string, decision: string): void {
+        const card = root.toolCardFor(message, callId);
+        if (!card || card.kind !== "opencodeShellApproval" || card.state !== "pending")
+            return;
+        const allowed = decision === "once";
+        root.updateToolCard(message, callId, {
+            state: allowed ? "done" : "denied",
+            summary: allowed ? Translation.tr("Allowed") : Translation.tr("Not allowed")
+        });
+        Quickshell.execDetached(["python3", Directories.opencodeBridgeScriptPath, "answer",
+            String(card.data?.sessionId ?? ""), String(card.data?.requestId ?? ""), decision]);
+    }
+
+    function approveShellTool(message: AiMessageData, callId: string): void {
+        root.answerShellApproval(message, callId, "once");
+    }
+
+    function rejectShellTool(message: AiMessageData, callId: string): void {
+        root.answerShellApproval(message, callId, "reject");
     }
 
     function messageForToolKey(key: string): var {
@@ -2041,11 +2088,11 @@ Singleton {
     // pending approval: these stay in the transcript once done, the same way
     // a search engine's results page does not disappear once you have read
     // it.
-    readonly property var resultCardKinds: ["settingsResults", "fileResults", "songIdentifyPreview", "taskResults", "ragResults", "modesResult"]
+    readonly property var resultCardKinds: ["settingsResults", "fileResults", "songIdentifyPreview", "taskResults", "ragResults", "modesResult", "opencodeToolActivity"]
     // Approval bodies are actionable only while pending. Keeping their final
     // state in the model lets the transcript turn the card into one outcome
     // row instead of removing it from under the reader.
-    readonly property var approvalCardKinds: ["settingsDiff", "reminderPreview", "memoryFact", "fileAttachPreview", "notesPreview", "systemControlPreview", "windowMovePreview", "wallpaperPreview", "mediaControlPreview", "songIdentifyPreview", "taskPreview", "taskMutationPreview", "calendarMutationPreview", "modesDeletePreview"]
+    readonly property var approvalCardKinds: ["settingsDiff", "reminderPreview", "memoryFact", "fileAttachPreview", "notesPreview", "systemControlPreview", "opencodeShellApproval","windowMovePreview", "wallpaperPreview", "mediaControlPreview", "songIdentifyPreview", "taskPreview", "taskMutationPreview", "calendarMutationPreview", "modesDeletePreview"]
     readonly property var resolvedApprovalStates: ["done", "denied", "failed", "needsInspection"]
 
     function visibleToolCards(message): var {
@@ -2068,9 +2115,20 @@ Singleton {
     // builds a model object or tests a provider name for substrings.
     readonly property ModelCatalog catalog: ModelCatalog {
         ollamaModelNames: root.ollamaModels
+        opencodeModelNames: root.opencodeModels
     }
     property var ollamaModels: []
+    property var opencodeModels: []
     property bool ollamaRefreshPending: false
+
+    /**
+     * The OpenCode server may start after the shell did, so the model picker asks
+     * again when it opens. Shares the boot index's job, which only looks, never starts.
+     */
+    function refreshOpencodeModels() {
+        if (!aiIndexProc.running)
+            aiIndexProc.running = true;
+    }
 
     /** Re-index after a user-initiated local pull, without duplicating jobs. */
     function refreshOllamaModels() {
@@ -2173,7 +2231,8 @@ Singleton {
             // configs (and the shipped default) still ask for it.
             "mistral": openAiCompat,
             "gemini": geminiApiStrategy.createObject(this),
-            "anthropic": anthropicApiStrategy.createObject(this)
+            "anthropic": anthropicApiStrategy.createObject(this),
+            "opencode": opencodeApiStrategy.createObject(this)
         };
     }
     property ApiStrategy currentApiStrategy: apiStrategies[root.currentModelEntry?.api_format || "openai"]
@@ -2261,6 +2320,10 @@ Singleton {
                 // the "ollama" provider's model list.
                 if (Array.isArray(parsed.ollama_models))
                     root.ollamaModels = parsed.ollama_models
+
+                // OpenCode server models: the same catalog treatment, from a server that is already running.
+                if (Array.isArray(parsed.opencode_models))
+                    root.opencodeModels = parsed.opencode_models
 
                 // Prompts (already absolute, filtered by extension)
                 if (Array.isArray(parsed.default_prompts))
@@ -2899,6 +2962,140 @@ Singleton {
 
     }
 
+    // ── What an OpenCode chat reaches without a card ─────────────────────
+    // The chat's MCP server (scripts/ai/shell_tools_mcp.py) calls these over IPC. They are reads, and
+    // the shell's own settings. Whether a tool waits for the user is decided by the bridge's session
+    // rules; what a settings change may touch is decided here, whatever the rules say.
+
+    /**
+     * Settings the model must not change on its own say-so, because changing them gives it more power than
+     * the user did: its own permissions and policies, anything the shell later runs as a command, and
+     * addresses and credentials. They are refused with a pointer to where the user can change them.
+     */
+    readonly property var protectedSettingPrefix: /^(ai|policies|apps|lock\.security|dnsOverTls)(\.|$)/
+    readonly property var protectedSettingWords: new Set([
+        "command", "commands", "cmd", "exec", "execute", "executable", "script", "scripts", "hook", "hooks", "url", "urls",
+        "endpoint", "token", "tokens", "secret", "secrets", "password", "passwords", "credential", "credentials", "proxy",
+        "ssh", "askpass", "remote"
+    ])
+
+    /** `engineBaseUrl` → engine, base, url. Whole words only: "alwaysShowSwap" contains "ssh" and is harmless. */
+    function settingWords(key: string): var {
+        return String(key).replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[._-]/g, " ").toLowerCase().split(" ").filter(word => word.length > 0);
+    }
+
+    function protectedSettingReason(key: string): string {
+        const name = String(key);
+        const protectedKey = root.protectedSettingPrefix.test(name)
+            || root.settingWords(name).some(word => root.protectedSettingWords.has(word));
+        if (!protectedKey)
+            return "";
+        const entry = root.settingsIntegration.entryFor(name);
+        const place = [entry?.pageName, entry?.sectionTitle].filter(part => String(part ?? "").length > 0).join(" › ");
+        return `protected: only the user can change this one${place.length > 0 ? ` (Settings › ${place})` : ""}`;
+    }
+
+    function opencodeSettingRef(ref: var): var {
+        const projected = root.settingsIntegration.modelRef(ref);
+        if (!projected)
+            return null;
+        const options = Array.from(ref.options ?? []).map(option => option?.value);
+        if (options.length > 0)
+            projected.options = options;
+        if (ref.range)
+            projected.range = ref.range;
+        const reason = root.protectedSettingReason(projected.key);
+        if (reason.length > 0)
+            projected.protected = true;
+        return projected;
+    }
+
+    function opencodeSettingsSet(changes: var): var {
+        const applied = [];
+        const skipped = [];
+        for (const change of Array.from(changes ?? []).slice(0, 20)) {
+            const key = String(change?.key ?? "");
+            const reason = root.protectedSettingReason(key);
+            if (reason.length > 0) {
+                skipped.push({ key: key, reason: reason });
+                continue;
+            }
+            const previous = root.settingsIntegration.currentValue(key);
+            const result = root.settingsIntegration.apply([{ key: key, value: change?.value }]);
+            if (result.applied.length > 0)
+                applied.push({ key: key, value: change.value, previous: previous === undefined ? null : previous });
+            else
+                skipped.push(result.skipped[0] ?? { key: key, reason: "rejected" });
+        }
+        return { applied: applied, skipped: skipped };
+    }
+
+    /**
+     * The list under `field` in a JSON object argument, or null. The list travels inside an object because
+     * `qs ipc call` takes an argument that starts with `[` as several arguments of its own.
+     */
+    function parseJsonField(text: string, field: string): var {
+        try {
+            const value = JSON.parse(text);
+            return Array.isArray(value?.[field]) ? value[field] : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function opencodeIndexReady(): bool {
+        if (root.settingsIntegration.ready)
+            return true;
+        root.settingsIntegration.ensureIndex();
+        return false;
+    }
+
+    IpcHandler {
+        target: "aitools"
+
+        function status(): string {
+            return JSON.stringify(root.systemIntegration.status());
+        }
+
+        function health(): string {
+            return JSON.stringify(root.systemIntegration.health());
+        }
+
+        function windows(): string {
+            return JSON.stringify({ windows: root.windowsIntegration.list() });
+        }
+
+        function keybinds(query: string, limit: string): string {
+            return JSON.stringify({ query: query, matches: root.systemIntegration.keybinds(query, Number(limit) || 12) });
+        }
+
+        function settingsSearch(query: string, limit: string): string {
+            if (!root.opencodeIndexReady())
+                return JSON.stringify({ error: "The settings index is preparing; try again in a moment." });
+            const found = root.settingsIntegration.search(query, Number(limit) || 5);
+            return JSON.stringify({ query: query, matches: found.map(ref => root.opencodeSettingRef(ref)).filter(ref => ref !== null) });
+        }
+
+        function settingsGet(argsJson: string): string {
+            if (!root.opencodeIndexReady())
+                return JSON.stringify({ error: "The settings index is preparing; try again in a moment." });
+            const keys = root.parseJsonField(argsJson, "keys");
+            if (keys === null)
+                return JSON.stringify({ error: "expected {\"keys\": [...]}" });
+            const refs = root.settingsIntegration.get(keys);
+            return JSON.stringify({ settings: refs.map(ref => ref.error !== undefined ? ref : root.opencodeSettingRef(ref)) });
+        }
+
+        function settingsSet(argsJson: string): string {
+            if (!root.opencodeIndexReady())
+                return JSON.stringify({ error: "The settings index is preparing; try again in a moment.", applied: [], skipped: [] });
+            const changes = root.parseJsonField(argsJson, "changes");
+            if (changes === null)
+                return JSON.stringify({ error: "expected {\"changes\": [...]}", applied: [], skipped: [] });
+            return JSON.stringify(root.opencodeSettingsSet(changes));
+        }
+    }
+
     function transportErrorKind(status: int, code: int): string {
         if (status === 401 || status === 403)
             return "auth";
@@ -3014,6 +3211,7 @@ Singleton {
                 const functionCalls = Array.isArray(result.functionCalls) ? result.functionCalls : (result.functionCall ? [result.functionCall] : []);
                 if (functionCalls.length > 0)
                     root.handleFunctionCalls(functionCalls, requester.message);
+                root.applyToolCards(requester.message, result.toolCards ?? []);
                 if (result.tokenUsage) {
                     root.tokenCount.input = result.tokenUsage.input;
                     root.tokenCount.output = result.tokenUsage.output;
@@ -3189,6 +3387,7 @@ Singleton {
         const profile = pending ? (pending.profile ?? root.responseProfileForModel(model.id)) : root.responseProfileForModel(model.id);
         const strategy = pending ? root.apiStrategies[model.api_format || "openai"] : root.currentApiStrategy;
         strategy.activeThinkingLevel = profile.thinkingLevel;
+        strategy.chatSessionId = pending?.sessionId || root.sessions.currentId;
         const messageArray = root.messageIDs.map(id => root.messageByID[id]);
         const filteredMessageArray = messageArray.filter(message => message.role !== root.interfaceRole);
         // Only what fits goes out. What does not is remembered as a summary
@@ -7824,6 +8023,9 @@ Singleton {
     function requestTitle(opening: string, sessionId: string, expectedRevision: int) {
         const model = root.currentModelEntry;
         if (!model || titleRequester.running)
+            return;
+        // The OpenCode server keeps the chat in one session. A title request would be a second, empty one.
+        if (model.api_format === "opencode")
             return;
         if (!root.canSubmit(model.id).allowed)
             return;

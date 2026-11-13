@@ -324,6 +324,7 @@ Item {
              * list here is that it may rest anywhere.
              */
             ListView {
+                WheelScroll {}
                 id: cardList
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -476,6 +477,7 @@ Item {
              * is a unit and Recents has no units.
              */
             ListView {
+                WheelScroll {}
                 id: pager
                 anchors.fill: parent
                 visible: root.gridLayout

@@ -8,7 +8,6 @@ import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.functions
-import qs.modules.common.models.hyprland
 import "ModeSchema.js" as ModeSchema
 
 /**
@@ -148,21 +147,10 @@ QtObject {
         return out;
     }
 
-    // The Game Mode toggle's own heuristic: animations disabled ⇒ game mode on.
-    property HyprlandConfigOption animationsOption: HyprlandConfigOption {
-        key: "animations:enabled"
-    }
-    readonly property bool gameModeOn: root.animationsOption.value === 0
-        || root.animationsOption.value === false
+    readonly property bool gameModeOn: HyprlandProfiles.gameModeActive
 
     function setGameMode(on) {
-        if (on) {
-            HyprlandConfig.setMany(ModeSchema.GAME_MODE_OPTIONS, { addLines: [ModeSchema.GAME_MODE_RULE] });
-            return;
-        }
-        HyprlandConfig.resetMany(Object.keys(ModeSchema.GAME_MODE_OPTIONS), {
-            removeMatching: [ModeSchema.GAME_MODE_RULE_MARKER]
-        });
+        HyprlandProfiles.setGameMode(on);
     }
 
     function closeWindowsByClass(classes) {
@@ -1002,7 +990,7 @@ QtObject {
             editor: "hyprland", volatile: false,
             // value: { presets: ["animations", "blur", …], options: { "key": value } }
             // One setMany per apply; revert resets the same keys, minus the
-            // ones Game Mode holds while it is on.
+            // options the Game Mode profile still owns while it is on.
             available: () => true,
             apply: v => {
                 const options = root.hyprlandOptions(v);

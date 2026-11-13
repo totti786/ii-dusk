@@ -20,7 +20,7 @@ Singleton {
 
     readonly property string helperPath: `${Directories.scriptPath}/media/local_player.py`
     readonly property string scannerPath: `${Directories.scriptPath}/media/library-index-venv.sh`
-    readonly property string helperBusName: "org.mpris.MediaPlayer2.ii_local"
+    readonly property string helperBusName: "org.mpris.MediaPlayer2.audioplayer"
     readonly property int protocolVersion: 1
 
     property bool helperWanted: false

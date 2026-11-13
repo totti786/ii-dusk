@@ -14,6 +14,51 @@ Singleton {
     property var jobs: []
     readonly property bool hasActiveJobs: jobs.length > 0
 
+    // ── What the island's bubble shows ───────────────────────────────────────
+    readonly property var runningJobs: root.jobs.filter(j => j.state === "running")
+    /// The mean of what is still running, 0..1; a finished-only list reads as full.
+    readonly property var pausedJobs: root.jobs.filter(j => j.state === "paused")
+    readonly property real overallFraction: {
+        const running = root.runningJobs;
+        if (running.length === 0) {
+            // Only paused jobs left: the ring says how far they got, not "done"
+            const paused = root.pausedJobs;
+            if (paused.length > 0 && paused.length === root.jobs.length)
+                return paused.reduce((sum, j) => sum + Math.max(0, Math.min(100, j.percent ?? 0)), 0) / (paused.length * 100);
+            return root.jobs.length > 0 ? 1 : 0;
+        }
+        return running.reduce((sum, j) => sum + Math.max(0, Math.min(100, j.percent ?? 0)), 0) / (running.length * 100);
+    }
+
+    /// Stops a job the shell started: a yt-dlp download is cancelled, a torrent paused, the
+    /// media downloader cancelled. Jobs from other programs (Dolphin, notifications) are theirs.
+    /// A paused torrent stays on the card for a minute with a Resume button, then drops off.
+    readonly property int pausedLingerMs: 60000
+    function canResume(job) {
+        return job && job.state === "paused" && job.source === "shell" && String(job.id).startsWith("qb:");
+    }
+    function resumeJob(job) {
+        if (root.canResume(job))
+            TorrentsService.act("start", [String(job.id).slice(3)]);
+    }
+
+    function canCancel(job) {
+        return job && job.state === "running" && job.source === "shell"
+            && (String(job.id).startsWith("ytdl:") || String(job.id).startsWith("qb:") || job.id === "mediaDownloader");
+    }
+
+    function cancelJob(job) {
+        if (!root.canCancel(job))
+            return;
+        const id = String(job.id);
+        if (id.startsWith("ytdl:"))
+            DownloadsService.cancel(id.slice(5));
+        else if (id.startsWith("qb:"))
+            TorrentsService.act("stop", [id.slice(3)]);
+        else if (id === "mediaDownloader")
+            MediaDownloaderService.cancelDownload();
+    }
+
     // Central formatting helpers
     function formatBytes(bytes) {
         if (bytes <= 0) return "0 B";
@@ -40,6 +85,19 @@ Singleton {
         let hours = Math.floor(mins / 60);
         let remMins = mins % 60;
         return hours + "h " + remMins + "m restantes";
+    }
+
+    /// "3m 12s", "1h 04m": a short time left, for a job's second line.
+    function shortEta(seconds) {
+        if (!(seconds > 0) || !isFinite(seconds))
+            return "";
+        const total = Math.ceil(seconds);
+        if (total < 60)
+            return total + "s";
+        const mins = Math.floor(total / 60);
+        if (mins < 60)
+            return mins + "m " + String(total % 60).padStart(2, "0") + "s";
+        return Math.floor(mins / 60) + "h " + String(mins % 60).padStart(2, "0") + "m";
     }
 
     // Monitor for the org.kde.JobViewServer session DBus process
@@ -74,19 +132,19 @@ Singleton {
         id: cleanupTimer
         interval: 1000
         repeat: true
-        running: root.jobs.some(j => j.state === "completed" || j.state === "failed" || j.state === "cleared")
+        running: root.jobs.some(j => j.state === "completed" || j.state === "failed" || j.state === "cleared" || j.state === "paused")
         onTriggered: {
             let now = Date.now();
             let newJobs = [];
             let changed = false;
             for (let i = 0; i < root.jobs.length; i++) {
                 let job = root.jobs[i];
-                if (job.state === "completed" || job.state === "failed" || job.state === "cleared") {
+                if (job.state === "completed" || job.state === "failed" || job.state === "cleared" || job.state === "paused") {
                     if (!job.completedTime) {
                         job.completedTime = now;
                         changed = true;
                     }
-                    if (now - job.completedTime > 3000) { // Keep complete visible for 3 seconds
+                    if (now - job.completedTime > (job.state === "paused" ? root.pausedLingerMs : 3000)) { // Keep complete visible for 3 seconds
                         changed = true;
                         continue;
                     }
@@ -173,8 +231,11 @@ Singleton {
      * with the same id, it updates the job in place.
      */
     function reportShellJob(id, job) {
-        let next = root.jobs.filter(j => !(j.source === "shell" && j.id === id));
-        next.push(Object.assign({
+        // Same slot when the job is already listed: moving it to the end on every update
+        // would reorder the rows and make anything keyed by position start over.
+        const at = root.jobs.findIndex(j => j.source === "shell" && j.id === id);
+        let next = root.jobs.slice();
+        const entry = Object.assign({
             percent: 0,
             message: "",
             appName: "",
@@ -185,7 +246,11 @@ Singleton {
             speedText: "",
             progressText: "",
             etaText: ""
-        }, job, { id: id, source: "shell", state: "running" }));
+        }, job, { id: id, source: "shell", state: "running" });
+        if (at === -1)
+            next.push(entry);
+        else
+            next[at] = entry;
         root.jobs = next;
     }
 

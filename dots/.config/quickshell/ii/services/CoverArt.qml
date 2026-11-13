@@ -80,6 +80,10 @@ Singleton {
         const url = root._queue.shift();
         if (root._ready[url])
             return root._pump();
+        // Marked failed before it starts: a launch that never gets going (no exit signal) must not
+        // be asked for again in a tight loop. A success clears it.
+        root._failedAt[url] = Date.now();
+        retryTimer.restart();
         downloader.url = url;
         downloader.path = root.cachePath(url);
         downloader.running = true;
@@ -97,10 +101,15 @@ Singleton {
         id: downloader
         property string url: ""
         property string path: ""
+        stdinEnabled: true
+        // The URL arrives on stdin: an embedded `data:` cover is far past the size of one argument.
         command: ["bash", "-c",
-            "test -s \"$2\" && exit 0; mkdir -p \"$(dirname \"$2\")\"; t=$(mktemp \"$2.XXXXXX\") || exit 1; "
-            + "if curl -fLsS -4 --connect-timeout 8 --max-time 30 -o \"$t\" -- \"$1\" && test -s \"$t\"; then mv -f -- \"$t\" \"$2\"; else rm -f -- \"$t\"; exit 1; fi",
-            "cover-art", url, path]
+            "read -r url; test -s \"$1\" && exit 0; mkdir -p \"$(dirname \"$1\")\"; t=$(mktemp \"$1.XXXXXX\") || exit 1; "
+            + "case \"$url\" in data:*) printf '%s' \"${url#*,}\" | base64 -d > \"$t\" 2>/dev/null; ok=$?;; "
+            + "*) curl -fLsS -4 --connect-timeout 8 --max-time 30 -o \"$t\" -- \"$url\"; ok=$?;; esac; "
+            + "if [ $ok -eq 0 ] && test -s \"$t\"; then mv -f -- \"$t\" \"$1\"; else rm -f -- \"$t\"; exit 1; fi",
+            "cover-art", path]
+        onStarted: downloader.write(downloader.url + "\n")
         onExited: exitCode => {
             const url = downloader.url;
             if (exitCode === 0) {

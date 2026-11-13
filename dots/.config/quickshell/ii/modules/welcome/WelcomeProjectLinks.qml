@@ -8,8 +8,8 @@ import Quickshell
  * The fork documentation URL stays empty until the project publishes it.
  */
 QtObject {
-    readonly property string repositoryUrl: "https://github.com/P3DROVFX/ii-p3drovfx"
-    readonly property string documentationUrl: "https://github.com/P3DROVFX/ii-p3drovfx/wiki"
+    readonly property string repositoryUrl: "https://github.com/totti786/ii-dusk"
+    readonly property string documentationUrl: "https://github.com/totti786/ii-dusk#readme"
     readonly property string discordUrl: "https://discord.gg/GtdRBXgMwq"
     readonly property bool documentationAvailable: true
 }

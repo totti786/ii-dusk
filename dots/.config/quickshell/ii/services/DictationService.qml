@@ -9,7 +9,13 @@ import qs.modules.common
 import qs.modules.common.functions
 
 /**
- * Speech typed straight into whatever window has focus, through voxtype.
+ * Speech typed straight into whatever window has focus, through voxtype or Hex.
+ *
+ * Two engines sit behind the same keys, bar indicator and notch: `engine` picks Voxtype (a
+ * daemon the shell owns) or Hex (~/hex, which keeps itself running and pastes the text itself;
+ * the shell only starts it, sends `hex dictation start|stop|toggle|cancel` and follows the
+ * state events it appends to its live log). Everything below that says voxtype is the
+ * Voxtype half.
  *
  *     idle → recording → transcribing → (text typed into the focused app)
  *
@@ -45,6 +51,10 @@ Singleton {
 
     // ── Options ───────────────────────────────────────────────────────────
     readonly property bool enabled: Config.options?.dictation?.enabled ?? false
+    /** "hex" or "voxtype". Hex falls back to Voxtype while it is not installed. */
+    readonly property string engine: Config.options?.dictation?.engine ?? "hex"
+    /** Minutes without use after which Hex is quit (0 keeps it running). */
+    readonly property int hexIdleMinutes: Config.options?.dictation?.hexIdleMinutes ?? 10
     /** "fast" or "accurate" — a size/latency choice, not a language one. */
     readonly property string quality: Config.options?.dictation?.quality ?? "fast"
     /** "auto", a single code ("fr"), or several comma-separated ("en,fr"). */
@@ -170,12 +180,23 @@ Singleton {
      */
     property bool configApplied: false
 
-    readonly property bool available: root.installed && root.enabled && root.modelReady
+    /** The Hex binary: ~/hex, or `hex` on the PATH. Empty when neither exists. */
+    property string hexBin: ""
+    readonly property bool hexInstalled: root.hexBin.length > 0
+    /** The engine actually in use. Until the lookup has finished Hex is trusted, so a Voxtype
+     *  daemon is not started and torn down again at every login. */
+    readonly property string activeEngine: root.engine === "hex" && (root.hexInstalled || !root.binaryChecked) ? "hex" : "voxtype"
+    readonly property bool useHex: root.activeEngine === "hex"
+    readonly property bool engineReady: root.useHex ? root.hexInstalled : (root.installed && root.modelReady)
+    readonly property bool available: root.enabled && root.engineReady
 
     /** Why dictation cannot run right now, empty when it can. */
     function unavailableReason(): string {
         if (!root.binaryChecked)
-            return Translation.tr("Looking for voxtype…");
+            return Translation.tr("Looking for the dictation engine…");
+        if (root.useHex)
+            return !root.hexInstalled ? Translation.tr("Hex was not found (expected at ~/hex).")
+                : !root.enabled ? Translation.tr("Dictation is turned off.") : "";
         if (!root.installed)
             return Translation.tr("Voxtype is not installed.");
         if (!root.enabled)
@@ -189,7 +210,9 @@ Singleton {
 
     // ── Live state ────────────────────────────────────────────────────────
     /** stopped | idle | recording | streaming | transcribing */
-    property string state: "stopped"
+    property string voxState: "stopped"
+    property string hexState: "stopped"
+    readonly property string state: root.useHex ? root.hexState : root.voxState
     readonly property bool recording: root.state === "recording" || root.state === "streaming"
     readonly property bool transcribing: root.state === "transcribing"
     readonly property bool busy: root.recording || root.transcribing
@@ -229,9 +252,24 @@ Singleton {
      * something is missing — a dictation key that does nothing at all reads as
      * a broken shell, not as an unconfigured feature.
      */
+    function hexCmd(sub: string): void {
+        Quickshell.execDetached([root.hexBin, "dictation", sub]);
+    }
+
     function toggle() {
         if (!root.available) {
             root.complain();
+            return;
+        }
+        if (root.useHex) {
+            if (root.hexStarting)
+                root.hexPending = "";
+            else if (root.busy)
+                root.hexCmd("toggle");
+            else
+                // The cached state can be seconds old (Hex may have just been quit), so a start
+                // always asks Hex itself first.
+                root.ensureHex("toggle");
             return;
         }
         if (!root.daemonUp) {
@@ -247,6 +285,10 @@ Singleton {
     function stop() {
         if (!root.busy)
             return;
+        if (root.useHex) {
+            root.hexCmd("stop");
+            return;
+        }
         recordProc.exec(["voxtype", "record", "stop"]);
     }
 
@@ -254,11 +296,16 @@ Singleton {
     function discard() {
         if (!root.busy)
             return;
+        if (root.useHex) {
+            // Hex 3.1.2 dropped `cancel`; `stop --print` prints the words instead of pasting them.
+            Quickshell.execDetached([root.hexBin, "dictation", "stop", "--print"]);
+            return;
+        }
         recordProc.exec(["voxtype", "record", "cancel"]);
     }
 
     /** Short label for the language in use, for the bar and the popup. */
-    readonly property string languageBadge: root.language === "auto"
+    readonly property string languageBadge: root.useHex ? "EN" : root.language === "auto"
         ? Translation.tr("AUTO")
         : root.language.split(",")[0].trim().toUpperCase()
 
@@ -388,12 +435,15 @@ Singleton {
         id: binaryCheckProc
         command: ["bash", "-c",
             "command -v voxtype >/dev/null 2>&1 && echo yes || echo no; " +
-            "command -v voxtype-audio-bridge >/dev/null 2>&1 && echo yes || echo no"]
+            "command -v voxtype-audio-bridge >/dev/null 2>&1 && echo yes || echo no; " +
+            "h=$(command -v hex 2>/dev/null); [ -n \"$h\" ] || { [ -x \"$HOME/hex\" ] && h=\"$HOME/hex\"; }; echo \"${h:-none}\""]
         stdout: StdioCollector {
             onStreamFinished: {
                 const lines = text.trim().split("\n");
                 root.installed = (lines[0] ?? "no").trim() === "yes";
                 root.bridgeInstalled = (lines[1] ?? "no").trim() === "yes";
+                const hex = (lines[2] ?? "none").trim();
+                root.hexBin = hex === "none" ? "" : hex;
                 root.binaryChecked = true;
                 if (root.installed && root.enabled)
                     root.scheduleApply();
@@ -491,7 +541,7 @@ Singleton {
     Process {
         id: daemonProc
         property bool restarting: false
-        running: Config.ready && root.enabled && root.installed && root.modelReady
+        running: Config.ready && !root.useHex && root.enabled && root.installed && root.modelReady
             && root.configApplied && !root.externalDaemon
         // The model loads when a recording starts, while the audio is already being
         // captured, instead of holding ~60 MB of RAM and ~150 MB of VRAM all session.
@@ -516,7 +566,7 @@ Singleton {
     Timer {
         id: daemonRestartTimer
         interval: 250
-        onTriggered: daemonProc.running = Qt.binding(() => Config.ready && root.enabled && root.installed
+        onTriggered: daemonProc.running = Qt.binding(() => Config.ready && !root.useHex && root.enabled && root.installed
             && root.modelReady && root.configApplied && !root.externalDaemon)
     }
 
@@ -529,11 +579,11 @@ Singleton {
         onFileChanged: reload()
         onLoaded: {
             const next = (text() || "").trim();
-            root.state = next.length > 0 ? next : "idle";
+            root.voxState = next.length > 0 ? next : "idle";
         }
         // The daemon deletes the file on the way out, so a failed load is how
         // "not running" arrives — not an error worth reporting.
-        onLoadFailed: root.state = "stopped"
+        onLoadFailed: root.voxState = "stopped"
     }
 
     /**
@@ -545,7 +595,7 @@ Singleton {
     Timer {
         interval: 1000
         repeat: true
-        running: root.enabled && root.installed && root.modelReady && root.state === "stopped"
+        running: !root.useHex && root.enabled && root.installed && root.modelReady && root.voxState === "stopped"
         onTriggered: {
             stateFile.path = "";
             stateFile.path = root.statePath;
@@ -580,7 +630,147 @@ Singleton {
         }
     }
 
+    // ── Hex: keeping it up, and following what it does ──────────────────────
+    /**
+     * Hex keeps itself running once started, so the shell only makes sure it exists: a probe
+     * every few seconds both reports whether it is up and starts it when it is not. It is
+     * started with `hex start`, which is the entry point that gets the desktop permission
+     * the dictation commands need (`hex service` alone ends up "not listening").
+     */
+    Process {
+        id: hexProbeProc
+        // Only looks: Hex is started by a key press (see ensureHex), never by this probe. It
+        // counts as up only when it answers `hex status`, so a frozen daemon reads as down.
+        command: ["bash", "-c",
+            // The path is looked up again each time: Hex can be installed (or replaced) while the shell runs
+            "h=$(command -v hex 2>/dev/null); [ -n \"$h\" ] || { [ -x \"$HOME/hex\" ] && h=\"$HOME/hex\"; }; " +
+            "if [ -z \"$h\" ]; then echo none; elif timeout 2 \"$h\" status >/dev/null 2>&1; then echo \"up $h\"; " +
+            "else echo \"down $h\"; fi"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const parts = text.trim().split(" ");
+                if (parts[0] === "none") {
+                    root.hexBin = "";
+                    root.hexState = "stopped";
+                    return;
+                }
+                if (parts[1] && parts[1] !== root.hexBin)
+                    root.hexBin = parts[1];
+                const up = parts[0] === "up";
+                if (up && root.hexState === "stopped")
+                    root.hexState = "idle";
+                else if (!up)
+                    root.hexState = "stopped";
+            }
+        }
+    }
+
+    Timer {
+        interval: 4000
+        repeat: true
+        triggeredOnStart: true
+        running: root.useHex && root.enabled && root.hexInstalled && Config.ready && !root.hexStarting
+        onTriggered: {
+            if (!hexProbeProc.running)
+                hexProbeProc.running = true;
+        }
+    }
+
+    /** True while a key press is waiting for Hex to come up. */
+    property bool hexStarting: false
+    /** What to do once Hex answers: "start" (hold to talk), "toggle", or "" (cancelled). */
+    property string hexPending: ""
+
+    /**
+     * Runs `action` once Hex answers, starting it first when it is down. A daemon that is alive
+     * but does not answer is restarted through its unit; otherwise `hex start` brings it up
+     * (the entry point that gets the desktop permission the dictation commands need).
+     */
+    function ensureHex(action: string): void {
+        root.hexPending = action;
+        if (root.hexStarting)
+            return;
+        root.hexStarting = true;
+        hexReadyProc.running = true;
+    }
+
+    Process {
+        id: hexReadyProc
+        command: ["bash", "-c",
+            "h=\"$1\"; [ -n \"$h\" ] || h=$(command -v hex); " +
+            // Answering is not enough: dictation commands are refused until the listener is enabled
+            "ready() { timeout 2 \"$h\" status 2>&1 | grep -q 'running: Enabled'; }; " +
+            "ready && exit 0; " +
+            "if systemctl --user is-active -q hex.service; then systemctl --user restart hex.service; " +
+            "else setsid -f \"$h\" start >/dev/null 2>&1 </dev/null; fi; " +
+            "for i in $(seq 80); do ready && exit 0; sleep 0.5; done; exit 1",
+            "--", root.hexBin]
+        onExited: (code, status) => {
+            const action = root.hexPending;
+            root.hexStarting = false;
+            root.hexPending = "";
+            if (code !== 0) {
+                root.lastError = Translation.tr("Hex did not start.");
+                root.hexState = "stopped";
+                Quickshell.execDetached(["notify-send", Translation.tr("Dictation"), root.lastError, "-a", "Shell", "-i", "mic"]);
+                return;
+            }
+            if (root.hexState === "stopped")
+                root.hexState = "idle";
+            if (action === "start" || action === "toggle")
+                root.hexCmd(action);
+            idleQuitTimer.restart();
+        }
+    }
+
+    /** Quits Hex after a quiet spell; the next key press starts it again. */
+    Timer {
+        id: idleQuitTimer
+        interval: Math.max(1, root.hexIdleMinutes) * 60000
+        running: root.useHex && root.hexIdleMinutes > 0 && root.state === "idle" && !root.hexStarting
+        onTriggered: {
+            if (root.busy || root.hexStarting)
+                return;
+            Quickshell.execDetached([root.hexBin, "quit"]);
+            root.hexState = "stopped";
+        }
+    }
+
+    /**
+     * Hex appends every state change to a log of JSON lines; following it gives the same
+     * instant reaction the Voxtype state file does.
+     */
+    Process {
+        id: hexLiveProc
+        running: root.useHex && root.enabled && root.hexInstalled
+        command: ["tail", "-n", "0", "-F",
+            `${Quickshell.env("XDG_DATA_HOME") || Quickshell.env("HOME") + "/.local/share"}/hex/logs/live.ndjson`]
+        stdout: SplitParser {
+            onRead: line => {
+                if (line.indexOf('"kind":"state"') === -1)
+                    return;
+                try {
+                    const st = JSON.parse(line).state;
+                    root.hexState = st === "dictating" ? "recording"
+                        : st === "transcribing" ? "transcribing" : "idle";
+                } catch (e) {}
+            }
+        }
+    }
+
     // ── Mic levels ────────────────────────────────────────────────────────
+    /** Hex has no level feed: listen to the default microphone while it records. */
+    Process {
+        id: hexLevelProc
+        running: root.recording && root.useHex
+        command: ProcUtils.pdeath(["bash", "-c",
+            "parec --raw --format=s16le --rate=16000 --channels=1 --latency-msec=30 2>/dev/null | python3 -u \"$1\"",
+            "--", FileUtils.trimFileProtocol(`${Directories.scriptPath}/dictation/mic_level.py`)])
+        stdout: SplitParser {
+            onRead: data => root.handleFrame(data)
+        }
+    }
+
     /**
      * voxtype's own sidecar, reading the daemon's capture over its audio
      * socket. The alternative — pointing cava at the microphone — opens a
@@ -589,7 +779,7 @@ Singleton {
      */
     Process {
         id: bridgeProc
-        running: root.recording && root.bridgeInstalled
+        running: root.recording && root.bridgeInstalled && !root.useHex
         command: ProcUtils.pdeath(["voxtype-audio-bridge"])
         stdout: SplitParser {
             // One read can carry several frames at once, so never treat the
@@ -742,6 +932,51 @@ Singleton {
         name: "dictationToggle"
         description: "Start or stop dictation"
         onPressed: root.toggle()
+    }
+
+    // ── Hold to talk ──
+    // Hyprland hands a global shortcut its release even when the modifiers were let go first,
+    // which a plain exec bind cannot do. Recording lasts exactly as long as the keys are held.
+    // A release that comes right after the press waits a moment, so the stop cannot overtake
+    // the start (two separate processes) and leave a recording running.
+    property real holdPressedAt: 0
+
+    function holdStart(): void {
+        root.holdPressedAt = Date.now();
+        holdStopTimer.stop();
+        if (!root.available) {
+            root.complain();
+            return;
+        }
+        if (root.useHex) {
+            root.ensureHex("start");
+        } else if (root.daemonUp && !root.busy)
+            recordProc.exec(["voxtype", "record", "start"]);
+    }
+
+    function holdStop(): void {
+        // Released before Hex finished starting: there is nothing to record any more.
+        if (root.hexStarting)
+            root.hexPending = "";
+        holdStopTimer.interval = Math.max(1, 300 - (Date.now() - root.holdPressedAt));
+        holdStopTimer.restart();
+    }
+
+    Timer {
+        id: holdStopTimer
+        onTriggered: {
+            if (root.useHex)
+                root.hexCmd("stop");
+            else if (root.busy)
+                recordProc.exec(["voxtype", "record", "stop"]);
+        }
+    }
+
+    GlobalShortcut {
+        name: "dictationHold"
+        description: "Dictate while the keys are held"
+        onPressed: root.holdStart()
+        onReleased: root.holdStop()
     }
 
     GlobalShortcut {

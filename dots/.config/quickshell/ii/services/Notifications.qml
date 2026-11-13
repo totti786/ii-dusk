@@ -127,6 +127,44 @@ Singleton {
     property list<QtObject> list: []
     property var popupList: list.filter((notif) => notif && notif.popup);
     property bool popupInhibited: (GlobalStates?.sidebarRightOpen ?? false) || effectiveSilent
+
+    // ── Hold during a focus session ──────────────────────────────────────────
+    // While a Grit focus phase runs, ordinary notifications are stored but neither shown nor
+    // sounded. The shell's own alarms (calendar, reminders, battery) are never held: you asked
+    // for those. When the phase ends, one note says what came in.
+    readonly property bool holdActive: (Config?.options.notifications.holdDuringFocus ?? true)
+        && GritService.timerRunning && GritService.timerPhase === "focus"
+    property var heldByApp: ({})
+    property int heldCount: 0
+
+    function _isHeld(notification): bool {
+        return root.holdActive && notification.urgency !== NotificationUrgency.Critical;
+    }
+    function _noteHeld(appName: string): void {
+        const name = String(appName || "").trim() || Translation.tr("Unknown");
+        const next = Object.assign({}, root.heldByApp);
+        next[name] = (next[name] ?? 0) + 1;
+        root.heldByApp = next;
+        root.heldCount++;
+    }
+    onHoldActiveChanged: {
+        if (root.holdActive || root.heldCount === 0)
+            return;
+        const parts = Object.keys(root.heldByApp)
+            .sort((a, b) => root.heldByApp[b] - root.heldByApp[a])
+            .slice(0, 3)
+            .map(name => root.heldByApp[name] > 1 ? name + " (" + root.heldByApp[name] + ")" : name);
+        const total = root.heldCount;
+        root.heldByApp = ({});
+        root.heldCount = 0;
+        root.publishInternalNotification({
+            appName: Translation.tr("Focus"),
+            appIcon: "timer",
+            summary: total === 1 ? Translation.tr("1 notification while you focused") : Translation.tr("%1 notifications while you focused").arg(total),
+            body: parts.join(", "),
+            actions: [{ identifier: "__qs_held_open", text: Translation.tr("Open") }]
+        });
+    }
     property var latestTimeForApp: ({})
     // Notification history is useful context, but retaining every wrapper and
     // image reference for the lifetime of the shell is not. Keep the newest
@@ -586,15 +624,22 @@ Singleton {
                 existingNotifObject.notification = notification;
                 existingNotifObject.time = Date.now();
                 root._handleShellNotification(existingNotifObject);
-                root.armNotificationTimeout(existingNotifObject, notification);
-                root.notify(existingNotifObject);
+                root._addSmartActions(existingNotifObject);
+                if (!root._isHeld(notification)) {
+                    root.armNotificationTimeout(existingNotifObject, notification);
+                    root.notify(existingNotifObject);
+                }
                 root.triggerListChange();
                 root.scheduleDiskWrite();
                 return;
             }
 
+            const held = root._isHeld(notification);
+            if (held)
+                root._noteHeld(notification.appName);
             try {
-                root.playNotificationSound(notification);
+                if (!held)
+                    root.playNotificationSound(notification);
             } catch (e) {
                 console.log("[Notifications] Sound playback error: " + e);
             }
@@ -606,18 +651,20 @@ Singleton {
             });
 
             root._handleShellNotification(newNotifObject);
+            root._addSmartActions(newNotifObject);
 
             // Batch notifications to avoid rapid list updates
             root._pendingNotifications.push(newNotifObject);
             batchNotificationTimer.restart();
 
             // Popup
-            if (!root.popupInhibited) {
+            if (!root.popupInhibited && !held) {
                 root.armNotificationTimeout(newNotifObject, notification);
                 if (!isPhone)
                     root.unread++;
             }
-            root.notify(newNotifObject);
+            if (!held)
+                root.notify(newNotifObject);
             // Schedule disk write instead of immediate write
             root.scheduleDiskWrite();
         }
@@ -688,8 +735,76 @@ Singleton {
         notifObj._qsFilePath = filePath;
     }
 
+    // ── Buttons drawn from what the notification says ───────────────────────────
+    readonly property var _codeWords: /\b(code|otp|passcode|verification|verify|one[- ]time|2fa|security code|pin|password)\b|رمز|كود/i
+
+    /** A sign-in code in the text: a 4-8 digit run (or 3+3 with a space or dash) near a code word. */
+    function findCode(text: string): string {
+        const t = String(text ?? "");
+        if (!root._codeWords.test(t))
+            return "";
+        const re = /(?:^|[^\d])(\d{3}[ -]\d{3}|\d{4,8})(?![\d])/g;
+        let m;
+        while ((m = re.exec(t)) !== null) {
+            const digits = m[1].replace(/\D/g, "");
+            // A year or a clock reading is not a code.
+            if (/^(19|20)\d\d$/.test(digits))
+                continue;
+            return digits;
+        }
+        return "";
+    }
+
+    /** The first web link, from a hyperlink tag or bare text, without trailing punctuation. */
+    function findLink(text: string): string {
+        const t = String(text ?? "");
+        const href = t.match(/href=["'](https?:\/\/[^"'\s]+)["']/i);
+        const m = href ? href : t.match(/https?:\/\/[^\s<>"')\]]+/i);
+        if (!m)
+            return "";
+        return (href ? m[1] : m[0]).replace(/[.,;:!?]+$/, "");
+    }
+
+    function _addSmartActions(notifObj): void {
+        if (!(Config?.options.notifications.smartActions ?? true) || !notifObj || notifObj.internal)
+            return;
+        if (notifObj.customActions.length > 0 || notifObj.actions.length >= 3)
+            return;
+        const text = (notifObj.summary || "") + "\n" + (notifObj.body || "");
+        const code = root.findCode(text);
+        const url = root.findLink(text);
+        const extra = [];
+        if (code.length > 0)
+            extra.push({ "identifier": "__qs_smart_copy_code", "text": Translation.tr("Copy code"), "icon": "content_copy" });
+        if (url.length > 0 && !notifObj.actions.some(a => a.identifier === "default"))
+            extra.push({ "identifier": "__qs_smart_open_link", "text": Translation.tr("Open link"), "icon": "open_in_new" });
+        if (extra.length === 0)
+            return;
+        notifObj.internalActionPayload = { "code": code, "url": url };
+        notifObj.customActions = extra;
+    }
+
     // Execute a QML-handled notification action (identified by "__qs_" prefix).
     function executeShellAction(notifObj, identifier) {
+        if (identifier === "__qs_smart_copy_code") {
+            const code = String(notifObj?.internalActionPayload?.code ?? "");
+            if (code.length > 0) {
+                // Cleared after 30 s, but only if it is still the code: never wipe something newer.
+                Quickshell.execDetached(["bash", "-c",
+                    'printf %s "$1" | wl-copy; sleep 30; [ "$(wl-paste -n 2>/dev/null)" = "$1" ] && wl-copy --clear', "_", code]);
+            }
+            return;
+        }
+        if (identifier === "__qs_smart_open_link") {
+            const url = String(notifObj?.internalActionPayload?.url ?? "");
+            if (/^https?:\/\//.test(url))
+                Quickshell.execDetached(["xdg-open", url]);
+            return;
+        }
+        if (identifier === "__qs_held_open") {
+            GlobalStates.sidebarRightOpen = true;
+            return;
+        }
         if (String(identifier).startsWith("__qs_calendar_") || String(identifier).startsWith("__qs_reminder_")
                 || String(identifier).startsWith("__qs_health_")) {
             root.internalActionInvoked(identifier, notifObj?.notificationId ?? 0, notifObj?.internalActionPayload ?? ({}));

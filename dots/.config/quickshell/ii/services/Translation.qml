@@ -64,7 +64,9 @@ Singleton {
         languageCode: root.languageCode
         onContentLoaded: (data) => {
             Qt.callLater(() => {
-                root.translations = data;
+                // The English file maps every string to itself, and tr() already falls back to
+                // the key. Keeping its ~15,000 entries only costs memory, so drop them.
+                root.translations = root.languageCode.startsWith("en") ? ({}) : data;
                 root.isLoading = false;
             });
         }
@@ -80,6 +82,12 @@ Singleton {
                 root.isLoading = false;
             });
         }
+    }
+
+    // A locale file generated at runtime (AiTranslation) joins the language list.
+    function rescan() {
+        scanLanguagesProcess.running = false;
+        scanLanguagesProcess.running = true;
     }
 
     function tr(text) {
@@ -136,11 +144,17 @@ Singleton {
             const availableLanguages = translationReader === generatedTranslationFileView
                 ? root.availableGeneratedLanguages
                 : root.availableLanguages;
-            if (!availableLanguages || !availableLanguages.includes(translationReader.languageCode)) {
+            // An exact match wins; otherwise another region of the same language
+            // (ar_SY reads ar_SA) is better than showing English.
+            const wanted = translationReader.languageCode;
+            const code = (availableLanguages ?? []).includes(wanted)
+                ? wanted
+                : (availableLanguages ?? []).find(l => l.split("_")[0] === wanted.split("_")[0]);
+            if (!code) {
                 translationReader.contentLoaded({});
                 return;
             }
-            translationReader.path = `${translationReader.translationsDir}/${translationReader.languageCode}.json`;
+            translationReader.path = `${translationReader.translationsDir}/${code}.json`;
             translationReader.reload();
         }
         path: ""

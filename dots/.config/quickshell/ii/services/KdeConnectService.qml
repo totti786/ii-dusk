@@ -513,6 +513,10 @@ Singleton {
             checkScrcpyProc.running = true
             checkAdbProc.running = true
             checkPythonDbusProc.running = true
+            // The disabled branch below assigns these, which drops their bindings; restore them
+            adbProber.running = Qt.binding(() => root.ready && root._enabled)
+            scrcpyStatusTimer.running = Qt.binding(() => root.ready && root._enabled)
+            scrcpyElapsedTicker.running = Qt.binding(() => root.scrcpyRunning)
         } else {
             // Disabled: stop everything that consumes CPU/IPC.
             monitorProc.running = false
@@ -814,6 +818,18 @@ Singleton {
         case "pairing_request":
             root._addPairingRequest(ev.id, ev.name ?? "")
             break
+        case "remote_sinks":
+            root._patchDevice(ev.id, {"remoteSinks": ev.sinks ?? []})
+            break
+        case "remote_commands":
+            root._patchDevice(ev.id, {"remoteCommands": Object.keys(ev.commands ?? {})
+                .map(key => ({ "key": key, "name": String(ev.commands[key]?.name ?? key),
+                               "command": String(ev.commands[key]?.command ?? "") }))
+                .sort((a, b) => a.name.localeCompare(b.name))})
+            break
+        case "locked":
+            root._patchDevice(ev.id, {"locked": ev.locked})
+            break
         case "debug":
             // Best-effort: keep log only when env var set
             if (typeof Qt !== "undefined" && Qt.application)
@@ -833,12 +849,14 @@ Singleton {
             icon: ev.icon ?? "phone",
             reachable: !!ev.reachable,
             paired: !!ev.paired,
+            pairState: ev.pair_state ?? (ev.paired ? 3 : 0),
             charge: ev.charge ?? -1,
             charging: !!ev.charging,
             signalType: ev.signalType ?? "",
             signalStrength: ev.signalStrength ?? 0,
             supportedPlugins: ev.supported_plugins ?? [],
             loadedPlugins: ev.loaded_plugins ?? [],
+            enabledPlugins: ev.enabled_plugins ?? [],
             reachableAddresses: ev.reachableAddresses ?? [],
         }
         if (idx < 0) devices.push(normalized)
@@ -918,10 +936,11 @@ Singleton {
         if ("isReachable" in changed) patch.reachable = !!changed.isReachable
         if ("isPaired" in changed) patch.paired = !!changed.isPaired
         if ("pairState" in changed) {
-            // pairState: 0 = unpaired, 1 = paired, 2 = requested
-            const ps = changed.pairState
+            // pairState: 0 = not paired, 1 = we asked, 2 = the peer asked, 3 = paired
+            const ps = Number(changed.pairState)
+            patch.pairState = ps
             if (patch.paired === undefined) {
-                patch.paired = (ps === 1)
+                patch.paired = (ps === 3)
             }
         }
         if ("loadedPlugins" in changed) patch.loadedPlugins = changed.loadedPlugins.slice(0)
@@ -1296,6 +1315,82 @@ Singleton {
         ])
         root._removePairingRequest(devId)
         root.actionFeedback(Translation.tr("Pairing declined"), false)
+    }
+
+    // ─── Phone-side controls ───────────────────────────────
+    /** Volume of one of the phone's audio outputs, 0..maxVolume as the phone reports it. */
+    function setRemoteVolume(devId, sinkName, volume) {
+        if (!devId || !sinkName) return
+        root._call(devId, "remotesystemvolume",
+                   "org.kde.kdeconnect.device.remotesystemvolume.sendVolume",
+                   [root._shellQuote(sinkName), String(Math.round(volume))])
+    }
+
+    function setRemoteMuted(devId, sinkName, muted) {
+        if (!devId || !sinkName) return
+        root._call(devId, "remotesystemvolume",
+                   "org.kde.kdeconnect.device.remotesystemvolume.sendMuted",
+                   [root._shellQuote(sinkName), muted ? "true" : "false"])
+    }
+
+    /** Runs one of the commands set up on the phone (KDE Connect → Commands there). */
+    function triggerRemoteCommand(devId, key) {
+        if (!devId || !key) return
+        root._call(devId, "remotecommands",
+                   "org.kde.kdeconnect.device.remotecommands.triggerCommand",
+                   [root._shellQuote(key)])
+        root.actionFeedback(Translation.tr("Command sent to the phone"), true)
+    }
+
+    /** Locks the phone's screen. Unlocking from here is not offered by Android. */
+    function lockPhone(devId) {
+        if (!devId) return
+        root._call(devId, "lockdevice",
+                   "org.kde.kdeconnect.device.lockdevice.setLocked", ["true"])
+        root.actionFeedback(Translation.tr("Locking the phone"), true)
+    }
+
+    /** Asks a nearby, unpaired device to pair (daemon method requestPairing).
+     *  The phone then shows its own accept prompt. */
+    function requestPairing(devId) {
+        if (!devId) return
+        root._callDevice(devId, "requestPairing")
+        root.actionFeedback(Translation.tr("Pairing request sent"), true)
+    }
+
+    /** Forgets a paired device (daemon method unpair). */
+    function unpairDevice(devId) {
+        if (!devId) return
+        root._callDevice(devId, "unpair")
+        root._removePairingRequest(devId)
+        root.actionFeedback(Translation.tr("Device unpaired"), true)
+    }
+
+    /** Turns one plugin on or off for one device. `plugin` is the daemon's id, e.g.
+     *  "kdeconnect_clipboard". The monitor reports the result through pluginsChanged. */
+    function setPluginEnabled(devId, plugin, enabled) {
+        if (!devId || !plugin) return
+        root._callDevice(devId, "setPluginEnabled", [plugin, enabled ? "true" : "false"])
+    }
+
+    /** A method on the device object itself rather than on one of its plugins. */
+    function _callDevice(devId, method, args) {
+        const argString = (args || []).map(a => root._shellQuote(String(a))).join(" ")
+        Quickshell.execDetached([
+            "bash", "-c",
+            "QDBUS=$(command -v qdbus-qt6 || command -v qdbus6 || command -v qdbus); " +
+            "$QDBUS org.kde.kdeconnect /modules/kdeconnect/devices/" + devId +
+            " org.kde.kdeconnect.device." + method +
+            (argString.length > 0 ? " " + argString : "") +
+            " >/dev/null 2>&1 || true"
+        ])
+    }
+
+    /** Asks the daemon to look for devices on the network again. */
+    function rescanNetwork() {
+        Quickshell.execDetached(["kdeconnect-cli", "--refresh"])
+        // The monitor re-enumerates from scratch, which also picks up its own updates.
+        root.refreshDevices()
     }
 
     /** Restarts the KDE Connect DBus monitor process. This triggers a fresh
@@ -2554,6 +2649,61 @@ Singleton {
         running: false
         stderr: SplitParser {
             onRead: line => console.warn("[KdeConnectService] run commands:", line)
+        }
+    }
+
+    // ─── Run-command editor ────────────────────────────────
+    /** The user's own Run command entries for `runCommandsDeviceId`, as
+     *  [{key, name, command}]. The shell's `ii-` entries are not listed: they follow the
+     *  "Offer shell actions" switch. */
+    property var runCommandList: []
+    property string runCommandsDeviceId: ""
+    property bool runCommandsBusy: false
+
+    function loadRunCommands(devId) {
+        if (!devId) return
+        root._runCommandsEdit(devId, ["list"])
+    }
+
+    /** `key` empty creates a new entry. */
+    function saveRunCommand(devId, key, name, command) {
+        if (!devId) return
+        root._runCommandsEdit(devId, ["set", key && key.length > 0 ? key : "-", name, command])
+    }
+
+    function deleteRunCommand(devId, key) {
+        if (!devId || !key) return
+        root._runCommandsEdit(devId, ["delete", key])
+    }
+
+    function _runCommandsEdit(devId, args) {
+        runCommandsEditProc.running = false
+        root.runCommandsDeviceId = devId
+        root.runCommandsBusy = true
+        runCommandsEditProc.command = ["python3",
+            Quickshell.shellPath("scripts/phone/kdeconnect_runcommands.py"), devId].concat(args)
+        runCommandsEditProc.running = true
+    }
+
+    Process {
+        id: runCommandsEditProc
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.runCommandsBusy = false
+                try {
+                    const reply = JSON.parse(String(this.text).trim())
+                    if (reply.ok === true && reply.commands)
+                        root.runCommandList = reply.commands.filter(c => !c.managed)
+                    else if (reply.error === "empty")
+                        root.actionFeedback(Translation.tr("A command needs a name and something to run"), false)
+                } catch (e) {
+                    console.warn("[KdeConnectService] run command editor:", e)
+                }
+            }
+        }
+        stderr: SplitParser {
+            onRead: line => console.warn("[KdeConnectService] run command editor:", line)
         }
     }
 

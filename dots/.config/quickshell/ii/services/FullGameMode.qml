@@ -4,8 +4,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import qs.modules.common.models.hyprland
-import "modes/ModeSchema.js" as ModeSchema
 
 /**
  * Full game mode: the whole shell is swapped for gameMode.qml, a second entry point that
@@ -33,11 +31,6 @@ Singleton {
     readonly property string swapScript: Quickshell.shellPath("scripts/gameMode/swap.sh")
     readonly property string sessionMarker: `${Quickshell.env("XDG_RUNTIME_DIR")}/ii-game-mode/active`
 
-    property HyprlandConfigOption animationsOption: HyprlandConfigOption {
-        key: "animations:enabled"
-    }
-    readonly property bool hyprlandGameModeOn: root.animationsOption.value === 0 || root.animationsOption.value === false
-
     property var pendingSwap: []
     property bool recovering: false
 
@@ -45,9 +38,9 @@ Singleton {
         if (root.running || root.switching)
             return;
         root.switching = true;
-        const restore = !root.hyprlandGameModeOn;
+        const restore = !HyprlandProfiles.gameModeActive;
         if (restore)
-            HyprlandConfig.setMany(ModeSchema.GAME_MODE_OPTIONS, { addLines: [ModeSchema.GAME_MODE_RULE] });
+            HyprlandProfiles.setGameMode(true);
         root.swapWhenWritten(["enter", restore ? "1" : "0"]);
     }
 
@@ -92,9 +85,7 @@ Singleton {
         printErrors: false
         onLoaded: {
             if (sessionFile.text().trim() === "1")
-                HyprlandConfig.resetMany(Object.keys(ModeSchema.GAME_MODE_OPTIONS), {
-                    removeMatching: [ModeSchema.GAME_MODE_RULE_MARKER]
-                });
+                HyprlandProfiles.clearGameMode();
             Quickshell.execDetached(["bash", root.swapScript, "recover"]);
         }
     }

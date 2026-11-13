@@ -215,7 +215,7 @@ Singleton {
         id: invalidateTimer
         interval: 250
         onTriggered: {
-            TaskbarApps.iconThemeRevision = 1 - TaskbarApps.iconThemeRevision;
+            TaskbarApps.iconThemeRevision = (TaskbarApps.iconThemeRevision + 1) % 6;
             redrawGraceTimer.restart();
         }
     }

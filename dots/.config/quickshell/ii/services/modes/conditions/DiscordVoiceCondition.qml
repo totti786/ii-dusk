@@ -8,6 +8,6 @@ import ".."
  */
 ModeCondition {
     id: root
-    satisfied: DiscordVoice.inVoice
-    reason: DiscordVoice.channel?.name ?? ""
+    satisfied: DiscordVoiceActivity.inVoice
+    reason: DiscordVoiceActivity.channel?.name ?? ""
 }
