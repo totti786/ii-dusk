@@ -15,12 +15,26 @@ import qs.modules.ii.bluetoothConnectionPopup
 import qs.modules.ii.bluetoothPairing
 import qs.modules.ii.cheatsheet
 import qs.modules.ii.notes
+import qs.modules.ii.calculator
+import qs.modules.ii.anki
+import qs.modules.ii.books
+import qs.modules.ii.camera
+import qs.modules.ii.imageViewer
+import qs.modules.ii.audioPlayer
+import qs.modules.ii.soundscapes
+import qs.modules.ii.fileManager
+import qs.modules.ii.textEditor
+import qs.modules.ii.mediator
+import qs.modules.ii.quran
+import qs.modules.ii.diwan
 import qs.modules.ii.clock
+import qs.modules.ii.grit
 import qs.modules.ii.health
 import qs.modules.ii.dock
 import qs.modules.ii.lock
 import qs.modules.ii.mediaControls
 import qs.modules.ii.notificationPopup
+import qs.modules.ii.discordoVoice
 import qs.modules.ii.onScreenDisplay
 import qs.modules.ii.onScreenDisplay.minimalist
 import qs.modules.common.onScreenKeyboard
@@ -47,6 +61,14 @@ import qs.modules.ii.liveDraw
 import qs.modules.ii.topLayer
 import qs.modules.ii.tilingAssistant
 import qs.modules.ii.usage
+import qs.modules.ii.downloads
+import qs.modules.ii.mixer
+import qs.modules.ii.torrents
+import qs.modules.ii.packages
+import qs.modules.ii.bluetoothManager
+import qs.modules.ii.patchbay
+import qs.modules.ii.music
+import qs.modules.ii.monitor
 import qs.modules.ii.modes
 import qs.modules.ii.modeFlashPopup
 import qs.modules.ii.alarmRingingPopup
@@ -86,7 +108,7 @@ Scope {
     PanelUrlLoader {
         extraCondition: Config.options.background.enable
         panelUrl: Qt.resolvedUrl("../modules/ii/background/Background.qml")
-        priority: 3
+        priority: 5 // Above the bar: after a reload the wallpaper must not trail the bar
     }
     PanelUrlLoader {
         // The desktop layout editor's chrome; nothing to edit without the background.
@@ -114,6 +136,86 @@ Scope {
         panelUrl: Qt.resolvedUrl("../modules/ii/clock/ClockApp.qml")
     }
     PanelUrlLoader {
+        // Multi-provider weather window; the Scope holds the keybind and IPC target.
+        extraCondition: Config.options.weatherApp?.enable ?? true
+        panelUrl: Qt.resolvedUrl("../modules/ii/weather/WeatherApp.qml")
+    }
+    PanelUrlLoader {
+        // Ambient sound mixer; the Scope holds the keybind and IPC target, a daemon plays the mix.
+        extraCondition: Config.options.soundscapes?.enable ?? true
+        panelUrl: Qt.resolvedUrl("../modules/ii/soundscapes/SoundscapesApp.qml")
+    }
+    PanelUrlLoader {
+        // Habit tracker and focus timer. Its Scope holds the keybind; the window is
+        // built only while Grit is open, and the timer keeps running without it.
+        panelUrl: Qt.resolvedUrl("../modules/ii/grit/GritApp.qml")
+    }
+    PanelUrlLoader {
+        // The calculator keeps its own open state, so its Scope holds the keybind and IPC
+        // target and the window exists only while it is open.
+        panelUrl: Qt.resolvedUrl("../modules/ii/calculator/CalculatorApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/anki/AnkiApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/books/BooksApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/audioRecorder/AudioRecorderApp.qml")
+    }
+    PanelUrlLoader {
+        // Tuner, metronome, maqam reference, sheet library, recorder and note trainer.
+        // The Scope holds the keybind and IPC target; the window is built on demand.
+        panelUrl: Qt.resolvedUrl("../modules/ii/qanun/QanunApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/camera/CameraApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/imageViewer/ImageViewerApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/audioPlayer/AudioPlayerApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/fileManager/FileManagerApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/textEditor/EditorApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/wikipedia/WikipediaApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/youtubeApp/YouTubeApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/discordoVoice/DiscordoVoiceApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/quickShare/QuickShareApp.qml")
+    }
+    PanelUrlLoader {
+        // Holds the shortcuts and IPC target; the window exists only while Syncplay is open.
+        panelUrl: Qt.resolvedUrl("../modules/ii/syncplay/SyncplayApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/bar/popups/passwordManager/PasswordManagerOverlay.qml")
+    }
+    PanelUrlLoader {
+        // The Scope holds the keybinds and IPC target; the overlay is built only while open.
+        panelUrl: Qt.resolvedUrl("../modules/ii/mediator/MediatorApp.qml")
+    }
+    PanelUrlLoader {
+        // Keybind and IPC target; the overlay is built only while open.
+        panelUrl: Qt.resolvedUrl("../modules/ii/quran/QuranApp.qml")
+    }
+    PanelUrlLoader {
+        // Keybind and IPC target; the overlay is built only while open.
+        panelUrl: Qt.resolvedUrl("../modules/ii/diwan/DiwanApp.qml")
+    }
+    PanelUrlLoader {
         // Always loaded: its keybinds and IPC switch presets even with the app off; the
         // window inside is gated on the app setting and built only while it is open.
         panelUrl: Qt.resolvedUrl("../modules/ii/easyEffects/EasyEffectsApp.qml")
@@ -123,6 +225,30 @@ Scope {
         // loads the app.
         extraCondition: Config.options.appStats.overlayEnabled
         panelUrl: Qt.resolvedUrl("../modules/ii/usage/UsageApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/downloads/DownloadsApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/mixer/MixerApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/torrents/TorrentsApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/packages/PackagesApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/bluetoothManager/BluetoothManagerApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/patchbay/PatchbayApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/music/MusicApp.qml")
+    }
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("../modules/ii/monitor/MonitorApp.qml")
     }
     PanelUrlLoader {
         extraCondition: Config.options.modes.overlayEnabled

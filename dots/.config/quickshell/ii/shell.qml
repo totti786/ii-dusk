@@ -1,5 +1,10 @@
 //@ pragma UseQApplication
 //@ pragma Env QS_NO_RELOAD_POPUP=1
+// Qt's compiled-QML cache, written to ~/.cache/quickshell/qmlcache. It only applies to types
+// served as file: URLs, which the patched Quickshell (file-url-compile-cache.patch in
+// ~/Projects/quickshell-fast) does; with a stock build it does nothing. Startup compiles
+// ~2300 files otherwise, ~13 s of the QML loader thread.
+//@ pragma Env QML_DISK_CACHE=qmlc-read,qmlc-write
 //@ pragma Env QT_QUICK_CONTROLS_STYLE=Basic
 //@ pragma Env QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
 // Qt allocates a depth-stencil renderbuffer per window (and per layer) for 2D opaque batching. The rendered
@@ -67,6 +72,15 @@ ShellRoot {
         deferredServicesTimer.restart();
     }
 
+    // Start-up parses the config, the translations and the app list, and the garbage from that
+    // would otherwise sit in the JS heap until the engine next feels pressure. Collect it once,
+    // after the panels exist.
+    Timer {
+        interval: 25000
+        running: true
+        onTriggered: gc()
+    }
+
     // MangoHud has to be in Steam's environment before a game starts, so the
     // wiring happens at shell start instead of when the HUD is first opened.
     Process {
@@ -79,13 +93,43 @@ ShellRoot {
         }
     }
 
+    // Gate: wait for the panel queue to drain (PanelSchedule.idle) so the services never compete
+    // with panel incubation, but never longer than ~12 s in case a hold is stuck. Then the
+    // services start in small batches, one per tick, instead of one long frame-blocking call.
+    property int deferredWaited: 0
+    property int deferredNext: 0
     Timer {
         id: deferredServicesTimer
-        interval: 3000
-        onTriggered: root.loadDeferredServices()
+        interval: 1000
+        onTriggered: {
+            root.deferredWaited += interval;
+            if (PanelSchedule.idle || root.deferredWaited >= 12000) {
+                root.deferredNext = 0;
+                deferredStepTimer.restart();
+            } else {
+                deferredServicesTimer.restart();
+            }
+        }
+    }
+    Timer {
+        id: deferredStepTimer
+        interval: 150
+        repeat: true
+        onTriggered: {
+            if (!root.deferredStep(root.deferredNext++))
+                stop();
+        }
     }
 
+    // Everything at once (family switches).
     function loadDeferredServices() {
+        for (let i = 0; root.deferredStep(i); i++) {}
+    }
+
+    // Returns false when there is no step n (or the family skips the rest).
+    function deferredStep(n) {
+        switch (n) {
+        case 0:
         if (!Config.options.overlay.perfMonitor.gamesAutoWired)
             perfAutoWire.running = true;
         Hyprsunset.load();
@@ -100,6 +144,8 @@ ShellRoot {
         // loads it on demand through ShellUpdateSummaryCard.
         if (Config.options?.update?.aiSummary)
             ShellUpdateSummary.load();
+        return true;
+        case 1:
         if (Config.options?.light?.darkMode?.automatic ?? false)
             DarkModeService.automatic;
         if (Config.options?.sounds?.enable)
@@ -110,16 +156,29 @@ ShellRoot {
             WaterReminderService.enabled;
         if (Config.options?.calendar?.timetable?.notifications?.enable)
             CalendarNotifier.enabled;
+        MediatorService.preloadContinueCache(); // Keep Continue Watching ready before the browser opens
         Todo.list; // Touch singleton: monitors due task notifications and done history
         AlarmService.alarms; // Touch singleton: alarms ring, catch up after a suspend and schedule the wake timer
-        BedtimeService.enabled; // Bedtime reminders and tracking; idles when off but keeps its IPC
         RemindersService.loaded; // Touch singleton: reminders alert, catch up after a suspend and schedule the wake timer
+        return true;
+        case 2:
+        StaleFocusRelease.active; // Drops the keyboard from a window silently sent off screen
+        ClosedWindows.count; // Registers the reopen bind and keeps the closed-window stack; idle while disabled
+        TouchpadGestures.enabled; // Keeps the compositor's touchpad gesture snapshot in step with the config
+        // The Lite family leaves the optional services below unloaded: each is a singleton with
+        // its own state, timers and often a helper process, and none has a surface in Lite.
+        return !PanelFamily.isLite;
+        case 3:
+        BedtimeService.enabled; // Bedtime reminders and tracking; idles when off but keeps its IPC
+        GritService.loaded; // Habits, tasks and focus: keeps the timer and sync alive with the window closed
         if (Config.options?.clockApp?.reminders?.todoSync?.enable ?? false)
             RemindersSync.enabled; // Two-way Microsoft To Do sync
         if (Config.options?.clockApp?.phoneAlarm?.enable ?? true)
             PhoneAlarmService.enabled; // Mirrors the phone's next alarm over ADB
         if (Config.options?.health?.enable ?? true)
             HealthService.enabled; // Runs health_watch: failed services, crashes, new errors, disks
+        return true;
+        case 4: {
         const timetable = Config.options?.calendar?.timetable;
         const hasCalendarSubscriptions = (timetable?.imports?.enable ?? false) || ((timetable?.subscriptions ?? []).length > 0);
         if (hasCalendarSubscriptions)
@@ -144,16 +203,16 @@ ShellRoot {
             NotesService.ready; // Touch singleton only when the notes feature is enabled
         if (Config.options?.modes?.enable ?? false)
             Modes.ready; // Touch singleton only when modes are enabled
+        return true;
+        }
+        case 5:
         if (Config.options?.tiling?.enable)
             TilingAssistant.enabled; // Touch singleton: watches for window drags, does nothing while disabled
         if (Config.options?.launcher?.typeToSearch?.enable ?? false)
             TypeToSearch.armed; // Register binds only when type-to-search is enabled
-        StaleFocusRelease.active; // Drops the keyboard from a window silently sent off screen
-        ClosedWindows.count; // Registers the reopen bind and keeps the closed-window stack; idle while disabled
         if (Config.options?.interactions?.touchGestures?.enable ?? true)
             TouchGestureService.enabled; // Start the touch helper only when gestures are enabled
         TabletButtons.enabled; // Registers the tablet button binds and IPC; idle while disabled
-        TouchpadGestures.enabled; // Keeps the compositor's touchpad gesture snapshot in step with the config
         if (Config.options?.bar?.workspaces?.arranger?.autoCloseGaps ?? false)
             WorkspaceArranger.enabled; // Start the arranger's watcher only when auto-close gaps is enabled
         // IconThemes is loaded by the settings page when its data is actually needed.
@@ -173,10 +232,29 @@ ShellRoot {
             LocalMediaSelection.lastSelectionDescription; // Touch singleton: local media picker
         }
         root.applyOpenRgbIfEnabled();
+        return true;
+        default:
+            return false;
+        }
     }
 
     // Panel families. The list and the switch itself live on PanelFamily now — this file
     // owning a second copy of the family names is how the two drift apart.
+    Connections {
+        target: PanelFamily
+        function onCurrentChanged() {
+            HyprlandProfiles.syncPanelFamily();
+            if (!PanelFamily.isLite)
+                Qt.callLater(root.loadDeferredServices);
+        }
+    }
+
+    // "Reduce motion" turns Hyprland's animations off too, in any family. Lite keeps them off
+    // whatever the switch says, and leaving Lite must not undo a switch that is still on.
+    readonly property bool reduceMotion: Config.ready
+        && ((Config.options.appearance.reduceMotion ?? false) || Appearance.powerSaverMotionOff)
+    onReduceMotionChanged: HyprlandProfiles.syncReduceMotion()
+
     function cyclePanelFamily() {
         PanelFamily.cycle();
     }
@@ -209,8 +287,7 @@ ShellRoot {
     }
 
     // Families are loaded by URL rather than as inline components: an inline `component: X {}`
-    // compiles X and its whole import closure (for Waffle: 144 files plus the FluentWinUI3/Fusion
-    // style and Kirigami plugins) at startup even when that family is never active. With a URL,
+    // compiles X and its whole import closure at startup even when that family is never active. With a URL,
     // nothing is compiled until the family is wanted.
     //
     // LazyLoader.setSource() compiles the component but never incubates it, and setActive(true)
@@ -236,8 +313,8 @@ ShellRoot {
     }
 
     PanelFamilyLoader {
-        identifier: "waffle"
-        familyUrl: Qt.resolvedUrl("panelFamilies/WaffleFamily.qml")
+        identifier: "lite"
+        familyUrl: Qt.resolvedUrl("panelFamilies/LiteFamily.qml")
     }
 
     // Closing destroys the window and its page tree, at once or after

@@ -13,6 +13,13 @@ Singleton {
     id: root
 
     property alias sidebarLeftOpen: root.policiesPanelOpen // Until all sidebars naming is fixed
+    /// The Lite family's notification shade, dropped from the date and clock in its bar
+    property bool liteNotificationsOpen: false
+    // Which page the Lite quick settings open on ("main", "wifi", "bluetooth", "battery"); read once
+    // when the panel is built, then put back to "main".
+    property string liteQuickSettingsPage: "main"
+    // True while the Lite power manager has switched the profile to power saver by itself.
+    property bool liteAutoSaverActive: false
     property alias sidebarRightOpen: root.dashboardPanelOpen // Until all sidebars naming is fixed
 
     property bool barOpen: true
@@ -75,6 +82,13 @@ Singleton {
         mediaModeMonitors = list;
     }
 
+    // Media mode is an overlay that covers the desktop, so the shell stays put under it, as it does
+    // under the Mediator. Only a playing music video makes the overlay see-through, and only then
+    // do the bar, dock, widgets and wallpaper have to step out of the way.
+    function isMediaModeRevealingDesktop(screenName) {
+        return isMediaModeActiveForScreen(screenName) && MusicVideoService.videoReady;
+    }
+
     function isMediaModeActiveForScreen(screenName) {
         if (!Config.options.background.mediaMode.togglePerMonitor) {
             return mediaModeActive;
@@ -125,6 +139,102 @@ Singleton {
         root.clockAppOpen = true;
     }
 
+    /// The Grit window (habits, tasks and focus sessions), built on demand like the clock app.
+    property bool gritAppOpen: false
+    /// A tab the app should land on when it opens, consumed on arrival.
+    property string gritPendingTab: ""
+
+    function openGritApp(tab = ""): void {
+        root.gritPendingTab = String(tab ?? "");
+        root.gritAppOpen = true;
+    }
+
+    /// The floating weather app (multi-provider forecasts, charts and air quality).
+    property bool weatherAppOpen: false
+    /// A tab the weather app should land on when it opens, consumed on arrival.
+    property string weatherAppPendingTab: ""
+
+    function openWeatherApp(tab = ""): void {
+        root.weatherAppPendingTab = String(tab ?? "");
+        root.weatherAppOpen = true;
+    }
+
+    /// Qanun: tuner, metronome, maqams, sheet music, tracks and flashcards.
+    property bool qanunOpen: false
+    property string qanunPendingTab: ""
+
+    function openQanunApp(tab = ""): void {
+        root.qanunPendingTab = String(tab ?? "");
+        root.qanunOpen = true;
+    }
+
+    /// The calculator window, built on demand like the clock app.
+    property bool calculatorAppOpen: false
+
+    function openCalculatorApp(): void {
+        root.calculatorAppOpen = true;
+    }
+
+    /// The Syncplay window: watch together, built on demand like the calculator.
+    property bool syncplayAppOpen: false
+
+    function openSyncplayApp(): void {
+        root.syncplayAppOpen = true;
+    }
+
+    /// The Quick Share window: send to and receive from Android, built on demand.
+    property bool quickShareAppOpen: false
+
+    function openQuickShareApp(): void {
+        root.quickShareAppOpen = true;
+    }
+
+    /// The mediator browser, built on demand like the calculator. The tab is consumed on arrival.
+    property bool mediatorAppOpen: false
+    property string mediatorPendingTab: ""
+    /// Window or full-screen overlay; a fresh open follows Config.options.mediator.presentation.
+    property bool mediatorWindowed: false
+    /// A title id the browser opens straight to its page, consumed on arrival
+    property string mediatorPendingTitle: ""
+
+    /// Where the browser was when it last closed (tab, open title page, missing-episodes sheet),
+    /// so a plain reopen, e.g. after it stepped aside for the player, lands in the same place
+    property var mediatorLast: null
+
+    /// A streamed title (a Mediator stream state) whose page the browser opens in the Streaming tab, consumed on arrival
+    property var mediatorPendingStream: null
+
+    function openMediatorApp(tab = "", windowed = null, title = "", stream = null): void {
+        // Presentation first: an already-open browser consumes the pending tab in its
+        // change handler, and it must know whether the target surface is the overlay or
+        // the window before that tab is published.
+        root.mediatorWindowed = windowed ?? (Config.options.mediator.presentation === "window");
+        root.mediatorPendingTitle = String(title ?? "");
+        root.mediatorPendingStream = stream;
+        root.mediatorPendingTab = String(tab ?? "");
+        root.mediatorAppOpen = true;
+    }
+
+    /// The poetry reader overlay, built only while open.
+    property bool diwanOpen: false
+    /// What the reader should do when it next looks, consumed on arrival
+    property string diwanPendingSlug: ""
+    /// With a pending poem: the verse to scroll to and pick, or -1
+    property int diwanPendingVerse: -1
+    property string diwanPendingQuery: ""
+    /// "random" or "saved"
+    property string diwanPendingAction: ""
+
+    /// The Quran reader overlay, built only while open.
+    property bool quranOpen: false
+    /// The running QuranPlayer (set by QuranApp), read by the media card
+    property var quranPlayer: null
+    /// "surah:ayah" the reader should go to (and play) when it next looks, consumed on arrival
+    property string quranPendingKey: ""
+    property bool quranPendingPlay: false
+    /// Open the tafsir on that ayah once there
+    property bool quranPendingTafsir: false
+
     /// The EasyEffects app window, built on demand like the clock app.
     property bool easyEffectsAppOpen: false
     /// A tab the EasyEffects app should land on when it opens, consumed on arrival.
@@ -145,7 +255,224 @@ Singleton {
         root.usageOpen = true;
     }
 
-    /// The Modes & Routines window (Super+Y), built on demand like the clock app.
+    /// The Downloads window (a front for yt-dlp), built on demand like the clock app.
+    property bool downloadsOpen: false
+    /// A tab the downloads app should land on when it opens, consumed on arrival.
+    property string downloadsPendingTab: ""
+
+    function openDownloadsApp(tab = ""): void {
+        root.downloadsPendingTab = String(tab ?? "");
+        root.downloadsOpen = true;
+    }
+
+    /// The sound mixer window (a native stand-in for pavucontrol), built on demand like the clock app.
+    property bool mixerOpen: false
+    /// A tab the mixer should land on when it opens, consumed on arrival.
+    property string mixerPendingTab: ""
+
+    function openMixerApp(tab = ""): void {
+        root.mixerPendingTab = String(tab ?? "");
+        root.mixerOpen = true;
+    }
+
+    /// The Soundscapes ambient mixer window, built on demand. The mix itself is played by a daemon.
+    property bool soundscapesOpen: false
+    /// A tab the app should land on when it opens, consumed on arrival.
+    property string soundscapesPendingTab: ""
+    /// A sound whose info sheet the app should open on arrival (`ipc call soundscapes info <id>`).
+    property string soundscapesPendingSound: ""
+
+    function openSoundscapesApp(tab = ""): void {
+        root.soundscapesPendingTab = String(tab ?? "");
+        root.soundscapesOpen = true;
+    }
+
+    /// The Torrents window (a front end for qBittorrent's web interface), built on demand.
+    property bool torrentsOpen: false
+    /// A tab the torrents app should land on when it opens, consumed on arrival.
+    property string torrentsPendingTab: ""
+
+    function openTorrentsApp(tab = ""): void {
+        root.torrentsPendingTab = String(tab ?? "");
+        root.torrentsOpen = true;
+    }
+
+    /// The Quran reader (a full-screen mushaf overlay), built on demand.
+    function openQuranApp(windowed = null): void {
+        root.quranWindowed = windowed ?? (Config.options.quran.presentation === "window");
+        root.quranOpen = true;
+    }
+    /// Window or full-screen overlay; a fresh open follows Config.options.quran.presentation.
+    property bool quranWindowed: false
+
+    /// The Diwan poetry reader (a full-screen overlay), built on demand.
+    function openDiwanApp(windowed = null): void {
+        root.diwanWindowed = windowed ?? (Config.options.diwan.presentation === "window");
+        root.diwanOpen = true;
+    }
+    /// Window or full-screen overlay; a fresh open follows Config.options.diwan.presentation.
+    property bool diwanWindowed: false
+
+    /// The Packages window (updates and a package manager over pacman and yay), built on demand.
+    property bool packagesOpen: false
+    /// A tab the Packages app should land on when it opens, consumed on arrival.
+    property string packagesPendingTab: ""
+
+    function openPackagesApp(tab = ""): void {
+        root.packagesPendingTab = String(tab ?? "");
+        root.packagesOpen = true;
+    }
+
+    /// The Bluetooth manager window, built on demand like the clock app.
+    property bool bluetoothManagerOpen: false
+    /// A tab the Bluetooth manager should land on when it opens, consumed on arrival.
+    property string bluetoothManagerPendingTab: ""
+
+    function openBluetoothManagerApp(tab = ""): void {
+        root.bluetoothManagerPendingTab = String(tab ?? "");
+        root.bluetoothManagerOpen = true;
+    }
+
+    /// The Patchbay window (the PipeWire graph), built on demand like the clock app.
+    property bool patchbayOpen: false
+
+    /// The Music window (a light YouTube Music player), built on demand like the clock app.
+    property bool musicOpen: false
+    /// A tab the music app should land on when it opens, consumed on arrival.
+    property string musicPendingTab: ""
+
+    function openMusicApp(tab = ""): void {
+        root.musicPendingTab = String(tab ?? "");
+        root.musicOpen = true;
+    }
+
+    /// The Monitor window (btop-like system view plus internet latency), built on demand.
+    property bool monitorOpen: false
+    property string monitorPendingTab: ""
+    /// Open as the full-screen overlay (Ctrl+Shift+Enter) rather than the window (Ctrl+Alt+M)
+    property bool monitorOverlay: false
+
+    function openMonitorApp(tab = "", overlay = false): void {
+        root.monitorPendingTab = String(tab ?? "");
+        root.monitorOverlay = overlay;
+        root.monitorOpen = true;
+    }
+
+    /// The built-in Anki reviewer. The window owns the collection while it is open.
+    property bool ankiOpen: false
+    property real ankiPendingDeck: 0
+
+    function openAnkiApp(deckId = ""): void {
+        const id = Number(deckId);
+        root.ankiPendingDeck = Number.isFinite(id) ? id : 0;
+        root.ankiOpen = true;
+    }
+
+    /// The Books library window (Super+Ctrl+R), built while it is open.
+    property bool booksOpen: false
+    /// The immersive Books overlay (Super+Ctrl+Shift+B).
+    property bool booksOverlayOpen: false
+
+    function openBooksApp(): void {
+        root.booksOpen = true;
+    }
+
+    /// The Audio Recorder app window.
+    property bool audioRecorderOpen: false
+
+    function openAudioRecorderApp(): void {
+        root.audioRecorderOpen = true;
+    }
+
+    /// The Image Viewer window, and the file it was last asked to show.
+    property bool imageViewerOpen: false
+    property string imageViewerPath: ""
+    /// Bumped on every open request, so asking for the file already shown still counts
+    property int imageViewerRequest: 0
+
+    function openImageViewerApp(path = ""): void {
+        root.imageViewerPath = String(path ?? "");
+        root.imageViewerRequest += 1;
+        root.imageViewerOpen = true;
+    }
+
+    /// The Audio Player window, and the file or folder it was last asked to play.
+    property bool audioPlayerOpen: false
+    property string audioPlayerPath: ""
+    property int audioPlayerRequest: 0
+    /// Bumped to make the Audio Player re-index its library folders
+    property int audioPlayerRescan: 0
+
+    function openAudioPlayerApp(path = ""): void {
+        root.audioPlayerPath = String(path ?? "");
+        root.audioPlayerRequest += 1;
+        root.audioPlayerOpen = true;
+    }
+
+    /// The File Manager window, and the folder it was last asked to show.
+    property bool fileManagerOpen: false
+    property string fileManagerPath: ""
+    property int fileManagerRequest: 0
+
+    function openFileManagerApp(path = ""): void {
+        root.fileManagerPath = String(path ?? "");
+        root.fileManagerRequest += 1;
+        root.fileManagerOpen = true;
+    }
+
+    property bool editorOpen: false
+    property string editorPath: ""
+    property int editorLine: 0
+    property int editorRequest: 0
+
+    function openEditorApp(path = "", line = 0): void {
+        root.editorPath = String(path ?? "");
+        root.editorLine = line;
+        root.editorRequest += 1;
+        root.editorOpen = true;
+    }
+
+    /// The Camera app window.
+    property bool cameraOpen: false
+
+    function openCameraApp(): void {
+        root.cameraOpen = true;
+    }
+
+    /// The Wikipedia app window.
+    property bool wikipediaOpen: false
+
+    function openWikipediaApp(): void {
+        root.wikipediaOpen = true;
+    }
+
+    /// The YouTube app window.
+    property bool youtubeOpen: false
+
+    function openYouTubeApp(): void {
+        root.youtubeOpen = true;
+    }
+
+    /// The Discordo Voice window is disposable; its retained service keeps an active call.
+    property bool discordoVoiceOpen: false
+    // The text chat window, and the channel to show when it opens ("" keeps the last one)
+    /// Which page the Discordo app shows: "voice" or "chat". Chat is a page of the one app, not a second window.
+    property string discordoPage: "voice"
+    readonly property bool discordoChatOpen: root.discordoVoiceOpen && root.discordoPage === "chat"
+    property string discordoChatTarget: ""
+    property string discordoChatTargetGuild: ""
+    function openDiscordoChat(channelId = "", guildId = ""): void {
+        root.discordoChatTarget = String(channelId);
+        root.discordoChatTargetGuild = String(guildId);
+        root.discordoPage = "chat";
+        root.discordoVoiceOpen = true;
+    }
+
+    function openDiscordoVoiceApp(): void {
+        root.discordoVoiceOpen = true;
+    }
+
+    /// The Modes & Routines window (Super+Alt+Y), built on demand like the clock app.
     property bool modesOpen: false
     /// A tab the modes app should land on when it opens, consumed on arrival.
     property string modesAppPendingTab: ""
@@ -1240,6 +1567,30 @@ Singleton {
         onTriggered: root._editRestoreWorkspace()
     }
 
+    // Panels drawn on the compositor's overlay layer cover the screen by design, so one left open
+    // when the lock comes up would sit over it (or take the keyboard from the password field).
+    // Closing them ends their layer surfaces. Apps that also run as ordinary windows keep the
+    // window: only their overlay form is closed.
+    readonly property var overlayPanelFlags: [
+        "overlayOpen", "overviewOpen", "searchOpen", "cheatsheetOpen", "wallpaperSelectorOpen",
+        "regionSelectorOpen", "screenshotOverlayOpen", "videoEditorPopupOpen", "screenTranslatorOpen",
+        "colorPickerPopupOpen", "displayModesPopupOpen", "localSendPopupOpen", "bluetoothConnectionPopupOpen",
+        "sessionOpen", "desktopMenuOpen", "dashboardPanelOpen", "policiesPanelOpen", "mediaControlsOpen"
+    ]
+    function closeOverlaysForLock(): void {
+        for (const flag of root.overlayPanelFlags) {
+            if (root[flag] === true)
+                root[flag] = false;
+        }
+        if (root.mediatorAppOpen && !root.mediatorWindowed)
+            root.mediatorAppOpen = false;
+        if (root.diwanOpen && !root.diwanWindowed)
+            root.diwanOpen = false;
+        if (root.quranOpen && !root.quranWindowed)
+            root.quranOpen = false;
+        root.booksOverlayOpen = false;
+    }
+
     Connections {
         target: root
 
@@ -1253,6 +1604,7 @@ Singleton {
             root.superDown = false;
             if (root.screenLocked) {
                 root.editMode = false;
+                root.closeOverlaysForLock();
                 return;
             }
             if (root._editSavedWorkspace !== 0)
@@ -2554,7 +2906,8 @@ Singleton {
     /// The parallax progress of whatever occupies each screen edge — the same mapping as
     /// effectiveLeftOpen/effectiveRightOpen.
     readonly property real effectiveLeftParallaxProgress: {
-        if (PanelFamily.nativeAppWindows)
+        // Without the animation the wallpaper would jump sideways when a sidebar opens, so it stays put
+        if (PanelFamily.nativeAppWindows || Appearance.reducedMotion)
             return 0;
         switch (Config.options.sidebar.position) {
         case "inverted":
@@ -2568,6 +2921,8 @@ Singleton {
         }
     }
     readonly property real effectiveRightParallaxProgress: {
+        if (Appearance.reducedMotion)
+            return 0;
         switch (Config.options.sidebar.position) {
         case "inverted":
             return policiesParallaxProgress;
@@ -3684,6 +4039,9 @@ Singleton {
         if (!open && !root.anyBarPopupOpen)
             root.activeBarPopupMonitor = "";
     }
+
+    /// Passwords widgets currently in a bar; with none, the overlay answers the passwordManager IPC.
+    property int passwordWidgetCount: 0
 
     function openBarPopup(popupId, monitorName) {
         root.setBarPopupOpen(popupId, true, monitorName);

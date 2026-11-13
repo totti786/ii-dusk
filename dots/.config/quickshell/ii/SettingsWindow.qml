@@ -1151,7 +1151,7 @@ FloatingWindow {
                                 property: "opacity"
                                 from: 0
                                 to: 1
-                                duration: 180
+                                duration: Appearance.dur(180)
                                 easing.type: Easing.OutCubic
                             }
                             NumberAnimation {
@@ -1159,7 +1159,7 @@ FloatingWindow {
                                 property: "scale"
                                 from: 0.97
                                 to: 1
-                                duration: 180
+                                duration: Appearance.dur(180)
                                 easing.type: Easing.OutCubic
                             }
                         }
