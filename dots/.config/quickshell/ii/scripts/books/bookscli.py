@@ -26,7 +26,7 @@ class SourceError(Exception):
 def run(source: str, args: list[str], timeout: int, stdin_text: str | None = None) -> tuple[int, dict]:
     """Run `books.pyz <source> <args>`; secrets travel on stdin, never argv."""
     if not PYZ.is_file():
-        raise SourceError("missing", f"books-cli bundle not found at {PYZ}; run scripts/build-books-zipapp.sh")
+        raise SourceError("missing", f"The Books app needs a books-cli bundle, which ii-dusk does not ship. Build one from your own books-cli checkout with scripts/build-books-zipapp.sh <checkout>, or set BOOKS_CLI_PYZ. Looked for {PYZ}")
     try:
         proc = subprocess.run([sys.executable, "-I", str(PYZ), source, *args], input=stdin_text,
                               capture_output=True, text=True, timeout=timeout)
