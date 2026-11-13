@@ -23,10 +23,24 @@ Item { // Fullscreen MediaMode instance
     signal localMusicFilesRequested()
     signal localMusicFolderRequested()
 
+    focus: true
+    Keys.onEscapePressed: event => {
+        root.closeRequested(!Config.options.background.mediaMode.togglePerMonitor);
+        event.accepted = true;
+    }
+
+    // Space pauses and resumes, as in any player; a focused text field or button keeps its own Space
+    Keys.onSpacePressed: event => {
+        if (event.isAutoRepeat || !root.player)
+            return;
+        root.player.togglePlaying();
+        event.accepted = true;
+    }
+
     opacity: 0
     Behavior on opacity {
         NumberAnimation {
-            duration: 300
+            duration: Appearance.dur(180)
             easing.type: Easing.OutQuad
         }
     }
@@ -216,6 +230,7 @@ Item { // Fullscreen MediaMode instance
 
     Component.onCompleted: {
         Persistent.states.background.mediaMode.userScrollOffset = 0;
+        root.forceActiveFocus();
         root.opacity = 1.0;
         if (videoActive) {
             Quickshell.execDetached(["hyprctl", "keyword", "layerrule", "unset,quickshell:background"]);
@@ -483,7 +498,7 @@ Item { // Fullscreen MediaMode instance
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: 800
+                        duration: Appearance.dur(800)
                         easing.type: Easing.InOutQuad
                     }
                 }
@@ -511,17 +526,17 @@ Item { // Fullscreen MediaMode instance
                             target: videoCrossfadeOverlay
                             property: "opacity"
                             to: 0.85
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutQuad
                         }
                         PauseAnimation {
-                            duration: 150
+                            duration: Appearance.dur(150)
                         }
                         NumberAnimation {
                             target: videoCrossfadeOverlay
                             property: "opacity"
                             to: 0.0
-                            duration: 400
+                            duration: Appearance.dur(400)
                             easing.type: Easing.InQuad
                         }
                     }
@@ -546,7 +561,7 @@ Item { // Fullscreen MediaMode instance
 
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: 800
+                            duration: Appearance.dur(800)
                             easing.type: Easing.InOutQuad
                         }
                     }
@@ -1115,7 +1130,7 @@ Item { // Fullscreen MediaMode instance
                                 color: videoActive ? ColorUtils.transparentize(Appearance.colors.colLayer1Base, 0.70) : ColorUtils.transparentize(Appearance.colors.colLayer1Base, 0.55)
 
                                 Behavior on color {
-                                    ColorAnimation { duration: 400; easing.type: Easing.InOutQuad }
+                                    ColorAnimation { duration: Appearance.dur(400); easing.type: Easing.InOutQuad }
                                 }
 
                                 MediaModeCoverArt {

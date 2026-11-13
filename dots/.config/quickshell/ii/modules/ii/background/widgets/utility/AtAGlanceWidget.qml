@@ -53,7 +53,7 @@ AbstractBackgroundWidget {
     readonly property var dualData: AtAGlanceService.getTargetData(dualServiceKey)
 
     Behavior on implicitWidth {
-        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic }
     }
 
     function triggerAction(serviceName) {
@@ -66,7 +66,8 @@ AbstractBackgroundWidget {
         } else if (serviceName === "email") {
             emailIpc.running = true;
         } else if (serviceName === "fallback") {
-            Weather.getData(true);
+            // the fallback face is the weather: a tap goes on to the full app
+            GlobalStates.openWeatherApp("");
         }
     }
 

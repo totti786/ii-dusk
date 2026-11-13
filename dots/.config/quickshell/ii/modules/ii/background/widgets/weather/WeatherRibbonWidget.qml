@@ -19,6 +19,7 @@ import "WeatherMood.js" as Mood
  */
 ExpressiveCardWidget {
     id: root
+    onCardTapped: GlobalStates.openWeatherApp("hourly")
 
     configEntryName: "weather_ribbon"
     designWidth: 492
@@ -52,7 +53,7 @@ ExpressiveCardWidget {
         x: root.padding - 4
         y: root.padding - 14
         text: Mood.number(root.current?.temp) + "°"
-        color: WidgetColorScheme.textColorOnBg
+        color: root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 80
         font.variableAxes: ({ "wght": 110, "wdth": 100, "ROND": 100 })
@@ -70,7 +71,7 @@ ExpressiveCardWidget {
             width: parent.width
             elide: Text.ElideRight
             text: String(root.current?.wDesc ?? "").toUpperCase()
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: 21
             font.variableAxes: ({ "wght": 950, "wdth": 80, "ROND": 0 })
@@ -79,7 +80,7 @@ ExpressiveCardWidget {
             width: parent.width
             elide: Text.ElideRight
             text: root.current?.city ?? ""
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.family: Appearance.font.family.reading
             font.pixelSize: Appearance.font.pixelSize.small
         }
@@ -106,13 +107,13 @@ ExpressiveCardWidget {
                 width: chipText.implicitWidth + 18
                 height: 24
                 radius: root.pill(height)
-                color: chip.modelData.high ? WidgetColorScheme.accentColor : WidgetColorScheme.pillBgColor
+                color: chip.modelData.high ? root.cardScheme.accentColor : root.cardScheme.pillBgColor
 
                 StyledText {
                     id: chipText
                     anchors.centerIn: parent
                     text: chip.modelData.label + " " + (chip.modelData.value ?? "--") + "°"
-                    color: chip.modelData.high ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnBg
+                    color: chip.modelData.high ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnBg
                     font.family: Appearance.font.family.main
                     font.pixelSize: 12
                     font.variableAxes: ({ "wght": 700, "wdth": 90, "ROND": 100 })
@@ -159,7 +160,7 @@ ExpressiveCardWidget {
             width: relief.width
             height: 3
             radius: 1.5
-            color: WidgetColorScheme.pillBgColor
+            color: root.cardScheme.pillBgColor
         }
 
         Shape {
@@ -169,11 +170,11 @@ ExpressiveCardWidget {
 
             ShapePath {
                 strokeColor: "transparent"
-                fillColor: ColorUtils.mix(WidgetColorScheme.accentColor, root.cardColor, 0.28)
+                fillColor: ColorUtils.mix(root.cardScheme.accentColor, root.cardColor, 0.28)
                 PathSvg { path: relief.area }
             }
             ShapePath {
-                strokeColor: WidgetColorScheme.accentColor
+                strokeColor: root.cardScheme.accentColor
                 strokeWidth: 4
                 capStyle: ShapePath.RoundCap
                 joinStyle: ShapePath.RoundJoin
@@ -195,7 +196,7 @@ ExpressiveCardWidget {
                     x: step.point.x - width / 2
                     y: step.point.y - height - 4
                     text: step.modelData.temp + "°"
-                    color: step.index === 0 ? WidgetColorScheme.accentColor : WidgetColorScheme.textColorOnBg
+                    color: step.index === 0 ? root.cardScheme.accentColor : root.cardScheme.textColorOnBg
                     font.family: Appearance.font.family.main
                     font.pixelSize: 13
                     font.variableAxes: ({ "wght": step.index === 0 ? 800 : 600, "wdth": 90, "ROND": 100 })
@@ -204,7 +205,7 @@ ExpressiveCardWidget {
                     x: step.point.x - width / 2
                     y: relief.baseLine + 6
                     text: step.index === 0 ? Translation.tr("Now") : (String(step.modelData.hour).padStart(2, "0") + "h")
-                    color: WidgetColorScheme.subtextColorOnBg
+                    color: root.cardScheme.subtextColorOnBg
                     font.family: Appearance.font.family.main
                     font.pixelSize: 11
                     font.variableAxes: ({ "wght": 550, "wdth": 100, "ROND": 100 })
@@ -220,7 +221,7 @@ ExpressiveCardWidget {
             width: 3
             height: relief.baseLine - y
             radius: 1.5
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
     }
 }

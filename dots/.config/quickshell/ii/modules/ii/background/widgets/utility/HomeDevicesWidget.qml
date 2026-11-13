@@ -64,7 +64,7 @@ ExpressiveCardWidget {
 
             StyledText {
                 text: Translation.tr("Home")
-                color: WidgetColorScheme.textColorOnBg
+                color: root.cardScheme.textColorOnBg
                 font.family: Appearance.font.family.title
                 font.pixelSize: Appearance.font.pixelSize.huge
                 font.variableAxes: Appearance.font.variableAxes.titleRounded
@@ -73,7 +73,7 @@ ExpressiveCardWidget {
                 text: SmartDevicesService.hasDevices
                     ? Translation.tr("%1 of %2 on").arg(SmartDevicesService.onCount).arg(SmartDevicesService.deviceCount)
                     : Translation.tr("No devices")
-                color: WidgetColorScheme.subtextColorOnBg
+                color: root.cardScheme.subtextColorOnBg
                 font.family: Appearance.font.family.main
                 font.pixelSize: 12
                 font.variableAxes: ({ "wght": 500, "wdth": 100, "slnt": -10, "ROND": 100 })
@@ -88,8 +88,8 @@ ExpressiveCardWidget {
             height: 44
             symbol: "power_settings_new"
             symbolSize: 22
-            colFill: SmartDevicesService.anyDeviceOn ? WidgetColorScheme.accentColor : WidgetColorScheme.pillBgColor
-            colContent: SmartDevicesService.anyDeviceOn ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnBg
+            colFill: SmartDevicesService.anyDeviceOn ? root.cardScheme.accentColor : root.cardScheme.pillBgColor
+            colContent: SmartDevicesService.anyDeviceOn ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnBg
             restRadius: SmartDevicesService.anyDeviceOn ? Appearance.rounding.normal : root.pill(height)
             onClicked: if (root.actionsEnabled) SmartDevicesService.toggleAll()
         }
@@ -130,7 +130,7 @@ ExpressiveCardWidget {
                     // The lights share the column; a long list scrolls.
                     height: Math.max(88, (list.height - tiles.spacing * (root.devices.length - 1)) / Math.max(1, root.devices.length))
                     radius: Appearance.rounding.large
-                    color: WidgetColorScheme.pillBgColor
+                    color: root.cardScheme.pillBgColor
                     opacity: tile.online ? 1 : 0.5
                     clip: true
 
@@ -164,14 +164,14 @@ ExpressiveCardWidget {
                         MaterialShape {
                             anchors.fill: parent
                             shapeString: tile.on ? "Sunny" : "Circle"
-                            color: tile.on ? root.contentOn(tile.light) : WidgetColorScheme.cardBgColor
+                            color: tile.on ? root.contentOn(tile.light) : root.cardScheme.cardBgColor
                         }
                         MaterialSymbol {
                             anchors.centerIn: parent
                             text: tile.on ? "lightbulb" : "light_off"
                             iconSize: 20
                             fill: tile.on ? 1 : 0
-                            color: tile.on ? tile.light : WidgetColorScheme.subtextColorOnBg
+                            color: tile.on ? tile.light : root.cardScheme.subtextColorOnBg
                         }
                     }
 
@@ -184,7 +184,7 @@ ExpressiveCardWidget {
                         anchors.verticalCenter: bulb.verticalCenter
                         elide: Text.ElideRight
                         text: String(tile.modelData.name ?? "")
-                        color: tile.on && (tile.column ? tile.level > 0.85 : tile.level > 0.45) ? root.contentOn(tile.light) : WidgetColorScheme.textColorOnBg
+                        color: tile.on && (tile.column ? tile.level > 0.85 : tile.level > 0.45) ? root.contentOn(tile.light) : root.cardScheme.textColorOnBg
                         font.family: Appearance.font.family.main
                         font.pixelSize: 14
                         font.variableAxes: ({ "wght": 700, "wdth": 90, "ROND": 100 })
@@ -195,7 +195,7 @@ ExpressiveCardWidget {
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 8
                         text: !tile.online ? Translation.tr("Offline") : tile.on ? Math.round(tile.level * 100) + "%" : Translation.tr("Off")
-                        color: tile.on && tile.level > 0.25 ? root.contentOn(tile.light) : WidgetColorScheme.subtextColorOnBg
+                        color: tile.on && tile.level > 0.25 ? root.contentOn(tile.light) : root.cardScheme.subtextColorOnBg
                         font.family: Appearance.font.family.main
                         font.pixelSize: tile.on ? (tile.column ? 64 : 30) : 16
                         font.variableAxes: tile.on ? ({ "wght": 780, "wdth": 60, "ROND": 100 })
@@ -218,8 +218,8 @@ ExpressiveCardWidget {
                                 height: 32
                                 symbol: modelData.symbol
                                 symbolSize: 16
-                                colFill: WidgetColorScheme.cardBgColor
-                                colContent: WidgetColorScheme.textColorOnBg
+                                colFill: root.cardScheme.cardBgColor
+                                colContent: root.cardScheme.textColorOnBg
                                 onClicked: if (root.actionsEnabled) root.setBrightness(tile.modelData, (tile.modelData.brightness ?? 0) + modelData.step)
                             }
                         }
@@ -239,14 +239,14 @@ ExpressiveCardWidget {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "home_iot_device"
             iconSize: 44
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
         }
         StyledText {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             text: Translation.tr("Set up your lights in the Smart Devices quick toggle")
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.small
         }

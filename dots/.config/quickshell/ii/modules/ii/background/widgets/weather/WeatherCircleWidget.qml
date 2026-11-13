@@ -10,6 +10,7 @@ import qs.modules.ii.background.widgets
 
 AbstractBackgroundWidget {
     id: root
+    opensWeatherApp: true
 
     configEntryName: "weather_circle"
 

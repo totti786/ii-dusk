@@ -67,7 +67,7 @@ Item {
     // The picture actually on the plane, when it is one a cutout can stand for.
     readonly property string planePath: {
         const p = root.plane;
-        if (!p || p.wallpaperIsVideo || p.shellVideoPath !== "" || p.wallpaperSafetyTriggered
+        if (!p || p.celestialWallpaperActive || p.wallpaperIsVideo || p.shellVideoPath !== "" || p.wallpaperSafetyTriggered
                 || Config.options.background.useWallpaperEngine)
             return "";
         return DepthEffect.cleanPath(p.committedWallpaperSource);
@@ -327,7 +327,7 @@ Item {
             && !GlobalStates.lockLookActive
         property real barBand: barBandShown ? 1 : 0
         Behavior on barBand {
-            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic }
         }
         readonly property real barSpan: (BarPlacement.vertical ? Appearance.sizes.verticalBarWidth : Appearance.sizes.barHeight) + 100
         property real barBandSize: barSpan / Math.max(1, BarPlacement.vertical ? width : height)

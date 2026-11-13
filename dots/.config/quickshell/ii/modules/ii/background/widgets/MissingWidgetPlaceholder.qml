@@ -28,7 +28,7 @@ Rectangle {
     border.color: Qt.rgba(1, 0.4, 0.4, 0.5)
     border.width: 1
 
-    Behavior on color { ColorAnimation { duration: 120 } }
+    Behavior on color { ColorAnimation { duration: Appearance.dur(120) } }
 
     MouseArea {
         id: missingPlaceholderMouse

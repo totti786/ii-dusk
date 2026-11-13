@@ -504,6 +504,7 @@ AbstractWidget {
         "circle_pointer_clock": true, "circular_media": true,
         "clock_expressive_card": true, "clock_flex": true,
         "clock_duo": true, "clock_hori": true, "clock_numeral": true, "clock_type_stack": true, "clock_type_weight": true,
+        "clock_hour_shape": true, "clock_bloom": true, "clock_capsule": true, "clock_dome": true, "clock_totem": true,
         "clock_type_width": true, "compact_media": true, "concentric_clock": true,
         "grid_card_clock": true, "media_cd": true, "media_cover": true, "media_deck": true,
         "media_halo": true, "media_poster": true, "month_clock": true,
@@ -537,6 +538,91 @@ AbstractWidget {
     // undefined and visually revert the widget on the next resync.
     readonly property real _persistedInstanceScale: widgetInstance !== null ? (widgetInstance.scale ?? 1.0) : 1.0
 
+
+    // ── Size classes ─────────────────────────────────────────────────────────
+    // A widget that lists `supportedSizes` ("1x1", "2x1", "2x0.5", ...; one cell is 240 design
+    // units) comes in those shapes, not just bigger or smaller: the resize grip snaps to the
+    // nearest one, Edit Mode shows a chip row to pick one, and the widget lays itself out per
+    // `sizeClass`. The choice is stored on the placed widget (`size` on its activeWidgets entry),
+    // so two copies of one widget can differ. A widget that lists none keeps plain scaling.
+    property var supportedSizes: []
+    property string defaultSize: ""
+    property string _sizeOverride: ""   // the class under the grip while it is being dragged
+    property bool _resizeClassMode: false
+    property real _resizeStartDiag: 1
+    readonly property real sizeCell: 240
+    readonly property bool sizeable: root.supportedSizes.length > 1
+    readonly property string sizeClass: {
+        if (!root.sizeable)
+            return "";
+        if (root._sizeOverride !== "" && root.supportedSizes.includes(root._sizeOverride))
+            return root._sizeOverride;
+        const own = root.widgetInstance ? String(root.widgetInstance.size ?? "") : "";
+        if (root.supportedSizes.includes(own))
+            return own;
+        return root.supportedSizes.includes(root.defaultSize) ? root.defaultSize : root.supportedSizes[0];
+    }
+    function sizeDims(id) {
+        const m = /^([0-9.]+)x([0-9.]+)$/.exec(String(id));
+        return m ? Qt.size(Number(m[1]) * root.sizeCell, Number(m[2]) * root.sizeCell) : Qt.size(root.sizeCell, root.sizeCell);
+    }
+    function sizeLabel(id) {
+        return String(id).replace("x", "×").replace("0.5", "½");
+    }
+    readonly property size sizeClassDims: root.sizeDims(root.sizeClass)
+
+    // ── Families ──
+    // A widget that belongs to a registry family (the same thing built at several sizes) is
+    // offered the family's sizes the same way, and "resizing" it swaps it for the sibling.
+    readonly property var _meta: root.widgetInstance ? WidgetsRegistry.getWidgetMetadata(root.widgetInstance.widgetId) : null
+    readonly property string familyName: root._meta?.family ?? ""
+    readonly property string familySize: root._meta?.size ?? ""
+    readonly property var familySizes: WidgetsRegistry.familySizes(root.familyName)
+    readonly property var familyHere: WidgetsRegistry.familyVariants(root.familyName, root.familySize)
+    // What the switcher and the grip choose between
+    readonly property var chipSizes: root.sizeable ? root.supportedSizes : (root.familySizes.length > 1 ? root.familySizes : [])
+    readonly property string chipCurrent: root.sizeable ? root.sizeClass : root.familySize
+    readonly property bool switchable: root.chipSizes.length > 1
+    property string _sizePick: ""
+    function pickSize(id) {
+        if (id === "" || id === root.chipCurrent)
+            return;
+        if (root.sizeable) {
+            root.setSizeClass(id);
+        } else if (root.widgetInstance !== null && !root.isPreview) {
+            const list = WidgetsRegistry.familyVariants(root.familyName, id);
+            if (list.length > 0)
+                Config.updateWidgetVariant(root.widgetInstance.id, list[0]);
+        }
+    }
+    // The next design at the size it already is
+    function nextDesign() {
+        if (root.widgetInstance === null || root.isPreview || root.familyHere.length < 2)
+            return;
+        const at = root.familyHere.indexOf(root.widgetInstance.widgetId);
+        Config.updateWidgetVariant(root.widgetInstance.id, root.familyHere[(at + 1) % root.familyHere.length]);
+    }
+    // The widgets that are laid out per class read these instead of the raw dims
+    readonly property bool isStrip: root.sizeClassDims.height <= root.sizeCell / 2 + 1
+    readonly property bool isWide: root.sizeClassDims.width > root.sizeCell + 1
+    readonly property bool isTall: root.sizeClassDims.height > root.sizeCell + 1
+    function setSizeClass(id) {
+        if (root.widgetInstance !== null && !root.isPreview)
+            Config.updateWidgetSize(root.widgetInstance.id, id === root.defaultSize ? "" : id);
+        Qt.callLater(() => root._keepOnScreen());
+    }
+    // A bigger shape grows right and down from the corner, so it can leave the screen
+    function _keepOnScreen() {
+        if (root.widgetInstance === null || root.isPreview)
+            return;
+        const nx = WidgetDragMath.clamp(root.x, root.dragMinimumX(), root.dragMaximumX());
+        const ny = WidgetDragMath.clamp(root.y, root.dragMinimumY(), root.dragMaximumY());
+        if (nx !== root.x || ny !== root.y) {
+            root.x = nx;
+            root.y = ny;
+            root.commitPlacement(nx, ny);
+        }
+    }
 
     // ── Resize gesture ───────────────────────────────────────────────────────
     // The widget resizes live under the grip, but nothing is *persisted* until
@@ -612,6 +698,11 @@ AbstractWidget {
         }
         _resizeStartDist = Math.max(1, Math.hypot(p.x - centre.x, p.y - centre.y));
         _resizeStartScale = _currentScaleFactor();
+        const startDims = root.sizeDims(root.chipCurrent);
+        _resizeStartDiag = Math.max(1, Math.hypot(startDims.width, startDims.height));
+        _resizeClassMode = false;
+        _sizeOverride = "";
+        _sizePick = "";
         _resizeMinScale = 0.5;
         if (_usesWidgetSizeKey) {
             // Never let the widget outgrow its monitor.
@@ -660,6 +751,27 @@ AbstractWidget {
             dist = Math.hypot(p.x - _resizeCentreGlobal.x, p.y - _resizeCentreGlobal.y);
         }
         dist = Math.max(1, dist);
+        if (root.switchable && !_resizeFreeStep) {
+            // Snap to the nearest shape by how big the pointer says the card is
+            _resizeClassMode = true;
+            const wanted = _resizeStartDiag * (dist / _resizeStartDist);
+            let best = root.chipCurrent;
+            let bestOff = Infinity;
+            for (const id of root.chipSizes) {
+                const d = root.sizeDims(id);
+                const off = Math.abs(Math.log(Math.max(1, Math.hypot(d.width, d.height)) / wanted));
+                if (off < bestOff) {
+                    bestOff = off;
+                    best = id;
+                }
+            }
+            _sizePick = best;
+            if (root.sizeable)
+                _sizeOverride = best;
+            _resizePreviewScale = _resizeStartScale;
+            return;
+        }
+        _resizeClassMode = false;
         _resizePreviewScale = _quantiseScale(_resizeStartScale * (dist / _resizeStartDist));
         if (_resizeGroup.length > 0 && _resizeStartScale > 0) {
             const ratio = _resizePreviewScale / _resizeStartScale;
@@ -739,6 +851,8 @@ AbstractWidget {
         const inGroup = canvas && canvas.selectedWidgets && canvas.selectedWidgets.indexOf(root) !== -1;
         GlobalStates.editHistoryBeginBatch();
         commitResizeScale(1.0);
+        if (root.sizeable)
+            root.setSizeClass(root.defaultSize !== "" ? root.defaultSize : root.supportedSizes[0]);
         if (inGroup) {
             const others = canvas.selectedWidgets.filter(w => w !== root && w.draggable);
             for (let i = 0; i < others.length; i++) {
@@ -757,6 +871,21 @@ AbstractWidget {
         if (!_resizeActive)
             return;
         _resizeActive = false;
+        if (_resizeClassMode && _sizePick !== "") {
+            // A shape was picked: one history entry for it, and the corner it grew past is pulled back
+            const picked = _sizePick;
+            _resizeClassMode = false;
+            _resizeGroup = [];
+            _resizePreviewScale = 0;
+            _liveScaleOverride = 0;
+            GlobalStates.editHistoryBeginBatch();
+            root.pickSize(picked);
+            GlobalStates.editHistoryEndBatch();
+            _sizeOverride = "";
+            _sizePick = "";
+            settleTimer.restart();
+            return;
+        }
         // A click without pointer travel never entered updateResizeGesture, so
         // there is nothing to commit — persisting the untouched preview would
         // just rewrite the same value and fight the double-click reset.
@@ -1303,6 +1432,28 @@ AbstractWidget {
         if (mouse.button === Qt.RightButton)
             requestContextMenu(mouse.x, mouse.y);
     }
+
+    // A weather widget names the weather app tab a plain click opens ("" = its default
+    // landing). The click must not have become a drag, and Edit Mode keeps a click for
+    // selecting the widget; previews and the lock screen never open anything.
+    property bool opensWeatherApp: false
+    property string weatherAppTab: ""
+    property bool _tapMoved: false
+    Connections {
+        target: root
+        enabled: root.opensWeatherApp
+        function onIsDraggingChanged() {
+            if (root.isDragging)
+                root._tapMoved = true;
+            else
+                Qt.callLater(() => root._tapMoved = false);
+        }
+        function onClicked(mouse) {
+            if (mouse.button !== Qt.LeftButton || root._tapMoved || root.isPreview || root.editModeActive || GlobalStates.screenLocked)
+                return;
+            GlobalStates.openWeatherApp(root.weatherAppTab);
+        }
+    }
     animateXPos: _positionAnimReady && entryDone && !isDragging && !isDraggingOrSettling && !groupDragging
         && (visibleWhenLocked || !GlobalStates.screenLocked)
     animateYPos: _positionAnimReady && entryDone && !isDragging && !isDraggingOrSettling && !groupDragging
@@ -1472,7 +1623,7 @@ AbstractWidget {
 
     property bool needsColText: false
     property color dominantColor: Appearance.colors.colPrimary
-    property bool dominantColorIsDark: dominantColor.hslLightness < 0.5
+    property bool dominantColorIsDark: dominantColor.hslLightness < (Config.options.background.darkTextAbove ?? 0.72)
     property color colText: {
         const onNormalBackground = (lockLayoutActive && Config.options.lock.blur.enable)
         const adaptiveColor = ColorUtils.colorWithLightness(Appearance.colors.colPrimary, (dominantColorIsDark ? 0.8 : 0.12))
@@ -1559,6 +1710,79 @@ AbstractWidget {
         }
     }
 
+    // ── Size switcher ────────────────────────────────────────────────────────
+    // The shapes this widget comes in, one tap each, under the card while the desktop is being
+    // edited. Counter-scaled so it stays the same size at any widget scale, and out of the way
+    // while the grip is being dragged (the readout owns the space above it).
+    Rectangle {
+        id: sizeSwitcher
+        z: 200
+        visible: root.switchable && root.editModeActive && !root.isPreview && !root.resizePreviewActive
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.bottom
+        anchors.topMargin: 10 / Math.max(0.001, root.effectiveScale)
+        scale: 1 / Math.max(0.001, root.effectiveScale)
+        transformOrigin: Item.Top
+        implicitWidth: sizeRow.implicitWidth + 12
+        implicitHeight: 34
+        radius: height / 2
+        color: Appearance.colors.colLayer2
+
+        Row {
+            id: sizeRow
+            anchors.centerIn: parent
+            spacing: 2
+            Repeater {
+                model: root.chipSizes
+                delegate: Rectangle {
+                    id: sizeChip
+                    required property string modelData
+                    readonly property bool current: sizeChip.modelData === root.chipCurrent
+                    width: 50
+                    height: 26
+                    radius: height / 2
+                    color: sizeChip.current ? Appearance.colors.colPrimary : "transparent"
+                    StyledText {
+                        anchors.centerIn: parent
+                        text: root.sizeLabel(sizeChip.modelData)
+                        font.pixelSize: 12
+                        font.weight: Font.DemiBold
+                        color: sizeChip.current ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer2
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.pickSize(sizeChip.modelData)
+                    }
+                }
+            }
+            // Other designs at this size, one tap to the next
+            Rectangle {
+                visible: root.familyHere.length > 1
+                width: 64
+                height: 26
+                radius: height / 2
+                color: designArea.containsMouse ? Appearance.colors.colLayer2Hover : "transparent"
+                border.width: 1
+                border.color: Appearance.colors.colOutlineVariant
+                StyledText {
+                    anchors.centerIn: parent
+                    text: (root.familyHere.indexOf(root.widgetInstance ? root.widgetInstance.widgetId : "") + 1) + "/" + root.familyHere.length
+                    font.pixelSize: 12
+                    font.weight: Font.DemiBold
+                    color: Appearance.colors.colOnLayer2
+                }
+                MouseArea {
+                    id: designArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.nextDesign()
+                }
+            }
+        }
+    }
+
     // ── Resize readout ───────────────────────────────────────────────────────
     // The widget itself is the preview now, so there is no outline — only the
     // number, which is the one thing the widget cannot tell you on its own.
@@ -1580,7 +1804,7 @@ AbstractWidget {
         StyledText {
             id: readoutText
             anchors.centerIn: parent
-            text: root.resizePreviewPercent + "%"
+            text: root._resizeClassMode ? root.sizeLabel(root._sizePick !== "" ? root._sizePick : root.chipCurrent) : root.resizePreviewPercent + "%"
             font.pixelSize: Appearance.font.pixelSize.smaller
             color: Appearance.colors.colOnPrimary
         }

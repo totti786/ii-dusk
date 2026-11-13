@@ -34,7 +34,7 @@ ExpressiveCardWidget {
         x: root.padding
         y: root.padding - 4
         text: Translation.tr("Birthdays")
-        color: WidgetColorScheme.textColorOnBg
+        color: root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.title
         font.pixelSize: Appearance.font.pixelSize.larger
         font.variableAxes: Appearance.font.variableAxes.titleRounded
@@ -44,7 +44,7 @@ ExpressiveCardWidget {
         anchors.rightMargin: root.padding
         y: root.padding
         text: Translation.tr("next %1 days").arg(Math.round(root.span))
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 12
         font.variableAxes: ({ "wght": 500, "wdth": 100, "slnt": -10, "ROND": 100 })
@@ -68,7 +68,7 @@ ExpressiveCardWidget {
             width: lane.width + 50
             height: 4
             radius: 2
-            color: WidgetColorScheme.pillBgColor
+            color: root.cardScheme.pillBgColor
         }
         Rectangle {
             x: -4
@@ -76,7 +76,7 @@ ExpressiveCardWidget {
             width: 16
             height: 16
             radius: 8
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
 
         Repeater {
@@ -97,7 +97,7 @@ ExpressiveCardWidget {
                     y: person.above ? lane.lineY - 14 : lane.lineY
                     width: 3
                     height: 14
-                    color: WidgetColorScheme.pillBgColor
+                    color: root.cardScheme.pillBgColor
                 }
 
                 PersonAvatar {
@@ -117,7 +117,7 @@ ExpressiveCardWidget {
 
                     StyledText {
                         text: person.modelData.name.split(" ")[0]
-                        color: WidgetColorScheme.textColorOnBg
+                        color: root.cardScheme.textColorOnBg
                         font.family: Appearance.font.family.main
                         font.pixelSize: 13
                         font.variableAxes: ({ "wght": 700, "wdth": 90, "ROND": 100 })
@@ -125,7 +125,7 @@ ExpressiveCardWidget {
                     StyledText {
                         text: person.modelData.days === 0 ? Translation.tr("Today")
                             : Qt.locale().toString(person.modelData.date, "d MMM")
-                        color: person.modelData.days === 0 ? WidgetColorScheme.accentColor : WidgetColorScheme.subtextColorOnBg
+                        color: person.modelData.days === 0 ? root.cardScheme.accentColor : root.cardScheme.subtextColorOnBg
                         font.family: Appearance.font.family.main
                         font.pixelSize: 11
                         font.variableAxes: ({ "wght": 500, "wdth": 100, "ROND": 100 })
@@ -139,7 +139,7 @@ ExpressiveCardWidget {
         visible: root.people.length === 0
         anchors.centerIn: parent
         text: Translation.tr("Add birthdays to your phone's contacts")
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: Appearance.font.pixelSize.normal
     }

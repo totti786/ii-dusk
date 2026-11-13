@@ -28,8 +28,8 @@ ExpressiveCardWidget {
 
     readonly property var apps: ScreenTimeLimits.todayApps()
     readonly property real total: root.apps.reduce((sum, app) => sum + app.seconds, 0)
-    readonly property var colors: [WidgetColorScheme.accentColor, WidgetColorScheme.pillFillColor,
-        WidgetColorScheme.highlightCircleColor, WidgetColorScheme.innerShapeColor]
+    readonly property var colors: [root.cardScheme.accentColor, root.cardScheme.pillFillColor,
+        root.cardScheme.highlightCircleColor, root.cardScheme.innerShapeColor]
     // [{ key, start, sweep, color }] in degrees from 12 o'clock; the fifth is "the rest".
     readonly property var segments: {
         if (root.total <= 0)
@@ -40,7 +40,7 @@ ExpressiveCardWidget {
         const rest = root.total - top.reduce((sum, app) => sum + app.seconds, 0);
         const parts = top.map((app, i) => ({ key: app.key, seconds: app.seconds, color: root.colors[i] }));
         if (rest > 0)
-            parts.push({ key: "", seconds: rest, color: WidgetColorScheme.pillBgColor });
+            parts.push({ key: "", seconds: rest, color: root.cardScheme.pillBgColor });
         for (const part of parts) {
             const sweep = 360 * part.seconds / root.total;
             out.push({ key: part.key, start: start, sweep: sweep, color: part.color });
@@ -62,7 +62,7 @@ ExpressiveCardWidget {
         visible: root.segments.length === 0
 
         ShapePath {
-            strokeColor: WidgetColorScheme.pillBgColor
+            strokeColor: root.cardScheme.pillBgColor
             strokeWidth: root.stroke
             fillColor: "transparent"
             PathAngleArc {
@@ -127,7 +127,7 @@ ExpressiveCardWidget {
             StyledText {
                 anchors.baseline: minutesText.baseline
                 text: String(Math.floor(root.totalMinutes / 60))
-                color: WidgetColorScheme.textColorOnBg
+                color: root.cardScheme.textColorOnBg
                 font.family: Appearance.font.family.main
                 font.pixelSize: 50
                 font.variableAxes: ({ "wght": 820, "wdth": 45, "ROND": 100 })
@@ -135,7 +135,7 @@ ExpressiveCardWidget {
             StyledText {
                 anchors.baseline: minutesText.baseline
                 text: "h"
-                color: WidgetColorScheme.subtextColorOnBg
+                color: root.cardScheme.subtextColorOnBg
                 font.family: Appearance.font.family.main
                 font.pixelSize: 20
                 font.variableAxes: ({ "wght": 500, "wdth": 100, "ROND": 100 })
@@ -144,7 +144,7 @@ ExpressiveCardWidget {
                 id: minutesText
                 leftPadding: 4
                 text: String(root.totalMinutes % 60).padStart(2, "0")
-                color: WidgetColorScheme.textColorOnBg
+                color: root.cardScheme.textColorOnBg
                 font.family: Appearance.font.family.main
                 font.pixelSize: 30
                 font.variableAxes: ({ "wght": 280, "wdth": 100, "ROND": 100 })
@@ -153,7 +153,7 @@ ExpressiveCardWidget {
         StyledText {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Translation.tr("today")
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: 12
             font.variableAxes: ({ "wght": 500, "wdth": 110, "slnt": -10, "ROND": 100 })

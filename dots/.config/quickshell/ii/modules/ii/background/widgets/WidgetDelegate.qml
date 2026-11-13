@@ -122,6 +122,11 @@ Item {
         "favorites_row": component_favorites_row,
         "search_pixel": component_search_pixel,
         "search_shortcuts": component_search_shortcuts,
+        "clock_hour_shape": component_clock_hour_shape,
+        "clock_bloom": component_clock_bloom,
+        "clock_capsule": component_clock_capsule,
+        "clock_dome": component_clock_dome,
+        "clock_totem": component_clock_totem,
         "clock_type_weight": component_clock_type_weight,
         "clock_type_width": component_clock_type_width,
         "clock_type_stack": component_clock_type_stack,
@@ -198,6 +203,14 @@ Item {
         "quick_actions": component_quick_actions,
         "quote": component_quote,
         "water_reminder": component_water_reminder,
+        "prayer_times": component_prayer_times,
+        "diwan_verse": component_diwan_verse,
+        "quran_ayah": component_quran_ayah,
+        "quran_lockup": component_quran_lockup,
+        "quran_lens": component_quran_lens,
+        "quran_ring": component_quran_ring,
+        "quran_hero": component_quran_hero,
+        "quran_hilye": component_quran_hilye,
         "at_a_glance": component_at_a_glance,
         "resource_cpu_pill": component_resource_cpu_pill,
         "resource_ram_pill": component_resource_ram_pill,
@@ -518,6 +531,71 @@ Item {
         id: component_triple_ring_clock
 
         TripleRingClockWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_clock_hour_shape
+
+        HourShapeClockWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_clock_bloom
+
+        BloomClockWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_clock_capsule
+
+        CapsuleClockWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_clock_dome
+
+        DomeClockWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_clock_totem
+
+        TotemClockWidget {
             screenWidth: delegateRoot.screenWidth
             screenHeight: delegateRoot.screenHeight
             scaledScreenWidth: delegateRoot.screenWidth
@@ -1723,6 +1801,110 @@ Item {
     }
 
     Component {
+        id: component_prayer_times
+
+        PrayerTimesWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_diwan_verse
+
+        VerseOfDayWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_quran_ayah
+
+        QuranAyahWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_quran_lockup
+
+        QuranLockupWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_quran_lens
+
+        QuranLensWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_quran_ring
+
+        QuranRingWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_quran_hero
+
+        QuranHeroWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_quran_hilye
+
+        QuranHilyeWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
         id: component_at_a_glance
 
         AtAGlanceWidget {
@@ -2251,7 +2433,9 @@ Item {
                     "monitorName": delegateRoot.monitorName,
                     "placementStrategy": delegateRoot.placementStrategy,
                     "lockBehavior": delegateRoot.lockBehavior,
-                    "pinned": delegateRoot.configEntry ? delegateRoot.configEntry.pinned === true : false
+                    "pinned": delegateRoot.configEntry ? delegateRoot.configEntry.pinned === true : false,
+                    "style": delegateRoot.configEntry && delegateRoot.configEntry.style ? delegateRoot.configEntry.style : null,
+                    "size": delegateRoot.configEntry && delegateRoot.configEntry.size ? delegateRoot.configEntry.size : ""
                 };
             }
             when: widgetLoader.status == Loader.Ready

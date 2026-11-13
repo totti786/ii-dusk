@@ -43,7 +43,7 @@ Item {
                 property: "rippleProgress"
                 from: 0.0
                 to: 1.0
-                duration: 1500
+                duration: Appearance.dur(1500)
                 easing.type: Easing.OutQuart
             }
         }

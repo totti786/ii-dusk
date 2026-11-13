@@ -45,7 +45,7 @@ ExpressiveCardWidget {
     }
 
     component Caption: StyledText {
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 11
         font.letterSpacing: 1.2
@@ -61,7 +61,7 @@ ExpressiveCardWidget {
         // ── Date ──
         StyledText {
             text: Qt.locale().toString(root.now, "dddd, d MMM")
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.title
             font.pixelSize: Appearance.font.pixelSize.larger
             font.variableAxes: Appearance.font.variableAxes.titleRounded
@@ -92,8 +92,8 @@ ExpressiveCardWidget {
                         height: heat.cellSize * 0.62
                         radius: hourCell.current ? root.pill(height) : Appearance.rounding.verysmall
                         color: hourCell.share > 0
-                            ? ColorUtils.mix(WidgetColorScheme.accentColor, WidgetColorScheme.pillBgColor, 0.25 + 0.75 * hourCell.share)
-                            : WidgetColorScheme.pillBgColor
+                            ? ColorUtils.mix(root.cardScheme.accentColor, root.cardScheme.pillBgColor, 0.25 + 0.75 * hourCell.share)
+                            : root.cardScheme.pillBgColor
                     }
                 }
             }
@@ -135,7 +135,7 @@ ExpressiveCardWidget {
                         width: Math.max(height, parent.width * bar.modelData.seconds / bar.peak)
                         height: parent.height
                         radius: root.pill(height)
-                        color: bar.modelData.accent ? WidgetColorScheme.accentColor : WidgetColorScheme.pillBgColor
+                        color: bar.modelData.accent ? root.cardScheme.accentColor : root.cardScheme.pillBgColor
                         Behavior on width {
                             animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                         }
@@ -144,7 +144,7 @@ ExpressiveCardWidget {
                         x: 12
                         anchors.verticalCenter: parent.verticalCenter
                         text: bar.modelData.label + "  " + ScreenTimeLimits.formatSeconds(bar.modelData.seconds)
-                        color: bar.modelData.accent ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnBg
+                        color: bar.modelData.accent ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnBg
                         font.family: Appearance.font.family.main
                         font.pixelSize: 13
                         font.variableAxes: ({ "wght": 650, "wdth": 90, "ROND": 100 })
@@ -186,7 +186,7 @@ ExpressiveCardWidget {
                             topRightRadius: 3
                             bottomLeftRadius: 7
                             bottomRightRadius: 7
-                            color: full ? WidgetColorScheme.pillFillColor : WidgetColorScheme.pillBgColor
+                            color: full ? root.cardScheme.pillFillColor : root.cardScheme.pillBgColor
                         }
                     }
                 }
@@ -199,8 +199,8 @@ ExpressiveCardWidget {
                     height: 40
                     symbol: "add"
                     symbolSize: 20
-                    colFill: WidgetColorScheme.pillFillColor
-                    colContent: WidgetColorScheme.textColorOnPillFill
+                    colFill: root.cardScheme.pillFillColor
+                    colContent: root.cardScheme.textColorOnPillFill
                     onClicked: if (root.actionsEnabled) WaterReminderService.drink(1)
                 }
             }
@@ -215,7 +215,7 @@ ExpressiveCardWidget {
         width: root.innerWidth
         height: 44
         radius: root.pill(height)
-        color: WidgetColorScheme.pillBgColor
+        color: root.cardScheme.pillBgColor
         visible: BedtimeService.enabled
 
         MaterialSymbol {
@@ -225,14 +225,14 @@ ExpressiveCardWidget {
             text: "bedtime"
             iconSize: 20
             fill: 1
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
         StyledText {
             anchors.left: bedGlyph.right
             anchors.leftMargin: 8
             anchors.verticalCenter: parent.verticalCenter
             text: Translation.tr("Bed at %1").arg(Qt.locale().toString(BedtimeService.targetFor(BedtimeService.nightKey(root.now)), Config.options?.time?.format ?? "hh:mm"))
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.small
             font.variableAxes: ({ "wght": 600, "wdth": 100, "ROND": 100 })

@@ -13,8 +13,13 @@ AbstractBackgroundWidget {
 
     configEntryName: "quick_actions"
 
-    implicitWidth: 240
-    implicitHeight: 240
+    // 1x1 is the AI pill and two chosen keys; wider, the card shows more of the keys: four on a
+    // row at 2x1, all of them in two rows at 2x2
+    supportedSizes: ["1x1", "2x1", "2x2"]
+    defaultSize: "1x1"
+    readonly property bool extended: root.sizeClass !== "1x1"
+    implicitWidth: root.sizeClassDims.width
+    implicitHeight: root.sizeClassDims.height
 
     // Color tokens from WidgetColorScheme
     readonly property color cardBgColor: WidgetColorScheme.cardBgColor
@@ -94,6 +99,14 @@ AbstractBackgroundWidget {
     readonly property string button2Module: Config.options.background.widgets.quick_actions.bottomButton2 || "phone"
     readonly property var button1Def: moduleMap[button1Module] || moduleMap["translator"]
     readonly property var button2Def: moduleMap[button2Module] || moduleMap["phone"]
+
+    // The two chosen keys first, then the rest in a fixed order, for the wider cards
+    readonly property var moduleOrder: {
+        const all = ["translator", "phone", "wallpapers", "media", "sidebar_dashboard", "cheatsheet", "notes"];
+        const first = [root.button1Module, root.button2Module].filter((m, i, a) => root.moduleMap[m] !== undefined && a.indexOf(m) === i);
+        return first.concat(all.filter(m => !first.includes(m)));
+    }
+    readonly property var shownModules: root.moduleOrder.slice(0, root.sizeClass === "2x1" ? 4 : 8)
 
     function triggerModule(moduleId) {
         const def = moduleMap[moduleId];
@@ -179,8 +192,53 @@ AbstractBackgroundWidget {
                     onClicked: root.openPoliciesTab("Intelligence")
                 }
 
+                // The wider cards: the keys in a grid
+                GridLayout {
+                    visible: root.extended
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    columns: 4
+                    rowSpacing: 12
+                    columnSpacing: 12
+
+                    Repeater {
+                        model: root.shownModules
+                        delegate: RippleButton {
+                            id: moduleKey
+                            required property string modelData
+                            readonly property var def: root.moduleMap[moduleKey.modelData]
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            buttonRadius: Appearance.rounding.normal
+                            colBackground: root.innerShapeColor
+                            colBackgroundHover: Qt.darker(root.innerShapeColor, 1.1)
+                            colRipple: Qt.darker(root.innerShapeColor, 1.2)
+
+                            ColumnLayout {
+                                anchors.centerIn: parent
+                                spacing: 4
+                                MaterialSymbol {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: moduleKey.def.icon
+                                    iconSize: 22
+                                    fill: 1
+                                    color: root.textColorOnBg
+                                }
+                                StyledText {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: moduleKey.def.label
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    color: root.subtextColorOnBg
+                                }
+                            }
+                            onClicked: root.triggerModule(moduleKey.modelData)
+                        }
+                    }
+                }
+
                 // Bottom row: two configurable action buttons
                 RowLayout {
+                    visible: !root.extended
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     spacing: 12

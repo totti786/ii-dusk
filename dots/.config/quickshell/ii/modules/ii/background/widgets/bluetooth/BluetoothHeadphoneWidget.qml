@@ -64,7 +64,7 @@ AbstractBackgroundWidget {
                 opacity: root.isConnected ? 1.0 : 0.35
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 300 }
+                    NumberAnimation { duration: Appearance.dur(300) }
                 }
 
                 readonly property string headphoneImageSource: Qt.resolvedUrl("../../../../../assets/images/devices/pixel_headphone1.png")

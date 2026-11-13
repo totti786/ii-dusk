@@ -18,6 +18,7 @@ import "WeatherMood.js" as Mood
  */
 ExpressiveCardWidget {
     id: root
+    onCardTapped: GlobalStates.openWeatherApp("details")
 
     configEntryName: "weather_daylight"
     designWidth: 492
@@ -52,7 +53,7 @@ ExpressiveCardWidget {
         width: 200
         elide: Text.ElideRight
         text: root.current?.city ?? ""
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: Appearance.font.pixelSize.small
         font.variableAxes: ({ "wght": 560, "wdth": 100, "ROND": 100 })
@@ -67,7 +68,7 @@ ExpressiveCardWidget {
         fontSizeMode: Text.HorizontalFit
         minimumPixelSize: 40
         text: Mood.number(root.current?.temp) + "°"
-        color: WidgetColorScheme.textColorOnBg
+        color: root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 92
         font.variableAxes: ({ "wght": 230, "wdth": 151, "ROND": 100 })
@@ -84,7 +85,7 @@ ExpressiveCardWidget {
         elide: Text.ElideRight
         lineHeight: 0.85
         text: String(root.current?.wDesc ?? "").toUpperCase()
-        color: WidgetColorScheme.accentColor
+        color: root.cardScheme.accentColor
         font.family: Appearance.font.family.main
         font.pixelSize: 22
         font.variableAxes: ({ "wght": 820, "wdth": 55, "ROND": 0 })
@@ -95,7 +96,7 @@ ExpressiveCardWidget {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: root.padding
         text: Translation.tr("Feels like %1").arg(Mood.number(root.current?.tempFeelsLike) + "°")
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: Appearance.font.pixelSize.small
         font.variableAxes: ({ "wght": 450, "wdth": 100, "slnt": -10, "ROND": 100 })
@@ -123,7 +124,7 @@ ExpressiveCardWidget {
             preferredRendererType: Shape.CurveRenderer
 
             ShapePath {
-                strokeColor: WidgetColorScheme.pillBgColor
+                strokeColor: root.cardScheme.pillBgColor
                 strokeWidth: sky.stroke
                 capStyle: ShapePath.RoundCap
                 fillColor: "transparent"
@@ -137,7 +138,7 @@ ExpressiveCardWidget {
                 }
             }
             ShapePath {
-                strokeColor: root.night ? WidgetColorScheme.innerShapeColor : WidgetColorScheme.accentColor
+                strokeColor: root.night ? root.cardScheme.innerShapeColor : root.cardScheme.accentColor
                 strokeWidth: sky.stroke
                 capStyle: ShapePath.RoundCap
                 fillColor: "transparent"
@@ -160,7 +161,7 @@ ExpressiveCardWidget {
             width: sky.width
             height: sky.height - ground.y
             radius: Appearance.rounding.large
-            color: WidgetColorScheme.pillBgColor
+            color: root.cardScheme.pillBgColor
 
             Row {
                 anchors.left: parent.left
@@ -171,12 +172,12 @@ ExpressiveCardWidget {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "wb_twilight"
                     iconSize: 16
-                    color: WidgetColorScheme.subtextColorOnBg
+                    color: root.cardScheme.subtextColorOnBg
                 }
                 StyledText {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.current?.sunrise ?? ""
-                    color: WidgetColorScheme.textColorOnBg
+                    color: root.cardScheme.textColorOnBg
                     font.family: Appearance.font.family.main
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.variableAxes: ({ "wght": 650, "wdth": 85, "ROND": 100 })
@@ -190,7 +191,7 @@ ExpressiveCardWidget {
                 StyledText {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.current?.sunset ?? ""
-                    color: WidgetColorScheme.textColorOnBg
+                    color: root.cardScheme.textColorOnBg
                     font.family: Appearance.font.family.main
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.variableAxes: ({ "wght": 650, "wdth": 85, "ROND": 100 })
@@ -199,7 +200,7 @@ ExpressiveCardWidget {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "nights_stay"
                     iconSize: 16
-                    color: WidgetColorScheme.subtextColorOnBg
+                    color: root.cardScheme.subtextColorOnBg
                 }
             }
         }
@@ -230,14 +231,14 @@ ExpressiveCardWidget {
             MaterialShape {
                 anchors.fill: parent
                 shapeString: root.night ? "Circle" : "VerySunny"
-                color: root.night ? WidgetColorScheme.innerShapeColor : WidgetColorScheme.accentColor
+                color: root.night ? root.cardScheme.innerShapeColor : root.cardScheme.accentColor
             }
             MaterialSymbol {
                 anchors.centerIn: parent
                 text: root.night ? "bedtime" : WeatherIcons.getMaterialSymbol(root.current?.wCode ?? 113)
                 iconSize: 22
                 fill: 1
-                color: root.night ? WidgetColorScheme.textColorOnBg : WidgetColorScheme.onAccentColor
+                color: root.night ? root.cardScheme.textColorOnBg : root.cardScheme.onAccentColor
             }
         }
     }

@@ -117,7 +117,7 @@ ExpressiveCardWidget {
                 visible: !slot.empty
                 url: slot.site?.url ?? ""
                 title: slot.site?.title ?? ""
-                colPlate: WidgetColorScheme.pillBgColor
+                colPlate: root.cardScheme.pillBgColor
                 iconScale: root.row ? 0.68 : 0.6
                 // Rounded square at rest; a circle under the pointer.
                 radius: slot.hovered ? width / 2 : Math.round(width * 0.3)
@@ -130,7 +130,7 @@ ExpressiveCardWidget {
                 anchors.fill: parent
                 visible: slot.empty
                 radius: slot.hovered ? width / 2 : Math.round(width * 0.3)
-                color: slot.hovered ? WidgetColorScheme.pillFillColor : WidgetColorScheme.pillBgColor
+                color: slot.hovered ? root.cardScheme.pillFillColor : root.cardScheme.pillBgColor
                 Behavior on radius {
                     animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                 }
@@ -142,7 +142,7 @@ ExpressiveCardWidget {
                     anchors.centerIn: parent
                     text: "add"
                     iconSize: Math.round(parent.width * 0.42)
-                    color: slot.hovered ? WidgetColorScheme.textColorOnPillFill : WidgetColorScheme.subtextColorOnBg
+                    color: slot.hovered ? root.cardScheme.textColorOnPillFill : root.cardScheme.subtextColorOnBg
                 }
             }
         }
@@ -157,7 +157,7 @@ ExpressiveCardWidget {
             horizontalAlignment: Text.AlignHCenter
             elide: Text.ElideRight
             text: slot.empty ? Translation.tr("Add") : (slot.site.title || String(slot.site.url).replace(/^https?:\/\/(www\.)?/i, ""))
-            color: slot.empty ? WidgetColorScheme.subtextColorOnBg : WidgetColorScheme.textColorOnBg
+            color: slot.empty ? root.cardScheme.subtextColorOnBg : root.cardScheme.textColorOnBg
             font.pixelSize: root.row ? Appearance.font.pixelSize.smallest : Appearance.font.pixelSize.smaller
             font.variableAxes: ({ "wght": 600, "wdth": 90, "ROND": 100 })
         }
@@ -208,14 +208,14 @@ ExpressiveCardWidget {
             width: root.row ? 76 : 120
             height: width
             shape: MaterialShape.Shape.Clover4Leaf
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
         MaterialSymbol {
             anchors.centerIn: parent
             text: "bookmark_add"
             iconSize: root.row ? 32 : 48
             fill: 1
-            color: WidgetColorScheme.onAccentColor
+            color: root.cardScheme.onAccentColor
         }
     }
 }

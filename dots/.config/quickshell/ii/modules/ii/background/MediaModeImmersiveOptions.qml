@@ -416,6 +416,7 @@ Item {
                             // BackgroundRoot only restores the wallpaper palette once Media
                             // Mode closes; turning the option off should undo it right away.
                             LyricsService.shellColorChanged = false;
+                            LyricsService.shellNeedsRestore = false;
                             LyricsService.lastAppliedShellColor = "";
                             if (Config.options.appearance.palette.type.startsWith("scheme"))
                                 Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--noswitch", "--color",

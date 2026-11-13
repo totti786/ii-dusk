@@ -29,7 +29,7 @@ Item {
     readonly property real sourceHeight: sourceItem ? sourceItem.height : 0
     readonly property real configuredBlurRadius: Math.max(0, Math.min(50, Config.options.lock.blur.radius ?? 40))
 
-    readonly property bool blurWanted: GlobalStates.lockLookActive || GlobalStates.scratchpadEmptyOverlayActive
+    readonly property bool blurWanted: GlobalStates.lockLookActive
 
     function startBlurEntrance() {
         blurInAnimation.stop();
@@ -112,7 +112,7 @@ Item {
 
     Loader {
         id: blurLoader
-        active: (Config.options.lock.blur.enable || GlobalStates.scratchpadEmptyOverlayActive) && lockBlurRoot.sourceReady && !lockBlurRoot.reloadRequested
+        active: Config.options.lock.blur.enable && lockBlurRoot.sourceReady && !lockBlurRoot.reloadRequested
             && (lockBlurRoot.blurWanted || opacityAnim.running) && !lockBlurRoot.wallpaperIsVideo
             && !lockBlurRoot.suppressed
         anchors.fill: parent

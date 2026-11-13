@@ -52,10 +52,10 @@ ExpressiveCardWidget {
 
     function fillColor(state) {
         if (state === "warn")
-            return WidgetColorScheme.warningColor;
+            return root.cardScheme.warningColor;
         if (state === "reached" || state === "ignored")
-            return WidgetColorScheme.subtextColorOnBg;
-        return WidgetColorScheme.accentColor;
+            return root.cardScheme.subtextColorOnBg;
+        return root.cardScheme.accentColor;
     }
 
     // ── Header ──
@@ -72,14 +72,14 @@ ExpressiveCardWidget {
             text: "hourglass_top"
             iconSize: 22
             fill: 1
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
         StyledText {
             anchors.left: headerGlyph.right
             anchors.leftMargin: 6
             anchors.verticalCenter: parent.verticalCenter
             text: root.hasRules ? Translation.tr("Daily limits") : Translation.tr("Today's apps")
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.title
             font.pixelSize: Appearance.font.pixelSize.larger
             font.variableAxes: Appearance.font.variableAxes.titleRounded
@@ -93,8 +93,8 @@ ExpressiveCardWidget {
             symbolSize: 16
             label: root.hasRules ? Translation.tr("Edit") : Translation.tr("Set a limit")
             labelSize: Appearance.font.pixelSize.smaller
-            colFill: WidgetColorScheme.pillBgColor
-            colContent: WidgetColorScheme.textColorOnBg
+            colFill: root.cardScheme.pillBgColor
+            colContent: root.cardScheme.textColorOnBg
             onClicked: if (root.actionsEnabled) GlobalStates.openUsageApp("limits")
 
             StyledText {
@@ -131,7 +131,7 @@ ExpressiveCardWidget {
                     width: 44
                     height: 44
                     radius: Appearance.rounding.normal
-                    color: WidgetColorScheme.pillBgColor
+                    color: root.cardScheme.pillBgColor
 
                     WellbeingAppIcon {
                         anchors.centerIn: parent
@@ -144,7 +144,7 @@ ExpressiveCardWidget {
                         visible: row.modelData.key.length === 0
                         text: "desktop_windows"
                         iconSize: 22
-                        color: WidgetColorScheme.textColorOnBg
+                        color: root.cardScheme.textColorOnBg
                     }
                 }
 
@@ -157,7 +157,7 @@ ExpressiveCardWidget {
                     y: 4
                     elide: Text.ElideRight
                     text: row.modelData.name
-                    color: WidgetColorScheme.textColorOnBg
+                    color: root.cardScheme.textColorOnBg
                     font.family: Appearance.font.family.main
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.variableAxes: ({ "wght": 600, "wdth": 100, "ROND": 100 })
@@ -171,7 +171,7 @@ ExpressiveCardWidget {
                         ? ScreenTimeLimits.formatSeconds(row.modelData.used)
                         : row.spent ? Translation.tr("Time's up")
                         : Translation.tr("%1 left").arg(ScreenTimeLimits.formatSeconds(row.modelData.budget - row.modelData.used))
-                    color: row.modelData.state === "warn" ? WidgetColorScheme.warningColor : WidgetColorScheme.textColorOnBg
+                    color: row.modelData.state === "warn" ? root.cardScheme.warningColor : root.cardScheme.textColorOnBg
                     font.family: Appearance.font.family.main
                     font.pixelSize: 15
                     font.variableAxes: ({ "wght": 750, "wdth": 70, "ROND": 100 })
@@ -186,7 +186,7 @@ ExpressiveCardWidget {
                     anchors.bottomMargin: 6
                     height: row.spent ? 4 : 12
                     radius: root.pill(height)
-                    color: WidgetColorScheme.pillBgColor
+                    color: root.cardScheme.pillBgColor
                     Behavior on height {
                         animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                     }
@@ -213,7 +213,7 @@ ExpressiveCardWidget {
         anchors.centerIn: parent
         anchors.verticalCenterOffset: 18
         text: Translation.tr("No screen time yet today")
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: Appearance.font.pixelSize.normal
         font.variableAxes: ({ "wght": 450, "wdth": 100, "slnt": -10, "ROND": 100 })

@@ -127,7 +127,7 @@ AbstractBackgroundWidget {
 
                     Behavior on width {
                         NumberAnimation {
-                            duration: 350
+                            duration: Appearance.dur(350)
                             easing.type: Easing.OutCubic
                         }
                     }

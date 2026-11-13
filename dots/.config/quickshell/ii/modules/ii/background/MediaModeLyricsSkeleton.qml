@@ -60,7 +60,7 @@ Item {
     NumberAnimation on shimmerPhase {
         // The host keeps every lyrics state loaded to cross-fade between them,
         // so the shimmer must stop paying for itself while hidden.
-        running: root.visible
+        running: (root.visible) && !Appearance.motionOff
         loops: Animation.Infinite
         from: 0
         to: 1

@@ -10,6 +10,7 @@ import Qt5Compat.GraphicalEffects
 
 AbstractBackgroundWidget {
     id: root
+    opensWeatherApp: true
 
     configEntryName: "weather"
 

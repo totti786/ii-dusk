@@ -61,7 +61,7 @@ ExpressiveCardWidget {
         Rectangle {
             anchors.fill: parent
             radius: width / 2
-            color: root.phase === "bedtime" ? WidgetColorScheme.accentColor : WidgetColorScheme.innerShapeColor
+            color: root.phase === "bedtime" ? root.cardScheme.accentColor : root.cardScheme.innerShapeColor
             Behavior on color {
                 animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
             }
@@ -86,7 +86,7 @@ ExpressiveCardWidget {
         anchors.top: moon.bottom
         anchors.topMargin: 2
         text: root.enabled ? Qt.locale().toString(root.target, Config.options?.time?.format ?? "hh:mm") : "--:--"
-        color: WidgetColorScheme.textColorOnBg
+        color: root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 54
         font.variableAxes: ({ "wght": 260, "wdth": 125, "ROND": 100 })
@@ -99,7 +99,7 @@ ExpressiveCardWidget {
         width: 200
         elide: Text.ElideRight
         text: root.untilText
-        color: root.phase === "none" ? WidgetColorScheme.subtextColorOnBg : WidgetColorScheme.accentColor
+        color: root.phase === "none" ? root.cardScheme.subtextColorOnBg : root.cardScheme.accentColor
         font.family: Appearance.font.family.main
         font.pixelSize: Appearance.font.pixelSize.normal
         font.variableAxes: ({ "wght": 620, "wdth": 92, "ROND": 100 })
@@ -113,7 +113,7 @@ ExpressiveCardWidget {
         width: root.designWidth - chart.x - root.padding
         height: root.designHeight - root.padding * 2
         radius: Appearance.rounding.large
-        color: WidgetColorScheme.pillBgColor
+        color: root.cardScheme.pillBgColor
 
         readonly property real labelHeight: 22
         readonly property real targetY: (chart.height - chart.labelHeight) / 2 + 4
@@ -126,7 +126,7 @@ ExpressiveCardWidget {
             width: chart.width - 24
             height: 2
             radius: 1
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             opacity: 0.4
         }
 
@@ -155,7 +155,7 @@ ExpressiveCardWidget {
                         y: night.swing > 0 ? chart.targetY - 5 : chart.targetY + 5 - height
                         radius: root.pill(width)
                         opacity: night.modelData.estimated ? 0.5 : 1
-                        color: night.modelData.onTime ? WidgetColorScheme.accentColor : WidgetColorScheme.warningColor
+                        color: night.modelData.onTime ? root.cardScheme.accentColor : root.cardScheme.warningColor
                     }
                     Rectangle {
                         visible: !night.known
@@ -164,7 +164,7 @@ ExpressiveCardWidget {
                         width: 8
                         height: 8
                         radius: 4
-                        color: WidgetColorScheme.subtextColorOnBg
+                        color: root.cardScheme.subtextColorOnBg
                         opacity: 0.4
                     }
                     StyledText {
@@ -173,7 +173,7 @@ ExpressiveCardWidget {
                         anchors.bottomMargin: 6
                         // The evening the night belongs to, not the morning a late target falls on.
                         text: Qt.locale().toString(new Date(night.modelData.night + "T12:00:00"), "ddd").charAt(0).toUpperCase()
-                        color: WidgetColorScheme.subtextColorOnBg
+                        color: root.cardScheme.subtextColorOnBg
                         font.family: Appearance.font.family.main
                         font.pixelSize: 11
                         font.variableAxes: ({ "wght": 650, "wdth": 110, "ROND": 100 })

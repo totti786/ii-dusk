@@ -124,7 +124,7 @@ AbstractBackgroundWidget {
                                 color: root.activeAccentColor
 
                                 Behavior on height {
-                                    NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
+                                    NumberAnimation { duration: Appearance.dur(400); easing.type: Easing.OutCubic }
                                 }
                             }
                         }

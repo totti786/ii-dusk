@@ -198,7 +198,7 @@ AbstractBackgroundWidget {
                             color: ColorUtils.applyAlpha(cardItem.accentColor, 0.30)
 
                             Behavior on height {
-                                NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
+                                NumberAnimation { duration: Appearance.dur(400); easing.type: Easing.OutCubic }
                             }
                         }
 

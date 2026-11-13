@@ -140,7 +140,7 @@ AbstractBackgroundWidget {
                             color: hasItem ? itemData.accent : root.pillFillColor
 
                             Behavior on width {
-                                NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
+                                NumberAnimation { duration: Appearance.dur(400); easing.type: Easing.OutCubic }
                             }
                         }
 

@@ -38,7 +38,7 @@ ExpressiveCardWidget {
         x: root.padding - 3
         y: root.padding - 10
         text: String(root.minutes)
-        color: root.due ? WidgetColorScheme.warningColor : WidgetColorScheme.textColorOnBg
+        color: root.due ? root.cardScheme.warningColor : root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 76
         font.variableAxes: ({ "wght": 760, "wdth": 60, "ROND": 100 })
@@ -51,7 +51,7 @@ ExpressiveCardWidget {
         wrapMode: Text.Wrap
         lineHeight: 0.9
         text: root.due ? Translation.tr("min · time for a break") : Translation.tr("min on screen")
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 13
         font.variableAxes: ({ "wght": 500, "wdth": 100, "slnt": -10, "ROND": 100 })
@@ -74,7 +74,7 @@ ExpressiveCardWidget {
                 width: (root.designWidth - root.padding * 2 - cellRow.spacing * (root.cells - 1)) / root.cells
                 height: 78
                 radius: root.due ? Appearance.rounding.verysmall : root.pill(width)
-                color: WidgetColorScheme.pillBgColor
+                color: root.cardScheme.pillBgColor
                 clip: true
                 Behavior on radius {
                     animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
@@ -85,7 +85,7 @@ ExpressiveCardWidget {
                     width: parent.width
                     height: parent.height * cell.fill
                     radius: parent.radius
-                    color: root.due ? WidgetColorScheme.warningColor : WidgetColorScheme.accentColor
+                    color: root.due ? root.cardScheme.warningColor : root.cardScheme.accentColor
                     Behavior on height {
                         animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                     }
@@ -104,8 +104,8 @@ ExpressiveCardWidget {
         symbolSize: 18
         label: Translation.tr("I took a break")
         labelSize: Appearance.font.pixelSize.small
-        colFill: root.due ? WidgetColorScheme.warningColor : WidgetColorScheme.pillBgColor
-        colContent: root.due ? root.contentOn(WidgetColorScheme.warningColor) : WidgetColorScheme.textColorOnBg
+        colFill: root.due ? root.cardScheme.warningColor : root.cardScheme.pillBgColor
+        colContent: root.due ? root.contentOn(root.cardScheme.warningColor) : root.cardScheme.textColorOnBg
         onClicked: if (root.actionsEnabled) root.sessionStart = Date.now()
     }
 }

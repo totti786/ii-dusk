@@ -39,7 +39,7 @@ ExpressiveCardWidget {
         width: root.slabWidth
         height: root.designHeight - root.padding * 2
         radius: Appearance.rounding.normal
-        color: phone.mirrorRunning ? WidgetColorScheme.accentColor : WidgetColorScheme.pillBgColor
+        color: phone.mirrorRunning ? root.cardScheme.accentColor : root.cardScheme.pillBgColor
 
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -79,7 +79,7 @@ ExpressiveCardWidget {
             width: parent.width
             text: phone.name
             elide: Text.ElideRight
-            color: phone.hasDevice ? WidgetColorScheme.textColorOnBg : WidgetColorScheme.subtextColorOnBg
+            color: phone.hasDevice ? root.cardScheme.textColorOnBg : root.cardScheme.subtextColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: 34
             font.variableAxes: ({ "wght": 700, "wdth": 80, "ROND": 100, "opsz": 36 })
@@ -89,7 +89,7 @@ ExpressiveCardWidget {
             width: parent.width
             text: phone.status
             elide: Text.ElideRight
-            color: phone.mirrorRunning ? WidgetColorScheme.accentColor : WidgetColorScheme.subtextColorOnBg
+            color: phone.mirrorRunning ? root.cardScheme.accentColor : root.cardScheme.subtextColorOnBg
             font.pixelSize: Appearance.font.pixelSize.normal
             font.variableAxes: ({ "wght": 520, "wdth": 100, "ROND": 100, "slnt": phone.mirrorRunning ? -10 : 0 })
         }
@@ -104,7 +104,7 @@ ExpressiveCardWidget {
         spacing: 3
 
         readonly property int lit: Math.round(phone.charge / 10)
-        readonly property color litColor: phone.charge <= 15 && !phone.charging ? WidgetColorScheme.warningColor : WidgetColorScheme.accentColor
+        readonly property color litColor: phone.charge <= 15 && !phone.charging ? root.cardScheme.warningColor : root.cardScheme.accentColor
 
         Repeater {
             model: 10
@@ -114,7 +114,7 @@ ExpressiveCardWidget {
                 width: 12
                 height: 18
                 radius: 3
-                color: index < cells.lit ? cells.litColor : WidgetColorScheme.pillBgColor
+                color: index < cells.lit ? cells.litColor : root.cardScheme.pillBgColor
 
                 Behavior on color {
                     animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -136,7 +136,7 @@ ExpressiveCardWidget {
         StyledText {
             anchors.verticalCenter: parent.verticalCenter
             text: phone.charge + "%"
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.monospace
             font.pixelSize: Appearance.font.pixelSize.small
         }
@@ -162,8 +162,8 @@ ExpressiveCardWidget {
             enabled: phone.canMirror
             symbol: phone.mirrorRunning ? "open_in_new" : "cast"
             label: phone.mirrorRunning ? Translation.tr("Focus") : (phone.mirrorLaunching ? Translation.tr("Starting") : Translation.tr("Mirror"))
-            colFill: phone.mirrorRunning ? WidgetColorScheme.accentColor : WidgetColorScheme.pillFillColor
-            colContent: phone.mirrorRunning ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnPillFill
+            colFill: phone.mirrorRunning ? root.cardScheme.accentColor : root.cardScheme.pillFillColor
+            colContent: phone.mirrorRunning ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnPillFill
             onClicked: phone.mirror()
         }
 
@@ -172,8 +172,8 @@ ExpressiveCardWidget {
             width: group.sideWidth
             enabled: phone.hasDevice
             symbol: "upload_file"
-            colFill: WidgetColorScheme.pillBgColor
-            colContent: WidgetColorScheme.textColorOnBg
+            colFill: root.cardScheme.pillBgColor
+            colContent: root.cardScheme.textColorOnBg
             onClicked: phone.sendFile()
         }
 
@@ -183,8 +183,8 @@ ExpressiveCardWidget {
             last: true
             enabled: phone.hasDevice
             symbol: phone.sent === "clipboard" ? "check" : "content_paste_go"
-            colFill: phone.sent === "clipboard" ? WidgetColorScheme.accentColor : WidgetColorScheme.pillBgColor
-            colContent: phone.sent === "clipboard" ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnBg
+            colFill: phone.sent === "clipboard" ? root.cardScheme.accentColor : root.cardScheme.pillBgColor
+            colContent: phone.sent === "clipboard" ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnBg
             onClicked: phone.sendClipboard()
         }
     }

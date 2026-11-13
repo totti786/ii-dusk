@@ -12,6 +12,14 @@ AbstractBackgroundWidget {
 
     configEntryName: "clock_digital"
 
+    // The clock has no card, so a size class changes how it is set rather than how large its
+    // box is: the strip is one small line, the tile stacks small digits, the wide one is a line
+    // with the date, and the tall one is the clock as configured (stacked, at its own size).
+    supportedSizes: ["2x0.5", "1x1", "2x1", "1x2"]
+    defaultSize: "1x2"
+    readonly property real sizeScaleFor: root.sizeClass === "2x0.5" ? 0.28 : root.sizeClass === "1x1" ? 0.4 : root.sizeClass === "2x1" ? 0.55 : 1
+    readonly property int verticalModeFor: root.sizeClass === "1x2" ? -1 : (root.sizeClass === "1x1" ? 1 : 0)
+
     implicitHeight: contentColumn.implicitHeight
     implicitWidth: contentColumn.implicitWidth
 
@@ -43,6 +51,9 @@ AbstractBackgroundWidget {
 
         DigitalClock {
             textHorizontalAlignment: root.textHorizontalAlignment
+            sizeScale: root.sizeScaleFor
+            verticalMode: root.verticalModeFor
+            forceDate: root.sizeClass === "2x1"
         }
     }
 }

@@ -53,7 +53,7 @@ ExpressiveCardWidget {
         height: root.designHeight
         radius: root.pill(height)
         color: pillHover.hovered && root.actionsEnabled
-            ? ColorUtils.mix(WidgetColorScheme.textColorOnBg, root.cardColor, root.pressed ? 0.12 : 0.06)
+            ? ColorUtils.mix(root.cardScheme.textColorOnBg, root.cardColor, root.pressed ? 0.12 : 0.06)
             : root.cardColor
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -79,14 +79,14 @@ ExpressiveCardWidget {
                     height: 30
                     source: root.logo === "distro" ? SystemInfo.distroIcon : "google.svg"
                     colorize: true
-                    color: WidgetColorScheme.accentColor
+                    color: root.cardScheme.accentColor
                 }
                 MaterialSymbol {
                     anchors.centerIn: parent
                     visible: root.logo === "spark"
                     text: "search"
                     iconSize: 30
-                    color: WidgetColorScheme.accentColor
+                    color: root.cardScheme.accentColor
                 }
             }
 
@@ -98,7 +98,7 @@ ExpressiveCardWidget {
                 anchors.verticalCenter: parent.verticalCenter
                 elide: Text.ElideRight
                 text: root.options?.hint || Translation.tr("Search")
-                color: WidgetColorScheme.subtextColorOnBg
+                color: root.cardScheme.subtextColorOnBg
                 font.family: Appearance.font.family.main
                 font.pixelSize: Appearance.font.pixelSize.larger
                 font.variableAxes: ({ "wght": 500, "wdth": 100, "ROND": 100 })
@@ -123,7 +123,7 @@ ExpressiveCardWidget {
                         symbolSize: 26
                         symbolFilled: false
                         colFill: root.cardColor
-                        colContent: WidgetColorScheme.textColorOnBg
+                        colContent: root.cardScheme.textColorOnBg
                         onClicked: if (root.actionsEnabled) actions.run(key.modelData)
 
                         StyledToolTip {
@@ -161,14 +161,14 @@ ExpressiveCardWidget {
         MaterialShape {
             anchors.fill: parent
             shape: sideHover.hovered && root.actionsEnabled ? MaterialShape.Shape.Cookie9Sided : MaterialShape.Shape.Circle
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
         MaterialSymbol {
             anchors.centerIn: parent
             text: actions.details(root.sideKey).icon
             iconSize: 30
             fill: 1
-            color: WidgetColorScheme.onAccentColor
+            color: root.cardScheme.onAccentColor
         }
 
         HoverHandler {

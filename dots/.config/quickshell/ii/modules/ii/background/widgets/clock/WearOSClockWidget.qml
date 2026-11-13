@@ -92,7 +92,7 @@ AbstractBackgroundWidget {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 300
+                duration: Appearance.dur(300)
             }
         }
 

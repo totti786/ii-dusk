@@ -206,7 +206,7 @@ Item {
         clip: true
 
         Behavior on color {
-            ColorAnimation { duration: 250 }
+            ColorAnimation { duration: Appearance.dur(250) }
         }
 
         // Canvas for dotted pattern, arc gauges, radial dials, and curved bottom texts

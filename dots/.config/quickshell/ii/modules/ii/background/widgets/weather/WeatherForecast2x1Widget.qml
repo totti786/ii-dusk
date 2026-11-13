@@ -10,6 +10,8 @@ import qs.modules.ii.background.widgets
 
 AbstractBackgroundWidget {
     id: root
+    opensWeatherApp: true
+    weatherAppTab: "daily"
 
     configEntryName: "weather_forecast"
 

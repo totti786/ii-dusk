@@ -45,13 +45,13 @@ ExpressiveCardWidget {
         width: root.slabWidth
         height: root.designHeight - root.padding * 2
         radius: Appearance.rounding.normal
-        color: WidgetColorScheme.pillFillColor
+        color: root.cardScheme.pillFillColor
 
         StyledText {
             x: 16
             y: 14
             text: Translation.tr("To do").toUpperCase()
-            color: WidgetColorScheme.textColorOnPillFill
+            color: root.cardScheme.textColorOnPillFill
             opacity: 0.8
             font.family: Appearance.font.family.monospace
             font.pixelSize: Appearance.font.pixelSize.smaller
@@ -64,7 +64,7 @@ ExpressiveCardWidget {
             anchors.bottom: captions.top
             anchors.bottomMargin: -Math.round(root.numberSize * 0.14)
             text: String(tasks.openCount)
-            color: WidgetColorScheme.textColorOnPillFill
+            color: root.cardScheme.textColorOnPillFill
             font.family: Appearance.font.family.main
             font.pixelSize: root.numberSize
             font.variableAxes: ({ "wght": Appearance.font.variableAxes.blend(300, 900, root.easedLoad), "wdth": 40, "ROND": 100, "opsz": 144 })
@@ -80,13 +80,13 @@ ExpressiveCardWidget {
 
             StyledText {
                 text: tasks.openCount === 1 ? Translation.tr("task left") : Translation.tr("tasks left")
-                color: WidgetColorScheme.textColorOnPillFill
+                color: root.cardScheme.textColorOnPillFill
                 font.pixelSize: Appearance.font.pixelSize.normal
                 font.variableAxes: ({ "wght": 600, "wdth": 100, "ROND": 100 })
             }
             StyledText {
                 text: Translation.tr("%1 done today").arg(tasks.doneToday)
-                color: WidgetColorScheme.textColorOnPillFill
+                color: root.cardScheme.textColorOnPillFill
                 opacity: 0.75
                 font.family: Appearance.font.family.monospace
                 font.pixelSize: Appearance.font.pixelSize.smallest
@@ -105,6 +105,7 @@ ExpressiveCardWidget {
         height: addField.y - y - 6
 
         ListView {
+            WheelScroll {}
             id: list
             anchors.fill: parent
             clip: true
@@ -132,20 +133,20 @@ ExpressiveCardWidget {
                 anchors.verticalCenter: parent.verticalCenter
                 implicitSize: 44
                 shape: MaterialShape.Shape.Cookie7Sided
-                color: WidgetColorScheme.pillBgColor
+                color: root.cardScheme.pillBgColor
 
                 MaterialSymbol {
                     anchors.centerIn: parent
                     text: "done_all"
                     iconSize: 22
-                    color: WidgetColorScheme.subtextColorOnBg
+                    color: root.cardScheme.subtextColorOnBg
                 }
             }
 
             StyledText {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Translation.tr("Nothing left to do")
-                color: WidgetColorScheme.subtextColorOnBg
+                color: root.cardScheme.subtextColorOnBg
                 font.pixelSize: Appearance.font.pixelSize.normal
             }
         }

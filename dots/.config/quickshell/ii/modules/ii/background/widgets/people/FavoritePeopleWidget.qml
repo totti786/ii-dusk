@@ -49,7 +49,7 @@ ExpressiveCardWidget {
         x: root.padding
         y: root.padding - 2
         text: Translation.tr("People")
-        color: WidgetColorScheme.textColorOnBg
+        color: root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.title
         font.pixelSize: Appearance.font.pixelSize.huge
         font.variableAxes: Appearance.font.variableAxes.titleRounded
@@ -111,8 +111,8 @@ ExpressiveCardWidget {
                     visible: opacity > 0
                     symbol: "chat"
                     symbolSize: 16
-                    colFill: WidgetColorScheme.pillFillColor
-                    colContent: WidgetColorScheme.textColorOnPillFill
+                    colFill: root.cardScheme.pillFillColor
+                    colContent: root.cardScheme.textColorOnPillFill
                     onClicked: PhoneContactsService.composeSms(person.number)
                     Behavior on opacity {
                         animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
@@ -127,7 +127,7 @@ ExpressiveCardWidget {
                     width: Math.min(parent.width, nameText.implicitWidth + (person.birthday ? 34 : 14))
                     height: 24
                     radius: root.pill(height)
-                    color: person.birthday ? WidgetColorScheme.accentColor : "transparent"
+                    color: person.birthday ? root.cardScheme.accentColor : "transparent"
 
                     Row {
                         anchors.centerIn: parent
@@ -138,13 +138,13 @@ ExpressiveCardWidget {
                             text: "cake"
                             iconSize: 14
                             fill: 1
-                            color: WidgetColorScheme.onAccentColor
+                            color: root.cardScheme.onAccentColor
                         }
                         StyledText {
                             id: nameText
                             anchors.verticalCenter: parent.verticalCenter
                             text: String(person.modelData.givenName || person.modelData.displayName || "").split(" ")[0]
-                            color: person.birthday ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnBg
+                            color: person.birthday ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnBg
                             font.family: Appearance.font.family.main
                             font.pixelSize: 13
                             font.variableAxes: ({ "wght": 650, "wdth": 95, "ROND": 100 })
@@ -165,14 +165,14 @@ ExpressiveCardWidget {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "star"
             iconSize: 40
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
         }
         StyledText {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             text: Translation.tr("Star contacts in the phone sidebar to see them here")
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.small
         }

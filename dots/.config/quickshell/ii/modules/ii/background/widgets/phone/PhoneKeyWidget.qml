@@ -36,7 +36,7 @@ ExpressiveCardWidget {
         width: root.designWidth - root.padding * 2 - battery.width - 8
         text: phone.name
         elide: Text.ElideRight
-        color: phone.hasDevice ? WidgetColorScheme.textColorOnBg : WidgetColorScheme.subtextColorOnBg
+        color: phone.hasDevice ? root.cardScheme.textColorOnBg : root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.title
         font.pixelSize: Appearance.font.pixelSize.larger
         font.variableAxes: Appearance.font.variableAxes.titleRounded
@@ -46,7 +46,7 @@ ExpressiveCardWidget {
         x: root.padding + 2
         y: root.padding + 22
         text: phone.status
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.pixelSize: Appearance.font.pixelSize.smaller
     }
 
@@ -63,12 +63,12 @@ ExpressiveCardWidget {
             text: phone.charging ? "battery_charging_full" : "battery_full"
             iconSize: 16
             fill: 1
-            color: phone.charge <= 15 && !phone.charging ? WidgetColorScheme.warningColor : WidgetColorScheme.accentColor
+            color: phone.charge <= 15 && !phone.charging ? root.cardScheme.warningColor : root.cardScheme.accentColor
         }
         StyledText {
             anchors.verticalCenter: parent.verticalCenter
             text: phone.charge + "%"
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.monospace
             font.pixelSize: Appearance.font.pixelSize.smaller
         }
@@ -93,8 +93,8 @@ ExpressiveCardWidget {
             shape: phone.mirrorRunning ? MaterialShape.Shape.Square
                 : phone.mirrorLaunching ? MaterialShape.Shape.SoftBurst
                 : (keyHover.hovered && phone.canMirror ? MaterialShape.Shape.Cookie12Sided : MaterialShape.Shape.Cookie9Sided)
-            color: phone.mirrorRunning ? WidgetColorScheme.accentColor
-                : phone.canMirror ? WidgetColorScheme.pillFillColor : WidgetColorScheme.pillBgColor
+            color: phone.mirrorRunning ? root.cardScheme.accentColor
+                : phone.canMirror ? root.cardScheme.pillFillColor : root.cardScheme.pillBgColor
 
             Behavior on color {
                 animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -106,8 +106,8 @@ ExpressiveCardWidget {
             text: phone.mirrorRunning ? "open_in_new" : (phone.hasDevice ? "cast" : "phonelink_off")
             iconSize: 40
             fill: 1
-            color: phone.mirrorRunning ? WidgetColorScheme.onAccentColor
-                : phone.canMirror ? WidgetColorScheme.textColorOnPillFill : WidgetColorScheme.subtextColorOnBg
+            color: phone.mirrorRunning ? root.cardScheme.onAccentColor
+                : phone.canMirror ? root.cardScheme.textColorOnPillFill : root.cardScheme.subtextColorOnBg
         }
 
         HoverHandler {
@@ -130,8 +130,8 @@ ExpressiveCardWidget {
             visible: phone.mirrorRunning
             symbol: "close"
             symbolSize: 18
-            colFill: WidgetColorScheme.warningColor
-            colContent: root.contentOn(WidgetColorScheme.warningColor)
+            colFill: root.cardScheme.warningColor
+            colContent: root.contentOn(root.cardScheme.warningColor)
             onClicked: phone.stopMirror()
         }
     }
@@ -152,8 +152,8 @@ ExpressiveCardWidget {
             symbol: "upload_file"
             symbolSize: 18
             label: Translation.tr("File")
-            colFill: WidgetColorScheme.pillBgColor
-            colContent: WidgetColorScheme.textColorOnBg
+            colFill: root.cardScheme.pillBgColor
+            colContent: root.cardScheme.textColorOnBg
             onClicked: phone.sendFile()
         }
 
@@ -165,8 +165,8 @@ ExpressiveCardWidget {
             symbol: justSent ? "check" : "content_paste_go"
             symbolSize: 18
             label: justSent ? Translation.tr("Sent") : Translation.tr("Clipboard")
-            colFill: justSent ? WidgetColorScheme.accentColor : WidgetColorScheme.pillBgColor
-            colContent: justSent ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnBg
+            colFill: justSent ? root.cardScheme.accentColor : root.cardScheme.pillBgColor
+            colContent: justSent ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnBg
             restRadius: justSent ? Appearance.rounding.small : root.pill(height)
             onClicked: phone.sendClipboard()
         }

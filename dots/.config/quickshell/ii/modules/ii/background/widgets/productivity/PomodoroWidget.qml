@@ -19,8 +19,11 @@ ExpressiveCardWidget {
     id: root
 
     configEntryName: "timer_pomodoro"
-    designWidth: 240
-    designHeight: 240
+
+    // 1x1 is the ring and the keys; 2x1 adds the day's count and the lengths of the phases
+    supportedSizes: ["1x1", "2x1"]
+    defaultSize: "1x1"
+    faceWidth: 240
 
     readonly property real ringInset: 8
     readonly property real ringThickness: 8
@@ -38,9 +41,9 @@ ExpressiveCardWidget {
     readonly property int secondsLeft: Math.max(0, TimerService.pomodoroSecondsLeft)
     readonly property bool wavy: root.options?.wavyRing ?? true
 
-    readonly property color phaseColor: root.longBreak ? WidgetColorScheme.successColor
-        : root.onBreak ? WidgetColorScheme.highlightCircleColor : WidgetColorScheme.accentColor
-    readonly property color onPhaseColor: root.longBreak || root.onBreak ? WidgetColorScheme.highlightTextColor : WidgetColorScheme.onAccentColor
+    readonly property color phaseColor: root.longBreak ? root.cardScheme.successColor
+        : root.onBreak ? root.cardScheme.highlightCircleColor : root.cardScheme.accentColor
+    readonly property color onPhaseColor: root.longBreak || root.onBreak ? root.cardScheme.highlightTextColor : root.cardScheme.onAccentColor
     readonly property string phaseLabel: root.longBreak ? Translation.tr("Long break")
         : root.onBreak ? Translation.tr("Break") : Translation.tr("Focus")
     readonly property string phaseIcon: root.longBreak ? "self_improvement" : root.onBreak ? "coffee" : "psychiatry"
@@ -82,7 +85,7 @@ ExpressiveCardWidget {
         waves: 16
         tickDuration: root.running ? 1000 : 0
         colIndicator: root.phaseColor
-        colTrack: WidgetColorScheme.pillBgColor
+        colTrack: root.cardScheme.pillBgColor
     }
 
     // ── Phase ──
@@ -126,7 +129,7 @@ ExpressiveCardWidget {
         anchors.horizontalCenter: parent.horizontalCenter
         y: 72
         text: root.timeText
-        color: WidgetColorScheme.textColorOnBg
+        color: root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: root.digitSize
         // Bolder while it runs, lighter while it waits.
@@ -151,7 +154,7 @@ ExpressiveCardWidget {
                 width: dot.current ? 18 : 6
                 height: 6
                 radius: root.pill(height)
-                color: dot.current || dot.past ? root.phaseColor : WidgetColorScheme.pillBgColor
+                color: dot.current || dot.past ? root.phaseColor : root.cardScheme.pillBgColor
 
                 Behavior on width {
                     enabled: !Appearance.reducedMotion
@@ -172,8 +175,8 @@ ExpressiveCardWidget {
             height: root.keyHeight
             symbol: "restart_alt"
             symbolSize: 18
-            colFill: WidgetColorScheme.pillBgColor
-            colContent: WidgetColorScheme.textColorOnBg
+            colFill: root.cardScheme.pillBgColor
+            colContent: root.cardScheme.textColorOnBg
             onClicked: TimerService.resetPomodoro()
         }
 
@@ -194,9 +197,92 @@ ExpressiveCardWidget {
             height: root.keyHeight
             symbol: "skip_next"
             symbolSize: 18
-            colFill: WidgetColorScheme.pillBgColor
-            colContent: WidgetColorScheme.textColorOnBg
+            colFill: root.cardScheme.pillBgColor
+            colContent: root.cardScheme.textColorOnBg
             onClicked: TimerService.skipPomodoroPhase()
+        }
+    }
+
+    // ── 2x1: the day so far and what each phase lasts ──
+    Item {
+        parent: root.extraItem
+        anchors.fill: parent
+        visible: root.hasExtras
+
+        Column {
+            x: 6
+            y: 20
+            width: parent.width - 26
+            spacing: 2
+
+            StyledText {
+                text: Translation.tr("Today").toUpperCase()
+                color: root.cardScheme.subtextColorOnBg
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                font.variableAxes: ({ "wght": 650, "wdth": 100 })
+                font.letterSpacing: 1
+            }
+            Text {
+                text: String(TimerService.pomodoroFocusToday)
+                color: root.cardScheme.textColorOnBg
+                font.family: Appearance.font.family.main
+                font.pixelSize: 84
+                font.variableAxes: ({ "wght": 700, "wdth": 40, "ROND": 100, "opsz": 144 })
+                renderType: Text.QtRendering
+            }
+            StyledText {
+                text: Translation.tr("focus sessions")
+                color: root.cardScheme.subtextColorOnBg
+                font.pixelSize: Appearance.font.pixelSize.small
+            }
+        }
+
+        Column {
+            x: 6
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 20
+            width: parent.width - 26
+            spacing: 6
+
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: ColorUtils.applyAlpha(root.cardScheme.textColorOnBg, 0.12)
+            }
+            Repeater {
+                model: [
+                    { "label": Translation.tr("Focus"), "min": Math.round(TimerService.focusTime / 60), "icon": "psychiatry" },
+                    { "label": Translation.tr("Break"), "min": Math.round(TimerService.breakTime / 60), "icon": "coffee" },
+                    { "label": Translation.tr("Long break"), "min": Math.round(TimerService.longBreakTime / 60), "icon": "self_improvement" }
+                ]
+                delegate: Row {
+                    id: phaseLine
+                    required property var modelData
+                    width: parent.width
+                    spacing: 8
+                    MaterialSymbol {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: phaseLine.modelData.icon
+                        iconSize: 16
+                        color: root.cardScheme.subtextColorOnBg
+                    }
+                    StyledText {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 24 - minText.implicitWidth - 8
+                        text: phaseLine.modelData.label
+                        color: root.cardScheme.textColorOnBg
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        elide: Text.ElideRight
+                    }
+                    StyledText {
+                        id: minText
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Translation.tr("%1 min").arg(phaseLine.modelData.min)
+                        color: root.cardScheme.subtextColorOnBg
+                        font.pixelSize: Appearance.font.pixelSize.small
+                    }
+                }
+            }
         }
     }
 }

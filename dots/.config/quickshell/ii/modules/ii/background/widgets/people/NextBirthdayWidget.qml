@@ -44,13 +44,13 @@ ExpressiveCardWidget {
             anchors.fill: parent
             visible: root.next === null
             radius: width / 2
-            color: WidgetColorScheme.pillBgColor
+            color: root.cardScheme.pillBgColor
 
             MaterialSymbol {
                 anchors.centerIn: parent
                 text: "cake"
                 iconSize: 40
-                color: WidgetColorScheme.subtextColorOnBg
+                color: root.cardScheme.subtextColorOnBg
             }
         }
 
@@ -70,7 +70,7 @@ ExpressiveCardWidget {
                 width: modelData.size
                 height: modelData.size
                 shapeString: modelData.shape
-                color: index === 0 ? WidgetColorScheme.accentColor : index === 1 ? WidgetColorScheme.pillFillColor : WidgetColorScheme.highlightCircleColor
+                color: index === 0 ? root.cardScheme.accentColor : index === 1 ? root.cardScheme.pillFillColor : root.cardScheme.highlightCircleColor
                 scale: root.today ? 1 : 0
                 Behavior on scale {
                     animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
@@ -89,7 +89,7 @@ ExpressiveCardWidget {
 
         StyledText {
             text: root.today ? Translation.tr("Today") : String(root.next?.days ?? "")
-            color: root.today ? WidgetColorScheme.accentColor : WidgetColorScheme.textColorOnBg
+            color: root.today ? root.cardScheme.accentColor : root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: root.today ? 30 : 64
             font.variableAxes: root.today ? ({ "wght": 800, "wdth": 90, "ROND": 100 })
@@ -98,7 +98,7 @@ ExpressiveCardWidget {
         StyledText {
             visible: !root.today
             text: root.next?.days === 1 ? Translation.tr("day") : Translation.tr("days")
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: 14
             font.variableAxes: ({ "wght": 500, "wdth": 110, "slnt": -10, "ROND": 100 })
@@ -113,7 +113,7 @@ ExpressiveCardWidget {
         width: root.designWidth - root.padding * 2
         elide: Text.ElideRight
         text: root.next?.name ?? Translation.tr("No birthdays")
-        color: WidgetColorScheme.textColorOnBg
+        color: root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.title
         font.pixelSize: Appearance.font.pixelSize.huge
         font.variableAxes: Appearance.font.variableAxes.titleRounded
@@ -129,7 +129,7 @@ ExpressiveCardWidget {
             ? Translation.tr("Add birthdays to your phone's contacts")
             : (root.next.age > 0 ? Translation.tr("Turns %1").arg(root.next.age) + " · " : "")
               + Qt.locale().toString(root.next.date, "d MMMM")
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: Appearance.font.pixelSize.small
         font.variableAxes: ({ "wght": 550, "wdth": 100, "ROND": 100 })

@@ -110,7 +110,7 @@ AbstractBackgroundWidget {
                         color: editMouseArea.containsMouse ? Qt.darker(root.editBtnColor, 1.1) : root.editBtnColor
 
                         Behavior on color {
-                            ColorAnimation { duration: 150 }
+                            ColorAnimation { duration: Appearance.dur(150) }
                         }
 
                         MaterialSymbol {
@@ -186,7 +186,7 @@ AbstractBackgroundWidget {
                         readonly property string timeDisplay: msgData ? root.formatMsgTime(msgData.internalDate || msgData.timestamp, msgData.date) : ""
 
                         Behavior on color {
-                            ColorAnimation { duration: 150 }
+                            ColorAnimation { duration: Appearance.dur(150) }
                         }
 
                         RowLayout {

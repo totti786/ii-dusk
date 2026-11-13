@@ -46,7 +46,7 @@ ExpressiveCardWidget {
         width: 110
         height: 124
         radius: Appearance.rounding.normal
-        color: WidgetColorScheme.pillBgColor
+        color: root.cardScheme.pillBgColor
         clip: true
 
         Rectangle {
@@ -55,12 +55,12 @@ ExpressiveCardWidget {
             height: 34
             topLeftRadius: page.radius
             topRightRadius: page.radius
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
 
             StyledText {
                 anchors.centerIn: parent
                 text: root.next ? Qt.locale().toString(root.next.date, "MMM").replace(".", "").toUpperCase() : "—"
-                color: WidgetColorScheme.onAccentColor
+                color: root.cardScheme.onAccentColor
                 font.family: Appearance.font.family.main
                 font.pixelSize: 15
                 font.letterSpacing: 2
@@ -85,7 +85,7 @@ ExpressiveCardWidget {
             anchors.top: band.bottom
             anchors.topMargin: -6
             text: root.next ? String(root.next.date.getDate()) : "?"
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: 72
             font.variableAxes: ({ "wght": 640, "wdth": 75, "ROND": 100 })
@@ -101,7 +101,7 @@ ExpressiveCardWidget {
 
         StyledText {
             text: !root.next ? "" : root.next.days === 0 ? Translation.tr("Today") : String(root.next.days)
-            color: root.next?.days === 0 ? WidgetColorScheme.accentColor : WidgetColorScheme.textColorOnBg
+            color: root.next?.days === 0 ? root.cardScheme.accentColor : root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: root.next?.days === 0 ? 28 : 48
             font.variableAxes: ({ "wght": 300, "wdth": 110, "ROND": 100 })
@@ -109,7 +109,7 @@ ExpressiveCardWidget {
         StyledText {
             visible: (root.next?.days ?? 0) > 0
             text: root.next?.days === 1 ? Translation.tr("day to go") : Translation.tr("days to go")
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: 12
             font.variableAxes: ({ "wght": 500, "wdth": 100, "slnt": -10, "ROND": 100 })
@@ -126,7 +126,7 @@ ExpressiveCardWidget {
         elide: Text.ElideRight
         lineHeight: 0.9
         text: root.next?.name ?? (Holidays.enabled ? Translation.tr("Loading holidays…") : Translation.tr("Holidays are off"))
-        color: WidgetColorScheme.textColorOnBg
+        color: root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 19
         font.variableAxes: ({ "wght": 760, "wdth": 85, "ROND": 100 })

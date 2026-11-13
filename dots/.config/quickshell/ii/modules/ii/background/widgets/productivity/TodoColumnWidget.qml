@@ -41,7 +41,7 @@ ExpressiveCardWidget {
 
         StyledText {
             text: Translation.tr("To Do")
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.title
             font.pixelSize: Appearance.font.pixelSize.huge + 6
             font.variableAxes: Appearance.font.variableAxes.titleRounded
@@ -52,7 +52,7 @@ ExpressiveCardWidget {
             elide: Text.ElideRight
             text: tasks.openCount === 0 ? Translation.tr("All done for now")
                 : Translation.tr("%1 left · %2 done today").arg(tasks.openCount).arg(root.finished)
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.pixelSize: Appearance.font.pixelSize.small
         }
     }
@@ -84,12 +84,12 @@ ExpressiveCardWidget {
                 width: (segments.width - segments.spacing * (segments.count - 1)) / Math.max(1, segments.count)
                 height: segments.height
                 radius: root.pill(height)
-                color: WidgetColorScheme.pillBgColor
+                color: root.cardScheme.pillBgColor
 
                 Rectangle {
                     height: parent.height
                     radius: parent.radius
-                    color: WidgetColorScheme.accentColor
+                    color: root.cardScheme.accentColor
                     width: segment.done || segment.next ? parent.width : 0
 
                     Behavior on width {
@@ -106,6 +106,7 @@ ExpressiveCardWidget {
 
     // ── Tasks ──
     ListView {
+        WheelScroll {}
         id: list
         anchors.top: segments.visible ? segments.bottom : header.bottom
         anchors.topMargin: 12
@@ -141,20 +142,20 @@ ExpressiveCardWidget {
             anchors.horizontalCenter: parent.horizontalCenter
             implicitSize: 96
             shape: MaterialShape.Shape.SoftBurst
-            color: WidgetColorScheme.pillBgColor
+            color: root.cardScheme.pillBgColor
 
             MaterialSymbol {
                 anchors.centerIn: parent
                 text: "task_alt"
                 iconSize: 40
-                color: WidgetColorScheme.accentColor
+                color: root.cardScheme.accentColor
             }
         }
 
         StyledText {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Translation.tr("Nothing left to do")
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.pixelSize: Appearance.font.pixelSize.normal
         }
     }

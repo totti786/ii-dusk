@@ -210,6 +210,51 @@ Singleton {
             "configPage": "widgets/DesktopTripleRingClockConfig.qml"
         },
         {
+            "widgetId": "clock_hour_shape",
+            "name": Translation.tr("Hour Shape Clock (1x1)"),
+            "category": "Clock",
+            "qmlPath": Qt.resolvedUrl("clock/HourShapeClockWidget.qml"),
+            "icon": "interests",
+            "description": Translation.tr("1x1 card-less clock: every hour has its own shape and the body morphs when the hour turns; the minutes ride a moon on its rim."),
+            "configPage": "widgets/DesktopShapeClocksConfig.qml"
+        },
+        {
+            "widgetId": "clock_bloom",
+            "name": Translation.tr("Bloom Clock (1x1)"),
+            "category": "Clock",
+            "qmlPath": Qt.resolvedUrl("clock/BloomClockWidget.qml"),
+            "icon": "filter_vintage",
+            "description": Translation.tr("1x1 clock that is its own sunny shape: heavy condensed hours over light italic minutes."),
+            "configPage": "widgets/DesktopShapeClocksConfig.qml"
+        },
+        {
+            "widgetId": "clock_capsule",
+            "name": Translation.tr("Capsule Clock (2x1)"),
+            "category": "Clock",
+            "qmlPath": Qt.resolvedUrl("clock/CapsuleClockWidget.qml"),
+            "icon": "pill",
+            "description": Translation.tr("2x1 clock that is its own scalloped capsule, the cookie clock's edge stretched wide, with the time on one line and the date beside it."),
+            "configPage": "widgets/DesktopShapeClocksConfig.qml"
+        },
+        {
+            "widgetId": "clock_dome",
+            "name": Translation.tr("Dome Clock (2x1)"),
+            "category": "Clock",
+            "qmlPath": Qt.resolvedUrl("clock/DomeClockWidget.qml"),
+            "icon": "clock_loader_60",
+            "description": Translation.tr("2x1 clock shaped as a half dial of the day: a hand sweeps from midnight on the left through noon at the top, the time on a pill at its pivot."),
+            "configPage": "widgets/DesktopShapeClocksConfig.qml"
+        },
+        {
+            "widgetId": "clock_totem",
+            "name": Translation.tr("Totem Clock (1x2)"),
+            "category": "Clock",
+            "qmlPath": Qt.resolvedUrl("clock/TotemClockWidget.qml"),
+            "icon": "view_agenda",
+            "description": Translation.tr("1x2 stack of cut-outs: an arch with the hour, a cookie with the minutes leaning out under it, and the date over a row of the week."),
+            "configPage": "widgets/DesktopShapeClocksConfig.qml"
+        },
+        {
             "widgetId": "clock_type_weight",
             "name": Translation.tr("Weight Clock (1x1)"),
             "category": "Clock",
@@ -272,6 +317,8 @@ Singleton {
         },
         {
             "widgetId": "circular_media",
+            "family": "media",
+            "size": "1x1",
             "name": Translation.tr("Circular Media (Watch)"),
             "category": "Media",
             "qmlPath": Qt.resolvedUrl("media/CircularMediaWidget.qml"),
@@ -281,6 +328,8 @@ Singleton {
         },
         {
             "widgetId": "media_circular",
+            "family": "media",
+            "size": "1x1",
             "name": Translation.tr("Circular Media"),
             "category": "Media",
             "qmlPath": Qt.resolvedUrl("media/MediaWidget.qml"),
@@ -290,6 +339,8 @@ Singleton {
         },
         {
             "widgetId": "media_expressive",
+            "family": "media",
+            "size": "2x1",
             "name": Translation.tr("Expressive Media"),
             "category": "Media",
             "qmlPath": Qt.resolvedUrl("media/ExpressiveMediaWidget.qml"),
@@ -299,6 +350,8 @@ Singleton {
         },
         {
             "widgetId": "media_android",
+            "family": "media",
+            "size": "2x1",
             "name": Translation.tr("Android Media"),
             "category": "Media",
             "qmlPath": Qt.resolvedUrl("media/AndroidMediaWidget.qml"),
@@ -307,6 +360,8 @@ Singleton {
         },
         {
             "widgetId": "media_cd",
+            "family": "media",
+            "size": "1x1",
             "name": Translation.tr("CD Media 1x1"),
             "category": "Media",
             "qmlPath": Qt.resolvedUrl("media/CdMediaWidget.qml"),
@@ -316,6 +371,8 @@ Singleton {
         },
         {
             "widgetId": "nothing_ring_media",
+            "family": "media",
+            "size": "1x1",
             "name": Translation.tr("Nothing Ring Media 1x1"),
             "category": "Media",
             "qmlPath": Qt.resolvedUrl("media/NothingRingMediaWidget.qml"),
@@ -325,6 +382,8 @@ Singleton {
         },
         {
             "widgetId": "weather_default",
+            "family": "weather",
+            "size": "1x1",
             "name": Translation.tr("Default Weather"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherWidget.qml"),
@@ -334,6 +393,8 @@ Singleton {
         },
         {
             "widgetId": "weather_expressive",
+            "family": "weather",
+            "size": "1x1",
             "name": Translation.tr("Expressive Weather"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/ExpressiveWeatherWidget.qml"),
@@ -343,6 +404,8 @@ Singleton {
         },
         {
             "widgetId": "weather_forecast",
+            "family": "weather",
+            "size": "2x1",
             "name": Translation.tr("Forecast Weather 2x1"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherForecast2x1Widget.qml"),
@@ -352,6 +415,8 @@ Singleton {
         },
         {
             "widgetId": "weather_card",
+            "family": "weather",
+            "size": "1x1",
             "name": Translation.tr("Weather Card 1x1"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherCard1x1Widget.qml"),
@@ -361,6 +426,8 @@ Singleton {
         },
         {
             "widgetId": "weather_icon",
+            "family": "weather",
+            "size": "1x1",
             "name": Translation.tr("Weather Icon Shape"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherIconWidget.qml"),
@@ -370,6 +437,8 @@ Singleton {
         },
         {
             "widgetId": "weather_pill",
+            "family": "weather",
+            "size": "1x0.5",
             "name": Translation.tr("Weather Pill 1x0.5"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherPillWidget.qml"),
@@ -379,6 +448,8 @@ Singleton {
         },
         {
             "widgetId": "weather_circle",
+            "family": "weather",
+            "size": "1x1",
             "name": Translation.tr("Weather Circle Cookie"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherCircleWidget.qml"),
@@ -388,6 +459,8 @@ Singleton {
         },
         {
             "widgetId": "nothing_weather_circle",
+            "family": "weather",
+            "size": "1x1",
             "name": Translation.tr("Nothing Weather Circle"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/NothingWeatherWidget.qml"),
@@ -472,6 +545,8 @@ Singleton {
         },
         {
             "widgetId": "weather_typography",
+            "family": "weather",
+            "size": "1x1",
             "name": Translation.tr("Weather Typography"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherTypographyWidget.qml"),
@@ -481,6 +556,8 @@ Singleton {
         },
         {
             "widgetId": "weather_hourly",
+            "family": "weather",
+            "size": "2x1",
             "name": Translation.tr("Weather Hourly 2x1"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherHourly2x1Widget.qml"),
@@ -490,6 +567,8 @@ Singleton {
         },
         {
             "widgetId": "weather_monolith",
+            "family": "weather",
+            "size": "1x1",
             "name": Translation.tr("Weather Monolith"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherMonolithWidget.qml"),
@@ -499,6 +578,8 @@ Singleton {
         },
         {
             "widgetId": "weather_daylight",
+            "family": "weather",
+            "size": "2x1",
             "name": Translation.tr("Weather Daylight"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherDaylightWidget.qml"),
@@ -508,6 +589,8 @@ Singleton {
         },
         {
             "widgetId": "weather_ranges",
+            "family": "weather",
+            "size": "1x2",
             "name": Translation.tr("Weather Ranges"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherRangesWidget.qml"),
@@ -517,6 +600,8 @@ Singleton {
         },
         {
             "widgetId": "weather_ribbon",
+            "family": "weather",
+            "size": "2x1",
             "name": Translation.tr("Weather Ribbon"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherRibbonWidget.qml"),
@@ -526,6 +611,8 @@ Singleton {
         },
         {
             "widgetId": "weather_collage",
+            "family": "weather",
+            "size": "1x1",
             "name": Translation.tr("Weather Collage"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherCollageWidget.qml"),
@@ -535,6 +622,8 @@ Singleton {
         },
         {
             "widgetId": "weather_pattern",
+            "family": "weather",
+            "size": "1x1",
             "name": Translation.tr("Weather Pattern"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherPatternWidget.qml"),
@@ -544,6 +633,8 @@ Singleton {
         },
         {
             "widgetId": "weather_silhouette",
+            "family": "weather",
+            "size": "1x2",
             "name": Translation.tr("Weather Silhouette"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherSilhouetteWidget.qml"),
@@ -553,6 +644,8 @@ Singleton {
         },
         {
             "widgetId": "weather_strip",
+            "family": "weather",
+            "size": "2x1",
             "name": Translation.tr("Weather Strip"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherStripWidget.qml"),
@@ -562,6 +655,8 @@ Singleton {
         },
         {
             "widgetId": "weather_dial",
+            "family": "weather",
+            "size": "1x1",
             "name": Translation.tr("Weather Dial"),
             "category": "Weather",
             "qmlPath": Qt.resolvedUrl("weather/WeatherDialWidget.qml"),
@@ -571,6 +666,8 @@ Singleton {
         },
         {
             "widgetId": "date_default",
+            "family": "calendar",
+            "size": "1x1",
             "name": Translation.tr("Date Card"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/DateWidget.qml"),
@@ -580,6 +677,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_minimal",
+            "family": "calendar",
+            "size": "1x1",
             "name": Translation.tr("Calendar Minimal 1x1"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/CalendarMinimalWidget.qml"),
@@ -589,6 +688,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_grid",
+            "family": "calendar",
+            "size": "2x1",
             "name": Translation.tr("Calendar Month Grid 2x1"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/CalendarGrid2x1Widget.qml"),
@@ -598,6 +699,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_agenda",
+            "family": "calendar",
+            "size": "1x1",
             "name": Translation.tr("Calendar Agenda 1x1"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/CalendarAgendaWidget.qml"),
@@ -607,6 +710,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_next_event",
+            "family": "calendar",
+            "size": "2x1",
             "name": Translation.tr("Calendar Next Event 2x1"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/CalendarNextEventWidget.qml"),
@@ -616,6 +721,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_pill",
+            "family": "calendar",
+            "size": "1x0.5",
             "name": Translation.tr("Calendar Pill 1x0.5"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/CalendarPillWidget.qml"),
@@ -625,6 +732,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_date_stack",
+            "family": "calendar",
+            "size": "1x1",
             "name": Translation.tr("Date Stack (1x1)"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/DateStackWidget.qml"),
@@ -634,6 +743,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_date_banner",
+            "family": "calendar",
+            "size": "2x1",
             "name": Translation.tr("Date Banner (2x1)"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/DateBannerWidget.qml"),
@@ -643,6 +754,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_week_strip",
+            "family": "calendar",
+            "size": "2x0.5",
             "name": Translation.tr("Week Strip (2x0.5)"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/WeekStripWidget.qml"),
@@ -652,6 +765,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_week_agenda",
+            "family": "calendar",
+            "size": "2x2",
             "name": Translation.tr("Week Agenda (2x2)"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/WeekAgendaWidget.qml"),
@@ -661,6 +776,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_month_tall",
+            "family": "calendar",
+            "size": "1x2",
             "name": Translation.tr("Month Tall (1x2)"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/MonthTallWidget.qml"),
@@ -670,6 +787,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_date_type",
+            "family": "calendar",
+            "size": "2x1",
             "name": Translation.tr("Date Type (2x1)"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/DateTypeWidget.qml"),
@@ -679,6 +798,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_date_shapes",
+            "family": "calendar",
+            "size": "2x1",
             "name": Translation.tr("Date Shapes (2x1)"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/DateShapesWidget.qml"),
@@ -688,6 +809,8 @@ Singleton {
         },
         {
             "widgetId": "calendar_upcoming_3days",
+            "family": "calendar",
+            "size": "1x1",
             "name": Translation.tr("Calendar Upcoming 3 Days 1x1"),
             "category": "Date",
             "qmlPath": Qt.resolvedUrl("DateWidget/CalendarUpcoming3DaysWidget.qml"),
@@ -697,6 +820,8 @@ Singleton {
         },
         {
             "widgetId": "photo",
+            "family": "photo",
+            "size": "1x1",
             "name": Translation.tr("Photo"),
             "category": "Photo",
             "qmlPath": Qt.resolvedUrl("photo/PhotoWidget.qml"),
@@ -706,6 +831,8 @@ Singleton {
         },
         {
             "widgetId": "photo_plain_1x1",
+            "family": "photo",
+            "size": "1x1",
             "name": Translation.tr("Plain Photo (1x1)"),
             "category": "Photo",
             "qmlPath": Qt.resolvedUrl("photo/PlainPhoto1x1Widget.qml"),
@@ -715,6 +842,8 @@ Singleton {
         },
         {
             "widgetId": "photo_plain_2x1",
+            "family": "photo",
+            "size": "2x1",
             "name": Translation.tr("Plain Photo (2x1)"),
             "category": "Photo",
             "qmlPath": Qt.resolvedUrl("photo/PlainPhoto2x1Widget.qml"),
@@ -724,6 +853,8 @@ Singleton {
         },
         {
             "widgetId": "photo_plain_1x2",
+            "family": "photo",
+            "size": "1x2",
             "name": Translation.tr("Plain Photo (1x2)"),
             "category": "Photo",
             "qmlPath": Qt.resolvedUrl("photo/PlainPhoto1x2Widget.qml"),
@@ -733,6 +864,8 @@ Singleton {
         },
         {
             "widgetId": "photo_1x1",
+            "family": "photo",
+            "size": "1x1",
             "name": Translation.tr("Photo 1x1"),
             "category": "Photo",
             "qmlPath": Qt.resolvedUrl("photo/Photo1x1Widget.qml"),
@@ -742,6 +875,8 @@ Singleton {
         },
         {
             "widgetId": "photo_weather_2x1",
+            "family": "photo",
+            "size": "2x1",
             "name": Translation.tr("Photo Weather (2x1)"),
             "category": "Photo",
             "qmlPath": Qt.resolvedUrl("photo/PhotoWeather2x1Widget.qml"),
@@ -751,6 +886,8 @@ Singleton {
         },
         {
             "widgetId": "photo_pill_2x1",
+            "family": "photo",
+            "size": "2x1",
             "name": Translation.tr("Photo Pill Badge (2x1)"),
             "category": "Photo",
             "qmlPath": Qt.resolvedUrl("photo/PhotoPill2x1Widget.qml"),
@@ -760,6 +897,8 @@ Singleton {
         },
         {
             "widgetId": "photo_minimal_temp_2x1",
+            "family": "photo",
+            "size": "2x1",
             "name": Translation.tr("Photo Minimal Temp (2x1)"),
             "category": "Photo",
             "qmlPath": Qt.resolvedUrl("photo/PhotoMinimalTemp2x1Widget.qml"),
@@ -769,6 +908,8 @@ Singleton {
         },
         {
             "widgetId": "bluetooth_battery",
+            "family": "bluetooth",
+            "size": "1x1",
             "name": Translation.tr("Bluetooth Device Battery"),
             "category": "Devices",
             "qmlPath": Qt.resolvedUrl("bluetooth/BluetoothBatteryWidget.qml"),
@@ -778,6 +919,8 @@ Singleton {
         },
         {
             "widgetId": "bluetooth_headphone",
+            "family": "bluetooth",
+            "size": "1x2",
             "name": Translation.tr("Bluetooth Headphone 1x2"),
             "category": "Devices",
             "qmlPath": Qt.resolvedUrl("bluetooth/BluetoothHeadphoneWidget.qml"),
@@ -796,6 +939,8 @@ Singleton {
         },
         {
             "widgetId": "bluetooth_headphone_cookie",
+            "family": "bluetooth",
+            "size": "1x1",
             "name": Translation.tr("Bluetooth Headphone Cookie"),
             "category": "Devices",
             "qmlPath": Qt.resolvedUrl("bluetooth/BluetoothHeadphoneCookieWidget.qml"),
@@ -832,6 +977,8 @@ Singleton {
         },
         {
             "widgetId": "devices_battery_list",
+            "family": "devices",
+            "size": "2x1",
             "name": Translation.tr("Connected Devices Battery List (2x1)"),
             "category": "Devices",
             "qmlPath": Qt.resolvedUrl("bluetooth/DevicesBatteryListWidget.qml"),
@@ -841,6 +988,8 @@ Singleton {
         },
         {
             "widgetId": "devices_battery_list_1x1",
+            "family": "devices",
+            "size": "1x1",
             "name": Translation.tr("Connected Devices Battery List (1x1)"),
             "category": "Devices",
             "qmlPath": Qt.resolvedUrl("bluetooth/DevicesBatteryList1x1Widget.qml"),
@@ -850,6 +999,8 @@ Singleton {
         },
         {
             "widgetId": "bluetooth_earbuds_stem",
+            "family": "bluetooth",
+            "size": "1x1",
             "name": Translation.tr("Bluetooth Earbuds Stem"),
             "category": "Devices",
             "qmlPath": Qt.resolvedUrl("bluetooth/BluetoothEarbudsStemWidget.qml"),
@@ -859,6 +1010,8 @@ Singleton {
         },
         {
             "widgetId": "email_inbox",
+            "family": "email",
+            "size": "1x1",
             "name": Translation.tr("Email Inbox (1x1)"),
             "category": "Utility",
             "qmlPath": Qt.resolvedUrl("utility/EmailWidget.qml"),
@@ -868,6 +1021,8 @@ Singleton {
         },
         {
             "widgetId": "email_inbox_2x1",
+            "family": "email",
+            "size": "2x1",
             "name": Translation.tr("Email Inbox (2x1)"),
             "category": "Utility",
             "qmlPath": Qt.resolvedUrl("utility/EmailWidget2x1.qml"),
@@ -886,6 +1041,8 @@ Singleton {
         },
         {
             "widgetId": "notes_widget",
+            "family": "notes",
+            "size": "1x1",
             "name": Translation.tr("Notes (1x1)"),
             "category": "Utility",
             "qmlPath": Qt.resolvedUrl("utility/NotesWidget.qml"),
@@ -895,6 +1052,8 @@ Singleton {
         },
         {
             "widgetId": "notes_widget_2x1",
+            "family": "notes",
+            "size": "2x1",
             "name": Translation.tr("Notes (2x1)"),
             "category": "Utility",
             "qmlPath": Qt.resolvedUrl("utility/NotesWidget2x1.qml"),
@@ -904,6 +1063,8 @@ Singleton {
         },
         {
             "widgetId": "media_poster",
+            "family": "media",
+            "size": "1x2",
             "name": Translation.tr("Poster Media (1x2)"),
             "category": "Media",
             "qmlPath": Qt.resolvedUrl("media/PosterMediaWidget.qml"),
@@ -913,6 +1074,8 @@ Singleton {
         },
         {
             "widgetId": "media_deck",
+            "family": "media",
+            "size": "2x1",
             "name": Translation.tr("Deck Media (2x1)"),
             "category": "Media",
             "qmlPath": Qt.resolvedUrl("media/DeckMediaWidget.qml"),
@@ -922,6 +1085,8 @@ Singleton {
         },
         {
             "widgetId": "media_halo",
+            "family": "media",
+            "size": "1x1",
             "name": Translation.tr("Halo Media (1x1)"),
             "category": "Media",
             "qmlPath": Qt.resolvedUrl("media/HaloMediaWidget.qml"),
@@ -931,6 +1096,8 @@ Singleton {
         },
         {
             "widgetId": "media_cover",
+            "family": "media",
+            "size": "1x2",
             "name": Translation.tr("Cover Media (1x2)"),
             "category": "Media",
             "qmlPath": Qt.resolvedUrl("media/CoverMediaWidget.qml"),
@@ -940,6 +1107,8 @@ Singleton {
         },
         {
             "widgetId": "compact_media",
+            "family": "media",
+            "size": "2x1",
             "name": Translation.tr("Compact Media (2x1)"),
             "category": "Media",
             "qmlPath": Qt.resolvedUrl("media/CompactMediaWidget.qml"),
@@ -985,6 +1154,8 @@ Singleton {
         },
         {
             "widgetId": "shelf_1x1",
+            "family": "shelf",
+            "size": "1x1",
             "name": Translation.tr("Drop Shelf (1x1)"),
             "category": "Utility",
             "qmlPath": Qt.resolvedUrl("utility/ShelfWidget1x1.qml"),
@@ -994,6 +1165,8 @@ Singleton {
         },
         {
             "widgetId": "shelf_2x1",
+            "family": "shelf",
+            "size": "2x1",
             "name": Translation.tr("Drop Shelf (2x1)"),
             "category": "Utility",
             "qmlPath": Qt.resolvedUrl("utility/ShelfWidget2x1.qml"),
@@ -1003,6 +1176,8 @@ Singleton {
         },
         {
             "widgetId": "shelf_1x2",
+            "family": "shelf",
+            "size": "1x2",
             "name": Translation.tr("Drop Shelf (1x2)"),
             "category": "Utility",
             "qmlPath": Qt.resolvedUrl("utility/ShelfWidget1x2.qml"),
@@ -1012,6 +1187,8 @@ Singleton {
         },
         {
             "widgetId": "favorites_1x1",
+            "family": "favorites",
+            "size": "1x1",
             "name": Translation.tr("Favorites (1x1)"),
             "category": "Utility",
             "qmlPath": Qt.resolvedUrl("utility/FavoritesGridWidget.qml"),
@@ -1021,6 +1198,8 @@ Singleton {
         },
         {
             "widgetId": "favorites_row",
+            "family": "favorites",
+            "size": "1x0.5",
             "name": Translation.tr("Favorites (1x0.5)"),
             "category": "Utility",
             "qmlPath": Qt.resolvedUrl("utility/FavoritesRowWidget.qml"),
@@ -1057,6 +1236,8 @@ Singleton {
         },
         {
             "widgetId": "todo_focus",
+            "family": "todo",
+            "size": "1x1",
             "name": Translation.tr("To-Do Focus (1x1)"),
             "category": "Utility",
             "qmlPath": Qt.resolvedUrl("productivity/TodoFocusWidget.qml"),
@@ -1066,6 +1247,8 @@ Singleton {
         },
         {
             "widgetId": "todo_board",
+            "family": "todo",
+            "size": "2x1",
             "name": Translation.tr("To-Do Board (2x1)"),
             "category": "Utility",
             "qmlPath": Qt.resolvedUrl("productivity/TodoBoardWidget.qml"),
@@ -1075,6 +1258,8 @@ Singleton {
         },
         {
             "widgetId": "todo_column",
+            "family": "todo",
+            "size": "1x2",
             "name": Translation.tr("To-Do Column (1x2)"),
             "category": "Utility",
             "qmlPath": Qt.resolvedUrl("productivity/TodoColumnWidget.qml"),
@@ -1129,6 +1314,8 @@ Singleton {
         },
         {
             "widgetId": "phone_key",
+            "family": "phone",
+            "size": "1x1",
             "name": Translation.tr("Phone Key (1x1)"),
             "category": "Devices",
             "qmlPath": Qt.resolvedUrl("phone/PhoneKeyWidget.qml"),
@@ -1138,6 +1325,8 @@ Singleton {
         },
         {
             "widgetId": "phone_deck",
+            "family": "phone",
+            "size": "2x1",
             "name": Translation.tr("Phone Deck (2x1)"),
             "category": "Devices",
             "qmlPath": Qt.resolvedUrl("phone/PhoneDeckWidget.qml"),
@@ -1147,6 +1336,8 @@ Singleton {
         },
         {
             "widgetId": "phone_tower",
+            "family": "phone",
+            "size": "1x2",
             "name": Translation.tr("Phone Tower (1x2)"),
             "category": "Devices",
             "qmlPath": Qt.resolvedUrl("phone/PhoneTowerWidget.qml"),
@@ -1182,6 +1373,78 @@ Singleton {
             "configPage": "widgets/DesktopWaterReminderConfig.qml"
         },
         {
+            "widgetId": "prayer_times",
+            "name": Translation.tr("Prayer Times"),
+            "category": "Utility",
+            "qmlPath": Qt.resolvedUrl("utility/PrayerTimesWidget.qml"),
+            "icon": "mosque",
+            "description": Translation.tr("A wide prayer times card: the day drawn as the sun's path with a countdown to the next prayer, rolling over to tomorrow's Fajr after Isha."),
+            "configPage": "widgets/DesktopPrayerTimesConfig.qml"
+        },
+        {
+            "widgetId": "diwan_verse",
+            "name": Translation.tr("Verse of the Day"),
+            "category": "Utility",
+            "qmlPath": Qt.resolvedUrl("utility/VerseOfDayWidget.qml"),
+            "icon": "auto_stories",
+            "description": Translation.tr("A verse of Arabic poetry for each day, set in two half-lines like a printed diwan; click it to read the whole poem."),
+            "configPage": "widgets/DesktopVerseOfDayConfig.qml"
+        },
+        {
+            "widgetId": "quran_ayah",
+            "name": Translation.tr("Quran Ayah"),
+            "category": "Utility",
+            "qmlPath": Qt.resolvedUrl("utility/QuranAyahWidget.qml"),
+            "icon": "menu_book",
+            "description": Translation.tr("An ayah of the day with its translation; while the Quran player recites it follows the recitation word by word, with play and next-ayah on the card."),
+            "configPage": "widgets/DesktopQuranAyahConfig.qml"
+        },
+        {
+            "widgetId": "quran_lockup",
+            "name": Translation.tr("Quran Calligraphy"),
+            "category": "Utility",
+            "qmlPath": Qt.resolvedUrl("utility/QuranLockupWidget.qml"),
+            "icon": "format_quote",
+            "description": Translation.tr("An ayah set straight on the wallpaper with no card, every line scaled to one width like a calligraphy panel. Pick a decorative font, take the verse from your bookmarks, and the words light up as they are recited."),
+            "configPage": "widgets/DesktopQuranLockupConfig.qml"
+        },
+        {
+            "widgetId": "quran_lens",
+            "name": Translation.tr("Quran Calligraphy (Lens)"),
+            "category": "Utility",
+            "qmlPath": Qt.resolvedUrl("utility/QuranLensWidget.qml"),
+            "icon": "lens_blur",
+            "description": Translation.tr("The same calligraphy with the lines swelling towards the middle, a lens-shaped silhouette."),
+            "configPage": "widgets/DesktopQuranLensConfig.qml"
+        },
+        {
+            "widgetId": "quran_ring",
+            "name": Translation.tr("Quran Calligraphy (Ring)"),
+            "category": "Utility",
+            "qmlPath": Qt.resolvedUrl("utility/QuranRingWidget.qml"),
+            "icon": "radio_button_unchecked",
+            "description": Translation.tr("The words of an ayah follow a ring, over the top and under the bottom, with the surah's name in the middle."),
+            "configPage": "widgets/DesktopQuranRingConfig.qml"
+        },
+        {
+            "widgetId": "quran_hero",
+            "name": Translation.tr("Quran Calligraphy (Hero)"),
+            "category": "Utility",
+            "qmlPath": Qt.resolvedUrl("utility/QuranHeroWidget.qml"),
+            "icon": "title",
+            "description": Translation.tr("A large opening phrase set over a smaller body, after the oval panels on the Ka'bah belt."),
+            "configPage": "widgets/DesktopQuranHeroConfig.qml"
+        },
+        {
+            "widgetId": "quran_hilye",
+            "name": Translation.tr("Quran Calligraphy (Hilye)"),
+            "category": "Utility",
+            "qmlPath": Qt.resolvedUrl("utility/QuranHilyeWidget.qml"),
+            "icon": "crop_portrait",
+            "description": Translation.tr("Large opening and closing lines around a small body, with rosette separators and a fine frame, after Ottoman hilye panels."),
+            "configPage": "widgets/DesktopQuranHilyeConfig.qml"
+        },
+        {
             "widgetId": "at_a_glance",
             "name": Translation.tr("At a Glance"),
             "category": "Utility",
@@ -1192,6 +1455,8 @@ Singleton {
         },
         {
             "widgetId": "resource_cpu_pill",
+            "family": "resources",
+            "size": "1x0.5",
             "name": Translation.tr("CPU Resource Pill"),
             "category": "Resources",
             "qmlPath": Qt.resolvedUrl("utility/CpuPillWidget.qml"),
@@ -1201,6 +1466,8 @@ Singleton {
         },
         {
             "widgetId": "resource_ram_pill",
+            "family": "resources",
+            "size": "1x0.5",
             "name": Translation.tr("RAM Resource Pill"),
             "category": "Resources",
             "qmlPath": Qt.resolvedUrl("utility/RamPillWidget.qml"),
@@ -1210,6 +1477,8 @@ Singleton {
         },
         {
             "widgetId": "resource_disk_pill",
+            "family": "resources",
+            "size": "1x0.5",
             "name": Translation.tr("Disk Resource Pill"),
             "category": "Resources",
             "qmlPath": Qt.resolvedUrl("utility/DiskPillWidget.qml"),
@@ -1219,6 +1488,8 @@ Singleton {
         },
         {
             "widgetId": "resource_columns",
+            "family": "resources",
+            "size": "2x1",
             "name": Translation.tr("Resource Columns"),
             "category": "Resources",
             "qmlPath": Qt.resolvedUrl("utility/ResourceColumnsWidget.qml"),
@@ -1228,6 +1499,8 @@ Singleton {
         },
         {
             "widgetId": "resource_tiles",
+            "family": "resources",
+            "size": "1x1",
             "name": Translation.tr("Resource Tiles"),
             "category": "Resources",
             "qmlPath": Qt.resolvedUrl("utility/ResourceTilesWidget.qml"),
@@ -1237,6 +1510,8 @@ Singleton {
         },
         {
             "widgetId": "resource_fill_cards",
+            "family": "resources",
+            "size": "1x1",
             "name": Translation.tr("Resource Fill Cards"),
             "category": "Resources",
             "qmlPath": Qt.resolvedUrl("utility/ResourceFillCardsWidget.qml"),
@@ -1246,6 +1521,8 @@ Singleton {
         },
         {
             "widgetId": "resource_nothing_disk",
+            "family": "resources",
+            "size": "1x0.5",
             "name": Translation.tr("Nothing Storage Widget"),
             "category": "Resources",
             "qmlPath": Qt.resolvedUrl("utility/NothingDiskWidget.qml"),
@@ -1255,6 +1532,8 @@ Singleton {
         },
         {
             "widgetId": "resource_nothing_cpu",
+            "family": "resources",
+            "size": "1x0.5",
             "name": Translation.tr("Nothing CPU Widget"),
             "category": "Resources",
             "qmlPath": Qt.resolvedUrl("utility/NothingCpuWidget.qml"),
@@ -1264,6 +1543,8 @@ Singleton {
         },
         {
             "widgetId": "resource_nothing_ram",
+            "family": "resources",
+            "size": "1x0.5",
             "name": Translation.tr("Nothing RAM Widget"),
             "category": "Resources",
             "qmlPath": Qt.resolvedUrl("utility/NothingRamWidget.qml"),
@@ -1273,6 +1554,8 @@ Singleton {
         },
         {
             "widgetId": "wellbeing_screen_ring",
+            "family": "wellbeing",
+            "size": "1x1",
             "name": Translation.tr("Screen Time"),
             "category": "Wellbeing",
             "qmlPath": Qt.resolvedUrl("wellbeing/ScreenTimeRingWidget.qml"),
@@ -1282,6 +1565,8 @@ Singleton {
         },
         {
             "widgetId": "wellbeing_limits",
+            "family": "wellbeing",
+            "size": "2x1",
             "name": Translation.tr("Daily Limits"),
             "category": "Wellbeing",
             "qmlPath": Qt.resolvedUrl("wellbeing/ScreenTimeLimitsWidget.qml"),
@@ -1291,6 +1576,8 @@ Singleton {
         },
         {
             "widgetId": "wellbeing_bedtime",
+            "family": "wellbeing",
+            "size": "2x1",
             "name": Translation.tr("Bedtime"),
             "category": "Wellbeing",
             "qmlPath": Qt.resolvedUrl("wellbeing/BedtimeWidget.qml"),
@@ -1300,6 +1587,8 @@ Singleton {
         },
         {
             "widgetId": "wellbeing_break",
+            "family": "wellbeing",
+            "size": "1x1",
             "name": Translation.tr("Take a Break"),
             "category": "Wellbeing",
             "qmlPath": Qt.resolvedUrl("wellbeing/BreakWidget.qml"),
@@ -1309,6 +1598,8 @@ Singleton {
         },
         {
             "widgetId": "wellbeing_day",
+            "family": "wellbeing",
+            "size": "1x2",
             "name": Translation.tr("Your Day"),
             "category": "Wellbeing",
             "qmlPath": Qt.resolvedUrl("wellbeing/DayBalanceWidget.qml"),
@@ -1318,6 +1609,8 @@ Singleton {
         },
         {
             "widgetId": "people_birthday",
+            "family": "people",
+            "size": "1x1",
             "name": Translation.tr("Next Birthday"),
             "category": "People",
             "qmlPath": Qt.resolvedUrl("people/NextBirthdayWidget.qml"),
@@ -1327,6 +1620,8 @@ Singleton {
         },
         {
             "widgetId": "people_birthdays",
+            "family": "people",
+            "size": "2x1",
             "name": Translation.tr("Birthdays"),
             "category": "People",
             "qmlPath": Qt.resolvedUrl("people/BirthdayTimelineWidget.qml"),
@@ -1336,6 +1631,8 @@ Singleton {
         },
         {
             "widgetId": "people_holiday",
+            "family": "people",
+            "size": "1x1",
             "name": Translation.tr("Next Holiday"),
             "category": "People",
             "qmlPath": Qt.resolvedUrl("people/HolidayWidget.qml"),
@@ -1345,6 +1642,8 @@ Singleton {
         },
         {
             "widgetId": "people_countdowns",
+            "family": "people",
+            "size": "2x1",
             "name": Translation.tr("Countdowns"),
             "category": "People",
             "qmlPath": Qt.resolvedUrl("people/CountdownsWidget.qml"),
@@ -1354,6 +1653,8 @@ Singleton {
         },
         {
             "widgetId": "people_favorites",
+            "family": "people",
+            "size": "1x2",
             "name": Translation.tr("Favorite People"),
             "category": "People",
             "qmlPath": Qt.resolvedUrl("people/FavoritePeopleWidget.qml"),
@@ -1377,6 +1678,34 @@ Singleton {
 
     // Combined list of all available widgets
     readonly property var allWidgets: (builtinWidgets || []).concat(extensionWidgets || [])
+
+    // ── Families ─────────────────────────────────────────────────────────────
+    // Widgets that are the same thing at different sizes share a `family`, and each says which
+    // `size` ("1x1", "2x1", ...) it is. Edit Mode offers a placed widget the sizes of its family
+    // and swaps it for the one that fits; the several designs at one size are cycled the same way.
+    function _sizeArea(id) {
+        const m = /^([0-9.]+)x([0-9.]+)$/.exec(String(id));
+        return m ? Number(m[1]) * Number(m[2]) : 0;
+    }
+    function _sizeWidth(id) {
+        const m = /^([0-9.]+)x([0-9.]+)$/.exec(String(id));
+        return m ? Number(m[1]) : 0;
+    }
+    function familySizes(family) {
+        if (!family)
+            return [];
+        const out = [];
+        for (const w of root.builtinWidgets) {
+            if (w.family === family && w.size && !out.includes(w.size))
+                out.push(w.size);
+        }
+        return out.sort((a, b) => (root._sizeArea(a) - root._sizeArea(b)) || (root._sizeWidth(a) - root._sizeWidth(b)));
+    }
+    function familyVariants(family, size) {
+        if (!family)
+            return [];
+        return root.builtinWidgets.filter(w => w.family === family && w.size === size).map(w => w.widgetId);
+    }
 
     function getWidgetMetadata(widgetId) {
         let list = allWidgets;

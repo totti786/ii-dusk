@@ -39,7 +39,7 @@ Item {
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: 400
+                        duration: Appearance.dur(400)
                         easing.type: Easing.InOutQuad
                     }
                 }

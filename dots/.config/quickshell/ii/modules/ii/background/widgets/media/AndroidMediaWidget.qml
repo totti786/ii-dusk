@@ -160,14 +160,14 @@ AbstractBackgroundWidget {
             property: "lyricYOffset"
             from: 15
             to: 0.0
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
             target: root
             property: "lyricOpacity"
             to: 1.0
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.OutCubic
         }
     }
@@ -413,7 +413,7 @@ AbstractBackgroundWidget {
                                     target: lyricsContainer
                                     property: "scrollOffset"
                                     to: 0
-                                    duration: 400
+                                    duration: Appearance.dur(400)
                                     easing.type: Easing.OutQuart
                                 }
 

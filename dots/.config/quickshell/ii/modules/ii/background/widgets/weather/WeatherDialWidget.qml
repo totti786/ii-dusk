@@ -18,6 +18,7 @@ import "WeatherMood.js" as Mood
  */
 ExpressiveCardWidget {
     id: root
+    onCardTapped: GlobalStates.openWeatherApp("hourly")
 
     configEntryName: "weather_dial"
 
@@ -59,7 +60,7 @@ ExpressiveCardWidget {
         preferredRendererType: Shape.CurveRenderer
 
         ShapePath {
-            strokeColor: WidgetColorScheme.pillBgColor
+            strokeColor: root.cardScheme.pillBgColor
             strokeWidth: 6
             fillColor: "transparent"
             PathAngleArc {
@@ -107,7 +108,7 @@ ExpressiveCardWidget {
                 x: root.cx + root.labelRadius * Math.cos(segment.mid) - width / 2
                 y: root.cy + root.labelRadius * Math.sin(segment.mid) - height / 2
                 text: segment.modelData.temp + "°"
-                color: WidgetColorScheme.textColorOnBg
+                color: root.cardScheme.textColorOnBg
                 font.family: Appearance.font.family.main
                 font.pixelSize: 12
                 font.variableAxes: ({ "wght": 680, "wdth": 85, "ROND": 100 })
@@ -125,7 +126,7 @@ ExpressiveCardWidget {
             x: root.cx + 48 * Math.cos(a) - width / 2
             y: root.cy + 48 * Math.sin(a) - height / 2
             text: String(modelData)
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: 10
             font.variableAxes: ({ "wght": 500, "wdth": 100, "ROND": 100 })
@@ -154,7 +155,7 @@ ExpressiveCardWidget {
             width: parent.width
             height: 20
             radius: width / 2
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
     }
 
@@ -167,12 +168,12 @@ ExpressiveCardWidget {
             text: WeatherIcons.getMaterialSymbol(root.current?.wCode ?? 113)
             iconSize: 18
             fill: 1
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
         StyledText {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Mood.number(root.current?.temp) + "°"
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: 34
             font.variableAxes: ({ "wght": 700, "wdth": 95, "ROND": 100 })

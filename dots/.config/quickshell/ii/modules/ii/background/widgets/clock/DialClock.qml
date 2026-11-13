@@ -177,7 +177,7 @@ Item {
             font.variableAxes: ({ "wght": 1000 })
             color: root.colNumbers
             opacity: root.showNumberRing ? 0.8 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic } }
             anchors {
                 top: parent.top
                 topMargin: parent.height * 0.05
@@ -194,7 +194,7 @@ Item {
             font.variableAxes: ({ "wght": 1000 })
             color: root.colNumbers
             opacity: root.showNumberRing ? 0.8 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic } }
             anchors {
                 bottom: parent.bottom
                 bottomMargin: parent.height * 0.05
@@ -211,7 +211,7 @@ Item {
             font.variableAxes: ({ "wght": 1000 })
             color: root.colNumbers
             opacity: root.showNumberRing ? 0.8 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic } }
             anchors {
                 right: parent.right
                 rightMargin: parent.width * 0.07
@@ -228,7 +228,7 @@ Item {
             font.variableAxes: ({ "wght": 1000 })
             color: root.colNumbers
             opacity: root.showNumberRing ? 0.8 : 0.0
-            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic } }
             anchors {
                 left: parent.left
                 leftMargin: parent.width * 0.07

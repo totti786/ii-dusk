@@ -12,6 +12,9 @@ AbstractBackgroundWidget {
     id: root
 
     configEntryName: "clock_hori"
+    // The digits sit straight on the wallpaper, not on a card, so the scheme's "text on card"
+    // colour (black on a mid-tone container) is wrong for them: use the wallpaper-adaptive one.
+    needsColText: true
 
     readonly property real contentScale: (Config.options.background.widgets.clock_hori.widgetSize ?? 100) / 100.0
     implicitWidth: 320 * contentScale
@@ -28,7 +31,7 @@ AbstractBackgroundWidget {
 
     // ── Colors (WidgetColorScheme tokens, same pattern as FlexClock) ──
     readonly property bool useAltColors: Config.options.background.widgets.clock_hori.useAltColors ?? false
-    readonly property color tintSoft: useAltColors ? WidgetColorScheme.cardBgColor : WidgetColorScheme.textColorOnBg
+    readonly property color tintSoft: useAltColors ? WidgetColorScheme.cardBgColor : root.colText
     readonly property color tintBold: WidgetColorScheme.accentColor
 
     // ── Layout geometry (horizontal, 320×200) ──

@@ -52,8 +52,8 @@ ExpressiveCardWidget {
     }
     ParallelAnimation {
         id: sloshAnim
-        NumberAnimation { target: root; property: "slosh"; from: 1; to: 0; duration: 1400; easing.type: Easing.OutCubic }
-        NumberAnimation { target: root; property: "wavePhase"; from: 0; to: Math.PI * 4; duration: 1400; easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "slosh"; from: 1; to: 0; duration: Appearance.dur(1400); easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "wavePhase"; from: 0; to: Math.PI * 4; duration: Appearance.dur(1400); easing.type: Easing.OutCubic }
     }
 
     // ── Glass ──
@@ -64,7 +64,7 @@ ExpressiveCardWidget {
         width: root.glassWidth
         height: root.designHeight - root.padding * 2
         radius: Appearance.rounding.large
-        color: WidgetColorScheme.pillBgColor
+        color: root.cardScheme.pillBgColor
 
         Item {
             id: liquid
@@ -89,7 +89,7 @@ ExpressiveCardWidget {
                 preferredRendererType: Shape.CurveRenderer
 
                 ShapePath {
-                    fillColor: WidgetColorScheme.accentColor
+                    fillColor: root.cardScheme.accentColor
                     strokeWidth: -1
 
                     PathPolyline {
@@ -126,7 +126,7 @@ ExpressiveCardWidget {
                 width: 14
                 height: 3
                 radius: 1.5
-                color: under ? WidgetColorScheme.onAccentColor : WidgetColorScheme.subtextColorOnBg
+                color: under ? root.cardScheme.onAccentColor : root.cardScheme.subtextColorOnBg
                 opacity: under ? 0.55 : 0.45
             }
         }
@@ -138,7 +138,7 @@ ExpressiveCardWidget {
             text: root.reached ? "check_circle" : "water_drop"
             iconSize: 28
             fill: 1
-            color: root.level > 0.12 ? WidgetColorScheme.onAccentColor : WidgetColorScheme.accentColor
+            color: root.level > 0.12 ? root.cardScheme.onAccentColor : root.cardScheme.accentColor
         }
     }
 
@@ -148,7 +148,7 @@ ExpressiveCardWidget {
         anchors.leftMargin: 18
         y: root.padding
         text: Translation.tr("Hydration").toUpperCase()
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.monospace
         font.pixelSize: Appearance.font.pixelSize.smaller
         font.letterSpacing: 1.5
@@ -161,13 +161,13 @@ ExpressiveCardWidget {
         width: leftText.implicitWidth + 18
         height: 24
         radius: root.pill(height)
-        color: root.reached ? WidgetColorScheme.accentColor : WidgetColorScheme.pillBgColor
+        color: root.reached ? root.cardScheme.accentColor : root.cardScheme.pillBgColor
 
         StyledText {
             id: leftText
             anchors.centerIn: parent
             text: root.reached ? Translation.tr("Goal reached") : Translation.tr("%1 to go").arg(root.goal - root.glasses)
-            color: root.reached ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnBg
+            color: root.reached ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnBg
             font.pixelSize: Appearance.font.pixelSize.smaller
             font.variableAxes: ({ "wght": 600, "wdth": 100, "ROND": 100 })
         }
@@ -183,7 +183,7 @@ ExpressiveCardWidget {
         Text {
             id: countText
             text: String(root.glasses)
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: 112
             font.variableAxes: ({ "wght": 780, "wdth": 40, "ROND": 100, "opsz": 144 })
@@ -197,14 +197,14 @@ ExpressiveCardWidget {
 
             StyledText {
                 text: "/ " + root.goal
-                color: WidgetColorScheme.accentColor
+                color: root.cardScheme.accentColor
                 font.family: Appearance.font.family.main
                 font.pixelSize: Appearance.font.pixelSize.huge + 6
                 font.variableAxes: ({ "wght": 600, "wdth": 70, "ROND": 100 })
             }
             StyledText {
                 text: Translation.tr("glasses")
-                color: WidgetColorScheme.subtextColorOnBg
+                color: root.cardScheme.subtextColorOnBg
                 font.pixelSize: Appearance.font.pixelSize.small
             }
         }
@@ -238,14 +238,14 @@ ExpressiveCardWidget {
                     width: parent.width
                     height: parent.height - 16
                     radius: root.pill(width)
-                    color: WidgetColorScheme.pillBgColor
+                    color: root.cardScheme.pillBgColor
 
                     Rectangle {
                         anchors.bottom: parent.bottom
                         width: parent.width
                         height: Math.max(day.share > 0 ? width : 0, parent.height * day.share)
                         radius: parent.radius
-                        color: day.today ? WidgetColorScheme.accentColor : WidgetColorScheme.pillFillColor
+                        color: day.today ? root.cardScheme.accentColor : root.cardScheme.pillFillColor
 
                         Behavior on height {
                             enabled: !Appearance.reducedMotion
@@ -258,7 +258,7 @@ ExpressiveCardWidget {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
                     text: Qt.locale().toString(day.modelData.date, "ddd").charAt(0).toUpperCase()
-                    color: day.today ? WidgetColorScheme.accentColor : WidgetColorScheme.subtextColorOnBg
+                    color: day.today ? root.cardScheme.accentColor : root.cardScheme.subtextColorOnBg
                     font.family: Appearance.font.family.monospace
                     font.pixelSize: Appearance.font.pixelSize.smallest
                 }
@@ -279,8 +279,8 @@ ExpressiveCardWidget {
             height: root.keyHeight
             enabled: root.glasses > 0
             symbol: "remove"
-            colFill: WidgetColorScheme.pillBgColor
-            colContent: WidgetColorScheme.textColorOnBg
+            colFill: root.cardScheme.pillBgColor
+            colContent: root.cardScheme.textColorOnBg
             onClicked: WaterReminderService.drink(-1)
         }
 
@@ -290,8 +290,8 @@ ExpressiveCardWidget {
             symbol: "water_full"
             label: Translation.tr("Glass")
             labelAxes: ({ "wght": 650, "wdth": 100, "ROND": 100 })
-            colFill: WidgetColorScheme.accentColor
-            colContent: WidgetColorScheme.onAccentColor
+            colFill: root.cardScheme.accentColor
+            colContent: root.cardScheme.onAccentColor
             // Drops into a rounded square for a beat after each glass.
             restRadius: sloshAnim.running ? Appearance.rounding.normal : root.pill(height)
             onClicked: WaterReminderService.drink(1)

@@ -496,7 +496,7 @@ Item {
 
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: 120
+                                    duration: Appearance.dur(120)
                                     easing.type: Easing.OutCubic
                                 }
                             }

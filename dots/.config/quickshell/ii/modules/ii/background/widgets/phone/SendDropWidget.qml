@@ -130,7 +130,7 @@ ExpressiveCardWidget {
         width: root.targetWidth
         height: root.designHeight - root.padding * 2
         radius: Appearance.rounding.normal
-        color: root.dragOver ? ColorUtils.mix(WidgetColorScheme.accentColor, WidgetColorScheme.pillBgColor, 0.2) : WidgetColorScheme.pillBgColor
+        color: root.dragOver ? ColorUtils.mix(root.cardScheme.accentColor, root.cardScheme.pillBgColor, 0.2) : root.cardScheme.pillBgColor
 
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -154,7 +154,7 @@ ExpressiveCardWidget {
                 shape: root.justSent ? MaterialShape.Shape.Sunny
                     : root.sending ? MaterialShape.Shape.Flower
                     : root.dragOver ? MaterialShape.Shape.SoftBurst : MaterialShape.Shape.Cookie12Sided
-                color: root.justSent || root.dragOver || root.sending ? WidgetColorScheme.accentColor : WidgetColorScheme.pillFillColor
+                color: root.justSent || root.dragOver || root.sending ? root.cardScheme.accentColor : root.cardScheme.pillFillColor
 
                 Behavior on color {
                     animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -166,7 +166,7 @@ ExpressiveCardWidget {
                 text: root.justSent ? "done_all" : (root.localSend ? "near_me" : "phone_android")
                 iconSize: 44
                 fill: 1
-                color: root.justSent || root.dragOver || root.sending ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnPillFill
+                color: root.justSent || root.dragOver || root.sending ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnPillFill
             }
         }
 
@@ -178,7 +178,7 @@ ExpressiveCardWidget {
             horizontalAlignment: Text.AlignHCenter
             elide: Text.ElideRight
             text: root.stateText
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.pixelSize: Appearance.font.pixelSize.normal
             font.variableAxes: ({ "wght": 620, "wdth": 92, "ROND": 100 })
         }
@@ -217,8 +217,8 @@ ExpressiveCardWidget {
                 symbolSize: 16
                 label: segment.modelData.label
                 labelSize: Appearance.font.pixelSize.smaller
-                colFill: segment.chosen ? WidgetColorScheme.accentColor : WidgetColorScheme.pillBgColor
-                colContent: segment.chosen ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnBg
+                colFill: segment.chosen ? root.cardScheme.accentColor : root.cardScheme.pillBgColor
+                colContent: segment.chosen ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnBg
                 topLeftRadius: segment.index === 0 ? segment.outerRadius : segment.joinRadius
                 bottomLeftRadius: segment.index === 0 ? segment.outerRadius : segment.joinRadius
                 topRightRadius: segment.index === 1 ? segment.outerRadius : segment.joinRadius
@@ -230,6 +230,7 @@ ExpressiveCardWidget {
 
     // ── Devices ──
     Flickable {
+        WheelScroll {}
         id: devicesFlick
         anchors.left: way.left
         anchors.right: way.right
@@ -263,8 +264,8 @@ ExpressiveCardWidget {
                     symbolSize: 16
                     label: chip.chipName
                     labelSize: Appearance.font.pixelSize.smaller
-                    colFill: chip.chosen ? WidgetColorScheme.pillFillColor : WidgetColorScheme.pillBgColor
-                    colContent: chip.chosen ? WidgetColorScheme.textColorOnPillFill : WidgetColorScheme.textColorOnBg
+                    colFill: chip.chosen ? root.cardScheme.pillFillColor : root.cardScheme.pillBgColor
+                    colContent: chip.chosen ? root.cardScheme.textColorOnPillFill : root.cardScheme.textColorOnBg
                     restRadius: chip.chosen ? Appearance.rounding.small : root.pill(height)
                     onClicked: {
                         if (root.localSend) {
@@ -293,8 +294,8 @@ ExpressiveCardWidget {
                 symbolSize: 16
                 label: LocalSend.scanning ? Translation.tr("Scanning") : Translation.tr("Scan")
                 labelSize: Appearance.font.pixelSize.smaller
-                colFill: WidgetColorScheme.cardBgColor
-                colContent: WidgetColorScheme.subtextColorOnBg
+                colFill: root.cardScheme.cardBgColor
+                colContent: root.cardScheme.subtextColorOnBg
                 onClicked: LocalSend.startScanning()
             }
         }
@@ -307,7 +308,7 @@ ExpressiveCardWidget {
             text: root.localSend
                 ? (LocalSend.available ? Translation.tr("No devices found yet.") : Translation.tr("Install LocalSend in Settings → Devices & phone."))
                 : Translation.tr("No paired phones. Pair one in KDE Connect.")
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.pixelSize: Appearance.font.pixelSize.small
         }
     }
@@ -324,8 +325,8 @@ ExpressiveCardWidget {
         symbol: "attach_file"
         label: Translation.tr("Choose files for %1").arg(root.targetName)
         labelAxes: ({ "wght": 620, "wdth": 92, "ROND": 100 })
-        colFill: WidgetColorScheme.accentColor
-        colContent: WidgetColorScheme.onAccentColor
+        colFill: root.cardScheme.accentColor
+        colContent: root.cardScheme.onAccentColor
         onClicked: picker.running = true
     }
 

@@ -135,7 +135,7 @@ AbstractBackgroundWidget {
 
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: 250
+                                    duration: Appearance.dur(250)
                                     easing.type: Easing.OutCubic
                                 }
                             }

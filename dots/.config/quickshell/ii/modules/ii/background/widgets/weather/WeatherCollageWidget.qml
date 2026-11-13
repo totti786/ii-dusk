@@ -19,6 +19,7 @@ import "WeatherMood.js" as Mood
  */
 ExpressiveCardWidget {
     id: root
+    onCardTapped: GlobalStates.openWeatherApp("")
 
     configEntryName: "weather_collage"
 
@@ -44,7 +45,7 @@ ExpressiveCardWidget {
         MaterialShape {
             anchors.fill: parent
             shapeString: hover.hovered && root.actionsEnabled ? Mood.altShapeName(root.fam, root.night) : Mood.shapeName(root.fam, root.night)
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
 
         Column {
@@ -57,12 +58,12 @@ ExpressiveCardWidget {
                 text: WeatherIcons.getMaterialSymbol(root.current?.wCode ?? 113)
                 iconSize: 26
                 fill: 1
-                color: WidgetColorScheme.onAccentColor
+                color: root.cardScheme.onAccentColor
             }
             StyledText {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: Mood.number(root.current?.temp) + "°"
-                color: WidgetColorScheme.onAccentColor
+                color: root.cardScheme.onAccentColor
                 font.family: Appearance.font.family.expressive
                 font.pixelSize: 54
                 font.weight: Font.Bold
@@ -81,7 +82,7 @@ ExpressiveCardWidget {
         Rectangle {
             anchors.fill: parent
             radius: width / 2
-            color: WidgetColorScheme.innerShapeColor
+            color: root.cardScheme.innerShapeColor
         }
         MaterialSymbol {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -90,7 +91,7 @@ ExpressiveCardWidget {
             iconSize: 28
             fill: 1
             rotation: root.windTo
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             Behavior on rotation {
                 animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
             }
@@ -100,7 +101,7 @@ ExpressiveCardWidget {
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 11
             text: Mood.number(root.current?.wind)
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: 17
             font.variableAxes: ({ "wght": 700, "wdth": 60, "ROND": 100 })
@@ -118,7 +119,7 @@ ExpressiveCardWidget {
         MaterialShape {
             anchors.fill: parent
             shapeString: "Clover4Leaf"
-            color: WidgetColorScheme.pillFillColor
+            color: root.cardScheme.pillFillColor
         }
         Column {
             anchors.centerIn: parent
@@ -129,12 +130,12 @@ ExpressiveCardWidget {
                 text: "humidity_percentage"
                 iconSize: 18
                 fill: 1
-                color: WidgetColorScheme.textColorOnPillFill
+                color: root.cardScheme.textColorOnPillFill
             }
             StyledText {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: String(root.current?.humidity ?? "--")
-                color: WidgetColorScheme.textColorOnPillFill
+                color: root.cardScheme.textColorOnPillFill
                 font.family: Appearance.font.family.main
                 font.pixelSize: 22
                 font.variableAxes: ({ "wght": 800, "wdth": 125, "ROND": 100 })
@@ -153,7 +154,7 @@ ExpressiveCardWidget {
         MaterialShape {
             anchors.fill: parent
             shapeString: "Sunny"
-            color: WidgetColorScheme.highlightCircleColor
+            color: root.cardScheme.highlightCircleColor
         }
         Column {
             anchors.centerIn: parent
@@ -162,7 +163,7 @@ ExpressiveCardWidget {
             StyledText {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "UV"
-                color: WidgetColorScheme.highlightTextColor
+                color: root.cardScheme.highlightTextColor
                 font.family: Appearance.font.family.main
                 font.pixelSize: 9
                 font.letterSpacing: 1
@@ -171,7 +172,7 @@ ExpressiveCardWidget {
             StyledText {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: String(Math.round(Number(root.current?.uv ?? 0)))
-                color: WidgetColorScheme.highlightTextColor
+                color: root.cardScheme.highlightTextColor
                 font.family: Appearance.font.family.main
                 font.pixelSize: 20
                 font.variableAxes: ({ "wght": 600, "wdth": 100, "slnt": -10, "ROND": 100 })

@@ -110,7 +110,7 @@ AbstractBackgroundWidget {
                 opacity: root.isConnected ? 1.0 : 0.35
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 300 }
+                    NumberAnimation { duration: Appearance.dur(300) }
                 }
 
                 // Dynamic image source without hardcoded absolute string

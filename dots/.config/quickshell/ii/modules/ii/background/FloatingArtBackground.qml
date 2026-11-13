@@ -31,10 +31,10 @@ Item {
     Behavior on parallaxX {
         // The sidebar share is already animated on the parallax clock; smoothing it again lags.
         enabled: !GlobalStates.sidebarParallaxAnimating
-        NumberAnimation { duration: 600; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Appearance.dur(600); easing.type: Easing.OutCubic }
     }
     Behavior on parallaxY {
-        NumberAnimation { duration: 600; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Appearance.dur(600); easing.type: Easing.OutCubic }
     }
 
     TransitionImage {
@@ -87,7 +87,7 @@ Item {
         required property var speed
 
         loops: Animation.Infinite
-        running: root.animationEnabled
+        running: (root.animationEnabled) && !Appearance.motionOff
 
         onSpeedChanged: {
             running = false

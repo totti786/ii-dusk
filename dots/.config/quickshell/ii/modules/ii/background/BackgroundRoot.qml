@@ -12,6 +12,7 @@ import qs.modules.common.widgets.widgetCanvas
 import qs.modules.common.functions as CF
 
 import qs.modules.ii.background.widgets
+import qs.modules.ii.background.celestial
 import qs.modules.ii.background.wallpaper
 import qs.modules.ii.background.lockscreen
 import qs.modules.ii.background.parallax
@@ -72,6 +73,16 @@ PanelWindow {
     // for: a file rewritten in place keeps its path, so `wallpaperSizeFresh`
     // alone cannot tell the old answer from the new one.
     property int probedRevision: 0
+
+    // Celestial is an optional live scene. It is created only for a desktop
+    // that is actually visible; lock, fullscreen, edit, and Media Mode return
+    // to the existing wallpaper path and destroy its timers/textures.
+    readonly property bool celestialWallpaperEnabled: Config.options?.background?.celestial?.enable ?? false
+    // Keep the still image visible while the scene is incubating or if one of
+    // its local QML/shader assets fails to load.  `Loader.active` is true for
+    // both Loading and Error states, so using it here would create a blank
+    // desktop during a hot reload or a partial asset deployment.
+    readonly property bool celestialWallpaperActive: celestialLoader.status === Loader.Ready
 
     // State controllers
     WallpaperSizeProbe {
@@ -388,7 +399,9 @@ PanelWindow {
     // effects keep working on it, and mpvpaper is not running.
     readonly property bool videoInShell: wallpaperIsVideo && Wallpapers.videoRenderedByShell
         && !(!Appearance.m3colors.darkmode && useSeparateLightModeWallpaper && lightModeWallpaperPath !== "")
-    readonly property bool videoEffectsDisabled: (wallpaperIsVideo && !videoInShell) || Config.options.background.useWallpaperEngine
+    readonly property bool videoEffectsDisabled: (wallpaperIsVideo && !videoInShell)
+        || Config.options.background.useWallpaperEngine
+        || bgRoot.celestialWallpaperActive
     property string wallpaperPath: {
         if (bgRoot.ownWallpaperPath !== "")
             return bgRoot.ownWallpaperPath;
@@ -437,7 +450,7 @@ PanelWindow {
     // Colors
     property bool shouldBlur: (GlobalStates.lockLookActive && Config.options.lock.blur.enable)
     property color dominantColor: Appearance.colors.colPrimary // Default, to be changed
-    property bool dominantColorIsDark: dominantColor.hslLightness < 0.5
+    property bool dominantColorIsDark: dominantColor.hslLightness < (Config.options.background.darkTextAbove ?? 0.72)
     property color colText: {
         if (wallpaperSafetyTriggered)
             return CF.ColorUtils.mix(Appearance.colors.colOnLayer0, Appearance.colors.colPrimary, 0.75);
@@ -642,10 +655,12 @@ PanelWindow {
 
     function restoreWallpaperColors() {
         if (Config.options.appearance.palette.type.startsWith("scheme")
+                && LyricsService.shellNeedsRestore
                 && !GlobalStates.mediaModeActive
                 && bgRoot.isMonitorFocused) {
             // Restore only after every BackgroundRoot has released its media
             // mode registration.
+            LyricsService.shellNeedsRestore = false;
             Quickshell.execDetached([
                 Directories.wallpaperSwitchScriptPath,
                 "--noswitch",
@@ -705,23 +720,13 @@ PanelWindow {
     }
 
     onMediaModeOpenChanged: {
-        if (mediaModeOpen) {
-            if (bgRoot.hasWindowsInActiveWorkspace)
-                mediaModeEnterFade.restart();
-            else
-                bgRoot.mediaModeContentFade = 1;
-        } else {
-            mediaModeEnterFade.stop();
-            bgRoot.mediaModeContentFade = 1;
-        }
+        // The overlay is its own window now and covers the desktop, which stays as it is under it,
+        // so there is no wallpaper dissolve to run.
+        mediaModeEnterFade.stop();
+        bgRoot.mediaModeContentFade = 1;
         if (!mediaModeOpen) {
-            // Force widgets window to re-stack after our layer transition from
-            // WlrLayer.Overlay → WlrLayer.Bottom. Without this, the compositor
-            // re-stacks us at the top of the Bottom layer, covering the widgets
-            // PanelWindow with the wallpaper image.
-            Qt.callLater(function() {
-                GlobalStates.widgetReStackTrigger++;
-            });
+            // No widgets re-stack here any more: media mode lives in its own window, so this one
+            // never leaves WlrLayer.Background and the widgets window has nothing to be re-mapped for.
         }
     }
 
@@ -755,8 +760,37 @@ PanelWindow {
         opacity: bgRoot.mediaModeContentFade
         visible: GlobalStates.screenLocked || !bgRoot.deferredFullscreen || !(Config && Config.options && Config.options.background && Config.options.background.hideWhenFullscreen)
 
+        // Keep the full celestial scene out of the ordinary wallpaper path.
+        // Loader destruction is intentional: it releases the five shader
+        // textures and stops the astronomy/prayer timers while the desktop is
+        // covered by a lock, fullscreen window, edit card, or Media Mode.
+        Loader {
+            id: celestialLoader
+            anchors.fill: parent
+            z: -1
+            active: bgRoot.celestialWallpaperEnabled
+                && !GlobalStates.screenLocked
+                && !bgRoot.deferredFullscreen
+                && !bgRoot.isFullscreen
+                && !bgRoot.mediaModeOpen
+                && !FullGameMode.running
+                && !FullGameMode.switching
+                && bgRoot.editProgress <= 0.001
+            onStatusChanged: {
+                if (status === Loader.Error)
+                    console.warn("moonphase: celestial wallpaper failed to load; keeping the configured wallpaper");
+            }
+            sourceComponent: Component {
+                CelestialWallpaper {
+                    anchors.fill: parent
+                    screen: bgRoot.screen
+                }
+            }
+        }
+
         WallpaperImage {
             id: wallpaperImage
+            visible: !bgRoot.celestialWallpaperActive
             overviewController: overviewController
             screen: bgRoot.screen
             wallpaperPath: bgRoot.wallpaperPath
@@ -799,6 +833,7 @@ PanelWindow {
             // exactly like the widget canvas does. Reading the global boolean
             // here would centre every monitor.
             editProgress: bgRoot.editProgress
+            celestialWallpaperActive: bgRoot.celestialWallpaperActive
         }
 
         // The desktop menu when there is no widget surface to ask for it: with no widget shown

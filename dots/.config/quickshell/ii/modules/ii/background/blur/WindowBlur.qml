@@ -80,7 +80,7 @@ Item {
         target: windowBlurRoot
         property: "opacity"
         to: 1
-        duration: 400
+        duration: Appearance.dur(400)
         easing.type: Easing.OutCubic
     }
     function syncFade() {

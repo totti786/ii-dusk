@@ -16,8 +16,18 @@ ExpressiveCardWidget {
     id: root
 
     configEntryName: "timer_stopwatch"
-    designWidth: 240
-    designHeight: 240
+
+    // 1x1 is the dial and the time; 2x1 adds the laps, newest first, with each split
+    supportedSizes: ["1x1", "2x1"]
+    defaultSize: "1x1"
+    faceWidth: 240
+
+    function clock10(t) {
+        const total = Math.floor(t / 100);
+        const m = Math.floor(total / 60);
+        const s = total % 60;
+        return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0") + "." + String(Math.floor(t % 100)).padStart(2, "0");
+    }
 
     readonly property real padding: 16
     readonly property real dialSize: 84
@@ -58,7 +68,7 @@ ExpressiveCardWidget {
         x: root.padding + 2
         y: root.padding
         text: Translation.tr("Stopwatch").toUpperCase()
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.monospace
         font.pixelSize: Appearance.font.pixelSize.smaller
         font.letterSpacing: 1.5
@@ -72,13 +82,13 @@ ExpressiveCardWidget {
         width: lapText.implicitWidth + 18
         height: 24
         radius: root.pill(height)
-        color: WidgetColorScheme.pillBgColor
+        color: root.cardScheme.pillBgColor
 
         StyledText {
             id: lapText
             anchors.centerIn: parent
             text: Translation.tr("Lap %1").arg(root.laps.length)
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.monospace
             font.pixelSize: Appearance.font.pixelSize.smaller
         }
@@ -93,7 +103,7 @@ ExpressiveCardWidget {
         Text {
             id: digits
             text: root.mainText
-            color: root.started ? WidgetColorScheme.textColorOnBg : WidgetColorScheme.subtextColorOnBg
+            color: root.started ? root.cardScheme.textColorOnBg : root.cardScheme.subtextColorOnBg
             font.family: Appearance.font.family.main
             // Hours push the line wider: give them room by shrinking, not clipping.
             font.pixelSize: root.totalSeconds >= 3600 ? Math.round(root.digitSize * 0.72) : root.digitSize
@@ -104,7 +114,7 @@ ExpressiveCardWidget {
         StyledText {
             anchors.baseline: digits.baseline
             text: root.hundredths
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
             font.family: Appearance.font.family.monospace
             font.pixelSize: Appearance.font.pixelSize.huge
         }
@@ -122,8 +132,8 @@ ExpressiveCardWidget {
         MaterialShape {
             anchors.fill: parent
             shape: dialHover.hovered && root.actionsEnabled ? MaterialShape.Shape.Cookie12Sided : MaterialShape.Shape.Cookie9Sided
-            color: root.running ? WidgetColorScheme.accentColor
-                : root.started ? WidgetColorScheme.pillFillColor : WidgetColorScheme.pillBgColor
+            color: root.running ? root.cardScheme.accentColor
+                : root.started ? root.cardScheme.pillFillColor : root.cardScheme.pillBgColor
             // One turn a minute with the elapsed time.
             rotation: (root.shownTime % 6000) / 6000 * 360
 
@@ -137,8 +147,8 @@ ExpressiveCardWidget {
             text: root.running ? "pause" : "play_arrow"
             iconSize: 36
             fill: 1
-            color: root.running ? WidgetColorScheme.onAccentColor
-                : root.started ? WidgetColorScheme.textColorOnPillFill : WidgetColorScheme.textColorOnBg
+            color: root.running ? root.cardScheme.onAccentColor
+                : root.started ? root.cardScheme.textColorOnPillFill : root.cardScheme.textColorOnBg
         }
 
         HoverHandler {
@@ -168,8 +178,8 @@ ExpressiveCardWidget {
             symbol: "flag"
             symbolSize: 18
             label: Translation.tr("Lap")
-            colFill: WidgetColorScheme.pillBgColor
-            colContent: WidgetColorScheme.textColorOnBg
+            colFill: root.cardScheme.pillBgColor
+            colContent: root.cardScheme.textColorOnBg
             onClicked: TimerService.stopwatchRecordLap()
         }
 
@@ -180,9 +190,80 @@ ExpressiveCardWidget {
             symbol: "restart_alt"
             symbolSize: 18
             label: Translation.tr("Reset")
-            colFill: WidgetColorScheme.pillBgColor
-            colContent: WidgetColorScheme.textColorOnBg
+            colFill: root.cardScheme.pillBgColor
+            colContent: root.cardScheme.textColorOnBg
             onClicked: TimerService.stopwatchReset()
+        }
+    }
+
+    // ── 2x1: the laps, newest first, each with its split and the running total ──
+    Item {
+        parent: root.extraItem
+        anchors.fill: parent
+        visible: root.hasExtras
+
+        StyledText {
+            x: 6
+            y: root.padding
+            text: Translation.tr("Laps").toUpperCase()
+            color: root.cardScheme.subtextColorOnBg
+            font.pixelSize: Appearance.font.pixelSize.smaller
+            font.variableAxes: ({ "wght": 650, "wdth": 100 })
+            font.letterSpacing: 1
+        }
+
+        StyledText {
+            visible: root.laps.length === 0
+            x: 6
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width - 26
+            wrapMode: Text.Wrap
+            text: root.started ? Translation.tr("Tap lap to mark a split") : Translation.tr("Start the stopwatch, then tap lap to mark splits")
+            color: root.cardScheme.subtextColorOnBg
+            font.pixelSize: Appearance.font.pixelSize.small
+        }
+
+        Column {
+            x: 6
+            y: root.padding + 26
+            width: parent.width - 26
+            spacing: 6
+            visible: root.laps.length > 0
+
+            Repeater {
+                // Newest first, five at most; each lap's number is its place in the whole run
+                model: {
+                    const all = Array.from(root.laps);
+                    return all.map((t, i) => ({ "n": i + 1, "total": t, "split": t - (i > 0 ? all[i - 1] : 0) })).slice(-5).reverse();
+                }
+                delegate: Row {
+                    id: lapLine
+                    required property var modelData
+                    width: parent.width
+                    spacing: 8
+                    StyledText {
+                        width: 24
+                        text: String(lapLine.modelData.n)
+                        color: root.cardScheme.subtextColorOnBg
+                        font.pixelSize: Appearance.font.pixelSize.small
+                    }
+                    Text {
+                        width: parent.width - 32 - totalText.implicitWidth
+                        text: root.clock10(lapLine.modelData.split)
+                        color: root.cardScheme.textColorOnBg
+                        font.family: Appearance.font.family.numbers
+                        font.pixelSize: Appearance.font.pixelSize.normal
+                        font.variableAxes: ({ "wght": 600 })
+                    }
+                    Text {
+                        id: totalText
+                        text: root.clock10(lapLine.modelData.total)
+                        color: root.cardScheme.subtextColorOnBg
+                        font.family: Appearance.font.family.numbers
+                        font.pixelSize: Appearance.font.pixelSize.small
+                    }
+                }
+            }
         }
     }
 }

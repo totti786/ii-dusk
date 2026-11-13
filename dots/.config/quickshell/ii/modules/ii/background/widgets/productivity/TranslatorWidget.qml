@@ -114,7 +114,7 @@ ExpressiveCardWidget {
             MaterialShape {
                 anchors.fill: parent
                 shape: swapHover.hovered && swapButton.canSwap ? MaterialShape.Shape.Cookie12Sided : MaterialShape.Shape.Cookie9Sided
-                color: WidgetColorScheme.accentColor
+                color: root.cardScheme.accentColor
                 rotation: TranslatorService.swapTurns * 180
 
                 Behavior on rotation {
@@ -127,7 +127,7 @@ ExpressiveCardWidget {
                 anchors.centerIn: parent
                 text: "swap_horiz"
                 iconSize: 20
-                color: WidgetColorScheme.onAccentColor
+                color: root.cardScheme.onAccentColor
                 opacity: swapButton.canSwap ? 1 : 0.45
             }
 
@@ -158,13 +158,14 @@ ExpressiveCardWidget {
         width: bar.width
         height: root.sourceHeight
         radius: Appearance.rounding.normal
-        color: entry.holding ? ColorUtils.mix(WidgetColorScheme.accentColor, WidgetColorScheme.pillBgColor, 0.1) : WidgetColorScheme.pillBgColor
+        color: entry.holding ? ColorUtils.mix(root.cardScheme.accentColor, root.cardScheme.pillBgColor, 0.1) : root.cardScheme.pillBgColor
 
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
 
         Flickable {
+            WheelScroll {}
             id: sourceFlick
             x: 14
             y: 12
@@ -181,9 +182,9 @@ ExpressiveCardWidget {
                 width: sourceFlick.width
                 enabled: root.actionsEnabled
                 wrapMode: TextEdit.Wrap
-                color: WidgetColorScheme.textColorOnBg
-                selectionColor: WidgetColorScheme.accentColor
-                selectedTextColor: WidgetColorScheme.onAccentColor
+                color: root.cardScheme.textColorOnBg
+                selectionColor: root.cardScheme.accentColor
+                selectedTextColor: root.cardScheme.onAccentColor
                 font.family: Appearance.font.family.main
                 font.pixelSize: field.text.length > 60 ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.larger
                 font.variableAxes: ({ "wght": 500, "wdth": 100, "ROND": 100 })
@@ -200,7 +201,7 @@ ExpressiveCardWidget {
                     width: parent.width
                     wrapMode: Text.Wrap
                     text: entry.holding ? Translation.tr("Type to translate") : Translation.tr("Click to type, or paste")
-                    color: WidgetColorScheme.subtextColorOnBg
+                    color: root.cardScheme.subtextColorOnBg
                     font.family: Appearance.font.family.main
                     font.pixelSize: Appearance.font.pixelSize.larger
                     font.variableAxes: ({ "wght": 500, "wdth": 100, "ROND": 100 })
@@ -230,8 +231,8 @@ ExpressiveCardWidget {
                 symbolSize: 16
                 label: Translation.tr("Paste")
                 labelSize: Appearance.font.pixelSize.smaller
-                colFill: WidgetColorScheme.cardBgColor
-                colContent: WidgetColorScheme.textColorOnBg
+                colFill: root.cardScheme.cardBgColor
+                colContent: root.cardScheme.textColorOnBg
                 onClicked: field.text = String(Quickshell.clipboardText ?? "").trim()
             }
         }
@@ -246,8 +247,8 @@ ExpressiveCardWidget {
             visible: field.text.length > 0
             symbol: "close"
             symbolSize: 16
-            colFill: WidgetColorScheme.cardBgColor
-            colContent: WidgetColorScheme.textColorOnBg
+            colFill: root.cardScheme.cardBgColor
+            colContent: root.cardScheme.textColorOnBg
             onClicked: {
                 field.text = "";
                 entry.end();
@@ -270,9 +271,9 @@ ExpressiveCardWidget {
         anchors.bottomMargin: root.padding
         width: bar.width
         radius: Appearance.rounding.large
-        color: session.error && session.hasInput ? WidgetColorScheme.warningColor : WidgetColorScheme.pillFillColor
+        color: session.error && session.hasInput ? root.cardScheme.warningColor : root.cardScheme.pillFillColor
 
-        readonly property color contentColor: session.error && session.hasInput ? root.contentOn(WidgetColorScheme.warningColor) : WidgetColorScheme.textColorOnPillFill
+        readonly property color contentColor: session.error && session.hasInput ? root.contentOn(root.cardScheme.warningColor) : root.cardScheme.textColorOnPillFill
 
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -371,7 +372,7 @@ ExpressiveCardWidget {
         bottomLeftRadius: tile.innerSide === "left" ? tile.inner : tile.outer
         topRightRadius: tile.innerSide === "right" ? tile.inner : tile.outer
         bottomRightRadius: tile.innerSide === "right" ? tile.inner : tile.outer
-        color: tileHover.hovered && root.actionsEnabled ? ColorUtils.mix(WidgetColorScheme.textColorOnBg, WidgetColorScheme.pillBgColor, 0.08) : WidgetColorScheme.pillBgColor
+        color: tileHover.hovered && root.actionsEnabled ? ColorUtils.mix(root.cardScheme.textColorOnBg, root.cardScheme.pillBgColor, 0.08) : root.cardScheme.pillBgColor
 
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -387,7 +388,7 @@ ExpressiveCardWidget {
                 width: parent.width
                 text: tile.caption
                 elide: Text.ElideRight
-                color: WidgetColorScheme.subtextColorOnBg
+                color: root.cardScheme.subtextColorOnBg
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.variableAxes: ({ "wght": 650, "wdth": 100, "ROND": 100 })
             }
@@ -398,7 +399,7 @@ ExpressiveCardWidget {
                 // Long endonyms narrow before they elide.
                 fontSizeMode: Text.HorizontalFit
                 minimumPixelSize: 12
-                color: WidgetColorScheme.textColorOnBg
+                color: root.cardScheme.textColorOnBg
                 font.pixelSize: Appearance.font.pixelSize.normal
                 font.variableAxes: ({ "wght": 640, "wdth": 88, "ROND": 100 })
             }

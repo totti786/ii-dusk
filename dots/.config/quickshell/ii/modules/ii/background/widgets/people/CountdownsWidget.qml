@@ -63,7 +63,7 @@ ExpressiveCardWidget {
             fontSizeMode: Text.HorizontalFit
             minimumPixelSize: 40
             text: root.hero ? (root.hero.days === 0 ? Translation.tr("Today") : String(root.hero.days)) : ""
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: 96
             font.variableAxes: ({ "wght": 900, "wdth": 151, "ROND": 100 })
@@ -76,13 +76,13 @@ ExpressiveCardWidget {
             width: 96
             height: 96
             shapeString: "Cookie7Sided"
-            color: WidgetColorScheme.pillBgColor
+            color: root.cardScheme.pillBgColor
 
             MaterialSymbol {
                 anchors.centerIn: parent
                 text: "event_upcoming"
                 iconSize: 40
-                color: WidgetColorScheme.subtextColorOnBg
+                color: root.cardScheme.subtextColorOnBg
             }
         }
 
@@ -93,7 +93,7 @@ ExpressiveCardWidget {
             elide: Text.ElideRight
             text: root.hero ? (root.hero.days === 1 ? Translation.tr("day until %1") : Translation.tr("days until %1")).arg(root.hero.title)
                             : Translation.tr("Add dates in Settings")
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
             font.family: Appearance.font.family.main
             font.pixelSize: 17
             font.variableAxes: ({ "wght": 550, "wdth": 100, "slnt": -10, "ROND": 100 })
@@ -114,7 +114,7 @@ ExpressiveCardWidget {
                     width: 12
                     height: 12
                     radius: 6
-                    color: index === 0 ? WidgetColorScheme.accentColor : WidgetColorScheme.pillBgColor
+                    color: index === 0 ? root.cardScheme.accentColor : root.cardScheme.pillBgColor
                 }
             }
         }
@@ -138,14 +138,14 @@ ExpressiveCardWidget {
                 width: parent.width
                 height: 60
                 radius: Appearance.rounding.normal
-                color: WidgetColorScheme.pillBgColor
+                color: root.cardScheme.pillBgColor
 
                 StyledText {
                     id: rowDays
                     x: 12
                     anchors.verticalCenter: parent.verticalCenter
                     text: String(row.modelData.days)
-                    color: WidgetColorScheme.textColorOnBg
+                    color: root.cardScheme.textColorOnBg
                     font.family: Appearance.font.family.main
                     font.pixelSize: 30
                     font.variableAxes: ({ "wght": 760, "wdth": 50, "ROND": 100 })
@@ -162,14 +162,14 @@ ExpressiveCardWidget {
                         width: parent.width
                         elide: Text.ElideRight
                         text: row.modelData.title
-                        color: WidgetColorScheme.textColorOnBg
+                        color: root.cardScheme.textColorOnBg
                         font.family: Appearance.font.family.main
                         font.pixelSize: 13
                         font.variableAxes: ({ "wght": 650, "wdth": 100, "ROND": 100 })
                     }
                     StyledText {
                         text: Qt.locale().toString(row.modelData.date, "d MMM yyyy")
-                        color: WidgetColorScheme.subtextColorOnBg
+                        color: root.cardScheme.subtextColorOnBg
                         font.family: Appearance.font.family.main
                         font.pixelSize: 11
                     }

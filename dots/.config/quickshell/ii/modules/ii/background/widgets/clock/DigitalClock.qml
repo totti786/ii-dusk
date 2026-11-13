@@ -14,7 +14,13 @@ ColumnLayout {
     readonly property bool showSeconds: Config.options.bar.clock.showSeconds
     readonly property real lineSpacing: Config.options.background.widgets.clock_digital.lineSpacing
 
-    property bool isVertical: Config.options.background.widgets.clock_digital.vertical
+    // Set by the widget from its size class: how large the digits are against the configured
+    // size, whether they stack (1) or sit on one line (0) in place of the configured layout
+    // (-1), and whether the date shows whatever the setting says
+    property real sizeScale: 1
+    property int verticalMode: -1
+    property bool forceDate: false
+    property bool isVertical: clockColumn.verticalMode < 0 ? Config.options.background.widgets.clock_digital.vertical : clockColumn.verticalMode === 1
     property color colText: WidgetColorScheme.textColorOnBg
     property color colTextSecondary: WidgetColorScheme.subtextColorOnBg
     property color colTextTertiary: WidgetColorScheme.accentColor
@@ -30,7 +36,7 @@ ColumnLayout {
             color: clockColumn.colText
             horizontalAlignment: Text.AlignHCenter
             font {
-                pixelSize: Config.options.background.widgets.clock_digital.font.size
+                pixelSize: Config.options.background.widgets.clock_digital.font.size * clockColumn.sizeScale
                 weight: Config.options.background.widgets.clock_digital.font.weight
                 family: Appearance.font.family.numbers
                 variableAxes: ({
@@ -105,7 +111,7 @@ ColumnLayout {
     Loader {
         // -40 is the built-in tightening of the stacked lines; lineSpacing is
         // the user's vertical gap delta on top of it (negative overlaps).
-        Layout.topMargin: -40 + clockColumn.lineSpacing
+        Layout.topMargin: (-40 + clockColumn.lineSpacing) * clockColumn.sizeScale
         Layout.fillWidth: true
         active: clockColumn.isVertical
         visible: active
@@ -125,8 +131,8 @@ ColumnLayout {
 
     // Date
     ClockText {
-        visible: Config.options.background.widgets.clock_digital.showDate
-        Layout.topMargin: -20
+        visible: Config.options.background.widgets.clock_digital.showDate || clockColumn.forceDate
+        Layout.topMargin: -20 * clockColumn.sizeScale
         Layout.fillWidth: true
         text: DateTime.longDate
         color: colorful ? clockColumn.colTextSecondary : clockColumn.colText

@@ -742,7 +742,7 @@ Item {
         opacity: !past ? 1 : (sameStanza ? (root.overview ? 1 : 0.6) : 0.14)
         Behavior on opacity {
             NumberAnimation {
-                duration: 600
+                duration: Appearance.dur(600)
                 easing.type: Easing.OutCubic
             }
         }
@@ -876,7 +876,7 @@ Item {
                     y: -(baselineOffset + word.piece.capTop) * word.piece.fit
                     Behavior on ink {
                         ColorAnimation {
-                            duration: 300
+                            duration: Appearance.dur(300)
                         }
                     }
                 }

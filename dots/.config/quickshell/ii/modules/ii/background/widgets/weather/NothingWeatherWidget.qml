@@ -8,6 +8,7 @@ import qs.services
 
 AbstractBackgroundWidget {
     id: root
+    opensWeatherApp: true
 
     readonly property color circleBgColor: WidgetColorScheme.cardBgColor
     readonly property color dotIconColor: WidgetColorScheme.textColorOnBg

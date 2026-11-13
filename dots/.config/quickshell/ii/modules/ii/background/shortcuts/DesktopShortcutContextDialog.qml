@@ -944,7 +944,7 @@ esac`
             color: Appearance.m3colors.m3onSurface
             scale: toolMouse.pressed ? 0.85 : 1
             Behavior on scale {
-                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.4 }
+                NumberAnimation { duration: Appearance.dur(160); easing.type: Easing.OutBack; easing.overshoot: 2.4 }
             }
         }
         MouseArea {

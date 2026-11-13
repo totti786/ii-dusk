@@ -19,8 +19,11 @@ ExpressiveCardWidget {
     id: root
 
     configEntryName: "timer_countdown"
-    designWidth: 240
-    designHeight: 240
+
+    // 1x1 is the hourglass; 2x1 adds the other timers waiting behind it
+    supportedSizes: ["1x1", "2x1"]
+    defaultSize: "1x1"
+    faceWidth: 240
 
     readonly property real padding: 16
     readonly property real digitSize: 84
@@ -58,8 +61,8 @@ ExpressiveCardWidget {
         return Math.max(0, Math.min(1, root.secondsLeft / Math.max(1, Number(root.current.durationSeconds ?? 1))));
     }
 
-    readonly property color fillColor: root.finished ? WidgetColorScheme.warningColor : WidgetColorScheme.accentColor
-    readonly property color onFillColor: root.finished ? root.contentOn(WidgetColorScheme.warningColor) : WidgetColorScheme.onAccentColor
+    readonly property color fillColor: root.finished ? root.cardScheme.warningColor : root.cardScheme.accentColor
+    readonly property color onFillColor: root.finished ? root.contentOn(root.cardScheme.warningColor) : root.cardScheme.onAccentColor
 
     // ── Hourglass fill ──
     Rectangle {
@@ -125,8 +128,8 @@ ExpressiveCardWidget {
         anchors.fill: parent
 
         Readout {
-            colMain: WidgetColorScheme.textColorOnBg
-            colSub: WidgetColorScheme.subtextColorOnBg
+            colMain: root.cardScheme.textColorOnBg
+            colSub: root.cardScheme.subtextColorOnBg
         }
 
         Item {
@@ -153,13 +156,13 @@ ExpressiveCardWidget {
         width: othersText.implicitWidth + 16
         height: 24
         radius: root.pill(height)
-        color: WidgetColorScheme.pillBgColor
+        color: root.cardScheme.pillBgColor
 
         StyledText {
             id: othersText
             anchors.centerIn: parent
             text: "+" + root.others
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.monospace
             font.pixelSize: Appearance.font.pixelSize.smaller
         }
@@ -225,7 +228,7 @@ ExpressiveCardWidget {
             x: root.padding + 2
             y: root.padding
             text: Translation.tr("Timer").toUpperCase()
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.family: Appearance.font.family.monospace
             font.pixelSize: Appearance.font.pixelSize.smaller
             font.letterSpacing: 1.5
@@ -236,7 +239,7 @@ ExpressiveCardWidget {
             y: 40
             width: parent.width - root.padding * 2
             text: Translation.tr("Start a timer")
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.title
             font.pixelSize: Appearance.font.pixelSize.huge + 4
             font.variableAxes: Appearance.font.variableAxes.titleRounded
@@ -259,8 +262,8 @@ ExpressiveCardWidget {
                     width: (root.designWidth - root.padding * 2 - 8) / 2
                     height: 62
                     restRadius: Appearance.rounding.normal
-                    colFill: preset.index === 0 ? WidgetColorScheme.pillFillColor : WidgetColorScheme.pillBgColor
-                    colContent: preset.index === 0 ? WidgetColorScheme.textColorOnPillFill : WidgetColorScheme.textColorOnBg
+                    colFill: preset.index === 0 ? root.cardScheme.pillFillColor : root.cardScheme.pillBgColor
+                    colContent: preset.index === 0 ? root.cardScheme.textColorOnPillFill : root.cardScheme.textColorOnBg
                     onClicked: TimerService.addCountdownSeconds(Number(preset.modelData))
 
                     contentItem: Item {
@@ -273,6 +276,81 @@ ExpressiveCardWidget {
                             font.variableAxes: ({ "wght": 700, "wdth": 60, "ROND": 100, "opsz": 72 })
                             renderType: Text.QtRendering
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── 2x1: the other timers, soonest first ──
+    Item {
+        parent: root.extraItem
+        anchors.fill: parent
+        visible: root.hasExtras
+
+        readonly property var queue: {
+            TimerService.countdownTick;
+            return root.countdowns.filter(c => c !== root.current && !c.notified)
+                .map(c => ({ "id": c.id, "label": c.label || TimerService.defaultCountdownLabel(Number(c.durationSeconds ?? 0)), "left": TimerService.countdownSecondsLeft(c), "paused": c.paused === true }))
+                .sort((a, b) => a.left - b.left).slice(0, 4);
+        }
+
+        StyledText {
+            x: 6
+            y: root.padding
+            text: Translation.tr("Up next").toUpperCase()
+            color: root.cardScheme.subtextColorOnBg
+            font.pixelSize: Appearance.font.pixelSize.smaller
+            font.variableAxes: ({ "wght": 650, "wdth": 100 })
+            font.letterSpacing: 1
+        }
+
+        StyledText {
+            visible: parent.queue.length === 0
+            x: 6
+            anchors.verticalCenter: parent.verticalCenter
+            width: parent.width - 26
+            wrapMode: Text.Wrap
+            text: Translation.tr("No other timers running")
+            color: root.cardScheme.subtextColorOnBg
+            font.pixelSize: Appearance.font.pixelSize.small
+        }
+
+        Column {
+            x: 6
+            y: root.padding + 26
+            width: parent.width - 26
+            spacing: 8
+
+            Repeater {
+                model: parent.parent.queue
+                delegate: Row {
+                    id: queued
+                    required property var modelData
+                    width: parent.width
+                    spacing: 8
+                    MaterialSymbol {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: queued.modelData.paused ? "pause_circle" : "timer"
+                        iconSize: 18
+                        color: root.cardScheme.subtextColorOnBg
+                    }
+                    StyledText {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 30 - queuedLeft.implicitWidth - 8
+                        text: queued.modelData.label
+                        color: root.cardScheme.textColorOnBg
+                        font.pixelSize: Appearance.font.pixelSize.normal
+                        elide: Text.ElideRight
+                    }
+                    Text {
+                        id: queuedLeft
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: TimerService.formatCountdownDuration(queued.modelData.left)
+                        color: root.cardScheme.textColorOnBg
+                        font.family: Appearance.font.family.numbers
+                        font.pixelSize: Appearance.font.pixelSize.normal
+                        font.variableAxes: ({ "wght": 650 })
                     }
                 }
             }

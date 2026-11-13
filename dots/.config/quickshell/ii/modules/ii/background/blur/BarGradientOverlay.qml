@@ -27,7 +27,7 @@ Item {
         visible: opacity > 0.001
         opacity: barOverlayRoot.shouldShow ? 1.0 : 0.0
         Behavior on opacity {
-            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic }
         }
 
         readonly property bool isVertical: BarPlacement.vertical
@@ -140,7 +140,7 @@ Item {
         visible: opacity > 0.001
         opacity: barOverlayRoot.shouldShow ? 1.0 : 0.0
         Behavior on opacity {
-            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutCubic }
         }
 
         readonly property bool isVertical: BarPlacement.vertical

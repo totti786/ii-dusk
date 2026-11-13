@@ -1,5 +1,6 @@
 import QtQuick
 import qs.modules.common.widgets
+import qs.modules.common
 
 // A layer effect for the overview's wallpaper and widget planes. Only the
 // small silhouette is rasterized; its scale/rotation are sampled in the final
@@ -32,7 +33,7 @@ ShaderEffect {
         color: "white"
         // The next shape is chosen with the overview fully closed. A morph
         // here would add 350ms of JS/Canvas repaint underneath the zoom.
-        animation: NumberAnimation { duration: 0 }
+        animation: NumberAnimation { duration: Appearance.dur(0) }
         onPainted: shapeTexture.scheduleUpdate()
     }
 

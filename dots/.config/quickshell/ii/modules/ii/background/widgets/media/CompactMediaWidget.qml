@@ -159,7 +159,7 @@ AbstractBackgroundWidget {
             }
 
             Behavior on color {
-                ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                ColorAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic }
             }
 
             MaterialSymbol {
@@ -201,7 +201,7 @@ AbstractBackgroundWidget {
             }
 
             Behavior on color {
-                ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                ColorAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic }
             }
 
             MaterialSymbol {

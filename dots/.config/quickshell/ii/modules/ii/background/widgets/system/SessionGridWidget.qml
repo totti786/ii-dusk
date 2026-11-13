@@ -91,9 +91,9 @@ ExpressiveCardWidget {
                 required property int index
                 readonly property bool isArmed: root.armed === tile.modelData.id
                 readonly property bool dimmed: root.armed !== "" && !tile.isArmed
-                readonly property color armedColor: tile.modelData.destructive ? WidgetColorScheme.warningColor : WidgetColorScheme.accentColor
-                readonly property color armedContent: tile.modelData.destructive ? root.contentOn(WidgetColorScheme.warningColor) : WidgetColorScheme.onAccentColor
-                readonly property color contentColor: tile.isArmed ? tile.armedContent : WidgetColorScheme.textColorOnBg
+                readonly property color armedColor: tile.modelData.destructive ? root.cardScheme.warningColor : root.cardScheme.accentColor
+                readonly property color armedContent: tile.modelData.destructive ? root.contentOn(root.cardScheme.warningColor) : root.cardScheme.onAccentColor
+                readonly property color contentColor: tile.isArmed ? tile.armedContent : root.cardScheme.textColorOnBg
                 // The corners facing the grid's centre stay small: four tiles, one shape.
                 readonly property real outer: Appearance.rounding.large
                 readonly property real inner: Appearance.rounding.verysmall
@@ -105,7 +105,7 @@ ExpressiveCardWidget {
                 bottomLeftRadius: tile.isArmed || tile.index === 2 ? tile.outer : tile.inner
                 bottomRightRadius: tile.isArmed || tile.index === 3 ? tile.outer : tile.inner
                 color: tile.isArmed ? tile.armedColor
-                    : (tileHover.hovered && root.actionsEnabled ? ColorUtils.mix(WidgetColorScheme.textColorOnBg, WidgetColorScheme.pillBgColor, 0.08) : WidgetColorScheme.pillBgColor)
+                    : (tileHover.hovered && root.actionsEnabled ? ColorUtils.mix(root.cardScheme.textColorOnBg, root.cardScheme.pillBgColor, 0.08) : root.cardScheme.pillBgColor)
                 opacity: tile.dimmed ? 0.55 : 1
                 scale: tileTap.pressed ? 0.95 : 1
 
@@ -131,7 +131,7 @@ ExpressiveCardWidget {
                     implicitSize: 44
                     shape: tile.isArmed ? MaterialShape.Shape.SoftBurst
                         : (tileHover.hovered && root.actionsEnabled ? MaterialShape.Shape.Cookie12Sided : tile.modelData.shape)
-                    color: tile.isArmed ? tile.armedContent : WidgetColorScheme.pillFillColor
+                    color: tile.isArmed ? tile.armedContent : root.cardScheme.pillFillColor
 
                     Behavior on color {
                         animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -142,7 +142,7 @@ ExpressiveCardWidget {
                         text: tile.modelData.symbol
                         iconSize: 22
                         fill: 1
-                        color: tile.isArmed ? tile.armedColor : WidgetColorScheme.textColorOnPillFill
+                        color: tile.isArmed ? tile.armedColor : root.cardScheme.textColorOnPillFill
                     }
                 }
 

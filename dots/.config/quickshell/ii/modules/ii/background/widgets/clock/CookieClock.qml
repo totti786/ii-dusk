@@ -98,7 +98,7 @@ Item {
         anchors.fill: parent
 
         RotationAnimation on rotation {
-            running: Config.options.background.widgets.clock_cookie.constantlyRotate && root.live
+            running: (Config.options.background.widgets.clock_cookie.constantlyRotate && root.live) && !Appearance.motionOff
             duration: 30000
             easing.type: Easing.Linear
             loops: Animation.Infinite

@@ -453,6 +453,7 @@ Item {
             }
 
             ListView {
+                WheelScroll {}
                 id: queueList
                 anchors.fill: parent
                 clip: true

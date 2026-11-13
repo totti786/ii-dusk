@@ -453,7 +453,20 @@ PanelWindow {
         return Wallpapers.isVideoFile(path);
     }
     // Matches BackgroundRoot: a video the shell plays itself keeps the effects.
-    readonly property bool videoEffectsDisabled: (wallpaperIsVideo && !Wallpapers.videoRenderedByShell) || Config.options.background.useWallpaperEngine
+    // Match BackgroundRoot's celestial Loader gates too.  This separate window
+    // owns widget parallax/blur decisions, so it must stop sampling the still
+    // wallpaper while the generated scene is the visible desktop plane.
+    readonly property bool celestialWallpaperActive: (Config.options?.background?.celestial?.enable ?? false)
+        && !GlobalStates.screenLocked
+        && !bgWidgetsWindow.deferredFullscreen
+        && !bgWidgetsWindow.isFullscreen
+        && LyricsService.mediaModeOpenCount <= 0
+        && !FullGameMode.running
+        && !FullGameMode.switching
+        && bgWidgetsWindow.editProgress <= 0.001
+    readonly property bool videoEffectsDisabled: bgWidgetsWindow.celestialWallpaperActive
+        || (wallpaperIsVideo && !Wallpapers.videoRenderedByShell)
+        || Config.options.background.useWallpaperEngine
     property string wallpaperPath: {
         if (bgWidgetsWindow.ownWallpaperPath !== "")
             return bgWidgetsWindow.ownWallpaperPath;
@@ -646,7 +659,7 @@ PanelWindow {
         target: bgWidgetsWindow
         property: "windowBlurProgress"
         to: 1
-        duration: 400
+        duration: Appearance.dur(400)
         easing.type: Easing.OutCubic
     }
     function syncWindowBlur() {
@@ -671,6 +684,9 @@ PanelWindow {
 
     Item {
         id: transformContainer
+        // Desktop-icon menus spill past the Edit Mode shrink: every level from
+        // here down to them carries one (see PointerBoundsEscape).
+        PointerBoundsEscape {}
         anchors.fill: parent
 
         // Match the wallpaper's stable layer lifetime: opening only changes
@@ -684,7 +700,7 @@ PanelWindow {
         // as Edit Mode does) and steps them out only while a workspace slide hands the
         // plane to the strip's cards, which carry the wallpaper and windows alone:
         // per-workspace widgets would otherwise swap in place under the slide.
-        opacity: GlobalStates.isMediaModeActiveForScreen(bgWidgetsWindow.screen ? bgWidgetsWindow.screen.name : "")
+        opacity: GlobalStates.isMediaModeRevealingDesktop(bgWidgetsWindow.screen ? bgWidgetsWindow.screen.name : "")
                 || (bgWidgetsWindow.overviewController && bgWidgetsWindow.overviewController.isRealGnome && bgWidgetsWindow.overviewController.active
                     && Boolean(GlobalStates.realGnomePlaneHiddenScreens[bgWidgetsWindow.screen ? bgWidgetsWindow.screen.name : ""]))
             ? 0.0
@@ -874,6 +890,7 @@ PanelWindow {
 
         WidgetCanvas {
             id: widgetCanvas
+            PointerBoundsEscape {}
             parent: desktopStack
             // A screen that shows no widgets only maps this surface for the
             // wallpaper framing below; the canvas stays off it.
@@ -1043,6 +1060,7 @@ PanelWindow {
 
             Loader {
                 id: desktopIcons
+                PointerBoundsEscape {}
                 anchors.fill: parent
                 // The widget Repeater is declared after this Loader, so at equal z
                 // a placed widget buries the context menu and the editor. Raise the
@@ -1052,7 +1070,7 @@ PanelWindow {
                 z: desktopIcons.item?.dialogOpen ? 1000 : 0
                 active: PanelFamily.isIi && !GlobalStates.screenLocked
                     && DesktopShortcuts.itemsFor(bgWidgetsWindow.editScreenName).length > 0
-                visible: !GlobalStates.isMediaModeActiveForScreen(bgWidgetsWindow.editScreenName)
+                visible: !GlobalStates.isMediaModeRevealingDesktop(bgWidgetsWindow.editScreenName)
                 sourceComponent: DesktopShortcutsLayer {
                     screenName: bgWidgetsWindow.editScreenName
                     // The window's NET content scale (overview + edit

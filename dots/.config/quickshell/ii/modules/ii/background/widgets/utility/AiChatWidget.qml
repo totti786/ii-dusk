@@ -13,8 +13,21 @@ AbstractBackgroundWidget {
 
     configEntryName: "ai_chat"
 
-    implicitWidth: 240
-    implicitHeight: 240
+    // 1x1 is the greeting and the button; 1x0.5 is the icon and the button on one line; 2x1 puts
+    // the icon and greeting beside the button
+    supportedSizes: ["1x0.5", "1x1", "2x1"]
+    defaultSize: "1x1"
+    readonly property bool strip: root.sizeClass === "1x0.5"
+    readonly property bool wide: root.sizeClass === "2x1"
+    implicitWidth: root.sizeClassDims.width
+    implicitHeight: root.sizeClassDims.height
+
+    function openComposer() {
+        Ai.surfaceRouter.open({
+            surface: "sidebar",
+            focusIntent: "composer"
+        });
+    }
 
     // Color tokens from WidgetColorScheme
     readonly property color cardBgColor: WidgetColorScheme.cardBgColor
@@ -60,7 +73,78 @@ AbstractBackgroundWidget {
                 }
             }
 
+            // The two shapes that are not the square: the icon and the button side by side, with
+            // the greeting between them once there is room
+            RowLayout {
+                visible: root.strip || root.wide
+                anchors.fill: parent
+                anchors.margins: 16
+                spacing: 16
+
+                MaterialSymbol {
+                    Layout.alignment: Qt.AlignVCenter
+                    visible: Config.options.bar.useMaterialSymbolForTopLeftIcon
+                    text: Config.options.bar.topLeftIcon ?? "spark"
+                    iconSize: root.wide ? 64 : 40
+                    fill: 1
+                    color: root.accentColor
+                }
+                CustomIcon {
+                    Layout.alignment: Qt.AlignVCenter
+                    visible: !Config.options.bar.useMaterialSymbolForTopLeftIcon
+                    Layout.preferredWidth: root.wide ? 64 : 40
+                    Layout.preferredHeight: root.wide ? 64 : 40
+                    source: Config.options.bar.topLeftIcon == 'distro' ? SystemInfo.distroIcon : `${Config.options.bar.topLeftIcon}-symbolic`
+                    colorize: true
+                    color: root.accentColor
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: 10
+
+                    Item { Layout.fillHeight: true; visible: root.wide }
+                    StyledText {
+                        visible: root.wide
+                        Layout.fillWidth: true
+                        text: Translation.tr("How can I help you with today?")
+                        font.pixelSize: Appearance.font.pixelSize.larger
+                        font.weight: Font.DemiBold
+                        color: root.textColorOnBg
+                        wrapMode: Text.Wrap
+                    }
+                    RippleButton {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: root.strip
+                        Layout.preferredHeight: 44
+                        buttonRadius: Appearance.rounding.normal
+                        colBackground: root.innerShapeColor
+                        colBackgroundHover: Qt.darker(root.innerShapeColor, 1.1)
+                        colRipple: Qt.darker(root.innerShapeColor, 1.2)
+
+                        RowLayout {
+                            anchors.centerIn: parent
+                            spacing: 8
+                            MaterialSymbol {
+                                text: "edit"
+                                iconSize: 18
+                                color: root.subtextColorOnBg
+                            }
+                            StyledText {
+                                text: Translation.tr("Ask something")
+                                font.pixelSize: Appearance.font.pixelSize.normal
+                                color: root.subtextColorOnBg
+                            }
+                        }
+                        onClicked: root.openComposer()
+                    }
+                    Item { Layout.fillHeight: true; visible: root.wide }
+                }
+            }
+
             ColumnLayout {
+                visible: !root.strip && !root.wide
                 anchors.fill: parent
                 anchors.margins: 16
                 spacing: 0

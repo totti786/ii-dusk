@@ -43,7 +43,12 @@ Item {
     // a video the shell plays itself arrives here instead, with the poster
     // frame as `wallpaperPath`, and keeps every image effect.
     property string shellVideoPath: ""
-    readonly property bool videoEffectsDisabled: wallpaperIsVideo || Config.options.background.useWallpaperEngine
+    // The celestial live scene replaces this image while it is active. Depth
+    // cutouts and copy layers must know that the file plane is not on screen.
+    property bool celestialWallpaperActive: false
+    readonly property bool videoEffectsDisabled: wallpaperIsVideo
+        || Config.options.background.useWallpaperEngine
+        || wallpaperImageRoot.celestialWallpaperActive
 
     // ── This screen's framing (services/WallpaperLayout.qml) ─────────────────
     // The picture is drawn into `framedContent`, an Item laid out inside the
@@ -251,7 +256,7 @@ Item {
     }
     Timer {
         id: decodeSizeDebounce
-        interval: 140
+        interval: 40
         repeat: false
         onTriggered: wallpaperImageRoot._commitDecodeSize()
     }
@@ -491,7 +496,7 @@ Item {
     // The overview controller owns the only background scale animation. Keeping
     // this item at unit scale prevents a legacy scale from multiplying it.
     scale: isGnomeLikeOverview && !isScrollingLayout ? defaultRatio : 1.0
-    opacity: mediaModeOpen ? 0 : 1
+    opacity: mediaModeOpen && MusicVideoService.videoReady ? 0 : 1
 
     Behavior on opacity {
         animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(wallpaperImageRoot)
@@ -772,7 +777,7 @@ Item {
                     // Alpha data for the optional shadow mask.
                     color: "white"
                     // A newly selected mask must be static while its transform moves.
-                    animation: NumberAnimation { duration: 0 }
+                    animation: NumberAnimation { duration: Appearance.dur(0) }
 
                     transform: [
                         Scale {
@@ -911,14 +916,14 @@ Item {
             Behavior on width {
                 enabled: !wallpaperImageRoot.lockAnimationActive
                 NumberAnimation {
-                    duration: 600
+                    duration: Appearance.dur(600)
                     easing.type: Easing.OutCubic
                 }
             }
             Behavior on height {
                 enabled: !wallpaperImageRoot.lockAnimationActive
                 NumberAnimation {
-                    duration: 600
+                    duration: Appearance.dur(600)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -1234,7 +1239,7 @@ Item {
 
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: 350
+                            duration: Appearance.dur(350)
                             easing.type: Easing.OutCubic
                         }
                     }

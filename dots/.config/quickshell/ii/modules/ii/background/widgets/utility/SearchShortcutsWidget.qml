@@ -54,8 +54,8 @@ ExpressiveCardWidget {
         height: root.barHeight
         radius: root.pill(height)
         color: barHover.hovered && root.actionsEnabled
-            ? ColorUtils.mix(WidgetColorScheme.textColorOnBg, WidgetColorScheme.pillBgColor, root.pressed ? 0.12 : 0.06)
-            : WidgetColorScheme.pillBgColor
+            ? ColorUtils.mix(root.cardScheme.textColorOnBg, root.cardScheme.pillBgColor, root.pressed ? 0.12 : 0.06)
+            : root.cardScheme.pillBgColor
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
@@ -72,7 +72,7 @@ ExpressiveCardWidget {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "search"
                 iconSize: 26
-                color: WidgetColorScheme.textColorOnBg
+                color: root.cardScheme.textColorOnBg
             }
 
             StyledText {
@@ -83,7 +83,7 @@ ExpressiveCardWidget {
                 anchors.verticalCenter: parent.verticalCenter
                 elide: Text.ElideRight
                 text: root.options?.hint || Translation.tr("Search apps, files and the web")
-                color: WidgetColorScheme.subtextColorOnBg
+                color: root.cardScheme.subtextColorOnBg
                 font.family: Appearance.font.family.main
                 font.pixelSize: Appearance.font.pixelSize.large
                 font.variableAxes: ({ "wght": 500, "wdth": 100, "ROND": 100 })
@@ -101,8 +101,8 @@ ExpressiveCardWidget {
                 label: actions.details(root.barKey).displayName
                 labelSize: Appearance.font.pixelSize.small
                 labelAxes: ({ "wght": 650, "wdth": 95, "ROND": 100 })
-                colFill: WidgetColorScheme.accentColor
-                colContent: WidgetColorScheme.onAccentColor
+                colFill: root.cardScheme.accentColor
+                colContent: root.cardScheme.onAccentColor
                 restRadius: barKey.hovered ? Appearance.rounding.normal : root.pill(height)
                 onClicked: if (root.actionsEnabled) actions.run(root.barKey)
 
@@ -146,8 +146,8 @@ ExpressiveCardWidget {
                 label: actions.details(chip.modelData).displayName
                 labelSize: Appearance.font.pixelSize.smaller
                 labelAxes: ({ "wght": 620, "wdth": 92, "ROND": 100 })
-                colFill: chip.index % 2 === 0 ? WidgetColorScheme.pillBgColor : ColorUtils.mix(WidgetColorScheme.accentColor, WidgetColorScheme.pillBgColor, 0.14)
-                colContent: WidgetColorScheme.textColorOnBg
+                colFill: chip.index % 2 === 0 ? root.cardScheme.pillBgColor : ColorUtils.mix(root.cardScheme.accentColor, root.cardScheme.pillBgColor, 0.14)
+                colContent: root.cardScheme.textColorOnBg
                 topLeftRadius: chip.first ? chip.outerRadius : chip.joinRadius
                 bottomLeftRadius: chip.first ? chip.outerRadius : chip.joinRadius
                 topRightRadius: chip.last ? chip.outerRadius : chip.joinRadius

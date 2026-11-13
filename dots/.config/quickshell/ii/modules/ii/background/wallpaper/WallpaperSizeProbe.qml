@@ -7,7 +7,7 @@ Process {
     
     signal sizeDetected(int width, int height)
     
-    command: ["magick", "identify", "-format", "%w %h", (path.endsWith(".mp4") || path.endsWith(".webm") || path.endsWith(".mkv") || path.endsWith(".avi") || path.endsWith(".mov")) ? path + "[0]" : path]
+    command: ["magick", "identify", "-ping", "-format", "%w %h", (path.endsWith(".mp4") || path.endsWith(".webm") || path.endsWith(".mkv") || path.endsWith(".avi") || path.endsWith(".mov")) ? path + "[0]" : path]
 
     stdout: StdioCollector {
         id: collector

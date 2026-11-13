@@ -19,6 +19,7 @@ import "WeatherMood.js" as Mood
  */
 ExpressiveCardWidget {
     id: root
+    onCardTapped: GlobalStates.openWeatherApp("daily")
 
     configEntryName: "weather_ranges"
     designWidth: 240
@@ -55,7 +56,7 @@ ExpressiveCardWidget {
         width: root.designWidth - root.padding * 2
         height: 196
         radius: Appearance.rounding.large
-        color: WidgetColorScheme.accentColor
+        color: root.cardScheme.accentColor
         clip: true
 
         // Cut by the block's straight right edge (clear of its rounded
@@ -66,7 +67,7 @@ ExpressiveCardWidget {
             width: 150
             height: 150
             shapeString: Mood.shapeName(root.fam, root.night)
-            color: ColorUtils.mix(WidgetColorScheme.onAccentColor, WidgetColorScheme.accentColor, 0.2)
+            color: ColorUtils.mix(root.cardScheme.onAccentColor, root.cardScheme.accentColor, 0.2)
         }
         MaterialSymbol {
             x: hero.width - 58
@@ -74,7 +75,7 @@ ExpressiveCardWidget {
             text: WeatherIcons.getMaterialSymbol(root.current?.wCode ?? 113)
             iconSize: 34
             fill: 1
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
 
         StyledText {
@@ -84,7 +85,7 @@ ExpressiveCardWidget {
             width: hero.width - 120
             elide: Text.ElideRight
             text: root.current?.city ?? ""
-            color: WidgetColorScheme.onAccentColor
+            color: root.cardScheme.onAccentColor
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.normal
             font.variableAxes: ({ "wght": 600, "wdth": 100, "ROND": 100 })
@@ -96,7 +97,7 @@ ExpressiveCardWidget {
             anchors.bottom: heroSky.top
             anchors.bottomMargin: -10
             text: Mood.number(root.current?.temp) + "°"
-            color: WidgetColorScheme.onAccentColor
+            color: root.cardScheme.onAccentColor
             font.family: Appearance.font.family.main
             font.pixelSize: 88
             font.variableAxes: ({ "wght": 560, "wdth": 100, "ROND": 100 })
@@ -110,7 +111,7 @@ ExpressiveCardWidget {
             width: hero.width - 32
             elide: Text.ElideRight
             text: root.current?.wDesc ?? ""
-            color: WidgetColorScheme.onAccentColor
+            color: root.cardScheme.onAccentColor
             opacity: 0.85
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.normal
@@ -146,7 +147,7 @@ ExpressiveCardWidget {
                     width: 46
                     elide: Text.ElideRight
                     text: root.dayName(row.modelData, row.index).toUpperCase()
-                    color: row.index === 0 ? WidgetColorScheme.accentColor : WidgetColorScheme.textColorOnBg
+                    color: row.index === 0 ? root.cardScheme.accentColor : root.cardScheme.textColorOnBg
                     font.family: Appearance.font.family.expressive
                     font.pixelSize: 13
                     font.weight: Font.Bold
@@ -160,7 +161,7 @@ ExpressiveCardWidget {
                     text: WeatherIcons.getMaterialSymbol(row.modelData.code)
                     iconSize: 18
                     fill: 1
-                    color: WidgetColorScheme.subtextColorOnBg
+                    color: root.cardScheme.subtextColorOnBg
                 }
 
                 StyledText {
@@ -171,7 +172,7 @@ ExpressiveCardWidget {
                     width: 24
                     horizontalAlignment: Text.AlignRight
                     text: row.modelData.min + "°"
-                    color: WidgetColorScheme.subtextColorOnBg
+                    color: root.cardScheme.subtextColorOnBg
                     font.family: Appearance.font.family.main
                     font.pixelSize: 14
                     font.variableAxes: ({ "wght": 500, "wdth": 75, "ROND": 100 })
@@ -184,7 +185,7 @@ ExpressiveCardWidget {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 24
                     text: row.modelData.max + "°"
-                    color: WidgetColorScheme.textColorOnBg
+                    color: root.cardScheme.textColorOnBg
                     font.family: Appearance.font.family.main
                     font.pixelSize: 14
                     font.variableAxes: ({ "wght": 760, "wdth": 75, "ROND": 100 })
@@ -199,14 +200,14 @@ ExpressiveCardWidget {
                     anchors.verticalCenter: parent.verticalCenter
                     height: 10
                     radius: root.pill(height)
-                    color: WidgetColorScheme.pillBgColor
+                    color: root.cardScheme.pillBgColor
 
                     Rectangle {
                         x: track.width * root.fraction(row.modelData.min)
                         width: Math.max(track.height, track.width * (root.fraction(row.modelData.max) - root.fraction(row.modelData.min)))
                         height: track.height
                         radius: track.radius
-                        color: row.index === 0 ? WidgetColorScheme.accentColor : WidgetColorScheme.pillFillColor
+                        color: row.index === 0 ? root.cardScheme.accentColor : root.cardScheme.pillFillColor
                     }
 
                     // Now, on today's span: a tick standing through the bar.
@@ -217,7 +218,7 @@ ExpressiveCardWidget {
                         width: 4
                         height: 20
                         radius: 2
-                        color: WidgetColorScheme.textColorOnBg
+                        color: root.cardScheme.textColorOnBg
                     }
                 }
             }

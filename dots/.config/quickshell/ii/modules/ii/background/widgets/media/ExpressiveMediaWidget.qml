@@ -123,7 +123,7 @@ AbstractBackgroundWidget {
         id: resetRotationAnim
         target: albumArtItem
         property: "_rotationAngle"
-        duration: 600
+        duration: Appearance.dur(600)
         easing.type: Easing.OutCubic
         onStopped: albumArtItem._rotationAngle = 0
     }
@@ -418,7 +418,7 @@ AbstractBackgroundWidget {
 
                                 Behavior on buttonRadius {
                                     NumberAnimation {
-                                        duration: 250
+                                        duration: Appearance.dur(250)
                                         easing.type: Easing.OutQuint
                                     }
                                 }

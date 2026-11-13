@@ -128,8 +128,8 @@ ExpressiveCardWidget {
                 label: segment.chosen ? Translation.tr(segment.modelData.title) : ""
                 labelSize: Appearance.font.pixelSize.smaller
                 labelAxes: ({ "wght": 650, "wdth": 90, "ROND": 100 })
-                colFill: segment.chosen ? WidgetColorScheme.accentColor : WidgetColorScheme.pillBgColor
-                colContent: segment.chosen ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnBg
+                colFill: segment.chosen ? root.cardScheme.accentColor : root.cardScheme.pillBgColor
+                colContent: segment.chosen ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnBg
                 topLeftRadius: segment.first ? segment.outerRadius : segment.joinRadius
                 bottomLeftRadius: segment.first ? segment.outerRadius : segment.joinRadius
                 topRightRadius: segment.last ? segment.outerRadius : segment.joinRadius
@@ -150,9 +150,9 @@ ExpressiveCardWidget {
 
         property string side: "from"
         property string unitId: ""
-        property color colContent: WidgetColorScheme.textColorOnBg
-        property color colChip: WidgetColorScheme.cardBgColor
-        property color colChipContent: WidgetColorScheme.textColorOnBg
+        property color colContent: root.cardScheme.textColorOnBg
+        property color colChip: root.cardScheme.cardBgColor
+        property color colChipContent: root.cardScheme.textColorOnBg
         readonly property bool picking: root.picking === pane.side
         // The value goes in the pane's own children, anchored to this box,
         // which keeps clear of the swap notch on the inner side.
@@ -255,7 +255,7 @@ ExpressiveCardWidget {
         x: root.padding
         side: "from"
         unitId: root.fromId
-        color: entry.holding ? ColorUtils.mix(WidgetColorScheme.accentColor, WidgetColorScheme.pillBgColor, 0.18) : WidgetColorScheme.pillBgColor
+        color: entry.holding ? ColorUtils.mix(root.cardScheme.accentColor, root.cardScheme.pillBgColor, 0.18) : root.cardScheme.pillBgColor
 
         TextInput {
             id: field
@@ -267,9 +267,9 @@ ExpressiveCardWidget {
             visible: fromPane.valueArea.visible
             readonly property real fitSize: Math.max(24, Math.min(64, width / (Math.max(3, field.text.length) * 0.55)))
             text: Units.format(root.input)
-            color: WidgetColorScheme.textColorOnBg
-            selectionColor: WidgetColorScheme.accentColor
-            selectedTextColor: WidgetColorScheme.onAccentColor
+            color: root.cardScheme.textColorOnBg
+            selectionColor: root.cardScheme.accentColor
+            selectedTextColor: root.cardScheme.onAccentColor
             font.family: Appearance.font.family.main
             font.pixelSize: field.fitSize
             font.variableAxes: ({ "wght": 500, "wdth": 75, "ROND": 100 })
@@ -301,7 +301,7 @@ ExpressiveCardWidget {
             y: 21
             visible: !fromPane.picking
             text: entry.holding ? Translation.tr("Type a value") : Translation.tr("Click to type")
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.pixelSize: Appearance.font.pixelSize.smaller
             font.variableAxes: ({ "wght": 500, "wdth": 100, "ROND": 100 })
         }
@@ -326,10 +326,10 @@ ExpressiveCardWidget {
         x: root.designWidth - root.padding - width
         side: "to"
         unitId: root.toId
-        color: WidgetColorScheme.accentColor
-        colContent: WidgetColorScheme.onAccentColor
-        colChip: ColorUtils.mix(WidgetColorScheme.onAccentColor, WidgetColorScheme.accentColor, 0.16)
-        colChipContent: WidgetColorScheme.onAccentColor
+        color: root.cardScheme.accentColor
+        colContent: root.cardScheme.onAccentColor
+        colChip: ColorUtils.mix(root.cardScheme.onAccentColor, root.cardScheme.accentColor, 0.16)
+        colChipContent: root.cardScheme.onAccentColor
 
         StyledText {
             anchors.left: toPane.valueArea.left
@@ -344,7 +344,7 @@ ExpressiveCardWidget {
             fontSizeMode: Text.HorizontalFit
             minimumPixelSize: 20
             text: Units.format(root.output)
-            color: WidgetColorScheme.onAccentColor
+            color: root.cardScheme.onAccentColor
             font.family: Appearance.font.family.main
             font.pixelSize: 64
             font.variableAxes: ({ "wght": 750, "wdth": 75, "ROND": 100 })
@@ -362,12 +362,12 @@ ExpressiveCardWidget {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.copied ? "check" : "content_copy"
                 iconSize: 14
-                color: WidgetColorScheme.onAccentColor
+                color: root.cardScheme.onAccentColor
             }
             StyledText {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.copied ? Translation.tr("Copied") : Translation.tr("Copy")
-                color: WidgetColorScheme.onAccentColor
+                color: root.cardScheme.onAccentColor
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.variableAxes: ({ "wght": 600, "wdth": 100, "ROND": 100 })
             }
@@ -409,14 +409,14 @@ ExpressiveCardWidget {
             width: root.swapSize
             height: root.swapSize
             shape: swapHover.hovered ? MaterialShape.Shape.Cookie7Sided : MaterialShape.Shape.Circle
-            color: WidgetColorScheme.pillFillColor
+            color: root.cardScheme.pillFillColor
         }
         MaterialSymbol {
             anchors.centerIn: parent
             text: "swap_horiz"
             iconSize: 24
             fill: 1
-            color: WidgetColorScheme.textColorOnPillFill
+            color: root.cardScheme.textColorOnPillFill
         }
     }
 }

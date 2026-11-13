@@ -63,7 +63,7 @@ AbstractBackgroundWidget {
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: 200
+                        duration: Appearance.dur(200)
                     }
 
                 }
@@ -87,7 +87,7 @@ AbstractBackgroundWidget {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: 200
+                    duration: Appearance.dur(200)
                 }
 
             }
@@ -96,7 +96,7 @@ AbstractBackgroundWidget {
 
         Behavior on color {
             ColorAnimation {
-                duration: 200
+                duration: Appearance.dur(200)
                 easing.type: Easing.InOutQuad
             }
 

@@ -18,6 +18,7 @@ import "WeatherMood.js" as Mood
  */
 ExpressiveCardWidget {
     id: root
+    onCardTapped: GlobalStates.openWeatherApp("")
 
     configEntryName: "weather_monolith"
 
@@ -34,7 +35,7 @@ ExpressiveCardWidget {
         width: root.designWidth - root.padding * 2 - conditionShape.width - 8
         elide: Text.ElideRight
         text: String(root.current?.city ?? "").toUpperCase()
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 12
         font.letterSpacing: 1.6
@@ -50,7 +51,7 @@ ExpressiveCardWidget {
         maximumLineCount: 2
         elide: Text.ElideRight
         text: root.current?.wDesc ?? ""
-        color: WidgetColorScheme.textColorOnBg
+        color: root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 20
         lineHeight: 0.9
@@ -67,14 +68,14 @@ ExpressiveCardWidget {
         MaterialShape {
             anchors.fill: parent
             shapeString: Mood.shapeName(root.fam, root.night)
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
         MaterialSymbol {
             anchors.centerIn: parent
             text: WeatherIcons.getMaterialSymbol(root.current?.wCode ?? 113)
             iconSize: 26
             fill: 1
-            color: WidgetColorScheme.onAccentColor
+            color: root.cardScheme.onAccentColor
         }
     }
 
@@ -88,7 +89,7 @@ ExpressiveCardWidget {
         fontSizeMode: Text.HorizontalFit
         minimumPixelSize: 60
         text: Mood.number(root.current?.temp)
-        color: WidgetColorScheme.textColorOnBg
+        color: root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 158
         // ROND 0 breaks the heavy, narrow "9" (its tail renders torn).
@@ -101,7 +102,7 @@ ExpressiveCardWidget {
         anchors.baseline: digits.baseline
         anchors.baselineOffset: -Math.round((digits.fontInfo.pixelSize - font.pixelSize) * 0.72)
         text: "°"
-        color: WidgetColorScheme.accentColor
+        color: root.cardScheme.accentColor
         font.family: Appearance.font.family.main
         font.pixelSize: 64
         font.variableAxes: ({ "wght": 260, "wdth": 100, "ROND": 100 })
@@ -132,12 +133,12 @@ ExpressiveCardWidget {
                     anchors.verticalCenter: parent.verticalCenter
                     text: extreme.modelData.symbol
                     iconSize: 14
-                    color: extreme.modelData.high ? WidgetColorScheme.accentColor : WidgetColorScheme.subtextColorOnBg
+                    color: extreme.modelData.high ? root.cardScheme.accentColor : root.cardScheme.subtextColorOnBg
                 }
                 StyledText {
                     anchors.verticalCenter: parent.verticalCenter
                     text: (extreme.modelData.value ?? "--") + "°"
-                    color: extreme.modelData.high ? WidgetColorScheme.textColorOnBg : WidgetColorScheme.subtextColorOnBg
+                    color: extreme.modelData.high ? root.cardScheme.textColorOnBg : root.cardScheme.subtextColorOnBg
                     font.family: Appearance.font.family.main
                     font.pixelSize: 19
                     font.variableAxes: ({ "wght": 640, "wdth": 70, "ROND": 100 })

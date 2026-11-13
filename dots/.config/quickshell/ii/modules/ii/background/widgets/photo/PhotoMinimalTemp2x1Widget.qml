@@ -12,6 +12,7 @@ import qs.modules.ii.background.widgets
 
 AbstractBackgroundWidget {
     id: root
+    opensWeatherApp: true
 
     configEntryName: "photo_minimal_temp_2x1"
 

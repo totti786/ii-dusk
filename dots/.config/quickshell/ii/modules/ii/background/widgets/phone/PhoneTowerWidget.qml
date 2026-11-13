@@ -56,7 +56,7 @@ ExpressiveCardWidget {
         width: 64
         height: 64
 
-        readonly property color fillColor: phone.charge <= 15 && !phone.charging ? WidgetColorScheme.warningColor : WidgetColorScheme.accentColor
+        readonly property color fillColor: phone.charge <= 15 && !phone.charging ? root.cardScheme.warningColor : root.cardScheme.accentColor
 
         MaterialShape {
             anchors.fill: parent
@@ -71,7 +71,7 @@ ExpressiveCardWidget {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: String(phone.charge)
-                color: WidgetColorScheme.onAccentColor
+                color: root.cardScheme.onAccentColor
                 font.family: Appearance.font.family.main
                 font.pixelSize: 26
                 font.variableAxes: ({ "wght": 780, "wdth": 50, "ROND": 100, "opsz": 36 })
@@ -82,7 +82,7 @@ ExpressiveCardWidget {
                 text: phone.charging ? "bolt" : "percent"
                 iconSize: 13
                 fill: 1
-                color: WidgetColorScheme.onAccentColor
+                color: root.cardScheme.onAccentColor
             }
         }
     }
@@ -101,7 +101,7 @@ ExpressiveCardWidget {
             horizontalAlignment: Text.AlignHCenter
             text: phone.name
             elide: Text.ElideRight
-            color: phone.hasDevice ? WidgetColorScheme.textColorOnBg : WidgetColorScheme.subtextColorOnBg
+            color: phone.hasDevice ? root.cardScheme.textColorOnBg : root.cardScheme.subtextColorOnBg
             font.family: Appearance.font.family.title
             font.pixelSize: Appearance.font.pixelSize.huge + 2
             font.variableAxes: Appearance.font.variableAxes.titleRounded
@@ -112,7 +112,7 @@ ExpressiveCardWidget {
             horizontalAlignment: Text.AlignHCenter
             text: phone.status
             elide: Text.ElideRight
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.family: Appearance.font.family.monospace
             font.pixelSize: Appearance.font.pixelSize.smaller
         }
@@ -180,7 +180,7 @@ ExpressiveCardWidget {
         readonly property real outer: Appearance.rounding.large
         readonly property real join: Appearance.rounding.verysmall
         readonly property real full: root.pill(height)
-        readonly property color contentColor: row.active ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnBg
+        readonly property color contentColor: row.active ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnBg
 
         width: list.width
         height: root.rowHeight
@@ -188,8 +188,8 @@ ExpressiveCardWidget {
         topRightRadius: topLeftRadius
         bottomLeftRadius: row.isPill ? row.full : (row.index === 2 || row.facesPillBelow ? row.outer : row.join)
         bottomRightRadius: bottomLeftRadius
-        color: row.active ? WidgetColorScheme.accentColor
-            : (rowHover.hovered && row.available ? ColorUtils.mix(WidgetColorScheme.textColorOnBg, WidgetColorScheme.pillBgColor, 0.08) : WidgetColorScheme.pillBgColor)
+        color: row.active ? root.cardScheme.accentColor
+            : (rowHover.hovered && row.available ? ColorUtils.mix(root.cardScheme.textColorOnBg, root.cardScheme.pillBgColor, 0.08) : root.cardScheme.pillBgColor)
 
         Behavior on topLeftRadius { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
         Behavior on topRightRadius { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
@@ -205,7 +205,7 @@ ExpressiveCardWidget {
             anchors.verticalCenter: parent.verticalCenter
             implicitSize: 38
             shape: row.shape
-            color: row.active ? WidgetColorScheme.onAccentColor : WidgetColorScheme.pillFillColor
+            color: row.active ? root.cardScheme.onAccentColor : root.cardScheme.pillFillColor
             opacity: row.available ? 1 : 0.5
 
             MaterialSymbol {
@@ -213,7 +213,7 @@ ExpressiveCardWidget {
                 text: row.symbol
                 iconSize: 20
                 fill: 1
-                color: row.active ? WidgetColorScheme.accentColor : WidgetColorScheme.textColorOnPillFill
+                color: row.active ? root.cardScheme.accentColor : root.cardScheme.textColorOnPillFill
             }
         }
 

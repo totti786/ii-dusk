@@ -17,6 +17,7 @@ import "WeatherMood.js" as Mood
  */
 ExpressiveCardWidget {
     id: root
+    onCardTapped: GlobalStates.openWeatherApp("hourly")
 
     configEntryName: "weather_silhouette"
     designWidth: 240
@@ -62,12 +63,12 @@ ExpressiveCardWidget {
             text: WeatherIcons.getMaterialSymbol(root.current?.wCode ?? 113)
             iconSize: 26
             fill: 1
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
         StyledText {
             anchors.verticalCenter: parent.verticalCenter
             text: Mood.number(root.current?.temp) + "°"
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: 30
             font.variableAxes: ({ "wght": 380, "wdth": 100, "ROND": 100 })

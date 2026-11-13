@@ -107,7 +107,7 @@ ColumnLayout {
                 enabled: !DesktopShortcuts.hidden
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 150
+                        duration: Appearance.dur(150)
                         easing.type: Easing.OutQuad
                     }
                 }

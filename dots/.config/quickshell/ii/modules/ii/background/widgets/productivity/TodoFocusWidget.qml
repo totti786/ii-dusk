@@ -44,7 +44,7 @@ ExpressiveCardWidget {
         x: root.padding + 2
         y: root.padding
         text: Translation.tr("To do").toUpperCase()
-        color: WidgetColorScheme.subtextColorOnBg
+        color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.monospace
         font.pixelSize: Appearance.font.pixelSize.smaller
         font.letterSpacing: 1.5
@@ -58,13 +58,13 @@ ExpressiveCardWidget {
         width: positionText.implicitWidth + 18
         height: 24
         radius: root.pill(height)
-        color: WidgetColorScheme.pillBgColor
+        color: root.cardScheme.pillBgColor
 
         StyledText {
             id: positionText
             anchors.centerIn: parent
             text: (root.shownIndex + 1) + "/" + root.count
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.monospace
             font.pixelSize: Appearance.font.pixelSize.smaller
         }
@@ -92,7 +92,7 @@ ExpressiveCardWidget {
                 height: parent.height - (dueText.visible ? dueText.height + 4 : 0)
                 verticalAlignment: Text.AlignBottom
                 text: String(root.task?.content ?? "")
-                color: root.completing ? WidgetColorScheme.subtextColorOnBg : WidgetColorScheme.textColorOnBg
+                color: root.completing ? root.cardScheme.subtextColorOnBg : root.cardScheme.textColorOnBg
                 font.family: Appearance.font.family.main
                 font.pixelSize: root.maxTitleSize
                 minimumPixelSize: root.minTitleSize
@@ -113,7 +113,7 @@ ExpressiveCardWidget {
                 anchors.topMargin: 4
                 visible: tasks.dueLabel(root.task) !== ""
                 text: tasks.dueLabel(root.task).toUpperCase()
-                color: tasks.isOverdue(root.task) ? WidgetColorScheme.warningColor : WidgetColorScheme.subtextColorOnBg
+                color: tasks.isOverdue(root.task) ? root.cardScheme.warningColor : root.cardScheme.subtextColorOnBg
                 font.family: Appearance.font.family.monospace
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.letterSpacing: 1
@@ -138,20 +138,20 @@ ExpressiveCardWidget {
             anchors.horizontalCenter: parent.horizontalCenter
             implicitSize: 84
             shape: MaterialShape.Shape.Sunny
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
 
             MaterialSymbol {
                 anchors.centerIn: parent
                 text: "done_all"
                 iconSize: 38
-                color: WidgetColorScheme.onAccentColor
+                color: root.cardScheme.onAccentColor
             }
         }
 
         StyledText {
             anchors.horizontalCenter: parent.horizontalCenter
             text: Translation.tr("All clear")
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.title
             font.pixelSize: Appearance.font.pixelSize.huge
             font.variableAxes: Appearance.font.variableAxes.titleRounded
@@ -160,7 +160,7 @@ ExpressiveCardWidget {
         StyledText {
             anchors.horizontalCenter: parent.horizontalCenter
             text: tasks.doneToday > 0 ? Translation.tr("%1 done today").arg(tasks.doneToday) : Translation.tr("Nothing left to do")
-            color: WidgetColorScheme.subtextColorOnBg
+            color: root.cardScheme.subtextColorOnBg
             font.pixelSize: Appearance.font.pixelSize.small
         }
     }
@@ -178,8 +178,8 @@ ExpressiveCardWidget {
             height: root.keyHeight
             enabled: root.count > 1 && !root.completing
             symbol: "arrow_forward"
-            colFill: WidgetColorScheme.pillBgColor
-            colContent: WidgetColorScheme.textColorOnBg
+            colFill: root.cardScheme.pillBgColor
+            colContent: root.cardScheme.textColorOnBg
             onClicked: root.index = (root.shownIndex + 1) % Math.max(1, root.count)
         }
 
@@ -190,8 +190,8 @@ ExpressiveCardWidget {
             symbolSize: 24
             label: root.completing ? Translation.tr("Done") : Translation.tr("Complete")
             labelAxes: ({ "wght": 650, "wdth": 100, "ROND": 100 })
-            colFill: WidgetColorScheme.accentColor
-            colContent: WidgetColorScheme.onAccentColor
+            colFill: root.cardScheme.accentColor
+            colContent: root.cardScheme.onAccentColor
             // A pill at rest, a rounded square while the task goes.
             restRadius: root.completing ? Appearance.rounding.normal : root.pill(height)
             onClicked: {

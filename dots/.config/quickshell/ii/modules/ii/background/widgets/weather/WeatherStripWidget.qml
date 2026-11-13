@@ -18,6 +18,7 @@ import "WeatherMood.js" as Mood
  */
 ExpressiveCardWidget {
     id: root
+    onCardTapped: GlobalStates.openWeatherApp("daily")
 
     configEntryName: "weather_strip"
     designWidth: 492
@@ -52,12 +53,12 @@ ExpressiveCardWidget {
                 required property var modelData
                 required property int index
                 readonly property bool today: column.index === 0
-                readonly property color colContent: column.today ? WidgetColorScheme.onAccentColor : WidgetColorScheme.textColorOnBg
+                readonly property color colContent: column.today ? root.cardScheme.onAccentColor : root.cardScheme.textColorOnBg
                 readonly property real warmth: (column.modelData.max - root.low) / Math.max(1, root.high - root.low)
                 width: (root.designWidth - root.padding * 2 - root.gap * 4) / 5
                 height: root.designHeight - root.padding * 2
                 radius: Appearance.rounding.large
-                color: column.today ? WidgetColorScheme.accentColor : WidgetColorScheme.pillBgColor
+                color: column.today ? root.cardScheme.accentColor : root.cardScheme.pillBgColor
 
                 HoverHandler {
                     id: columnHover
@@ -77,14 +78,14 @@ ExpressiveCardWidget {
                     MaterialShape {
                         anchors.fill: parent
                         shapeString: columnHover.hovered && root.actionsEnabled ? Mood.altShapeName(column.modelData.fam, false) : Mood.shapeName(column.modelData.fam, false)
-                        color: column.today ? WidgetColorScheme.onAccentColor : tints.fill(column.modelData.fam)
+                        color: column.today ? root.cardScheme.onAccentColor : tints.fill(column.modelData.fam)
                     }
                     MaterialSymbol {
                         anchors.centerIn: parent
                         text: WeatherIcons.getMaterialSymbol(column.modelData.code)
                         iconSize: 22
                         fill: 1
-                        color: column.today ? WidgetColorScheme.accentColor : root.contentOn(tints.fill(column.modelData.fam))
+                        color: column.today ? root.cardScheme.accentColor : root.contentOn(tints.fill(column.modelData.fam))
                     }
                 }
 

@@ -18,6 +18,7 @@ import "WeatherMood.js" as Mood
  */
 ExpressiveCardWidget {
     id: root
+    onCardTapped: GlobalStates.openWeatherApp("")
 
     configEntryName: "weather_pattern"
 
@@ -121,7 +122,7 @@ ExpressiveCardWidget {
         anchors.baseline: parent.bottom
         anchors.baselineOffset: -root.padding
         text: Mood.number(root.current?.temp) + "°"
-        color: WidgetColorScheme.textColorOnBg
+        color: root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 40
         font.variableAxes: ({ "wght": 520, "wdth": 88, "ROND": 100 })

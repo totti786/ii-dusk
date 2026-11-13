@@ -78,14 +78,14 @@ ExpressiveCardWidget {
             width: 36
             height: 36
             shape: MaterialShape.Shape.Cookie7Sided
-            color: WidgetColorScheme.pillFillColor
+            color: root.cardScheme.pillFillColor
         }
         MaterialSymbol {
             anchors.centerIn: glyphShape
             text: "shelves"
             iconSize: 20
             fill: 1
-            color: WidgetColorScheme.textColorOnPillFill
+            color: root.cardScheme.textColorOnPillFill
         }
 
         StyledText {
@@ -94,7 +94,7 @@ ExpressiveCardWidget {
             anchors.leftMargin: 8
             anchors.verticalCenter: parent.verticalCenter
             text: Translation.tr("Shelf")
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.larger
             font.variableAxes: ({ "wght": 700, "wdth": 100, "ROND": 100 })
@@ -108,13 +108,13 @@ ExpressiveCardWidget {
             width: Math.max(height, countText.implicitWidth + 14)
             height: 22
             radius: root.pill(height)
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
 
             StyledText {
                 id: countText
                 anchors.centerIn: parent
                 text: String(root.count)
-                color: WidgetColorScheme.onAccentColor
+                color: root.cardScheme.onAccentColor
                 font.family: Appearance.font.family.main
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.variableAxes: ({ "wght": 750, "wdth": 100, "ROND": 100 })
@@ -129,8 +129,8 @@ ExpressiveCardWidget {
             height: 36
             symbol: "clear_all"
             symbolSize: 20
-            colFill: WidgetColorScheme.pillBgColor
-            colContent: WidgetColorScheme.textColorOnBg
+            colFill: root.cardScheme.pillBgColor
+            colContent: root.cardScheme.textColorOnBg
             onClicked: if (root.actionsEnabled) FileShelf.clear()
 
             StyledToolTip {
@@ -149,8 +149,8 @@ ExpressiveCardWidget {
             : root.tall && root.count > 0 ? 190 : root.designHeight - deckBlock.y - root.padding
         radius: Appearance.rounding.large
         color: allDrag.containsMouse && root.count > 0
-            ? ColorUtils.mix(WidgetColorScheme.textColorOnBg, WidgetColorScheme.pillBgColor, 0.06)
-            : WidgetColorScheme.pillBgColor
+            ? ColorUtils.mix(root.cardScheme.textColorOnBg, root.cardScheme.pillBgColor, 0.06)
+            : root.cardScheme.pillBgColor
         opacity: root.dragOver ? 0 : 1
         Behavior on opacity {
             animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
@@ -176,7 +176,7 @@ ExpressiveCardWidget {
                 x: deckBlock.cardX + deckBlock.step * depth
                 y: deckBlock.cardY - deckBlock.step * depth
                 radius: Math.round(deckBlock.card * 0.24)
-                color: ColorUtils.applyAlpha(WidgetColorScheme.accentColor, 0.5 - depth * 0.18)
+                color: ColorUtils.applyAlpha(root.cardScheme.accentColor, 0.5 - depth * 0.18)
             }
         }
 
@@ -188,8 +188,8 @@ ExpressiveCardWidget {
             height: deckBlock.card
             path: FileShelf.newest
             radius: Math.round(deckBlock.card * 0.24)
-            colPlate: WidgetColorScheme.pillFillColor
-            colSymbol: WidgetColorScheme.textColorOnPillFill
+            colPlate: root.cardScheme.pillFillColor
+            colSymbol: root.cardScheme.textColorOnPillFill
             scale: allDrag.pressed ? 0.94 : 1
             Behavior on scale {
                 animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
@@ -207,13 +207,13 @@ ExpressiveCardWidget {
             MaterialShape {
                 anchors.fill: parent
                 shape: emptyHover.hovered ? MaterialShape.Shape.Cookie9Sided : MaterialShape.Shape.Square
-                color: WidgetColorScheme.cardBgColor
+                color: root.cardScheme.cardBgColor
             }
             MaterialSymbol {
                 anchors.centerIn: parent
                 text: "move_to_inbox"
                 iconSize: Math.round(parent.width * 0.4)
-                color: WidgetColorScheme.subtextColorOnBg
+                color: root.cardScheme.subtextColorOnBg
             }
             HoverHandler {
                 id: emptyHover
@@ -231,7 +231,7 @@ ExpressiveCardWidget {
             text: root.count === 0 ? Translation.tr("Drop files here")
                 : root.count === 1 ? UtilityFiles.baseName(FileShelf.newest)
                 : Translation.tr("Drag all %1").arg(root.count)
-            color: root.count === 0 ? WidgetColorScheme.subtextColorOnBg : WidgetColorScheme.textColorOnBg
+            color: root.count === 0 ? root.cardScheme.subtextColorOnBg : root.cardScheme.textColorOnBg
             font.pixelSize: Appearance.font.pixelSize.small
             font.variableAxes: ({ "wght": 620, "wdth": 92, "ROND": 100 })
         }
@@ -258,7 +258,7 @@ ExpressiveCardWidget {
         Rectangle {
             anchors.fill: parent
             radius: Appearance.rounding.normal
-            color: cell.hovered ? ColorUtils.mix(WidgetColorScheme.textColorOnBg, WidgetColorScheme.pillBgColor, 0.06) : WidgetColorScheme.pillBgColor
+            color: cell.hovered ? ColorUtils.mix(root.cardScheme.textColorOnBg, root.cardScheme.pillBgColor, 0.06) : root.cardScheme.pillBgColor
             Behavior on color {
                 animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
             }
@@ -272,8 +272,8 @@ ExpressiveCardWidget {
             height: cell.height - 12
             path: cell.path
             radius: Appearance.rounding.small
-            colPlate: WidgetColorScheme.cardBgColor
-            colSymbol: WidgetColorScheme.textColorOnBg
+            colPlate: root.cardScheme.cardBgColor
+            colSymbol: root.cardScheme.textColorOnBg
         }
 
         StyledText {
@@ -285,7 +285,7 @@ ExpressiveCardWidget {
             anchors.verticalCenter: parent.verticalCenter
             text: UtilityFiles.baseName(cell.path)
             elide: Text.ElideMiddle
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.pixelSize: Appearance.font.pixelSize.small
             font.variableAxes: ({ "wght": 560, "wdth": 95, "ROND": 100 })
         }
@@ -309,8 +309,8 @@ ExpressiveCardWidget {
             height: 26
             symbol: "close"
             symbolSize: 14
-            colFill: WidgetColorScheme.cardBgColor
-            colContent: WidgetColorScheme.textColorOnBg
+            colFill: root.cardScheme.cardBgColor
+            colContent: root.cardScheme.textColorOnBg
             onClicked: FileShelf.remove(cell.path)
 
             HoverHandler {
@@ -380,21 +380,21 @@ ExpressiveCardWidget {
             width: Math.min(root.designWidth, root.designHeight) * 0.5
             height: width
             shape: MaterialShape.Shape.SoftBurst
-            color: WidgetColorScheme.accentColor
+            color: root.cardScheme.accentColor
         }
         MaterialSymbol {
             anchors.centerIn: dropShape
             text: "file_download"
             iconSize: Math.round(dropShape.width * 0.4)
             fill: 1
-            color: WidgetColorScheme.onAccentColor
+            color: root.cardScheme.onAccentColor
         }
         StyledText {
             anchors.top: dropShape.bottom
             anchors.topMargin: 10
             anchors.horizontalCenter: parent.horizontalCenter
             text: Translation.tr("Drop to keep")
-            color: WidgetColorScheme.textColorOnBg
+            color: root.cardScheme.textColorOnBg
             font.pixelSize: Appearance.font.pixelSize.normal
             font.variableAxes: ({ "wght": 650, "wdth": 95, "ROND": 100 })
         }
