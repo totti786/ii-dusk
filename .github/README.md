@@ -1,5 +1,49 @@
 <div align="center">
 
+<img src="dots/.config/quickshell/ii/assets/icons/ii-dusk.png" alt="ii-dusk" width="120" />
+
+# ii-dusk
+
+A Material 3 shell for Hyprland on Quickshell, with its own apps, and a one-command updater.
+
+</div>
+
+**ii-dusk** is a personal fork of [II-P3DROVFX](https://github.com/P3DROVFX/ii-p3drovfx), which is built on
+[ii-vynx](https://github.com/vaguesyntax/ii-vynx) and [illogical-impulse](https://github.com/end-4/dots-hyprland).
+The licence is GPL-3.0 and the whole lineage is credited in Settings > About & Updates.
+
+## What it adds
+
+Quick Share (Android file sharing, no pairing), a Music app, Downloads (yt-dlp), a Books library, Anki, a
+Calculator, a System Monitor, Mediator, Soundscapes, and a Lite panel family that idles at about half the memory.
+Waffle (the Windows-style family) is removed. The Hyprland config in `dots/.config/hypr` carries the keybinds and
+window rules for all of it.
+
+Programs that need compiling (the Quick Share daemon, the System Health helper and others) are built on your
+machine from source and never shipped as binaries. Settings > About & Updates > **Compiled components** lists them,
+shows which are out of date and rebuilds them.
+
+## Install and update
+
+```bash
+git clone https://github.com/totti786/ii-dusk.git && cd ii-dusk
+bash setup-ii-dusk.sh install      # first time; asks before installing packages
+ii-dusk update                     # later, or use Settings > About & Updates
+ii-dusk fork p3drovfx              # switch to upstream II-P3DROVFX, `ii-dusk fork dusk` to come back
+```
+
+`ii-dusk` is also written `II-DUSK`. The Update button in Settings runs the same script in a terminal.
+
+## Not included
+
+Prebuilt bundles for the Mediator and Books apps come from private projects and are not in this repo; those two apps
+show as "not built" until you provide them. Your display layout (`monitors.*`) and generated colour files are never
+committed.
+
+---
+
+<div align="center">
+
 <img src="assets/readme/logo-banner.png" alt="ii-p3drovfx" />
 
 <br><br>

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# update-fork.sh — thin wrapper around `setup-ii-p3drovfx.sh update`.
+# update-fork.sh — thin wrapper around `setup-ii-dusk.sh update`.
 #
 # Kept for backwards compatibility with older buttons and shell history. New
-# code should call `ii-p3drovfx update` or `setup-ii-p3drovfx.sh update`.
+# code should call `ii-dusk update` or `setup-ii-dusk.sh update`.
 set -euo pipefail
 SCRIPT_DIR="$(cd -P "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -11,8 +11,8 @@ XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 # a wrapper left behind by an older install still finds something to run.
 SETUP=""
 for candidate in \
-    "$XDG_DATA_HOME/ii-p3drovfx/setup-ii-p3drovfx.sh" \
-    "$SCRIPT_DIR/setup-ii-p3drovfx.sh" \
+    "$XDG_DATA_HOME/ii-dusk/setup-ii-dusk.sh" \
+    "$SCRIPT_DIR/setup-ii-dusk.sh" \
     "$XDG_DATA_HOME/ii-vynx/setup-ii-vynx.sh" \
     "$SCRIPT_DIR/setup-ii-vynx.sh"; do
     if [ -f "$candidate" ]; then
@@ -22,7 +22,7 @@ for candidate in \
 done
 
 if [ -z "$SETUP" ]; then
-    echo "✗ Could not locate setup-ii-p3drovfx.sh" >&2
+    echo "✗ Could not locate setup-ii-dusk.sh" >&2
     exit 1
 fi
 
