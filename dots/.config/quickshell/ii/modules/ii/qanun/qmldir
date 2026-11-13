@@ -1,0 +1,10 @@
+module qs.modules.ii.qanun
+
+singleton QanunData 1.0 QanunData.qml
+singleton QanunStore 1.0 QanunStore.qml
+singleton QanunStyle 1.0 QanunStyle.qml
+singleton QanunConvertService 1.0 QanunConvertService.qml
+QanunApp 1.0 QanunApp.qml
+QanunWindow 1.0 QanunWindow.qml
+QanunContent 1.0 QanunContent.qml
+QanunSettingsPage 1.0 QanunSettingsPage.qml

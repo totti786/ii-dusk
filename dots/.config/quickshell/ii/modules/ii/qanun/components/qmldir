@@ -1,0 +1,12 @@
+module qs.modules.ii.qanun.components
+
+QanunTopBar 1.0 QanunTopBar.qml
+TunerGraph 1.0 TunerGraph.qml
+TuningSpinner 1.0 TuningSpinner.qml
+TunerRuler 1.0 TunerRuler.qml
+MetronomeDial 1.0 MetronomeDial.qml
+PlayPauseButton 1.0 PlayPauseButton.qml
+MetronomeTrackRow 1.0 MetronomeTrackRow.qml
+QanunDiagram 1.0 QanunDiagram.qml
+MusicStaff 1.0 MusicStaff.qml
+WaveformView 1.0 WaveformView.qml

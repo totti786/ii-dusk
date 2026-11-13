@@ -1,0 +1,10 @@
+module qs.modules.ii.qanun.tabs
+
+TunerTab 1.0 TunerTab.qml
+MetronomeTab 1.0 MetronomeTab.qml
+ScalesTab 1.0 ScalesTab.qml
+LibraryTab 1.0 LibraryTab.qml
+TracksTab 1.0 TracksTab.qml
+FlashcardsTab 1.0 FlashcardsTab.qml
+EarTrainingTab 1.0 EarTrainingTab.qml
+ConvertSheetPage 1.0 ConvertSheetPage.qml
