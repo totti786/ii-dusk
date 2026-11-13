@@ -989,7 +989,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
             color: circleButton.toggled ? Appearance.m3colors.m3onPrimary : Appearance.colors.colOnLayer2
 
             RotationAnimator on rotation {
-                running: circleButton.spinning
+                running: (circleButton.spinning) && !Appearance.motionOff
                 from: 0
                 to: 360
                 duration: 900
@@ -1401,11 +1401,11 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
 
                     SequentialAnimation {
                         id: messagesAreaAnim
-                        PauseAnimation { duration: 100 }
+                        PauseAnimation { duration: Appearance.dur(100) }
                         ParallelAnimation {
-                            NumberAnimation { target: messagesArea; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
-                            NumberAnimation { target: messagesArea; property: "scale"; from: 0.85; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                            NumberAnimation { target: messagesAreaTransform; property: "y"; from: 25; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: messagesArea; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
+                            NumberAnimation { target: messagesArea; property: "scale"; from: 0.85; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                            NumberAnimation { target: messagesAreaTransform; property: "y"; from: 25; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -1831,11 +1831,11 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
 
                     SequentialAnimation {
                         id: descriptionBoxAnim
-                        PauseAnimation { duration: 160 }
+                        PauseAnimation { duration: Appearance.dur(160) }
                         ParallelAnimation {
-                            NumberAnimation { target: descriptionBox; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
-                            NumberAnimation { target: descriptionBox; property: "scale"; from: 0.85; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                            NumberAnimation { target: descriptionBoxTransform; property: "y"; from: 25; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: descriptionBox; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
+                            NumberAnimation { target: descriptionBox; property: "scale"; from: 0.85; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                            NumberAnimation { target: descriptionBoxTransform; property: "y"; from: 25; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                         }
                     }
                 }
@@ -1869,11 +1869,11 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
 
                     SequentialAnimation {
                         id: suggestionsAnim
-                        PauseAnimation { duration: 280 }
+                        PauseAnimation { duration: Appearance.dur(280) }
                         ParallelAnimation {
-                            NumberAnimation { target: suggestions; property: "opacity"; from: 0.0; to: 1.0; duration: 300 }
-                            NumberAnimation { target: suggestions; property: "scale"; from: 0.85; to: 1.0; duration: 380; easing.type: Easing.OutBack }
-                            NumberAnimation { target: suggestionsTransform; property: "y"; from: 25; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: suggestions; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(300) }
+                            NumberAnimation { target: suggestions; property: "scale"; from: 0.85; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack }
+                            NumberAnimation { target: suggestionsTransform; property: "y"; from: 25; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -1904,8 +1904,8 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                                 id: btnEntranceAnim
                                 PauseAnimation { duration: index * 40 }
                                 ParallelAnimation {
-                                    NumberAnimation { target: commandButton; property: "opacity"; from: 0.0; to: 1.0; duration: 250; easing.type: Easing.OutCubic }
-                                    NumberAnimation { target: cmdBtnTranslate; property: "y"; from: 10; to: 0; duration: 280; easing.type: Easing.OutBack }
+                                    NumberAnimation { target: commandButton; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(250); easing.type: Easing.OutCubic }
+                                    NumberAnimation { target: cmdBtnTranslate; property: "y"; from: 10; to: 0; duration: Appearance.dur(280); easing.type: Easing.OutBack }
                                 }
                             }
 
@@ -2028,11 +2028,11 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
 
                     SequentialAnimation {
                         id: inputWrapperAnim
-                        PauseAnimation { duration: 320 }
+                        PauseAnimation { duration: Appearance.dur(320) }
                         ParallelAnimation {
-                            NumberAnimation { target: inputWrapper; property: "opacity"; from: 0.0; to: 1.0; duration: 320; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: inputBlur; property: "radius"; from: 20; to: 0; duration: 350; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: inputWrapperTransform; property: "y"; from: 40; to: 0; duration: 450; easing.type: Easing.OutExpo }
+                            NumberAnimation { target: inputWrapper; property: "opacity"; from: 0.0; to: 1.0; duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+                            NumberAnimation { target: inputBlur; property: "radius"; from: 20; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
+                            NumberAnimation { target: inputWrapperTransform; property: "y"; from: 40; to: 0; duration: Appearance.dur(450); easing.type: Easing.OutExpo }
                         }
                     }
 
@@ -2442,7 +2442,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
 
                             Behavior on contentX {
                                 NumberAnimation {
-                                    duration: 400
+                                    duration: Appearance.dur(400)
                                     easing.type: Easing.OutExpo
                                 }
                             }
@@ -2624,12 +2624,12 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
 
                                         Behavior on enabled {
                                             SequentialAnimation {
-                                                PauseAnimation { duration: 50 }
+                                                PauseAnimation { duration: Appearance.dur(50) }
                                                 NumberAnimation {
                                                     target: sendButton
                                                     property: "opacity"
                                                     to: sendButton.enabled ? 1.0 : 0.5
-                                                    duration: 200
+                                                    duration: Appearance.dur(200)
                                                     easing.type: Easing.OutCubic
                                                 }
                                             }

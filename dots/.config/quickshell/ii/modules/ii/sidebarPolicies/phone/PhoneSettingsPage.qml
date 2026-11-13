@@ -29,6 +29,38 @@ Item {
     readonly property var scrcpy: Config.options.phone.scrcpy
     readonly property var appMode: Config.options.phone.scrcpy.appMode
 
+    /** Paired devices first, then the ones asking, then whatever else is nearby. */
+    readonly property var sortedDevices: {
+        const rank = d => d.paired ? 0 : (d.pairState === 2 || d.pairState === 1) ? 1 : 2;
+        return Array.from(KdeConnectService.devices ?? [])
+            .sort((a, b) => rank(a) - rank(b) || String(a.name).localeCompare(String(b.name)));
+    }
+
+    /// Daemon plugin ids, in words. Anything not listed is shown by its id.
+    readonly property var pluginLabels: ({
+        "kdeconnect_battery": Translation.tr("Battery"),
+        "kdeconnect_clipboard": Translation.tr("Clipboard sync"),
+        "kdeconnect_connectivity_report": Translation.tr("Signal strength"),
+        "kdeconnect_contacts": Translation.tr("Contacts"),
+        "kdeconnect_findmyphone": Translation.tr("Find my phone"),
+        "kdeconnect_lockdevice": Translation.tr("Lock device"),
+        "kdeconnect_mousepad": Translation.tr("Remote input"),
+        "kdeconnect_mpriscontrol": Translation.tr("Media control"),
+        "kdeconnect_mprisremote": Translation.tr("Control phone media"),
+        "kdeconnect_notifications": Translation.tr("Notifications"),
+        "kdeconnect_pausemusic": Translation.tr("Pause media on calls"),
+        "kdeconnect_ping": Translation.tr("Ping"),
+        "kdeconnect_remotecommands": Translation.tr("Remote commands"),
+        "kdeconnect_remotecontrol": Translation.tr("Remote control"),
+        "kdeconnect_remotekeyboard": Translation.tr("Remote keyboard"),
+        "kdeconnect_remotesystemvolume": Translation.tr("Phone volume"),
+        "kdeconnect_runcommand": Translation.tr("Run commands"),
+        "kdeconnect_screensaver_inhibit": Translation.tr("Screensaver inhibit"),
+        "kdeconnect_sftp": Translation.tr("File browsing"),
+        "kdeconnect_share": Translation.tr("Share files"),
+        "kdeconnect_systemvolume": Translation.tr("Audio devices")
+    })
+
     // ─── Header ─────────────────────────────────────────────
     RowLayout {
         id: header
@@ -98,6 +130,164 @@ Item {
             id: body
             width: flick.width
             spacing: 18
+
+            // ── Devices ──
+            Section {
+                title: Translation.tr("Devices")
+                symbol: "devices"
+
+                Repeater {
+                    model: root.sortedDevices
+                    delegate: DeviceRow {
+                        required property var modelData
+                        device: modelData
+                    }
+                }
+
+                SettingRow {
+                    visible: root.sortedDevices.length === 0
+                    symbol: "phonelink_off"
+                    title: Translation.tr("No devices found")
+                    description: Translation.tr("Open KDE Connect on the phone, on the same network, then search again.")
+                }
+                SettingRow {
+                    symbol: "refresh"
+                    title: Translation.tr("Search for devices")
+                    description: Translation.tr("Looks for phones on the network again.")
+                    clickable: true
+                    onClicked: KdeConnectService.rescanNetwork()
+                }
+            }
+
+            // ── Run commands ──
+            Section {
+                id: commandsSection
+                readonly property string deviceId: KdeConnectService.activeDeviceId
+                property string editingKey: ""
+                property bool editing: false
+
+                title: Translation.tr("Commands on the phone")
+                symbol: "terminal"
+                visible: deviceId.length > 0
+
+                onDeviceIdChanged: if (deviceId.length > 0) KdeConnectService.loadRunCommands(deviceId)
+                Component.onCompleted: if (deviceId.length > 0) KdeConnectService.loadRunCommands(deviceId)
+
+                Repeater {
+                    model: KdeConnectService.runCommandsDeviceId === commandsSection.deviceId
+                        ? KdeConnectService.runCommandList : []
+                    delegate: SettingRow {
+                        id: commandRow
+                        required property var modelData
+                        symbol: "play_circle"
+                        title: modelData.name
+                        description: modelData.command
+
+                        RippleButton {
+                            implicitWidth: 34
+                            implicitHeight: 34
+                            buttonRadius: Appearance.rounding.full
+                            colBackground: "transparent"
+                            colBackgroundHover: Appearance.colors.colLayer3Hover
+                            colRipple: Appearance.colors.colLayer3Active
+                            onClicked: {
+                                commandsSection.editingKey = commandRow.modelData.key;
+                                nameField.text = commandRow.modelData.name;
+                                commandField.text = commandRow.modelData.command;
+                                commandsSection.editing = true;
+                            }
+                            contentItem: MaterialSymbol {
+                                anchors.centerIn: parent
+                                horizontalAlignment: Text.AlignHCenter
+                                text: "edit"
+                                iconSize: Appearance.font.pixelSize.larger
+                                color: Appearance.colors.colOnSurfaceVariant
+                            }
+                            StyledToolTip { text: Translation.tr("Edit") }
+                        }
+                        RippleButton {
+                            implicitWidth: 34
+                            implicitHeight: 34
+                            buttonRadius: Appearance.rounding.full
+                            colBackground: "transparent"
+                            colBackgroundHover: Appearance.colors.colLayer3Hover
+                            colRipple: Appearance.colors.colLayer3Active
+                            onClicked: KdeConnectService.deleteRunCommand(commandsSection.deviceId, commandRow.modelData.key)
+                            contentItem: MaterialSymbol {
+                                anchors.centerIn: parent
+                                horizontalAlignment: Text.AlignHCenter
+                                text: "delete"
+                                iconSize: Appearance.font.pixelSize.larger
+                                color: Appearance.colors.colOnSurfaceVariant
+                            }
+                            StyledToolTip { text: Translation.tr("Delete") }
+                        }
+                    }
+                }
+
+                SettingRow {
+                    visible: !commandsSection.editing
+                        && (KdeConnectService.runCommandsDeviceId !== commandsSection.deviceId
+                            || KdeConnectService.runCommandList.length === 0)
+                    symbol: "info"
+                    title: Translation.tr("No commands of your own yet")
+                    description: Translation.tr("They appear on the phone under KDE Connect → Run command, and run on this computer.")
+                }
+
+                // The form: one row, so it keeps the group's shape.
+                SettingRow {
+                    visible: commandsSection.editing
+                    symbol: "edit_note"
+                    title: commandsSection.editingKey.length > 0 ? Translation.tr("Edit command") : Translation.tr("New command")
+                    below: ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+                        MaterialTextField {
+                            id: nameField
+                            Layout.fillWidth: true
+                            placeholderText: Translation.tr("Name shown on the phone")
+                        }
+                        MaterialTextField {
+                            id: commandField
+                            Layout.fillWidth: true
+                            placeholderText: Translation.tr("Command, e.g. loginctl lock-session")
+                            onAccepted: saveButton.clicked()
+                        }
+                        RowLayout {
+                            Layout.alignment: Qt.AlignRight
+                            spacing: 6
+                            PillButton {
+                                tonal: false
+                                label: Translation.tr("Cancel")
+                                onClicked: commandsSection.editing = false
+                            }
+                            PillButton {
+                                id: saveButton
+                                label: Translation.tr("Save")
+                                enabled: nameField.text.trim().length > 0 && commandField.text.trim().length > 0
+                                onClicked: {
+                                    if (!saveButton.enabled) return;
+                                    KdeConnectService.saveRunCommand(commandsSection.deviceId,
+                                        commandsSection.editingKey, nameField.text, commandField.text);
+                                    commandsSection.editing = false;
+                                }
+                            }
+                        }
+                    }
+                }
+                SettingRow {
+                    visible: !commandsSection.editing
+                    symbol: "add"
+                    title: Translation.tr("Add a command")
+                    clickable: true
+                    onClicked: {
+                        commandsSection.editingKey = "";
+                        nameField.text = "";
+                        commandField.text = "";
+                        commandsSection.editing = true;
+                    }
+                }
+            }
 
             // ── Phone tab ──
             Section {
@@ -537,7 +727,8 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             anchors.leftMargin: 14
             anchors.rightMargin: 12
-            spacing: 8
+            // No gap under the title while the content below it is hidden (a closed drawer).
+            spacing: belowHolder.implicitHeight > 0 ? 8 : 0
 
             RowLayout {
                 Layout.fillWidth: true
@@ -602,6 +793,190 @@ Item {
                 Layout.fillWidth: true
                 visible: children.length > 0
                 spacing: 0
+            }
+        }
+    }
+
+    /** A small text button for the right side of a row. */
+    component PillButton: RippleButton {
+        id: pill
+        property string label: ""
+        property bool tonal: true
+        implicitHeight: 32
+        implicitWidth: pillText.implicitWidth + 24
+        buttonRadius: Appearance.rounding.full
+        colBackground: pill.tonal ? Appearance.colors.colSecondaryContainer : "transparent"
+        colBackgroundHover: pill.tonal ? Appearance.colors.colSecondaryContainerHover : Appearance.colors.colLayer3Hover
+        colRipple: pill.tonal ? Appearance.colors.colSecondaryContainerActive : Appearance.colors.colLayer3Active
+        contentItem: StyledText {
+            id: pillText
+            anchors.centerIn: parent
+            horizontalAlignment: Text.AlignHCenter
+            text: pill.label
+            font.pixelSize: Appearance.font.pixelSize.smaller
+            font.weight: Font.DemiBold
+            color: pill.tonal ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant
+        }
+    }
+
+    /**
+     * One device: its state in words, the action that fits that state, and for a paired
+     * one a drawer of per-plugin switches.
+     */
+    component DeviceRow: SettingRow {
+        id: deviceRow
+        property var device: ({})
+        property bool expanded: false
+        property bool confirmingUnpair: false
+
+        readonly property bool paired: device.paired === true
+        readonly property int pairState: Number(device.pairState ?? 0)
+        readonly property string deviceType: String(device.type ?? "phone")
+
+        symbol: deviceRow.deviceType === "tablet" ? "tablet"
+            : deviceRow.deviceType === "desktop" ? "desktop_windows"
+            : deviceRow.deviceType === "laptop" ? "laptop"
+            : deviceRow.deviceType === "tv" ? "tv" : "smartphone"
+        title: device.name && device.name.length > 0 ? device.name : String(device.id ?? "")
+        description: {
+            const parts = [];
+            if (deviceRow.paired)
+                parts.push(device.reachable ? Translation.tr("Paired · connected") : Translation.tr("Paired · offline"));
+            else if (deviceRow.pairState === 2)
+                parts.push(Translation.tr("Wants to pair"));
+            else if (deviceRow.pairState === 1)
+                parts.push(Translation.tr("Waiting for the phone to accept"));
+            else
+                parts.push(device.reachable ? Translation.tr("Nearby · not paired") : Translation.tr("Not paired"));
+            if (deviceRow.paired && Number(device.charge ?? -1) >= 0)
+                parts.push(`${device.charge}%${device.charging ? " ⚡" : ""}`);
+            return parts.join(" · ");
+        }
+
+        Timer {
+            id: confirmReset
+            interval: 4000
+            onTriggered: deviceRow.confirmingUnpair = false
+        }
+
+        // Someone else is asking: answer it.
+        PillButton {
+            visible: deviceRow.pairState === 2
+            label: Translation.tr("Accept")
+            onClicked: KdeConnectService.acceptPairing(deviceRow.device.id)
+        }
+        PillButton {
+            visible: deviceRow.pairState === 2
+            tonal: false
+            label: Translation.tr("Decline")
+            onClicked: KdeConnectService.declinePairing(deviceRow.device.id)
+        }
+        // We asked: let it be withdrawn.
+        PillButton {
+            visible: deviceRow.pairState === 1
+            tonal: false
+            label: Translation.tr("Cancel")
+            onClicked: KdeConnectService.declinePairing(deviceRow.device.id)
+        }
+        PillButton {
+            visible: !deviceRow.paired && deviceRow.pairState === 0
+            enabled: deviceRow.device.reachable === true
+            label: Translation.tr("Pair")
+            onClicked: KdeConnectService.requestPairing(deviceRow.device.id)
+        }
+        // Forgetting a device is the one thing here that cannot be undone from this side:
+        // the first press asks, the second does it.
+        PillButton {
+            visible: deviceRow.paired
+            tonal: deviceRow.confirmingUnpair
+            label: deviceRow.confirmingUnpair ? Translation.tr("Confirm") : Translation.tr("Unpair")
+            onClicked: {
+                if (!deviceRow.confirmingUnpair) {
+                    deviceRow.confirmingUnpair = true;
+                    confirmReset.restart();
+                    return;
+                }
+                confirmReset.stop();
+                deviceRow.confirmingUnpair = false;
+                KdeConnectService.unpairDevice(deviceRow.device.id);
+            }
+        }
+        RippleButton {
+            visible: deviceRow.paired && (deviceRow.device.supportedPlugins ?? []).length > 0
+            implicitWidth: 34
+            implicitHeight: 34
+            buttonRadius: Appearance.rounding.full
+            colBackground: "transparent"
+            colBackgroundHover: Appearance.colors.colLayer3Hover
+            colRipple: Appearance.colors.colLayer3Active
+            onClicked: deviceRow.expanded = !deviceRow.expanded
+            contentItem: MaterialSymbol {
+                anchors.centerIn: parent
+                horizontalAlignment: Text.AlignHCenter
+                text: deviceRow.expanded ? "expand_less" : "expand_more"
+                iconSize: Appearance.font.pixelSize.larger
+                color: Appearance.colors.colOnSurfaceVariant
+            }
+            StyledToolTip {
+                text: Translation.tr("Plugins")
+            }
+        }
+
+        below: Flow {
+            Layout.fillWidth: true
+            visible: deviceRow.expanded && deviceRow.paired
+            spacing: 6
+            Repeater {
+                model: [...(deviceRow.device.supportedPlugins ?? [])].sort((a, b) =>
+                    String(root.pluginLabels[a] ?? a).localeCompare(String(root.pluginLabels[b] ?? b)))
+                delegate: Rectangle {
+                    id: pluginChip
+                    required property string modelData
+                    readonly property bool on: (deviceRow.device.enabledPlugins ?? []).includes(modelData)
+                    implicitWidth: pluginRow.implicitWidth + 22
+                    implicitHeight: 32
+                    radius: Appearance.rounding.full
+                    color: pluginChip.on ? Appearance.colors.colSecondaryContainer
+                        : pluginHover.hovered ? ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.08) : "transparent"
+                    Behavior on color {
+                        animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                    }
+
+                    DashedBorder {
+                        anchors.fill: parent
+                        visible: !pluginChip.on
+                        color: ColorUtils.applyAlpha(Appearance.colors.colOutline, 0.8)
+                        borderWidth: 1
+                        dashLength: 4
+                        gapLength: 3
+                        radius: Appearance.rounding.full
+                    }
+
+                    RowLayout {
+                        id: pluginRow
+                        anchors.centerIn: parent
+                        spacing: 4
+                        MaterialSymbol {
+                            text: pluginChip.on ? "check" : "close"
+                            iconSize: Appearance.font.pixelSize.normal
+                            color: pluginChip.on ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant
+                        }
+                        StyledText {
+                            text: root.pluginLabels[pluginChip.modelData] ?? pluginChip.modelData
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            font.weight: Font.Bold
+                            color: pluginChip.on ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnSurfaceVariant
+                        }
+                    }
+
+                    HoverHandler {
+                        id: pluginHover
+                        cursorShape: Qt.PointingHandCursor
+                    }
+                    TapHandler {
+                        onTapped: KdeConnectService.setPluginEnabled(deviceRow.device.id, pluginChip.modelData, !pluginChip.on)
+                    }
+                }
             }
         }
     }

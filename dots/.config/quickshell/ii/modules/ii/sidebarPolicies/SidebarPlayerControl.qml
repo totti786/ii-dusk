@@ -114,112 +114,112 @@ Item {
         // Background Slide + Fade
         SequentialAnimation {
             ParallelAnimation {
-                NumberAnimation { target: background; property: "opacity"; to: 1.0; duration: 300; easing.type: Easing.OutCubic }
-                NumberAnimation { target: bgTrans; property: "x"; to: 0; duration: 350; easing.type: Easing.OutCubic }
+                NumberAnimation { target: background; property: "opacity"; to: 1.0; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
+                NumberAnimation { target: bgTrans; property: "x"; to: 0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
             }
         }
 
         // Album Art Entrance + Blur Unveil
         SequentialAnimation {
-            PauseAnimation { duration: 40 }
+            PauseAnimation { duration: Appearance.dur(40) }
             ParallelAnimation {
-                NumberAnimation { target: artBackground; property: "opacity"; to: 1.0; duration: 350; easing.type: Easing.OutCubic }
-                NumberAnimation { target: artBackgroundTrans; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
-                NumberAnimation { target: artBackground; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutCubic }
-                NumberAnimation { target: root; property: "artBlurRadius"; to: 0; duration: 420; easing.type: Easing.OutQuad }
+                NumberAnimation { target: artBackground; property: "opacity"; to: 1.0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
+                NumberAnimation { target: artBackgroundTrans; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
+                NumberAnimation { target: artBackground; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
+                NumberAnimation { target: root; property: "artBlurRadius"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutQuad }
             }
         }
 
         // Title & Artist Entrance
         SequentialAnimation {
-            PauseAnimation { duration: 120 }
+            PauseAnimation { duration: Appearance.dur(120) }
             ParallelAnimation {
-                NumberAnimation { target: metaColumn; property: "opacity"; to: 1.0; duration: 280; easing.type: Easing.OutCubic }
-                NumberAnimation { target: metaColumnTrans; property: "y"; to: 0; duration: 320; easing.type: Easing.OutCubic }
+                NumberAnimation { target: metaColumn; property: "opacity"; to: 1.0; duration: Appearance.dur(280); easing.type: Easing.OutCubic }
+                NumberAnimation { target: metaColumnTrans; property: "y"; to: 0; duration: Appearance.dur(320); easing.type: Easing.OutCubic }
             }
         }
 
         // Lyrics Entrance
         SequentialAnimation {
-            PauseAnimation { duration: 180 }
+            PauseAnimation { duration: Appearance.dur(180) }
             ParallelAnimation {
-                NumberAnimation { target: lyricsItem; property: "opacity"; to: 1.0; duration: 300; easing.type: Easing.OutCubic }
-                NumberAnimation { target: lyricsItemTrans; property: "y"; to: 0; duration: 340; easing.type: Easing.OutCubic }
+                NumberAnimation { target: lyricsItem; property: "opacity"; to: 1.0; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
+                NumberAnimation { target: lyricsItemTrans; property: "y"; to: 0; duration: Appearance.dur(340); easing.type: Easing.OutCubic }
             }
         }
 
         // Progress Row Entrance
         SequentialAnimation {
-            PauseAnimation { duration: 230 }
+            PauseAnimation { duration: Appearance.dur(230) }
             ParallelAnimation {
-                NumberAnimation { target: progressRow; property: "opacity"; to: 1.0; duration: 280; easing.type: Easing.OutCubic }
-                NumberAnimation { target: progressRowTrans; property: "y"; to: 0; duration: 320; easing.type: Easing.OutCubic }
+                NumberAnimation { target: progressRow; property: "opacity"; to: 1.0; duration: Appearance.dur(280); easing.type: Easing.OutCubic }
+                NumberAnimation { target: progressRowTrans; property: "y"; to: 0; duration: Appearance.dur(320); easing.type: Easing.OutCubic }
             }
         }
 
         // Playback Controls Row Entrance
         SequentialAnimation {
-            PauseAnimation { duration: 270 }
-            NumberAnimation { target: controlsRow; property: "opacity"; to: 1.0; duration: 180; easing.type: Easing.OutCubic }
+            PauseAnimation { duration: Appearance.dur(270) }
+            NumberAnimation { target: controlsRow; property: "opacity"; to: 1.0; duration: Appearance.dur(180); easing.type: Easing.OutCubic }
         }
 
         // Prev Button Cascade
         SequentialAnimation {
-            PauseAnimation { duration: 290 }
+            PauseAnimation { duration: Appearance.dur(290) }
             ParallelAnimation {
-                NumberAnimation { target: prevBtn; property: "opacity"; to: 1.0; duration: 220; easing.type: Easing.OutCubic }
-                NumberAnimation { target: prevBtn; property: "scale"; to: 1.0; duration: 280; easing.type: Easing.OutCubic }
+                NumberAnimation { target: prevBtn; property: "opacity"; to: 1.0; duration: Appearance.dur(220); easing.type: Easing.OutCubic }
+                NumberAnimation { target: prevBtn; property: "scale"; to: 1.0; duration: Appearance.dur(280); easing.type: Easing.OutCubic }
             }
         }
 
         // Play/Pause Button Cascade
         SequentialAnimation {
-            PauseAnimation { duration: 340 }
+            PauseAnimation { duration: Appearance.dur(340) }
             ParallelAnimation {
-                NumberAnimation { target: playPauseBtn; property: "opacity"; to: 1.0; duration: 220; easing.type: Easing.OutCubic }
-                NumberAnimation { target: playPauseBtn; property: "scale"; to: 1.0; duration: 300; easing.type: Easing.OutCubic }
+                NumberAnimation { target: playPauseBtn; property: "opacity"; to: 1.0; duration: Appearance.dur(220); easing.type: Easing.OutCubic }
+                NumberAnimation { target: playPauseBtn; property: "scale"; to: 1.0; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
             }
         }
 
         // Next Button Cascade
         SequentialAnimation {
-            PauseAnimation { duration: 390 }
+            PauseAnimation { duration: Appearance.dur(390) }
             ParallelAnimation {
-                NumberAnimation { target: nextBtn; property: "opacity"; to: 1.0; duration: 220; easing.type: Easing.OutCubic }
-                NumberAnimation { target: nextBtn; property: "scale"; to: 1.0; duration: 280; easing.type: Easing.OutCubic }
+                NumberAnimation { target: nextBtn; property: "opacity"; to: 1.0; duration: Appearance.dur(220); easing.type: Easing.OutCubic }
+                NumberAnimation { target: nextBtn; property: "scale"; to: 1.0; duration: Appearance.dur(280); easing.type: Easing.OutCubic }
             }
         }
 
         // Volume Controls Row Entrance
         SequentialAnimation {
-            PauseAnimation { duration: 420 }
-            NumberAnimation { target: volumeRow; property: "opacity"; to: 1.0; duration: 180; easing.type: Easing.OutCubic }
+            PauseAnimation { duration: Appearance.dur(420) }
+            NumberAnimation { target: volumeRow; property: "opacity"; to: 1.0; duration: Appearance.dur(180); easing.type: Easing.OutCubic }
         }
 
         // Mute Button Cascade
         SequentialAnimation {
-            PauseAnimation { duration: 440 }
+            PauseAnimation { duration: Appearance.dur(440) }
             ParallelAnimation {
-                NumberAnimation { target: volMuteBtn; property: "opacity"; to: 1.0; duration: 200; easing.type: Easing.OutCubic }
-                NumberAnimation { target: volMuteBtn; property: "scale"; to: 1.0; duration: 260; easing.type: Easing.OutCubic }
+                NumberAnimation { target: volMuteBtn; property: "opacity"; to: 1.0; duration: Appearance.dur(200); easing.type: Easing.OutCubic }
+                NumberAnimation { target: volMuteBtn; property: "scale"; to: 1.0; duration: Appearance.dur(260); easing.type: Easing.OutCubic }
             }
         }
 
         // Vol Down Button Cascade
         SequentialAnimation {
-            PauseAnimation { duration: 480 }
+            PauseAnimation { duration: Appearance.dur(480) }
             ParallelAnimation {
-                NumberAnimation { target: volDownBtn; property: "opacity"; to: 1.0; duration: 200; easing.type: Easing.OutCubic }
-                NumberAnimation { target: volDownBtn; property: "scale"; to: 1.0; duration: 260; easing.type: Easing.OutCubic }
+                NumberAnimation { target: volDownBtn; property: "opacity"; to: 1.0; duration: Appearance.dur(200); easing.type: Easing.OutCubic }
+                NumberAnimation { target: volDownBtn; property: "scale"; to: 1.0; duration: Appearance.dur(260); easing.type: Easing.OutCubic }
             }
         }
 
         // Vol Up Button Cascade
         SequentialAnimation {
-            PauseAnimation { duration: 520 }
+            PauseAnimation { duration: Appearance.dur(520) }
             ParallelAnimation {
-                NumberAnimation { target: volUpBtn; property: "opacity"; to: 1.0; duration: 200; easing.type: Easing.OutCubic }
-                NumberAnimation { target: volUpBtn; property: "scale"; to: 1.0; duration: 260; easing.type: Easing.OutCubic }
+                NumberAnimation { target: volUpBtn; property: "opacity"; to: 1.0; duration: Appearance.dur(200); easing.type: Easing.OutCubic }
+                NumberAnimation { target: volUpBtn; property: "scale"; to: 1.0; duration: Appearance.dur(260); easing.type: Easing.OutCubic }
             }
         }
     }
@@ -270,7 +270,7 @@ Item {
                     y: 0
                 }
 
-                Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic } }
 
                 // Placeholder icon when there is no cover art
                 MaterialSymbol {
@@ -359,9 +359,9 @@ Item {
 
                         Behavior on text {
                             SequentialAnimation {
-                                NumberAnimation { target: titleText; property: "x"; to: -titleText.width; duration: 150; easing.type: Easing.InQuad }
+                                NumberAnimation { target: titleText; property: "x"; to: -titleText.width; duration: Appearance.dur(150); easing.type: Easing.InQuad }
                                 PropertyAction { target: titleText; property: "text" }
-                                NumberAnimation { target: titleText; property: "x"; from: titleText.width; to: 0; duration: 150; easing.type: Easing.OutQuad }
+                                NumberAnimation { target: titleText; property: "x"; from: titleText.width; to: 0; duration: Appearance.dur(150); easing.type: Easing.OutQuad }
                             }
                         }
                     }
@@ -386,9 +386,9 @@ Item {
 
                         Behavior on text {
                             SequentialAnimation {
-                                NumberAnimation { target: artistText; property: "x"; to: -artistText.width; duration: 150; easing.type: Easing.InQuad }
+                                NumberAnimation { target: artistText; property: "x"; to: -artistText.width; duration: Appearance.dur(150); easing.type: Easing.InQuad }
                                 PropertyAction { target: artistText; property: "text" }
-                                NumberAnimation { target: artistText; property: "x"; from: artistText.width; to: 0; duration: 150; easing.type: Easing.OutQuad }
+                                NumberAnimation { target: artistText; property: "x"; from: artistText.width; to: 0; duration: Appearance.dur(150); easing.type: Easing.OutQuad }
                             }
                         }
                     }
@@ -538,7 +538,7 @@ Item {
                     colBackgroundHover: root.hasArt ? blendedColors.colSecondaryContainerHover : Appearance.colors.colSecondaryContainerHover
                     colRipple: root.hasArt ? blendedColors.colSecondaryContainerActive : Appearance.colors.colSecondaryContainerActive
                     
-                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.3 } }
+                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack; easing.overshoot: 1.3 } }
 
                     downAction: () => { if (root.player) root.player.previous() }
                     contentItem: MaterialSymbol {
@@ -560,8 +560,8 @@ Item {
                     colBackgroundHover: (root.player && root.player.isPlaying) ? (root.hasArt ? blendedColors.colPrimaryHover : Appearance.colors.colPrimaryHover) : (root.hasArt ? blendedColors.colSecondaryContainerHover : Appearance.colors.colSecondaryContainerHover)
                     colRipple: (root.player && root.player.isPlaying) ? (root.hasArt ? blendedColors.colPrimaryActive : Appearance.colors.colPrimaryActive) : (root.hasArt ? blendedColors.colSecondaryContainerActive : Appearance.colors.colSecondaryContainerActive)
                     
-                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
-                    Behavior on buttonRadius { NumberAnimation { duration: 300; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                    Behavior on scale { NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                    Behavior on buttonRadius { NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
 
                     downAction: () => { if (root.player) root.player.togglePlaying() }
                     contentItem: MaterialSymbol {
@@ -586,7 +586,7 @@ Item {
                     colBackgroundHover: root.hasArt ? blendedColors.colSecondaryContainerHover : Appearance.colors.colSecondaryContainerHover
                     colRipple: root.hasArt ? blendedColors.colSecondaryContainerActive : Appearance.colors.colSecondaryContainerActive
                     
-                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.3 } }
+                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack; easing.overshoot: 1.3 } }
 
                     downAction: () => { if (root.player) root.player.next() }
                     contentItem: MaterialSymbol {
@@ -621,7 +621,7 @@ Item {
                     colBackgroundHover: root.hasArt ? blendedColors.colSecondaryContainerHover : Appearance.colors.colSecondaryContainerHover
                     colRipple: root.hasArt ? blendedColors.colSecondaryContainerActive : Appearance.colors.colSecondaryContainerActive
                     
-                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
 
                     downAction: () => { if (root.player) root.player.volume = root.player.volume > 0 ? 0 : 1.0 }
                     contentItem: MaterialSymbol {
@@ -645,7 +645,7 @@ Item {
                     colBackgroundHover: root.hasArt ? blendedColors.colSecondaryContainerHover : Appearance.colors.colSecondaryContainerHover
                     colRipple: root.hasArt ? blendedColors.colSecondaryContainerActive : Appearance.colors.colSecondaryContainerActive
                     
-                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
 
                     downAction: () => { if (root.player) root.player.volume = Math.max(0, (root.player.volume ?? 1) - 0.1) }
                     contentItem: MaterialSymbol {
@@ -667,7 +667,7 @@ Item {
                     colBackgroundHover: root.hasArt ? blendedColors.colSecondaryContainerHover : Appearance.colors.colSecondaryContainerHover
                     colRipple: root.hasArt ? blendedColors.colSecondaryContainerActive : Appearance.colors.colSecondaryContainerActive
                     
-                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
+                    Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack; easing.overshoot: 1.2 } }
 
                     downAction: () => { if (root.player) root.player.volume = Math.min(1.5, (root.player.volume ?? 1) + 0.1) }
                     contentItem: MaterialSymbol {

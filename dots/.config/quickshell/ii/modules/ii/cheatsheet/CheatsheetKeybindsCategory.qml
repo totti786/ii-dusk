@@ -72,21 +72,21 @@ Rectangle {
             target: cardFlyInTrans
             property: "y"
             to: 0
-            duration: 300
+            duration: Appearance.dur(300)
             easing.type: Easing.OutCubic
         }
     }
 
     Behavior on opacity {
         NumberAnimation {
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.BezierSpline
             easing.bezierCurve: Appearance.animationCurves.emphasized
         }
     }
     Behavior on height {
         NumberAnimation {
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.BezierSpline
             easing.bezierCurve: Appearance.animationCurves.emphasized
         }
@@ -127,14 +127,14 @@ Rectangle {
 
         Behavior on height {
             NumberAnimation {
-                duration: 180
+                duration: Appearance.dur(180)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.emphasized
             }
         }
         Behavior on opacity {
             NumberAnimation {
-                duration: 180
+                duration: Appearance.dur(180)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.emphasized
             }

@@ -338,7 +338,7 @@ Item {
         clip: true
 
         Behavior on height {
-            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic }
         }
 
         RowLayout {

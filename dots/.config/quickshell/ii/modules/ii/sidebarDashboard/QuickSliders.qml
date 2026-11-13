@@ -202,7 +202,7 @@ Rectangle {
 
             Behavior on rotation {
                 NumberAnimation {
-                    duration: 350
+                    duration: Appearance.dur(350)
                     easing.type: Easing.OutBack
                     easing.overshoot: 1.5
                 }

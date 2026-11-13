@@ -53,7 +53,7 @@ ContentPage {
                 property: "opacity"
                 from: 0
                 to: 1
-                duration: 260
+                duration: Appearance.dur(260)
                 easing.type: Easing.OutCubic
             }
             NumberAnimation {
@@ -61,7 +61,7 @@ ContentPage {
                 property: "y"
                 from: 18
                 to: 0
-                duration: 380
+                duration: Appearance.dur(380)
                 easing.type: Easing.OutBack
                 easing.overshoot: 1.25
             }
@@ -135,7 +135,7 @@ ContentPage {
                     animateChange: true
 
                     RotationAnimation on rotation {
-                        running: PhoneMicService.connecting
+                        running: (PhoneMicService.connecting) && !Appearance.motionOff
                         loops: Animation.Infinite
                         from: 0; to: 360
                         duration: 1100
@@ -246,7 +246,7 @@ ContentPage {
                     fill: PhoneMicService.running ? 1.0 : 0.0
 
                     RotationAnimation on rotation {
-                        running: PhoneMicService.connecting
+                        running: (PhoneMicService.connecting) && !Appearance.motionOff
                         loops: Animation.Infinite
                         from: 0; to: 360
                         duration: 1100

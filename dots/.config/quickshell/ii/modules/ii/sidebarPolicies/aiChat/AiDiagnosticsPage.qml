@@ -143,7 +143,7 @@ Item {
                         }
 
                         RotationAnimation on rotation {
-                            running: root.diag.anyRunning
+                            running: (root.diag.anyRunning) && !Appearance.motionOff
                             loops: Animation.Infinite
                             from: 0
                             to: 360
@@ -302,7 +302,7 @@ Item {
 
         Behavior on color {
             ColorAnimation {
-                duration: 150
+                duration: Appearance.dur(150)
             }
         }
 
@@ -334,7 +334,7 @@ Item {
                 color: root.stateColor(rowRoot.state)
 
                 RotationAnimation on rotation {
-                    running: rowRoot.running
+                    running: (rowRoot.running) && !Appearance.motionOff
                     loops: Animation.Infinite
                     from: 0
                     to: 360

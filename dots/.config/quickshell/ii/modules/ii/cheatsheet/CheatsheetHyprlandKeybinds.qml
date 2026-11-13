@@ -345,7 +345,7 @@ Item {
         target: root
         property: "dragOffsetX"
         to: 0
-        duration: 350
+        duration: Appearance.dur(350)
         easing.type: Easing.OutBack
         easing.overshoot: 1.5
         onStopped: root.finishDrag()
@@ -355,7 +355,7 @@ Item {
         target: root
         property: "dragOffsetY"
         to: 0
-        duration: 350
+        duration: Appearance.dur(350)
         easing.type: Easing.OutBack
         easing.overshoot: 1.5
     }
@@ -366,7 +366,7 @@ Item {
         target: root
         property: "dragOffsetX"
         to: 0
-        duration: 250
+        duration: Appearance.dur(250)
         easing.type: Easing.BezierSpline
         easing.bezierCurve: Appearance.animationCurves.emphasized
         onStopped: root.finishDrag()
@@ -376,7 +376,7 @@ Item {
         target: root
         property: "dragOffsetY"
         to: 0
-        duration: 250
+        duration: Appearance.dur(250)
         easing.type: Easing.BezierSpline
         easing.bezierCurve: Appearance.animationCurves.emphasized
     }
@@ -445,7 +445,7 @@ Item {
         visible: extent > flickable.height
 
         Behavior on opacity {
-            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic }
         }
 
         Timer {
@@ -591,7 +591,7 @@ Item {
                 Behavior on x {
                     enabled: !cardDelegate.isDragged && contentArea.animateLayout
                     NumberAnimation {
-                        duration: 220
+                        duration: Appearance.dur(220)
                         easing.type: Easing.BezierSpline
                         easing.bezierCurve: Appearance.animationCurves.emphasized
                     }
@@ -599,7 +599,7 @@ Item {
                 Behavior on y {
                     enabled: !cardDelegate.isDragged && contentArea.animateLayout
                     NumberAnimation {
-                        duration: 220
+                        duration: Appearance.dur(220)
                         easing.type: Easing.BezierSpline
                         easing.bezierCurve: Appearance.animationCurves.emphasized
                     }
@@ -611,14 +611,14 @@ Item {
 
                 Behavior on scale {
                     NumberAnimation {
-                        duration: 180
+                        duration: Appearance.dur(180)
                         easing.type: Easing.BezierSpline
                         easing.bezierCurve: Appearance.animationCurves.emphasized
                     }
                 }
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 180
+                        duration: Appearance.dur(180)
                         easing.type: Easing.BezierSpline
                         easing.bezierCurve: Appearance.animationCurves.emphasized
                     }

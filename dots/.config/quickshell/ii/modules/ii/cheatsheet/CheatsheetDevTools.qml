@@ -897,6 +897,7 @@ Item {
                     implicitHeight: 34
 
                     ListView {
+                        WheelScroll {}
                         id: railCatList
                         anchors.fill: parent
                         orientation: ListView.Horizontal
@@ -985,6 +986,7 @@ Item {
                     implicitHeight: 34
 
                     ListView {
+                        WheelScroll {}
                         id: stripCatList
                         anchors.fill: parent
                         orientation: ListView.Horizontal

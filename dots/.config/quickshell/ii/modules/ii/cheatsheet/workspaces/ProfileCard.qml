@@ -99,7 +99,7 @@ Item {
 
     Behavior on opacity {
         NumberAnimation {
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.BezierSpline
             easing.bezierCurve: Appearance.animationCurves.emphasized
         }
@@ -107,7 +107,7 @@ Item {
 
     Behavior on scale {
         NumberAnimation {
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.BezierSpline
             easing.bezierCurve: Appearance.animationCurves.emphasized
         }
@@ -115,7 +115,7 @@ Item {
 
     Behavior on height {
         NumberAnimation {
-            duration: 180
+            duration: Appearance.dur(180)
             easing.type: Easing.BezierSpline
             easing.bezierCurve: Appearance.animationCurves.emphasized
         }
@@ -371,6 +371,7 @@ Item {
                     clip: true
 
                     Flickable {
+                        WheelScroll {}
                         id: chipsFlickable
                         anchors.fill: parent
                         contentWidth: chipsRow.implicitWidth
@@ -389,12 +390,12 @@ Item {
 
                         Behavior on leftFadeColor {
                             ColorAnimation {
-                                duration: 150
+                                duration: Appearance.dur(150)
                             }
                         }
                         Behavior on rightFadeColor {
                             ColorAnimation {
-                                duration: 150
+                                duration: Appearance.dur(150)
                             }
                         }
 
@@ -504,7 +505,7 @@ Item {
                         id: scrollAnim
                         target: chipsFlickable
                         property: "contentX"
-                        duration: 250
+                        duration: Appearance.dur(250)
                         easing.type: Easing.OutCubic
                     }
 

@@ -110,12 +110,12 @@ Item {
         id: openAnim
         ParallelAnimation {
             NumberAnimation {
-                target: background; property: "x"; to: 0; duration: 380
+                target: background; property: "x"; to: 0; duration: Appearance.dur(380)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
             NumberAnimation {
-                target: contentArea; property: "opacity"; to: 1; duration: 300; easing.type: Easing.OutCubic
+                target: contentArea; property: "opacity"; to: 1; duration: Appearance.dur(300); easing.type: Easing.OutCubic
             }
         }
         ScriptAction { script: isAnimating = false }
@@ -128,12 +128,12 @@ Item {
         ScriptAction { script: isAnimating = true }
         ParallelAnimation {
             NumberAnimation {
-                target: background; property: "x"; to: root.width; duration: 300
+                target: background; property: "x"; to: root.width; duration: Appearance.dur(300)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
             NumberAnimation {
-                target: contentArea; property: "opacity"; to: 0; duration: 200; easing.type: Easing.InCubic
+                target: contentArea; property: "opacity"; to: 0; duration: Appearance.dur(200); easing.type: Easing.InCubic
             }
         }
         ScriptAction {
@@ -582,7 +582,7 @@ Item {
 
                                                             Behavior on scale {
                                                                 NumberAnimation {
-                                                                    duration: 150
+                                                                    duration: Appearance.dur(150)
                                                                     easing.type: Easing.BezierSpline
                                                                     easing.bezierCurve: Appearance.animationCurves.emphasized
                                                                 }
@@ -631,7 +631,7 @@ Item {
 
                                                             Behavior on scale {
                                                                 NumberAnimation {
-                                                                    duration: 150
+                                                                    duration: Appearance.dur(150)
                                                                     easing.type: Easing.BezierSpline
                                                                     easing.bezierCurve: Appearance.animationCurves.emphasized
                                                                 }

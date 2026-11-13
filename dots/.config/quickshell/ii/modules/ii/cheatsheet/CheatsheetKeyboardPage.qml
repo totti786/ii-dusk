@@ -230,6 +230,7 @@ Item {
                 spacing: 12
 
                 Flickable {
+                    WheelScroll {}
                     id: layerFlickable
                     Layout.fillWidth: false
                     Layout.maximumWidth: Math.max(100, bottomToolbar.width - layoutControlsRow.implicitWidth - (layerHintText.visible ? layerHintText.implicitWidth + 24 : 0) - 24)

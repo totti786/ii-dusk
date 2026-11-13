@@ -141,7 +141,7 @@ Item {
                 : Appearance.colors.colSurfaceContainerHighest)
 
         Behavior on color {
-            ColorAnimation { duration: 150 }
+            ColorAnimation { duration: Appearance.dur(150) }
         }
 
         MouseArea {
@@ -198,10 +198,10 @@ Item {
             : (rowPillMouse.containsMouse ? Appearance.colors.colOnSurface : Appearance.colors.colOutline)
 
         Behavior on color {
-            ColorAnimation { duration: 150 }
+            ColorAnimation { duration: Appearance.dur(150) }
         }
         Behavior on border.color {
-            ColorAnimation { duration: 150 }
+            ColorAnimation { duration: Appearance.dur(150) }
         }
 
         MouseArea {
@@ -222,7 +222,7 @@ Item {
                 fill: 1
                 iconSize: 18
                 color: rowPill.colOn
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
 
             StyledText {
@@ -232,7 +232,7 @@ Item {
                 font.bold: true
                 color: rowPill.colOn
                 elide: Text.ElideRight
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
         }
 
@@ -531,7 +531,7 @@ Item {
 
                         Behavior on contentX {
                             NumberAnimation {
-                                duration: 400
+                                duration: Appearance.dur(400)
                                 easing.type: Easing.OutExpo
                             }
                         }
@@ -565,7 +565,7 @@ Item {
                                         : Appearance.colors.colOnSurface
 
                                     Behavior on color {
-                                        ColorAnimation { duration: 150 }
+                                        ColorAnimation { duration: Appearance.dur(150) }
                                     }
 
                                     MouseArea {
@@ -650,7 +650,7 @@ Item {
                                             : Appearance.colors.colSurfaceContainerHighest)
 
                                     Behavior on color {
-                                        ColorAnimation { duration: 150 }
+                                        ColorAnimation { duration: Appearance.dur(150) }
                                     }
 
                                     MouseArea {
@@ -674,8 +674,8 @@ Item {
                                             color: sessionCard.colOn
                                             opacity: actionCircleMouse.containsMouse ? 0 : 1
                                             scale: actionCircleMouse.containsMouse ? 0.5 : 1
-                                            Behavior on opacity { NumberAnimation { duration: 150 } }
-                                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                                            Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                                            Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
                                         }
 
                                         MaterialSymbol {
@@ -686,8 +686,8 @@ Item {
                                             color: sessionCard.colOn
                                             opacity: actionCircleMouse.containsMouse ? 1 : 0
                                             scale: actionCircleMouse.containsMouse ? 1 : 0.5
-                                            Behavior on opacity { NumberAnimation { duration: 150 } }
-                                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                                            Behavior on opacity { NumberAnimation { duration: Appearance.dur(150) } }
+                                            Behavior on scale { NumberAnimation { duration: Appearance.dur(150); easing.type: Easing.OutBack } }
                                         }
                                     }
                                 }

@@ -896,30 +896,30 @@ Item {
 
                         // Sync button animation
                         SequentialAnimation {
-                            PauseAnimation { duration: 420 }
+                            PauseAnimation { duration: Appearance.dur(420) }
                             ParallelAnimation {
-                                NumberAnimation { target: notifSyncBtn; property: "opacity"; to: (notifSyncBtn.enabled ? 1.0 : 0.4); duration: 300; easing.type: Easing.OutCubic }
-                                NumberAnimation { target: notifSyncBtnTransform; property: "x"; to: 0; duration: 380; easing.type: Easing.OutCubic }
-                                NumberAnimation { target: notifSyncBtn; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack; easing.overshoot: 1.4 }
+                                NumberAnimation { target: notifSyncBtn; property: "opacity"; to: (notifSyncBtn.enabled ? 1.0 : 0.4); duration: Appearance.dur(300); easing.type: Easing.OutCubic }
+                                NumberAnimation { target: notifSyncBtnTransform; property: "x"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
+                                NumberAnimation { target: notifSyncBtn; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack; easing.overshoot: 1.4 }
                             }
                         }
 
                         // Badge count animation
                         SequentialAnimation {
-                            PauseAnimation { duration: 470 }
+                            PauseAnimation { duration: Appearance.dur(470) }
                             ParallelAnimation {
-                                NumberAnimation { target: notifBadgeBtn; property: "opacity"; to: 1.0; duration: 300; easing.type: Easing.OutCubic }
-                                NumberAnimation { target: notifBadgeBtn; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack; easing.overshoot: 1.3 }
+                                NumberAnimation { target: notifBadgeBtn; property: "opacity"; to: 1.0; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
+                                NumberAnimation { target: notifBadgeBtn; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack; easing.overshoot: 1.3 }
                             }
                         }
 
                         // Clear button animation
                         SequentialAnimation {
-                            PauseAnimation { duration: 520 }
+                            PauseAnimation { duration: Appearance.dur(520) }
                             ParallelAnimation {
-                                NumberAnimation { target: notifClearBtn; property: "opacity"; to: (notifClearBtn.enabled ? 1.0 : 0.4); duration: 300; easing.type: Easing.OutCubic }
-                                NumberAnimation { target: notifClearBtnTransform; property: "x"; to: 0; duration: 380; easing.type: Easing.OutCubic }
-                                NumberAnimation { target: notifClearBtn; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack; easing.overshoot: 1.4 }
+                                NumberAnimation { target: notifClearBtn; property: "opacity"; to: (notifClearBtn.enabled ? 1.0 : 0.4); duration: Appearance.dur(300); easing.type: Easing.OutCubic }
+                                NumberAnimation { target: notifClearBtnTransform; property: "x"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
+                                NumberAnimation { target: notifClearBtn; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack; easing.overshoot: 1.4 }
                             }
                         }
                     }
@@ -971,6 +971,7 @@ Item {
                             horizontalAlignment: Text.AlignHCenter
                             text: parent.mainText
                             font.pixelSize: Appearance.font.pixelSize.small
+                            font.weight: Font.DemiBold
                             color: parent.colText
                         }
                         background: Rectangle {
@@ -1059,17 +1060,17 @@ Item {
                 SequentialAnimation {
                     id: emptyStateAnim
                     ParallelAnimation {
-                        NumberAnimation { target: emptyIcon; property: "scale"; from: 0.2; to: 1.15; duration: 400; easing.type: Easing.OutBack }
-                        NumberAnimation { target: emptyIconRotation; property: "angle"; from: -35; to: 0; duration: 500; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: emptyIcon; property: "scale"; from: 0.2; to: 1.15; duration: Appearance.dur(400); easing.type: Easing.OutBack }
+                        NumberAnimation { target: emptyIconRotation; property: "angle"; from: -35; to: 0; duration: Appearance.dur(500); easing.type: Easing.OutCubic }
                     }
-                    NumberAnimation { target: emptyIcon; property: "scale"; to: 1.0; duration: 120; easing.type: Easing.InOutCubic }
+                    NumberAnimation { target: emptyIcon; property: "scale"; to: 1.0; duration: Appearance.dur(120); easing.type: Easing.InOutCubic }
                     ParallelAnimation {
-                        NumberAnimation { target: emptyTitleTranslate; property: "y"; from: 25; to: 0; duration: 400; easing.type: Easing.OutExpo }
-                        NumberAnimation { target: emptyTitle; property: "opacity"; from: 0; to: 1; duration: 350; easing.type: Easing.OutCubic }
-                        NumberAnimation { target: emptyDescTranslate; property: "x"; from: -15; to: 0; duration: 450; easing.type: Easing.OutCubic }
-                        NumberAnimation { target: emptyDesc; property: "opacity"; from: 0; to: 0.7; duration: 350; easing.type: Easing.OutCubic }
-                        NumberAnimation { target: emptyInstallBtn; property: "scale"; from: 0.8; to: 1.0; duration: 400; easing.type: Easing.OutBack; easing.overshoot: 1.4 }
-                        NumberAnimation { target: emptyInstallBtn; property: "opacity"; from: 0; to: 1; duration: 300; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: emptyTitleTranslate; property: "y"; from: 25; to: 0; duration: Appearance.dur(400); easing.type: Easing.OutExpo }
+                        NumberAnimation { target: emptyTitle; property: "opacity"; from: 0; to: 1; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
+                        NumberAnimation { target: emptyDescTranslate; property: "x"; from: -15; to: 0; duration: Appearance.dur(450); easing.type: Easing.OutCubic }
+                        NumberAnimation { target: emptyDesc; property: "opacity"; from: 0; to: 0.7; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
+                        NumberAnimation { target: emptyInstallBtn; property: "scale"; from: 0.8; to: 1.0; duration: Appearance.dur(400); easing.type: Easing.OutBack; easing.overshoot: 1.4 }
+                        NumberAnimation { target: emptyInstallBtn; property: "opacity"; from: 0; to: 1; duration: Appearance.dur(300); easing.type: Easing.OutCubic }
                     }
                 }
 
@@ -1335,7 +1336,7 @@ Item {
 
                         Behavior on scale {
                             NumberAnimation {
-                                duration: 150
+                                duration: Appearance.dur(150)
                                 easing.type: Easing.OutQuad
                             }
                         }
@@ -1378,7 +1379,7 @@ Item {
 
                         Behavior on scale {
                             NumberAnimation {
-                                duration: 150
+                                duration: Appearance.dur(150)
                                 easing.type: Easing.OutQuad
                             }
                         }

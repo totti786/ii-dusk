@@ -1359,6 +1359,10 @@ Item {
                         return notesPreviewCard;
                     case "systemControlPreview":
                         return systemControlPreviewCard;
+                    case "opencodeShellApproval":
+                        return opencodeShellApprovalCard;
+                    case "opencodeToolActivity":
+                        return opencodeToolActivityCard;
                     case "windowMovePreview":
                         return windowMovePreviewCard;
                     case "wallpaperPreview":
@@ -1584,6 +1588,24 @@ Item {
                     id: systemControlPreviewCard
 
                     AiSystemControlCard {
+                        messageData: root.messageData
+                        card: cardHost.card
+                    }
+                }
+
+                Component {
+                    id: opencodeToolActivityCard
+
+                    AiToolActivityCard {
+                        messageData: root.messageData
+                        card: cardHost.card
+                    }
+                }
+
+                Component {
+                    id: opencodeShellApprovalCard
+
+                    AiShellApprovalCard {
                         messageData: root.messageData
                         card: cardHost.card
                     }

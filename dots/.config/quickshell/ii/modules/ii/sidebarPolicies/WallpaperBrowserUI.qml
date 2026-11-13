@@ -65,20 +65,20 @@ Item {
         id: wallpaperEntranceAnim
 
         SequentialAnimation {
-            PauseAnimation { duration: 60 }
+            PauseAnimation { duration: Appearance.dur(60) }
             ParallelAnimation {
-                NumberAnimation { target: columnLayout; property: "opacity"; to: 1.0; duration: 350; easing.type: Easing.OutCubic }
-                NumberAnimation { target: columnLayoutTrans; property: "y"; to: 0; duration: 400; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
-                NumberAnimation { target: columnLayout; property: "scale"; to: 1.0; duration: 400; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
+                NumberAnimation { target: columnLayout; property: "opacity"; to: 1.0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
+                NumberAnimation { target: columnLayoutTrans; property: "y"; to: 0; duration: Appearance.dur(400); easing.type: Easing.OutBack; easing.overshoot: 1.15 }
+                NumberAnimation { target: columnLayout; property: "scale"; to: 1.0; duration: Appearance.dur(400); easing.type: Easing.OutBack; easing.overshoot: 1.15 }
             }
         }
 
         SequentialAnimation {
-            PauseAnimation { duration: 180 }
+            PauseAnimation { duration: Appearance.dur(180) }
             ParallelAnimation {
-                NumberAnimation { target: searchInputContainer; property: "opacity"; to: 1.0; duration: 320; easing.type: Easing.OutCubic }
-                NumberAnimation { target: searchInputContainerTrans; property: "y"; to: 0; duration: 380; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
-                NumberAnimation { target: searchInputContainer; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+                NumberAnimation { target: searchInputContainer; property: "opacity"; to: 1.0; duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+                NumberAnimation { target: searchInputContainerTrans; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+                NumberAnimation { target: searchInputContainer; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack; easing.overshoot: 1.2 }
             }
         }
     }
@@ -271,7 +271,7 @@ Item {
                 y: 0
             }
 
-            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic } }
 
 
             DropArea {
@@ -349,10 +349,10 @@ Item {
                             root.suggestionQuery = searchInputField.text.split(" ").slice(1).join(" ");  
                             root.suggestionList = [  
                                 { name: `${root.commandPrefix}service unsplash`, description: Translation.tr("Use Unsplash (requires API key)") },  
-                                { name: `${root.commandPrefix}service wallhaven`, description: Translation.tr("Use Wallhaven (no API key required)") }  
+                                { name: `${root.commandPrefix}service wallhaven`, description: Translation.tr("Use Wallhaven (API key optional)") }  
                             ];  
                         } else if (searchInputField.text.startsWith(`${root.commandPrefix}sort`)) {  
-                            // Options for wallhaven: date_added, relevance, random, views, favourites, toplist // Options for unsplash: relevant, latest
+                            // Options for wallhaven: date_added, relevance, random, views, favorites, toplist, hot // Options for unsplash: relevant, latest
                             root.suggestionQuery = searchInputField.text.split(" ").slice(1).join(" "); 
                             const currentService = root.currentService 
                             if (currentService === "wallhaven") {
@@ -361,7 +361,8 @@ Item {
                                     { name: `${root.commandPrefix}sort relevance `, description: "" },
                                     { name: `${root.commandPrefix}sort random`, description: "" },
                                     { name: `${root.commandPrefix}sort views`, description: "" },
-                                    { name: `${root.commandPrefix}sort favourites`, description: "" },
+                                    { name: `${root.commandPrefix}sort favorites`, description: "" },
+                                    { name: `${root.commandPrefix}sort hot`, description: "" },
                                     { name: `${root.commandPrefix}sort toplist`, description: "" }  
                                 ]; 
                             }
@@ -376,7 +377,7 @@ Item {
                             root.suggestionQuery = searchInputField.text.split(" ").slice(1).join(" ");  
                             if (root.currentService === "wallhaven") {  
                                 root.suggestionList = [  
-                                    { name: `${root.commandPrefix}api`, description: Translation.tr("Wallhaven doesn't require an API key") }  
+                                    { name: `${root.commandPrefix}api YOUR_KEY`, description: Translation.tr("Optional Wallhaven key, unlocks NSFW (api clear removes it)") }  
                                 ];  
                             } else {  
                                 root.suggestionList = [  
@@ -510,40 +511,51 @@ Item {
 
     
 
+    Connections {
+        target: WallpaperBrowser
+        function onApiKeyChecked(status) {
+            const msgs = {
+                "ok": Translation.tr("Wallhaven knows this key: NSFW results are available."),
+                "rejected": Translation.tr("Wallhaven doesn't accept this key. It is saved, but NSFW stays off until it is valid."),
+                "unreachable": Translation.tr("Key saved, but Wallhaven couldn't be reached to check it."),
+                "cleared": Translation.tr("Wallhaven API key removed.")
+            };
+            WallpaperBrowser.addSystemMessage(msgs[status] ?? status);
+        }
+    }
+
     property var allCommands: [  
-        { name: "api", description: Translation.tr("Set API key for current service. Usage: %1api YOUR_API_KEY").arg(root.commandPrefix), execute: args => {  
-            if (args.length === 0) {  
-                const currentService = root.currentService;  
-                const unsplashApiKey = WallpaperBrowser.unsplashApiToken
-                
-                if (currentService === "unsplash") {
-                    if (unsplashApiKey != "") {
-                        WallpaperBrowser.addSystemMessage(Translation.tr("Unsplash API key is already set"));  
-                        return;
-                    } else {
-                        WallpaperBrowser.addSystemMessage(Translation.tr("Unsplash API key not set. To get an API key: \n- Go to https://unsplash.com/developers and sign up/in \n- Create a new app in your apps page \n- Get the API key from Access Key and set it with %1api YOUR_API_KEY").arg(root.commandPrefix));  
-                        return
-                    }
+        { name: "api", description: Translation.tr("Set API key for current service. Usage: %1api YOUR_API_KEY").arg(root.commandPrefix), execute: args => {
+            const currentService = root.currentService;
+            if (currentService === "wallhaven") {
+                if (args.length === 0) {
+                    WallpaperBrowser.addSystemMessage(WallpaperBrowser.wallhavenApiToken !== ""
+                        ? Translation.tr("Wallhaven API key is set. Use %1api clear to remove it.").arg(root.commandPrefix)
+                        : Translation.tr("No Wallhaven API key. It is optional: it unlocks NSFW results. Get one at https://wallhaven.cc/settings/account and set it with %1api YOUR_API_KEY").arg(root.commandPrefix));
+                    return;
                 }
+                WallpaperBrowser.setWallhavenApiKey(args[0] === "clear" ? "" : args[0]);
+                return;
             }
-
-            if (currentService === "wallhaven") {  
-                WallpaperBrowser.addSystemMessage(Translation.tr("Wallhaven doesn't require an API key"));  
-                return;  
-            } 
-
+            if (args.length === 0) {
+                if (WallpaperBrowser.unsplashApiToken != "") {
+                    WallpaperBrowser.addSystemMessage(Translation.tr("Unsplash API key is already set"));
+                } else {
+                    WallpaperBrowser.addSystemMessage(Translation.tr("Unsplash API key not set. To get an API key: \n- Go to https://unsplash.com/developers and sign up/in \n- Create a new app in your apps page \n- Get the API key from Access Key and set it with %1api YOUR_API_KEY").arg(root.commandPrefix));
+                }
+                return;
+            }
             if (args[0].length < 20) { // not a valid api key
-                WallpaperBrowser.addSystemMessage(Translation.tr("Please provide a valid API key")); 
-                KeyringStorage.setNestedField(["apiKeys", `wallpapers_${currentService}`], "");  
-                return; 
+                WallpaperBrowser.addSystemMessage(Translation.tr("Please provide a valid API key"));
+                KeyringStorage.setNestedField(["apiKeys", `wallpapers_${currentService}`], "");
+                return;
             }
-              
-            KeyringStorage.setNestedField(["apiKeys", `wallpapers_${currentService}`], args[0].trim());  
-            WallpaperBrowser.addSystemMessage(Translation.tr(`API key set for %1`).arg(currentService));  
-        } },  
+            KeyringStorage.setNestedField(["apiKeys", `wallpapers_${currentService}`], args[0].trim());
+            WallpaperBrowser.addSystemMessage(Translation.tr(`API key set for %1`).arg(currentService));
+        } },
         { name: "service", description: Translation.tr("Change wallpaper service. Usage: %1service SERVICE").arg(root.commandPrefix), execute: args => {  
             if (args.length === 0) {  
-                WallpaperBrowser.addSystemMessage(Translation.tr("Usage: %1service SERVICE, available services: \n\n Unsplash: \n- Requires API key, type %1api to get started. \n\nWallhaven: \n- Doesn't require API key \n- You can search similar images").arg(root.commandPrefix));  
+                WallpaperBrowser.addSystemMessage(Translation.tr("Usage: %1service SERVICE, available services: \n\n Unsplash: \n- Requires API key, type %1api to get started. \n\nWallhaven: \n- API key optional (needed for NSFW) \n- You can search similar images").arg(root.commandPrefix));  
                 return;  
             }  
             const service = args[0].toLowerCase();  
@@ -593,7 +605,7 @@ Item {
                 }
 
                 if (currentService === "wallhaven") {
-                    WallpaperBrowser.addSystemMessage(Translation.tr("Please add a sort option\nAvailable sorts: date_added, relevance, random, views, favourites, toplist"));
+                    WallpaperBrowser.addSystemMessage(Translation.tr("Please add a sort option\nAvailable sorts: date_added, relevance, random, views, favorites, toplist, hot"));
                     return;
                 }
             }  
@@ -607,19 +619,83 @@ Item {
                 }
             }
             if (currentService === "wallhaven") {
-                if (sort === "date_added" || sort === "relevance" || sort === "random" || sort === "views" || sort === "favourites" || sort === "toplist") {
+                if (sort === "date_added" || sort === "relevance" || sort === "random" || sort === "views" || sort === "favorites" || sort === "favourites" || sort === "toplist" || sort === "hot") {
                     WallpaperBrowser.addSystemMessage(Translation.tr("Sort option is set to %1").arg(sort));
                     WallpaperBrowser.setSort(sort);
                 } else {
-                    WallpaperBrowser.addSystemMessage(Translation.tr("Invalid sort option. Use: date_added, relevance, random, views, favourites, toplist"));
+                    WallpaperBrowser.addSystemMessage(Translation.tr("Invalid sort option. Use: date_added, relevance, random, views, favorites, toplist, hot"));
                 }
             }
         } }, 
+        { name: "browse", description: Translation.tr("Show the sorted list without a search (Wallhaven)"), execute: () => {
+            if (root.currentService !== "wallhaven") {
+                WallpaperBrowser.addSystemMessage(Translation.tr("Browsing without a search only works with wallhaven service"));
+                return;
+            }
+            WallpaperBrowser.makeRequest([], root.imageLimit, 1);
+        } },
+        { name: "purity", description: Translation.tr("Content filter: sfw, sketchy, nsfw (combine with commas). Usage: %1purity sfw,sketchy").arg(root.commandPrefix), execute: args => {
+            const cfg = Config.options.wallhaven;
+            if (args.length === 0) {
+                WallpaperBrowser.addSystemMessage(Translation.tr("Purity: %1 (as sfw/sketchy/nsfw bits). Usage: %2purity sfw,sketchy,nsfw").arg(cfg.purity).arg(root.commandPrefix));
+                return;
+            }
+            const want = args.join(",").toLowerCase().split(",").map(x => x.trim());
+            const bad = want.filter(x => !["sfw", "sketchy", "nsfw"].includes(x));
+            if (bad.length > 0 || want.length === 0) {
+                WallpaperBrowser.addSystemMessage(Translation.tr("Use: sfw, sketchy, nsfw"));
+                return;
+            }
+            cfg.purity = ["sfw", "sketchy", "nsfw"].map(x => want.includes(x) ? "1" : "0").join("");
+            let note = Translation.tr("Purity set to %1").arg(want.join(", "));
+            if (want.includes("nsfw") && WallpaperBrowser.wallhavenApiToken === "")
+                note += "\n" + Translation.tr("NSFW is ignored until you set an API key with %1api YOUR_API_KEY").arg(root.commandPrefix);
+            WallpaperBrowser.addSystemMessage(note);
+        } },
+        { name: "res", description: Translation.tr("Minimum resolution. Usage: %1res 1920x1080 (or off)").arg(root.commandPrefix), execute: args => {
+            if (args.length === 0) {
+                WallpaperBrowser.addSystemMessage(Translation.tr("Minimum resolution: %1").arg(Config.options.wallhaven.atleast || Translation.tr("any")));
+                return;
+            }
+            const v = args[0].toLowerCase();
+            if (v === "off" || v === "any") Config.options.wallhaven.atleast = "";
+            else if (/^\d{3,5}x\d{3,5}$/.test(v)) Config.options.wallhaven.atleast = v;
+            else { WallpaperBrowser.addSystemMessage(Translation.tr("Use a size like 1920x1080, or off")); return; }
+            WallpaperBrowser.addSystemMessage(Translation.tr("Minimum resolution: %1").arg(Config.options.wallhaven.atleast || Translation.tr("any")));
+        } },
+        { name: "ratio", description: Translation.tr("Aspect ratios. Usage: %1ratio 16x9,16x10 (or off)").arg(root.commandPrefix), execute: args => {
+            if (args.length === 0) {
+                WallpaperBrowser.addSystemMessage(Translation.tr("Ratios: %1").arg(Config.options.wallhaven.ratios || Translation.tr("any")));
+                return;
+            }
+            const v = args.join(",").toLowerCase();
+            if (v === "off" || v === "any") Config.options.wallhaven.ratios = "";
+            else if (/^\d+x\d+(,\d+x\d+)*$/.test(v)) Config.options.wallhaven.ratios = v;
+            else { WallpaperBrowser.addSystemMessage(Translation.tr("Use ratios like 16x9 or 16x9,16x10, or off")); return; }
+            WallpaperBrowser.addSystemMessage(Translation.tr("Ratios: %1").arg(Config.options.wallhaven.ratios || Translation.tr("any")));
+        } },
+        { name: "range", description: Translation.tr("Toplist time range: 1d, 3d, 1w, 1M, 3M, 6M, 1y. Usage: %1range 1w").arg(root.commandPrefix), execute: args => {
+            const ranges = ["1d", "3d", "1w", "1M", "3M", "6M", "1y"];
+            if (args.length === 0 || !ranges.includes(args[0])) {
+                WallpaperBrowser.addSystemMessage(Translation.tr("Toplist range: %1. Options: %2").arg(Config.options.wallhaven.topRange).arg(ranges.join(", ")));
+                return;
+            }
+            Config.options.wallhaven.topRange = args[0];
+            WallpaperBrowser.addSystemMessage(Translation.tr("Toplist range: %1 (applies when sorting by toplist)").arg(args[0]));
+        } },
+        { name: "exclude", description: Translation.tr("Terms added to every search. Usage: %1exclude -people -portrait (or off)").arg(root.commandPrefix), execute: args => {
+            if (args.length === 0) {
+                WallpaperBrowser.addSystemMessage(Translation.tr("Excluded terms: %1").arg(Config.options.wallhaven.excludeTerms || Translation.tr("none")));
+                return;
+            }
+            Config.options.wallhaven.excludeTerms = (args[0].toLowerCase() === "off") ? "" : args.join(" ");
+            WallpaperBrowser.addSystemMessage(Translation.tr("Excluded terms: %1").arg(Config.options.wallhaven.excludeTerms || Translation.tr("none")));
+        } },
         { name: "clear", description: Translation.tr("Clear the current list of images"), execute: () => {  
             WallpaperBrowser.clearResponses();  
         } },  
         { name: "help", description: Translation.tr("Shows a list of available commands"), execute: () => {  
-            WallpaperBrowser.addSystemMessage(Translation.tr("Available commands are:\n- %1api API_KEY: Set API key for current service\n- %1service SERVICE: Change wallpaper service\n- %1similar IMAGE_ID: Find similar images, you must enter wallhaven image id thats located in the file name (e.g. wallhaven-lyz3d2.png's id is lyz3d2)\n- %1anime SHOW/HIDE: Toggle anime results (only for wallhaven service)\n- %1sort SORT_OPTION: Sort results\n- %1clear: Clear the current list of images\n- %1next: Load next page").arg(root.commandPrefix));
+            WallpaperBrowser.addSystemMessage(Translation.tr("Available commands are:\n- %1api API_KEY: Set API key for current service\n- %1service SERVICE: Change wallpaper service\n- %1similar IMAGE_ID: Find similar images, you must enter wallhaven image id thats located in the file name (e.g. wallhaven-lyz3d2.png's id is lyz3d2)\n- %1anime SHOW/HIDE: Toggle anime results (only for wallhaven service)\n- %1sort SORT_OPTION: Sort results\n- %1browse: Show the sorted list with no search (Wallhaven)\n- %1purity sfw,sketchy,nsfw: Content filter (Wallhaven)\n- %1res 1920x1080: Minimum resolution, or off\n- %1ratio 16x9: Aspect ratios, or off\n- %1range 1w: Toplist time range\n- %1exclude -people: Terms added to every search, or off\n- %1clear: Clear the current list of images\n- %1next: Load next page").arg(root.commandPrefix));
         } },
         { name: "next", description: Translation.tr("Load next page"), execute: () => {  
             console.log("[Wallpapers] Next page")

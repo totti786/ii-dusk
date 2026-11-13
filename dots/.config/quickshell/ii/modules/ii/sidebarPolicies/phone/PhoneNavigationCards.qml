@@ -9,7 +9,13 @@ import qs.services
 Item {
     id: root
     implicitHeight: navigationRow.implicitHeight
+        + (controlsRow.visible ? 8 + controlsRow.implicitHeight : 0)
     height: implicitHeight
+
+    /// The phone controls only mean something for a device that has one of these plugins on.
+    readonly property var enabledPlugins: KdeConnectService.activeDevice?.enabledPlugins ?? []
+    readonly property bool hasPhoneControls: ["kdeconnect_lockdevice", "kdeconnect_remotesystemvolume",
+        "kdeconnect_remotecommands"].some(plugin => root.enabledPlugins.includes(plugin))
 
     signal requestOpenSubPage(url subPageUrl)
 
@@ -153,6 +159,77 @@ Item {
             }
 
             onClicked: root.requestOpenSubPage(Qt.resolvedUrl("PhoneAppsPage.qml"))
+        }
+    }
+
+    // Lock, volume and the phone's own commands
+    RowLayout {
+        id: controlsRow
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: navigationRow.bottom
+        anchors.topMargin: 8
+        visible: root.hasPhoneControls
+        spacing: 8
+
+        RippleButton {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 58
+            buttonRadius: Appearance.rounding.normal
+            colBackground: Appearance.colors.colLayer3
+            colBackgroundHover: Appearance.colors.colLayer3Hover
+            colBackgroundActive: Appearance.colors.colLayer3Active ?? Appearance.colors.colLayer3Hover
+
+            contentItem: RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 12
+                anchors.rightMargin: 12
+                spacing: 10
+
+                MaterialShapeWrappedMaterialSymbol {
+                    Layout.alignment: Qt.AlignVCenter
+                    text: "tune"
+                    iconSize: 20
+                    padding: 8
+                    fill: 1.0
+                    color: Appearance.colors.colTertiaryContainer
+                    colSymbol: Appearance.colors.colOnTertiaryContainer
+                    shape: MaterialShape.Shape.Cookie9Sided
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    spacing: 0
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: Translation.tr("Phone controls")
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        font.weight: Font.DemiBold
+                        color: Appearance.colors.colOnLayer3
+                        elide: Text.ElideRight
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: Translation.tr("Lock, volume, commands")
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        color: Appearance.colors.colSubtext
+                        opacity: 0.8
+                        elide: Text.ElideRight
+                    }
+                }
+
+                MaterialSymbol {
+                    Layout.alignment: Qt.AlignVCenter
+                    text: "chevron_right"
+                    iconSize: Appearance.font.pixelSize.normal
+                    color: Appearance.colors.colSubtext
+                }
+            }
+
+            onClicked: root.requestOpenSubPage(Qt.resolvedUrl("PhoneRemotePage.qml"))
         }
     }
 }

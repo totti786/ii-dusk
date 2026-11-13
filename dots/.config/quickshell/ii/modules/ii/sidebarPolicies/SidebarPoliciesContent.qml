@@ -278,19 +278,19 @@ Item {
 
         // Clean slide-in of navbar container from left-to-right (-80 -> 0)
         SequentialAnimation {
-            PauseAnimation { duration: 30 }
+            PauseAnimation { duration: Appearance.dur(30) }
             ParallelAnimation {
-                NumberAnimation { target: toolbarContainer; property: "opacity"; to: 1.0; duration: 280; easing.type: Easing.OutCubic }
-                NumberAnimation { target: toolbarTrans; property: "x"; to: 0; duration: 360; easing.type: Easing.OutCubic }
+                NumberAnimation { target: toolbarContainer; property: "opacity"; to: 1.0; duration: Appearance.dur(280); easing.type: Easing.OutCubic }
+                NumberAnimation { target: toolbarTrans; property: "x"; to: 0; duration: Appearance.dur(360); easing.type: Easing.OutCubic }
             }
         }
 
         // Staggered slide-in of tab buttons inside the navbar
         SequentialAnimation {
-            PauseAnimation { duration: 90 }
+            PauseAnimation { duration: Appearance.dur(90) }
             ParallelAnimation {
-                NumberAnimation { target: tabBar; property: "opacity"; to: 1.0; duration: 250; easing.type: Easing.OutCubic }
-                NumberAnimation { target: tabBarTrans; property: "x"; to: 0; duration: 320; easing.type: Easing.OutCubic }
+                NumberAnimation { target: tabBar; property: "opacity"; to: 1.0; duration: Appearance.dur(250); easing.type: Easing.OutCubic }
+                NumberAnimation { target: tabBarTrans; property: "x"; to: 0; duration: Appearance.dur(320); easing.type: Easing.OutCubic }
             }
         }
     }
@@ -589,7 +589,7 @@ Item {
                             target: trans
                             property: "x"
                             to: 0
-                            duration: 420
+                            duration: Appearance.dur(420)
                             easing.type: Easing.OutBack
                             easing.overshoot: 1.45
                         }
@@ -600,7 +600,7 @@ Item {
                             property: "opacity"
                             from: 0
                             to: 1
-                            duration: 280
+                            duration: Appearance.dur(280)
                             easing.type: Easing.OutCubic
                         }
                     }

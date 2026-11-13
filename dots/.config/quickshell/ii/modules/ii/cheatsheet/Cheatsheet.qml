@@ -32,6 +32,13 @@ Scope {
             "icon": "keyboard",
             "name": Translation.tr("Keybinds")
         });
+        if (Config.options.cheatsheet.enableApps) {
+            list.push({
+                "id": "apps",
+                "icon": "apps",
+                "name": Translation.tr("Apps")
+            });
+        }
         if (Config.options.cheatsheet.enablePeriodicTable) {
             list.push({
                 "id": "elements",
@@ -72,6 +79,13 @@ Scope {
                 "id": "email",
                 "icon": "mail",
                 "name": Translation.tr("Email")
+            });
+        }
+        if (Config.options.cheatsheet.enableGithub) {
+            list.push({
+                "id": "github",
+                "icon": "code_blocks",
+                "name": Translation.tr("GitHub")
             });
         }
         if (Config.options.cheatsheet.enableTypingTest) {
@@ -832,6 +846,8 @@ Scope {
                                             return "CheatsheetTimetable.qml";
                                         case "keyboard":
                                             return "CheatsheetKeybinds.qml";
+                                        case "apps":
+                                            return "CheatsheetApps.qml";
                                         case "experiment":
                                             return "CheatsheetPeriodicTable.qml";
                                         case "biotech":
@@ -842,6 +858,8 @@ Scope {
                                             return "CheatsheetWorkspaces.qml";
                                         case "mail":
                                             return "CheatsheetEmail.qml";
+                                        case "code_blocks":
+                                            return "github/CheatsheetGithub.qml";
                                         case "sports_soccer":
                                             return "CheatsheetFootball.qml";
                                         case "speed":

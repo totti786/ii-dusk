@@ -56,20 +56,20 @@ Item {
         id: animeEntranceAnim
 
         SequentialAnimation {
-            PauseAnimation { duration: 60 }
+            PauseAnimation { duration: Appearance.dur(60) }
             ParallelAnimation {
-                NumberAnimation { target: columnLayout; property: "opacity"; to: 1.0; duration: 350; easing.type: Easing.OutCubic }
-                NumberAnimation { target: columnLayoutTrans; property: "y"; to: 0; duration: 400; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
-                NumberAnimation { target: columnLayout; property: "scale"; to: 1.0; duration: 400; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
+                NumberAnimation { target: columnLayout; property: "opacity"; to: 1.0; duration: Appearance.dur(350); easing.type: Easing.OutCubic }
+                NumberAnimation { target: columnLayoutTrans; property: "y"; to: 0; duration: Appearance.dur(400); easing.type: Easing.OutBack; easing.overshoot: 1.15 }
+                NumberAnimation { target: columnLayout; property: "scale"; to: 1.0; duration: Appearance.dur(400); easing.type: Easing.OutBack; easing.overshoot: 1.15 }
             }
         }
 
         SequentialAnimation {
-            PauseAnimation { duration: 180 }
+            PauseAnimation { duration: Appearance.dur(180) }
             ParallelAnimation {
-                NumberAnimation { target: tagInputContainer; property: "opacity"; to: 1.0; duration: 320; easing.type: Easing.OutCubic }
-                NumberAnimation { target: tagInputContainerTrans; property: "y"; to: 0; duration: 380; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
-                NumberAnimation { target: tagInputContainer; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+                NumberAnimation { target: tagInputContainer; property: "opacity"; to: 1.0; duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+                NumberAnimation { target: tagInputContainerTrans; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+                NumberAnimation { target: tagInputContainer; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack; easing.overshoot: 1.2 }
             }
         }
     }
@@ -285,7 +285,7 @@ Item {
                     bottomMargin: 20 + (root.pullLoading ? 0 : Math.max(0, (root.normalizedPullDistance - 0.5) * 50))
                     Behavior on bottomMargin {
                         NumberAnimation {
-                            duration: 200
+                            duration: Appearance.dur(200)
                             easing.type: Easing.BezierSpline
                             easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial
                         }
@@ -387,7 +387,7 @@ Item {
                 y: 0
             }
 
-            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic } }
 
 
             Behavior on implicitHeight {

@@ -170,7 +170,7 @@ Item {
                 to: backgroundSyncBar.width
                 duration: 1500
                 loops: Animation.Infinite
-                running: backgroundSyncBar.visible
+                running: (backgroundSyncBar.visible) && !Appearance.motionOff
             }
         }
     }
@@ -275,7 +275,7 @@ Item {
                                 to: 360
                                 duration: 20000
                                 loops: Animation.Infinite
-                                running: root.model.count === 0 && !root.loading
+                                running: (root.model.count === 0 && !root.loading) && !Appearance.motionOff
                             }
                         }
 
@@ -431,7 +431,7 @@ Item {
                         id: snapAnim
                         target: cardRoot
                         property: "swipeX"
-                        duration: 350
+                        duration: Appearance.dur(350)
                         easing.type: Easing.OutCubic
                         onFinished: if (to === 0) {
                             root.swipingIndex = -1;
@@ -460,7 +460,7 @@ Item {
                             color: Appearance.colors.colOnTertiary
                             Behavior on iconSize {
                                 NumberAnimation {
-                                    duration: 200
+                                    duration: Appearance.dur(200)
                                     easing.type: Easing.OutBack
                                 }
                             }
@@ -487,7 +487,7 @@ Item {
                             color: Appearance.colors.colOnError
                             Behavior on iconSize {
                                 NumberAnimation {
-                                    duration: 200
+                                    duration: Appearance.dur(200)
                                     easing.type: Easing.OutBack
                                 }
                             }
@@ -524,7 +524,7 @@ Item {
                         Behavior on x {
                             enabled: !cardRoot.swiping
                             NumberAnimation {
-                                duration: 300
+                                duration: Appearance.dur(300)
                                 easing.type: Easing.OutCubic
                             }
                         }
@@ -550,14 +550,14 @@ Item {
                                 y: mouseArea.containsMouse ? 12 : 0
                                 Behavior on y {
                                     NumberAnimation {
-                                        duration: 300
+                                        duration: Appearance.dur(300)
                                         easing.type: Easing.OutBack
                                     }
                                 }
                             }
                             Behavior on opacity {
                                 NumberAnimation {
-                                    duration: 200
+                                    duration: Appearance.dur(200)
                                 }
                             }
                         }
@@ -581,14 +581,14 @@ Item {
                                 y: mouseArea.containsMouse ? 6 : 0
                                 Behavior on y {
                                     NumberAnimation {
-                                        duration: 300
+                                        duration: Appearance.dur(300)
                                         easing.type: Easing.OutBack
                                     }
                                 }
                             }
                             Behavior on opacity {
                                 NumberAnimation {
-                                    duration: 200
+                                    duration: Appearance.dur(200)
                                 }
                             }
                         }
@@ -603,7 +603,7 @@ Item {
 
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: 200
+                                    duration: Appearance.dur(200)
                                 }
                             }
 
@@ -621,28 +621,28 @@ Item {
                             Behavior on topLeftRadius {
                                 enabled: !cardRoot.swiping
                                 NumberAnimation {
-                                    duration: 150
+                                    duration: Appearance.dur(150)
                                     easing.type: Easing.OutCubic
                                 }
                             }
                             Behavior on topRightRadius {
                                 enabled: !cardRoot.swiping
                                 NumberAnimation {
-                                    duration: 150
+                                    duration: Appearance.dur(150)
                                     easing.type: Easing.OutCubic
                                 }
                             }
                             Behavior on bottomLeftRadius {
                                 enabled: !cardRoot.swiping
                                 NumberAnimation {
-                                    duration: 150
+                                    duration: Appearance.dur(150)
                                     easing.type: Easing.OutCubic
                                 }
                             }
                             Behavior on bottomRightRadius {
                                 enabled: !cardRoot.swiping
                                 NumberAnimation {
-                                    duration: 150
+                                    duration: Appearance.dur(150)
                                     easing.type: Easing.OutCubic
                                 }
                             }
@@ -1100,7 +1100,7 @@ Item {
                             target: cardRoot
                             property: "swipeX"
                             to: -cardRoot.width - 100
-                            duration: 300
+                            duration: Appearance.dur(300)
                             easing.type: Easing.InCubic
                         }
                         ParallelAnimation {
@@ -1108,14 +1108,14 @@ Item {
                                 target: cardRoot
                                 property: "opacity"
                                 to: 0
-                                duration: 200
+                                duration: Appearance.dur(200)
                                 easing.type: Easing.OutCubic
                             }
                             NumberAnimation {
                                 target: cardRoot
                                 property: "Layout.preferredHeight"
                                 to: 0
-                                duration: 300
+                                duration: Appearance.dur(300)
                                 easing.type: Easing.InOutCubic
                             }
                         }
@@ -1142,7 +1142,7 @@ Item {
                             target: cardRoot
                             property: "swipeX"
                             to: cardRoot.width + 100
-                            duration: 300
+                            duration: Appearance.dur(300)
                             easing.type: Easing.InCubic
                         }
                         ParallelAnimation {
@@ -1150,14 +1150,14 @@ Item {
                                 target: cardRoot
                                 property: "opacity"
                                 to: 0
-                                duration: 200
+                                duration: Appearance.dur(200)
                                 easing.type: Easing.OutCubic
                             }
                             NumberAnimation {
                                 target: cardRoot
                                 property: "Layout.preferredHeight"
                                 to: 0
-                                duration: 300
+                                duration: Appearance.dur(300)
                                 easing.type: Easing.InOutCubic
                             }
                         }
@@ -1195,21 +1195,21 @@ Item {
                                     target: starIconSymbol
                                     property: "scale"
                                     to: 2.2
-                                    duration: 250
+                                    duration: Appearance.dur(250)
                                     easing.type: Easing.OutBack
                                 }
                                 NumberAnimation {
                                     target: starIconSymbol
                                     property: "scale"
                                     to: 1.3
-                                    duration: 450
+                                    duration: Appearance.dur(450)
                                     easing.type: Easing.OutBounce
                                 }
                             }
 
                             // Hold the swipe position
                             PauseAnimation {
-                                duration: 600
+                                duration: Appearance.dur(600)
                             }
                         }
 
@@ -1217,7 +1217,7 @@ Item {
                             target: cardRoot
                             property: "swipeX"
                             to: 0
-                            duration: 500
+                            duration: Appearance.dur(500)
                             easing.type: Easing.OutExpo
                         }
 
@@ -1320,7 +1320,7 @@ Item {
     }
 
     component RippleAnim: NumberAnimation {
-        duration: 1200
+        duration: Appearance.dur(1200)
         easing.type: Easing.OutQuart
     }
 }

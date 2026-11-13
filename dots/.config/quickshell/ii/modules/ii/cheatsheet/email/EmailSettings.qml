@@ -1435,7 +1435,7 @@ Item {
 
             Behavior on y {
                 NumberAnimation {
-                    duration: 200
+                    duration: Appearance.dur(200)
                     easing.type: Easing.OutCubic
                 }
             }

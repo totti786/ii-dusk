@@ -74,7 +74,7 @@ Item {
                 target: background
                 properties: "x,y"
                 to: 0
-                duration: 450
+                duration: Appearance.dur(450)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -82,7 +82,7 @@ Item {
                 target: background
                 property: "width"
                 to: root.width
-                duration: 450
+                duration: Appearance.dur(450)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -90,7 +90,7 @@ Item {
                 target: background
                 property: "height"
                 to: root.height
-                duration: 450
+                duration: Appearance.dur(450)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -98,7 +98,7 @@ Item {
                 target: contentArea
                 property: "opacity"
                 to: 1
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.OutCubic
             }
         }
@@ -123,7 +123,7 @@ Item {
                 target: background
                 properties: "x,y"
                 to: startX
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -131,7 +131,7 @@ Item {
                 target: background
                 property: "width"
                 to: startWidth
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -139,7 +139,7 @@ Item {
                 target: background
                 property: "height"
                 to: startHeight
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -147,14 +147,14 @@ Item {
                 target: contentArea
                 property: "opacity"
                 to: 0
-                duration: 250
+                duration: Appearance.dur(250)
                 easing.type: Easing.OutCubic
             }
             NumberAnimation {
                 target: root
                 property: "opacity"
                 to: 0
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.InOutQuad
             }
         }
@@ -327,24 +327,24 @@ Item {
                                         scale: msgMouse.pressed ? 0.985 : 1.0
                                         Behavior on scale {
                                             NumberAnimation {
-                                                duration: 150
+                                                duration: Appearance.dur(150)
                                                 easing.type: Easing.OutQuint
                                             }
                                         }
                                         Behavior on color {
                                             ColorAnimation {
-                                                duration: 250
+                                                duration: Appearance.dur(250)
                                             }
                                         }
                                         Behavior on border.width {
                                             NumberAnimation {
-                                                duration: 350
+                                                duration: Appearance.dur(350)
                                                 easing.type: Easing.OutCubic
                                             }
                                         }
                                         Behavior on border.color {
                                             ColorAnimation {
-                                                duration: 350
+                                                duration: Appearance.dur(350)
                                             }
                                         }
 
@@ -750,7 +750,7 @@ Item {
 
                                     Behavior on Layout.preferredHeight {
                                         NumberAnimation {
-                                            duration: 400
+                                            duration: Appearance.dur(400)
                                             easing.type: Easing.OutQuint
                                         }
                                     }

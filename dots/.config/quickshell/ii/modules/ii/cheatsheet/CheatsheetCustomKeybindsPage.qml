@@ -878,7 +878,7 @@ Item {
                             id: spinAnim
                             target: aiIcon
                             property: "rotation"
-                            running: aiCategorizeButton.isCategorizing
+                            running: (aiCategorizeButton.isCategorizing) && !Appearance.motionOff
                             loops: Animation.Infinite
                             from: 0
                             to: 360

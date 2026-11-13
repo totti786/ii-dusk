@@ -33,7 +33,7 @@ Rectangle {
                 property: "opacity"
                 from: 0
                 to: 1
-                duration: 280
+                duration: Appearance.dur(280)
                 easing.type: Easing.OutCubic
             }
             NumberAnimation {
@@ -41,7 +41,7 @@ Rectangle {
                 property: "y"
                 from: 16
                 to: 0
-                duration: 360
+                duration: Appearance.dur(360)
                 easing.type: Easing.OutBack
                 easing.overshoot: 1.3
             }

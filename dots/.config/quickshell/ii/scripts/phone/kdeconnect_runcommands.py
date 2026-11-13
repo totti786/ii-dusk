@@ -10,11 +10,20 @@ Only entries whose key starts with `ii-` belong to the shell. Anything else in t
 the user's and is kept untouched, in both directions.
 
     kdeconnect_runcommands.py <device-id> enable|disable
+
+The commands page of the Phone settings edits the user's own entries (anything without the
+`ii-` prefix) through three more modes. Each prints one JSON object on stdout:
+
+    kdeconnect_runcommands.py <device-id> list
+    kdeconnect_runcommands.py <device-id> set <key|-> <name> <command>
+    kdeconnect_runcommands.py <device-id> delete <key>
 """
 import json
 import os
+import re
 import subprocess
 import sys
+import uuid
 from pathlib import Path
 
 PREFIX = "ii-"
@@ -37,6 +46,25 @@ def config_path(device_id):
     return base / "kdeconnect" / device_id / "kdeconnect_runcommand" / "config"
 
 
+def ini_quote(text):
+    """The daemon reads this file with QSettings, which splits an unquoted value at every comma.
+    A command list is therefore stored the way Qt itself stores a QByteArray: quoted, with
+    backslash and quote escaped."""
+    escaped = text.replace("\\", "\\\\").replace('"', '\\"')
+    return '"@ByteArray(' + escaped + ')"'
+
+
+def ini_unquote(raw):
+    """Back to the JSON text, from the quoted form above, or from a bare value."""
+    raw = raw.strip()
+    if len(raw) >= 2 and raw.startswith('"') and raw.endswith('"'):
+        table = {"n": "\n", "t": "\t", "r": "\r"}
+        raw = re.sub(r"\\(.)", lambda m: table.get(m.group(1), m.group(1)), raw[1:-1])
+    if raw.startswith("@ByteArray(") and raw.endswith(")"):
+        raw = raw[len("@ByteArray("):-1]
+    return raw
+
+
 def read_lines(path):
     try:
         return path.read_text().splitlines()
@@ -51,10 +79,7 @@ def current_commands(lines):
         if stripped.startswith("[") and stripped.endswith("]"):
             group = stripped[1:-1]
         elif group == "General" and stripped.startswith("commands="):
-            raw = stripped[len("commands="):]
-            # QSettings-style spelling, in case a file was ever written that way.
-            if raw.startswith("@ByteArray(") and raw.endswith(")"):
-                raw = raw[len("@ByteArray("):-1]
+            raw = ini_unquote(stripped[len("commands="):])
             try:
                 value = json.loads(raw)
                 return value if isinstance(value, dict) else {}
@@ -64,8 +89,8 @@ def current_commands(lines):
 
 
 def write_commands(lines, commands):
-    # KConfig reads the value raw; compact JSON has no characters it escapes.
-    entry = "commands=" + json.dumps(commands, separators=(",", ":"), ensure_ascii=False)
+    entry = "commands=" + ini_quote(
+        json.dumps(commands, separators=(",", ":"), ensure_ascii=False))
     out, group, written = [], None, False
     for line in lines:
         stripped = line.strip()
@@ -97,18 +122,7 @@ def announce(device_id):
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
 
 
-def main():
-    if len(sys.argv) != 3 or sys.argv[2] not in ("enable", "disable") or "/" in sys.argv[1]:
-        sys.stderr.write(__doc__)
-        return 2
-    device_id, mode = sys.argv[1], sys.argv[2]
-    path = config_path(device_id)
-    lines = read_lines(path)
-    commands = {k: v for k, v in current_commands(lines).items() if not k.startswith(PREFIX)}
-    if mode == "enable":
-        for key, (name, command) in COMMANDS.items():
-            commands[key] = {"name": name, "command": command}
-
+def save(device_id, path, lines, commands):
     path.parent.mkdir(parents=True, exist_ok=True)
     text = write_commands(lines, commands)
     if text != ("\n".join(lines) + "\n" if lines else ""):
@@ -116,6 +130,64 @@ def main():
         tmp.write_text(text)
         tmp.replace(path)
     announce(device_id)
+
+
+def listing(commands):
+    return [{"key": k, "name": str(v.get("name", "")), "command": str(v.get("command", "")),
+             "managed": k.startswith(PREFIX)}
+            for k, v in commands.items() if isinstance(v, dict)]
+
+
+def edit(device_id, mode, args):
+    path = config_path(device_id)
+    lines = read_lines(path)
+    commands = current_commands(lines)
+    if mode == "list":
+        print(json.dumps({"ok": True, "commands": listing(commands)}))
+        return 0
+    if mode == "set":
+        if len(args) != 3:
+            sys.stderr.write(__doc__)
+            return 2
+        key, name, command = args
+        if key == "-":
+            key = "user-" + uuid.uuid4().hex[:8]
+        if key.startswith(PREFIX):
+            print(json.dumps({"ok": False, "error": "reserved"}))
+            return 1
+        if not name.strip() or not command.strip():
+            print(json.dumps({"ok": False, "error": "empty"}))
+            return 1
+        commands[key] = {"name": name.strip(), "command": command.strip()}
+    else:
+        if len(args) != 1 or args[0].startswith(PREFIX):
+            print(json.dumps({"ok": False, "error": "reserved"}))
+            return 1
+        commands.pop(args[0], None)
+    save(device_id, path, lines, commands)
+    print(json.dumps({"ok": True, "commands": listing(commands)}))
+    return 0
+
+
+def main():
+    modes = ("enable", "disable", "list", "set", "delete")
+    if len(sys.argv) < 3 or sys.argv[2] not in modes or "/" in sys.argv[1]:
+        sys.stderr.write(__doc__)
+        return 2
+    device_id, mode = sys.argv[1], sys.argv[2]
+    if mode in ("list", "set", "delete"):
+        return edit(device_id, mode, sys.argv[3:])
+    if len(sys.argv) != 3:
+        sys.stderr.write(__doc__)
+        return 2
+    path = config_path(device_id)
+    lines = read_lines(path)
+    commands = {k: v for k, v in current_commands(lines).items() if not k.startswith(PREFIX)}
+    if mode == "enable":
+        for key, (name, command) in COMMANDS.items():
+            commands[key] = {"name": name, "command": command}
+
+    save(device_id, path, lines, commands)
     print(json.dumps({"ok": True, "count": len([k for k in commands if k.startswith(PREFIX)])}))
     return 0
 

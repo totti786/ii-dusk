@@ -182,7 +182,7 @@ Item {
             property: "opacity"
             from: 0
             to: 1
-            duration: 220
+            duration: Appearance.dur(220)
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
@@ -190,7 +190,7 @@ Item {
             property: "y"
             from: 14
             to: 0
-            duration: 280
+            duration: Appearance.dur(280)
             easing.type: Easing.OutCubic
         }
     }
@@ -269,7 +269,7 @@ Item {
             }
 
             SequentialAnimation on opacity {
-                running: !root.capturing && !root.failed
+                running: (!root.capturing && !root.failed) && !Appearance.motionOff
                 loops: Animation.Infinite
                 alwaysRunToEnd: true
                 NumberAnimation { to: 0.25; duration: 700; easing.type: Easing.InOutSine }
@@ -453,7 +453,7 @@ Item {
                 opacity: keyBar.showMore ? 0 : 1
 
                 Behavior on x {
-                    NumberAnimation { duration: 380; easing.type: Easing.OutExpo }
+                    NumberAnimation { duration: Appearance.dur(380); easing.type: Easing.OutExpo }
                 }
                 Behavior on opacity {
                     animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
@@ -495,7 +495,7 @@ Item {
                 opacity: keyBar.showMore ? 1 : 0
 
                 Behavior on x {
-                    NumberAnimation { duration: 380; easing.type: Easing.OutExpo }
+                    NumberAnimation { duration: Appearance.dur(380); easing.type: Easing.OutExpo }
                 }
                 Behavior on opacity {
                     animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)

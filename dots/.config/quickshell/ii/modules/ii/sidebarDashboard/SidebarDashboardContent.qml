@@ -399,7 +399,7 @@ Item {
 
         property real dialogBlurProgress: root.anyDialogVisible ? 1.0 : 0.0
         Behavior on dialogBlurProgress {
-            NumberAnimation { duration: 320; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Appearance.dur(320); easing.type: Easing.OutCubic }
         }
 
         ColumnLayout {

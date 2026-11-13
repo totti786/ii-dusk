@@ -126,7 +126,7 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 350
+                duration: Appearance.dur(350)
                 easing.type: Easing.OutCubic
             }
         }
@@ -317,14 +317,14 @@ Item {
 
                                 Behavior on x {
                                     NumberAnimation {
-                                        duration: 220
+                                        duration: Appearance.dur(220)
                                         easing.type: Easing.BezierSpline
                                         easing.bezierCurve: Appearance.animationCurves.emphasized
                                     }
                                 }
                                 Behavior on y {
                                     NumberAnimation {
-                                        duration: 220
+                                        duration: Appearance.dur(220)
                                         easing.type: Easing.BezierSpline
                                         easing.bezierCurve: Appearance.animationCurves.emphasized
                                     }
@@ -470,7 +470,7 @@ Item {
 
                                     Behavior on color {
                                         ColorAnimation {
-                                            duration: 150
+                                            duration: Appearance.dur(150)
                                         }
                                     }
                                 }

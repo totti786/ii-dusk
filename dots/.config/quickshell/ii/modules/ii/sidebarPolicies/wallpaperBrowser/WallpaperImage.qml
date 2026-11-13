@@ -166,9 +166,7 @@ Button {
                                 onClicked: {  
                                     root.showActions = false;  
                                     const targetPath = root.imageData.is_nsfw ? root.nsfwPath : root.downloadPath;  
-                                    Quickshell.execDetached(["bash", "-c",   
-                                        `mkdir -p '${targetPath}' && curl '${root.imageData.file_url}' -o '${targetPath}/${root.fileName}' && notify-send '${Translation.tr("Download complete")}' '${root.downloadPath}/${root.fileName}' -a 'Shell'`  
-                                    ])  
+                                    WallpaperBrowser.downloadImage(root.imageData, targetPath);  
                                 }  
                             }  
                             MenuButton {  

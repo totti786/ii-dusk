@@ -183,7 +183,7 @@ Item {
                 Component.onCompleted: opacity = 1
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 180
+                        duration: Appearance.dur(180)
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -249,13 +249,13 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 250
+                duration: Appearance.dur(250)
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on transform {
             NumberAnimation {
-                duration: 350
+                duration: Appearance.dur(350)
                 easing.type: Easing.OutBack
                 easing.overshoot: 1.3
             }
@@ -306,7 +306,7 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 250
+                duration: Appearance.dur(250)
                 easing.type: Easing.OutCubic
             }
         }

@@ -85,7 +85,7 @@ Item {
                     target: composeTrans
                     property: "x"
                     to: 0
-                    duration: 300
+                    duration: Appearance.dur(300)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -190,14 +190,14 @@ Item {
                                     target: navTrans
                                     property: "x"
                                     to: 0
-                                    duration: 250
+                                    duration: Appearance.dur(250)
                                     easing.type: Easing.OutCubic
                                 }
                                 NumberAnimation {
                                     target: navBtn
                                     property: "opacity"
                                     to: 1
-                                    duration: 250
+                                    duration: Appearance.dur(250)
                                     easing.type: Easing.OutCubic
                                 }
                             }

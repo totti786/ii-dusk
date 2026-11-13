@@ -105,9 +105,9 @@ Item {
             SequentialAnimation {
                 id: entranceAnim
                 ParallelAnimation {
-                    NumberAnimation { target: popupCard; property: "opacity"; from: 0; to: 1; duration: 260; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: popupCard; property: "scale"; from: 0.94; to: 1.0; duration: 380; easing.type: Easing.OutBack; easing.overshoot: 1.15 }
-                    NumberAnimation { target: cardTranslate; property: "y"; from: 18; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: popupCard; property: "opacity"; from: 0; to: 1; duration: Appearance.dur(260); easing.type: Easing.OutCubic }
+                    NumberAnimation { target: popupCard; property: "scale"; from: 0.94; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutBack; easing.overshoot: 1.15 }
+                    NumberAnimation { target: cardTranslate; property: "y"; from: 18; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
                 }
             }
 
@@ -175,7 +175,7 @@ Item {
                                 ? Appearance.colors.colPrimaryContainerHover
                                 : Appearance.colors.colSurfaceContainerHighest
                             scale: down ? 0.96 : 1.0
-                            Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
+                            Behavior on scale { NumberAnimation { duration: Appearance.dur(120); easing.type: Easing.OutQuad } }
                             contentItem: StyledText {
                                 anchors.centerIn: parent
                                 horizontalAlignment: Text.AlignHCenter
@@ -305,7 +305,7 @@ Item {
                                         colBackground: Appearance.colors.colSurfaceContainerHighest
                                         colBackgroundHover: Appearance.colors.colSurfaceContainerHighestHover
                                         scale: down ? 0.92 : 1.0
-                                        Behavior on scale { NumberAnimation { duration: 100; easing.type: Easing.OutQuad } }
+                                        Behavior on scale { NumberAnimation { duration: Appearance.dur(100); easing.type: Easing.OutQuad } }
                                         contentItem: MaterialSymbol {
                                             anchors.centerIn: parent
                                             text: copyLabel.showCheck ? "check" : "content_copy"
@@ -371,7 +371,7 @@ Item {
                         colBackground: Appearance.colors.colPrimaryContainer
                         colBackgroundHover: Appearance.colors.colPrimaryContainerHover
                         scale: down ? 0.96 : 1.0
-                        Behavior on scale { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
+                        Behavior on scale { NumberAnimation { duration: Appearance.dur(120); easing.type: Easing.OutQuad } }
                         contentItem: RowLayout {
                             spacing: 4
                             MaterialSymbol {

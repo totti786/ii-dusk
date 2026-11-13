@@ -1,0 +1,29 @@
+query {
+  viewer {
+    login name bio location avatarUrl url createdAt company websiteUrl
+    followers { totalCount } following { totalCount }
+    repositories(ownerAffiliations: OWNER, isFork: false, privacy: PUBLIC) { totalCount }
+    contributionsCollection {
+      totalCommitContributions totalIssueContributions totalPullRequestContributions totalPullRequestReviewContributions
+      restrictedContributionsCount
+      contributionCalendar { totalContributions weeks { contributionDays { date contributionCount weekday } } }
+    }
+    starredRepositories { totalCount }
+    repos: repositories(first: 8, ownerAffiliations: OWNER, orderBy: {field: PUSHED_AT, direction: DESC}) {
+      nodes { name nameWithOwner description url isPrivate isFork isArchived stargazerCount forkCount pushedAt
+        primaryLanguage { name color }
+        defaultBranchRef { target { ... on Commit { oid messageHeadline committedDate statusCheckRollup { state } } } } }
+    }
+    allStars: repositories(first: 100, ownerAffiliations: OWNER) { nodes { stargazerCount } }
+    pullRequests(first: 10, states: OPEN, orderBy: {field: UPDATED_AT, direction: DESC}) {
+      totalCount nodes { title url number updatedAt isDraft reviewDecision repository { nameWithOwner }
+        commits(last: 1) { nodes { commit { statusCheckRollup { state } } } } }
+    }
+    issues(first: 10, states: OPEN, orderBy: {field: UPDATED_AT, direction: DESC}) {
+      totalCount nodes { title url number updatedAt repository { nameWithOwner } comments { totalCount } }
+    }
+  }
+  reviews: search(query: "is:pr is:open review-requested:@me archived:false", type: ISSUE, first: 10) {
+    issueCount nodes { ... on PullRequest { title url number updatedAt repository { nameWithOwner } author { login } } }
+  }
+}

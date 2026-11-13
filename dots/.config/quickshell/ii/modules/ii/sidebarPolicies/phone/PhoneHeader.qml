@@ -65,20 +65,20 @@ Item {
 
         // Device chip animation
         SequentialAnimation {
-            PauseAnimation { duration: 30 }
+            PauseAnimation { duration: Appearance.dur(30) }
             ParallelAnimation {
-                NumberAnimation { target: deviceChip; property: "opacity"; to: (deviceChip.enabled ? 1.0 : 0.5); duration: 320; easing.type: Easing.OutCubic }
-                NumberAnimation { target: deviceChipTransform; property: "x"; to: 0; duration: 420; easing.type: Easing.OutBack; easing.overshoot: 1.3 }
-                NumberAnimation { target: deviceChip; property: "scale"; to: 1.0; duration: 420; easing.type: Easing.OutBack; easing.overshoot: 1.3 }
+                NumberAnimation { target: deviceChip; property: "opacity"; to: (deviceChip.enabled ? 1.0 : 0.5); duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+                NumberAnimation { target: deviceChipTransform; property: "x"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutBack; easing.overshoot: 1.3 }
+                NumberAnimation { target: deviceChip; property: "scale"; to: 1.0; duration: Appearance.dur(420); easing.type: Easing.OutBack; easing.overshoot: 1.3 }
             }
         }
 
         // Battery pill animation
         SequentialAnimation {
-            PauseAnimation { duration: 110 }
+            PauseAnimation { duration: Appearance.dur(110) }
             ParallelAnimation {
-                NumberAnimation { target: batteryPill; property: "opacity"; to: (root._battery >= 0 ? 1.0 : 0.4); duration: 320; easing.type: Easing.OutCubic }
-                NumberAnimation { target: batteryPill; property: "scale"; to: 1.0; duration: 420; easing.type: Easing.OutBack; easing.overshoot: 1.5 }
+                NumberAnimation { target: batteryPill; property: "opacity"; to: (root._battery >= 0 ? 1.0 : 0.4); duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+                NumberAnimation { target: batteryPill; property: "scale"; to: 1.0; duration: Appearance.dur(420); easing.type: Easing.OutBack; easing.overshoot: 1.5 }
             }
         }
     }
@@ -115,7 +115,7 @@ Item {
             Behavior on scale {
                 enabled: !headerEntranceAnim.running
                 NumberAnimation {
-                    duration: 150
+                    duration: Appearance.dur(150)
                     easing.type: Easing.OutQuad
                 }
             }
@@ -172,7 +172,7 @@ Item {
             Behavior on scale {
                 enabled: !headerEntranceAnim.running
                 NumberAnimation {
-                    duration: 180
+                    duration: Appearance.dur(180)
                     easing.type: Easing.OutBack
                     easing.overshoot: 1.5
                 }

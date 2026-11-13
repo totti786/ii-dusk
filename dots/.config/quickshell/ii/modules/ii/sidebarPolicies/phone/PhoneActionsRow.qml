@@ -35,51 +35,51 @@ Item {
         id: actionsEntranceAnim
 
         SequentialAnimation {
-            PauseAnimation { duration: 60 }
+            PauseAnimation { duration: Appearance.dur(60) }
             ParallelAnimation {
-                NumberAnimation { target: btn1; property: "opacity"; to: (btn1.enabled ? 1.0 : 0.4); duration: 320; easing.type: Easing.OutCubic }
-                NumberAnimation { target: btn1Transform; property: "y"; to: 0; duration: 420; easing.type: Easing.OutBack; easing.overshoot: 1.5 }
-                NumberAnimation { target: btn1; property: "scale"; to: 1.0; duration: 420; easing.type: Easing.OutBack; easing.overshoot: 1.5 }
+                NumberAnimation { target: btn1; property: "opacity"; to: (btn1.enabled ? 1.0 : 0.4); duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+                NumberAnimation { target: btn1Transform; property: "y"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutBack; easing.overshoot: 1.5 }
+                NumberAnimation { target: btn1; property: "scale"; to: 1.0; duration: Appearance.dur(420); easing.type: Easing.OutBack; easing.overshoot: 1.5 }
             }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 90 }
+            PauseAnimation { duration: Appearance.dur(90) }
             ParallelAnimation {
-                NumberAnimation { target: btn2; property: "opacity"; to: (btn2.enabled ? 1.0 : 0.4); duration: 320; easing.type: Easing.OutCubic }
-                NumberAnimation { target: btn2Transform; property: "y"; to: 0; duration: 400; easing.type: Easing.OutExpo }
-                NumberAnimation { target: btn2; property: "scale"; to: 1.0; duration: 400; easing.type: Easing.OutExpo }
+                NumberAnimation { target: btn2; property: "opacity"; to: (btn2.enabled ? 1.0 : 0.4); duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+                NumberAnimation { target: btn2Transform; property: "y"; to: 0; duration: Appearance.dur(400); easing.type: Easing.OutExpo }
+                NumberAnimation { target: btn2; property: "scale"; to: 1.0; duration: Appearance.dur(400); easing.type: Easing.OutExpo }
             }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 120 }
+            PauseAnimation { duration: Appearance.dur(120) }
             ParallelAnimation {
-                NumberAnimation { target: btn3; property: "opacity"; to: (btn3.enabled ? 1.0 : 0.4); duration: 320; easing.type: Easing.OutCubic }
-                NumberAnimation { target: btn3Transform; property: "y"; to: 0; duration: 420; easing.type: Easing.OutBack; easing.overshoot: 1.3 }
-                NumberAnimation { target: btn3; property: "scale"; to: 1.0; duration: 420; easing.type: Easing.OutBack; easing.overshoot: 1.3 }
+                NumberAnimation { target: btn3; property: "opacity"; to: (btn3.enabled ? 1.0 : 0.4); duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+                NumberAnimation { target: btn3Transform; property: "y"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutBack; easing.overshoot: 1.3 }
+                NumberAnimation { target: btn3; property: "scale"; to: 1.0; duration: Appearance.dur(420); easing.type: Easing.OutBack; easing.overshoot: 1.3 }
             }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 150 }
+            PauseAnimation { duration: Appearance.dur(150) }
             ParallelAnimation {
-                NumberAnimation { target: btn4; property: "opacity"; to: (btn4.enabled ? 1.0 : 0.4); duration: 320; easing.type: Easing.OutCubic }
-                NumberAnimation { target: btn4Transform; property: "y"; to: 0; duration: 380; easing.type: Easing.OutCubic }
-                NumberAnimation { target: btn4; property: "scale"; to: 1.0; duration: 380; easing.type: Easing.OutCubic }
+                NumberAnimation { target: btn4; property: "opacity"; to: (btn4.enabled ? 1.0 : 0.4); duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+                NumberAnimation { target: btn4Transform; property: "y"; to: 0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
+                NumberAnimation { target: btn4; property: "scale"; to: 1.0; duration: Appearance.dur(380); easing.type: Easing.OutCubic }
             }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 180 }
+            PauseAnimation { duration: Appearance.dur(180) }
             ParallelAnimation {
-                NumberAnimation { target: btn5; property: "opacity"; to: (btn5.enabled ? 1.0 : 0.4); duration: 320; easing.type: Easing.OutCubic }
-                NumberAnimation { target: btn5Transform; property: "y"; to: 0; duration: 420; easing.type: Easing.OutBack; easing.overshoot: 1.4 }
-                NumberAnimation { target: btn5; property: "scale"; to: 1.0; duration: 420; easing.type: Easing.OutBack; easing.overshoot: 1.4 }
+                NumberAnimation { target: btn5; property: "opacity"; to: (btn5.enabled ? 1.0 : 0.4); duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+                NumberAnimation { target: btn5Transform; property: "y"; to: 0; duration: Appearance.dur(420); easing.type: Easing.OutBack; easing.overshoot: 1.4 }
+                NumberAnimation { target: btn5; property: "scale"; to: 1.0; duration: Appearance.dur(420); easing.type: Easing.OutBack; easing.overshoot: 1.4 }
             }
         }
         SequentialAnimation {
-            PauseAnimation { duration: 210 }
+            PauseAnimation { duration: Appearance.dur(210) }
             ParallelAnimation {
-                NumberAnimation { target: btn6; property: "opacity"; to: (btn6.enabled ? 1.0 : 0.4); duration: 320; easing.type: Easing.OutCubic }
-                NumberAnimation { target: btn6Transform; property: "y"; to: 0; duration: 400; easing.type: Easing.OutExpo }
-                NumberAnimation { target: btn6; property: "scale"; to: 1.0; duration: 400; easing.type: Easing.OutExpo }
+                NumberAnimation { target: btn6; property: "opacity"; to: (btn6.enabled ? 1.0 : 0.4); duration: Appearance.dur(320); easing.type: Easing.OutCubic }
+                NumberAnimation { target: btn6Transform; property: "y"; to: 0; duration: Appearance.dur(400); easing.type: Easing.OutExpo }
+                NumberAnimation { target: btn6; property: "scale"; to: 1.0; duration: Appearance.dur(400); easing.type: Easing.OutExpo }
             }
         }
     }

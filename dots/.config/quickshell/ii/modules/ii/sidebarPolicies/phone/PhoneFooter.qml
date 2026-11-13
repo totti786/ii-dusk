@@ -41,7 +41,7 @@ Rectangle {
     readonly property real expandedHeight: Math.min(440, Math.max(282, (panelLoader.item?.contentHeight ?? 0) + 20))
     readonly property real collapsedHeight: collapsedRow.implicitHeight + 16
     readonly property bool collapsed: Persistent.states.sidebar.policies.phone.peripherals.collapsed
-    readonly property int selectedTab: Math.max(0, Math.min(2, Persistent.states.sidebar.policies.phone.peripherals.tab))
+    readonly property int selectedTab: Math.max(0, Math.min(3, Persistent.states.sidebar.policies.phone.peripherals.tab))
     implicitHeight: visible ? (collapsed ? collapsedHeight : expandedHeight) : 0
 
     Behavior on implicitHeight {
@@ -60,6 +60,7 @@ Rectangle {
     readonly property bool _scrcpyPresent: KdeConnectService.scrcpyAvailable
     readonly property bool _droidcamPresent: PhoneCameraService.available
     readonly property bool _micPresent: PhoneMicService.available
+    readonly property bool _audioPresent: PhoneAudioService.available
     readonly property bool _deviceOnline: KdeConnectService.activeReachable
 
     readonly property bool embedEnabled: Config.options?.phone?.scrcpy?.embed?.enabled ?? true
@@ -80,12 +81,17 @@ Rectangle {
         : !root._deviceOnline ? "offline"
         : PhoneMicService.connecting ? "connecting"
         : PhoneMicService.running ? "active" : "ready"
-    readonly property var featureStates: [root.mirrorState, root.webcamState, root.micState]
+    readonly property string audioState: !root._audioPresent ? "unavailable"
+        : !root._deviceOnline ? "offline"
+        : PhoneAudioService.connecting ? "connecting"
+        : PhoneAudioService.running ? "active" : "ready"
+    readonly property var featureStates: [root.mirrorState, root.webcamState, root.micState, root.audioState]
 
     readonly property var tabs: [
         { "name": Translation.tr("Mirror"), "icon": "smart_display" },
         { "name": Translation.tr("Webcam"), "icon": "videocam" },
-        { "name": Translation.tr("Mic"), "icon": "mic" }
+        { "name": Translation.tr("Mic"), "icon": "mic" },
+        { "name": Translation.tr("Audio"), "icon": "speaker_phone" }
     ]
 
     // ─── Install guide popup state ─────────────────────────
@@ -150,6 +156,14 @@ Rectangle {
             PhoneMicService.startMic();
     }
 
+    function audioMain(): void {
+        if (!root._audioPresent) {
+            root._openInstallGuide(KdeConnectService.scrcpyMissingDeps, Translation.tr("Phone Audio — Missing Dependencies"));
+            return;
+        }
+        PhoneAudioService.toggle();
+    }
+
     // ─── Entrance ───────────────────────────────────────────
     property int entranceTrigger: -1
     onEntranceTriggerChanged: {
@@ -197,12 +211,26 @@ Rectangle {
         }
 
         Repeater {
+            id: pillRepeater
             model: root.tabs
+            property int rev: 0
+            onItemAdded: rev++
+            onItemRemoved: rev++
+            readonly property real widestNeeded: {
+                rev;
+                let m = 0;
+                for (let i = 0; i < count; i++) {
+                    const it = itemAt(i);
+                    if (it) m = Math.max(m, it.neededWidth);
+                }
+                return m;
+            }
             delegate: StatusPill {
                 required property int index
                 required property var modelData
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
+                showLabel: width >= pillRepeater.widestNeeded
                 symbol: modelData.icon
                 label: modelData.name
                 featureState: root.featureStates[index]
@@ -296,7 +324,7 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: parent.height
-                sourceComponent: [mirrorPanel, webcamPanel, micPanel][panelArea.shownTab]
+                sourceComponent: [mirrorPanel, webcamPanel, micPanel, audioPanel][panelArea.shownTab]
             }
 
             Connections {
@@ -537,6 +565,48 @@ Rectangle {
         }
     }
 
+    Component {
+        id: audioPanel
+        FeaturePanel {
+            symbol: "speaker_phone"
+            shapeKind: MaterialShape.Shape.Cookie7Sided
+            featureState: root.audioState
+            title: root._audioPresent ? Translation.tr("Phone Audio") : Translation.tr("Install scrcpy")
+            subtitle: {
+                if (!root._audioPresent)
+                    return Translation.tr("See the missing dependencies");
+                if (!root._deviceOnline)
+                    return Translation.tr("Pair a reachable device");
+                if (PhoneAudioService.connecting)
+                    return Translation.tr("Connecting to the phone…");
+                if (PhoneAudioService.running)
+                    return Translation.tr("Playing for %1").arg(root._fmtElapsed(PhoneAudioService.elapsedMs)) + " · " + String(PhoneAudioService.volume) + "%";
+                return Translation.tr("Hear what the phone plays, without the screen");
+            }
+            mainLabel: !root._audioPresent ? Translation.tr("How to install")
+                : root.audioState === "active" ? Translation.tr("Stop") : Translation.tr("Start")
+            mainSymbol: !root._audioPresent ? "download"
+                : root.audioState === "active" ? "stop" : "play_arrow"
+            mainEnabled: !root._audioPresent || root._deviceOnline
+            error: root._audioPresent && !PhoneAudioService.running ? PhoneAudioService.lastError.split("\n")[0] : ""
+            detail: PhoneAudioService.running ? Translation.tr("volume %1%").arg(String(PhoneAudioService.volume)) : ""
+            onMainClicked: root.audioMain()
+            onStopClicked: PhoneAudioService.stop()
+            toggles: [
+                { icon: "volume_up", label: Translation.tr("Also on phone"), checked: PhoneAudioService.alsoOnPhone,
+                  toggle: () => PhoneAudioService.setAlsoOnPhone(!PhoneAudioService.alsoOnPhone) }
+            ]
+            actions: [
+                { icon: "volume_up", label: Translation.tr("Volume %1%").arg(String(PhoneAudioService.volume)),
+                  run: () => {
+                      // Cycle volume: 100 → 50 → 75 → 125 → 100.
+                      const v = PhoneAudioService.volume;
+                      PhoneAudioService.setVolume(v === 100 ? 50 : v === 50 ? 75 : v === 75 ? 125 : 100);
+                  } }
+            ]
+        }
+    }
+
     // ─── Components ─────────────────────────────────────────
     /** Collapsed-state pill: the feature's icon, name and a state colour. */
     component StatusPill: RippleButton {
@@ -554,20 +624,31 @@ Rectangle {
         colRipple: pill.active ? Appearance.colors.colPrimaryContainerActive : Appearance.colors.colLayer2Active
         opacity: pill.dimmed ? 0.55 : 1
 
+        // The row decides for every pill at once (showLabel): labels only if the widest one fits.
+        readonly property real neededWidth: pillIcon.implicitWidth + pillLabel.implicitWidth + 8 + 28
+        property bool showLabel: true
+        StyledToolTip {
+            text: pill.label
+            extraVisibleCondition: !pill.showLabel
+        }
+
         contentItem: Item {
             implicitWidth: pillRow.implicitWidth
             implicitHeight: pillRow.implicitHeight
             RowLayout {
                 id: pillRow
                 anchors.centerIn: parent
-                spacing: 5
+                spacing: 8
                 MaterialSymbol {
+                    id: pillIcon
                     text: pill.symbol
                     iconSize: Appearance.font.pixelSize.large
                     fill: pill.active ? 1 : 0
                     color: pill.active ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer3
                 }
                 StyledText {
+                    id: pillLabel
+                    visible: pill.showLabel
                     text: pill.label
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.DemiBold

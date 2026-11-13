@@ -329,7 +329,7 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 350
+                duration: Appearance.dur(350)
                 easing.type: Easing.OutCubic
             }
         }
@@ -395,14 +395,14 @@ Item {
                                         target: importContent
                                         property: "scale"
                                         to: 0
-                                        duration: 100
+                                        duration: Appearance.dur(100)
                                     }
                                     PropertyAction {}
                                     NumberAnimation {
                                         target: importContent
                                         property: "scale"
                                         to: 1
-                                        duration: 100
+                                        duration: Appearance.dur(100)
                                     }
                                 }
                             }
@@ -431,7 +431,7 @@ Item {
 
                     Behavior on width {
                         NumberAnimation {
-                            duration: 250
+                            duration: Appearance.dur(250)
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -473,7 +473,7 @@ Item {
 
                                             Behavior on color {
                                                 ColorAnimation {
-                                                    duration: 150
+                                                    duration: Appearance.dur(150)
                                                 }
                                             }
 
@@ -543,6 +543,7 @@ Item {
                         clip: true
 
                         Flickable {
+                            WheelScroll {}
                             id: tagFlickable
                             width: parent.width
                             height: tagButtonGroup.implicitHeight
@@ -753,7 +754,7 @@ Item {
 
                                     Behavior on opacity {
                                         NumberAnimation {
-                                            duration: 180
+                                            duration: Appearance.dur(180)
                                             easing.type: Easing.BezierSpline
                                             easing.bezierCurve: Appearance.animationCurves.emphasized
                                         }
@@ -761,7 +762,7 @@ Item {
 
                                     Behavior on scale {
                                         NumberAnimation {
-                                            duration: 180
+                                            duration: Appearance.dur(180)
                                             easing.type: Easing.BezierSpline
                                             easing.bezierCurve: Appearance.animationCurves.emphasized
                                         }
@@ -769,7 +770,7 @@ Item {
 
                                     Behavior on height {
                                         NumberAnimation {
-                                            duration: 180
+                                            duration: Appearance.dur(180)
                                             easing.type: Easing.BezierSpline
                                             easing.bezierCurve: Appearance.animationCurves.emphasized
                                         }
@@ -777,7 +778,7 @@ Item {
 
                                     Behavior on x {
                                         NumberAnimation {
-                                            duration: 220
+                                            duration: Appearance.dur(220)
                                             easing.type: Easing.BezierSpline
                                             easing.bezierCurve: Appearance.animationCurves.emphasized
                                         }
@@ -785,7 +786,7 @@ Item {
 
                                     Behavior on y {
                                         NumberAnimation {
-                                            duration: 220
+                                            duration: Appearance.dur(220)
                                             easing.type: Easing.BezierSpline
                                             easing.bezierCurve: Appearance.animationCurves.emphasized
                                         }
@@ -879,7 +880,7 @@ Item {
 
             Behavior on anchors.horizontalCenterOffset {
                 NumberAnimation {
-                    duration: 250
+                    duration: Appearance.dur(250)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -940,7 +941,7 @@ Item {
         visible: opacity > 0
         Behavior on opacity {
             NumberAnimation {
-                duration: 200
+                duration: Appearance.dur(200)
                 easing.type: Easing.OutCubic
             }
         }

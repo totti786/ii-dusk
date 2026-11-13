@@ -290,7 +290,7 @@ Item {
                         width: Math.max(parent.width, Appearance.font.pixelSize.huge) * 0.9
 
                         NumberAnimation on x {
-                            running: true
+                            running: !Appearance.motionOff
                             loops: Animation.Infinite
                             from: -sweepBand.width
                             to: Math.max(sweepSource.width, Appearance.font.pixelSize.huge)

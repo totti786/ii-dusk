@@ -142,13 +142,13 @@ Item {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 350
+                        duration: Appearance.dur(350)
                         easing.type: Easing.OutCubic
                     }
                 }
                 Behavior on scale {
                     NumberAnimation {
-                        duration: 350
+                        duration: Appearance.dur(350)
                         easing.type: Easing.OutCubic
                     }
                 }
