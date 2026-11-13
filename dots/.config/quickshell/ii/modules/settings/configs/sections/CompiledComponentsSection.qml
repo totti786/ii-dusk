@@ -49,7 +49,7 @@ ContentSection {
     // Bundled and rebuilt by hand: not part of rust-helpers.sh, because their sources live
     // outside this folder.
     readonly property var bundles: [
-        { file: "vendor/books.pyz", title: Translation.tr("Books bundle"), usedBy: Translation.tr("The Books app"), command: "scripts/build-books-zipapp.sh" }
+        { file: "vendor/books.pyz", title: Translation.tr("Books bundle (optional, not shipped)"), usedBy: Translation.tr("The Books app"), command: "scripts/build-books-zipapp.sh" }
     ]
 
     readonly property string scriptsDir: Quickshell.shellPath("scripts")
