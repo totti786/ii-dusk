@@ -1,0 +1,55 @@
+[package]
+name = "ii-quickshare"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-only"
+description = "Quick Share (Nearby Share) daemon for the ii shell; protocol core adapted from rquickshare's rqs_lib (GPL-3.0)"
+
+[dependencies]
+anyhow = "1.0"
+base64 = "0.22"
+bluer = { version = "0.17", features = ["bluetoothd"], optional = true }
+bytes = "1.10"
+directories = "6.0"
+futures = "0.3"
+get_if_addrs = "0.5"
+hex = "0.4"
+hkdf = "0.12"
+hmac = "0.12"
+libaes = "0.7"
+log = "0.4"
+mdns-sd = { git = "https://github.com/Martichou/mdns-sd", rev = "c3d6ec2e173ac2cf8306943f70026c37c2ab1dd7" }
+mime_guess = "2.0"
+num-bigint = "0.4"
+once_cell = "1.20"
+p256 = { version = "0.13", features = ["ecdh"] }
+prost = "0.13"
+rand = "0.9"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+tokio = { version = "1.43", features = ["macros", "rt", "rt-multi-thread", "net", "sync", "time", "io-util", "signal", "fs"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+uuid = "1.15"
+
+[build-dependencies]
+prost-build = "0.13"
+
+[features]
+default = ["ble"]
+ble = ["bluer"]
+
+[profile.release]
+opt-level = 2
+debug = false
+strip = true
+codegen-units = 4
+
+[lib]
+name = "rqs_lib"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ii-quickshare"
+path = "src/main.rs"
