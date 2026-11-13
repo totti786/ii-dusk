@@ -152,6 +152,9 @@ build_one() {
     cp "$src/target/release/$name" "$bin.new" || return 1
     mv -f "$bin.new" "$bin" || return 1
     write_stamp "$name" || return 1
+    # The compile cache is hundreds of MB per helper and the installed binary does not need it.
+    # RUST_HELPERS_KEEP_TARGET=1 keeps it for faster rebuilds while hacking on a helper.
+    [[ -n "${RUST_HELPERS_KEEP_TARGET:-}" ]] || rm -rf "$src/target"
     # Whatever is left under the former name only keeps `was_built` answering.
     local old
     old="$(former_name "$name")" && rm -f "$dir/$old" "$dir/.$old.stamp"
