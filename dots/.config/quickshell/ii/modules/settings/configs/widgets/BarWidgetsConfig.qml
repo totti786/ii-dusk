@@ -59,7 +59,7 @@ ContentPage {
         }
 
         StyledText {
-            text: Translation.tr("Widgets & Waffle Settings")
+            text: Translation.tr("Widgets Settings")
             font.pixelSize: Appearance.font.pixelSize.large
             font.family: Appearance.font.family.title
             color: Appearance.colors.colOnLayer0
@@ -375,53 +375,6 @@ ContentPage {
                 title: Translation.tr("Mode Indicator")
                 description: Translation.tr("The active mode's name and colour; hidden while no mode is on")
                 onOpenCard: root.openComponentPage("mode_indicator")
-            }
-        }
-    }
-
-    // ── Waffle Tweaks Section ──────────────────────────────────────────────
-    ContentSection {
-        icon: "grid_view"
-        title: Translation.tr("Waffle Tweaks")
-
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 4
-
-            ConfigSwitch {
-                buttonIcon: "align_horizontal_center"
-                text: Translation.tr("Fix switch handle position")
-                checked: Config.options.waffles.tweaks.switchHandlePositionFix
-                onCheckedChanged: {
-                    Config.options.waffles.tweaks.switchHandlePositionFix = checked;
-                }
-            }
-
-            ConfigSwitch {
-                buttonIcon: "animation"
-                text: Translation.tr("Smoother menu animations")
-                checked: Config.options.waffles.tweaks.smootherMenuAnimations
-                onCheckedChanged: {
-                    Config.options.waffles.tweaks.smootherMenuAnimations = checked;
-                }
-            }
-
-            ConfigSwitch {
-                buttonIcon: "search"
-                text: Translation.tr("Smoother search bar")
-                checked: Config.options.waffles.tweaks.smootherSearchBar
-                onCheckedChanged: {
-                    Config.options.waffles.tweaks.smootherSearchBar = checked;
-                }
-            }
-
-            ConfigSwitch {
-                buttonIcon: "calendar_today"
-                text: Translation.tr("Force 2-character day of week on calendar")
-                checked: Config.options.waffles.calendar.force2CharDayOfWeek
-                onCheckedChanged: {
-                    Config.options.waffles.calendar.force2CharDayOfWeek = checked;
-                }
             }
         }
     }

@@ -264,7 +264,7 @@ Item {
                 ConfigSubpageRow {
                     buttonIcon: "screen_record"
                     title: Translation.tr("Screen Recording")
-                    description: Translation.tr("Recorder provider (OBS / wf-recorder), video quality, and post-recording actions")
+                    description: Translation.tr("Recorder provider (Auto / GPU Screen Recorder / wf-recorder / OBS), video quality, and post-recording actions")
                     onClicked: subPageOverlay.open(Qt.resolvedUrl("widgets/ScreenRecordingConfig.qml"))
                 }
 

@@ -862,7 +862,7 @@ Item {
                         color: Appearance.colors.colOnPrimaryContainer
 
                         RotationAnimation on rotation {
-                            running: root.authRunning
+                            running: (root.authRunning) && !Appearance.motionOff
                             from: 0
                             to: 360
                             duration: 1000

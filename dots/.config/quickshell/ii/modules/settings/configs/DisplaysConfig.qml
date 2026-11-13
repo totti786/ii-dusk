@@ -95,20 +95,20 @@ ContentPage {
         Behavior on x {
             enabled: !isDragging && monitorCanvas.width > 40
             NumberAnimation {
-                duration: 150
+                duration: Appearance.dur(150)
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on y {
             enabled: !isDragging && monitorCanvas.width > 40
             NumberAnimation {
-                duration: 150
+                duration: Appearance.dur(150)
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on color {
             ColorAnimation {
-                duration: 150
+                duration: Appearance.dur(150)
             }
         }
 

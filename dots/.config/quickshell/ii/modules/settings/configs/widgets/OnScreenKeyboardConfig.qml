@@ -51,7 +51,7 @@ Item {
             Layout.fillWidth: true
             Layout.bottomMargin: 4
             text: Translation.tr("Toggle On-Screen Keyboard")
-            keys: ["Super", "K"]
+            keys: ["Super", "Alt", "K"]
         }
 
         ContentSection {

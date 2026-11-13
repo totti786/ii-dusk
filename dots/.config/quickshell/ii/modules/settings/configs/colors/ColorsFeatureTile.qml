@@ -21,6 +21,8 @@ Rectangle {
     property string summary: ""
     property bool checked: false
     property bool configurable: false
+    /// Many footer chips: the Configure action shrinks to its icon and the gaps tighten.
+    property bool compactFooter: false
     default property alias footer: footerRow.data
 
     signal toggled(bool value)
@@ -128,12 +130,12 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: root.compactFooter ? 4 : 8
 
             RowLayout {
                 id: footerRow
                 Layout.fillWidth: true
-                spacing: 8
+                spacing: root.compactFooter ? 4 : 8
             }
 
             // Built only for a tile that has a sub-page; most do not.

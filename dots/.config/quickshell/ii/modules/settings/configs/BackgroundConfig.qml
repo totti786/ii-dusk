@@ -160,6 +160,25 @@ Item {
         return (list.find(entry => entry.value === value) ?? list[0]).name;
     }
 
+    function celestialSimulationSpeedName(daysPerSecond) {
+        const days = Number(daysPerSecond ?? 1.0);
+        if (Math.abs(days - 1.0 / 24.0) < 0.001)
+            return Translation.tr("1 hour / second");
+        if (Math.abs(days - 1.0) < 0.001)
+            return Translation.tr("1 day / second");
+        if (Math.abs(days - 7.0) < 0.001)
+            return Translation.tr("7 days / second");
+        return Translation.tr("%1 days / second").arg(days.toFixed(2));
+    }
+
+    function returnCelestialToLive() {
+        backgroundRoot.background.celestial.simulationEnabled = false;
+        // The old fixed-date preview is a separate diagnostic switch. A
+        // button labelled "Return to live time" should clear both preview
+        // modes instead of silently landing on the debug date.
+        backgroundRoot.background.celestial.debugTimeOverrideEnabled = false;
+    }
+
     function tryEffect(mode) {
         backgroundRoot.previewMode = mode;
         hero.play();
@@ -262,6 +281,139 @@ Item {
             visible: backgroundRoot.videoLocked
             materialIcon: "movie"
             text: Translation.tr("Video wallpaper active: window blur and parallax are disabled automatically; only the Default zoom style is available.")
+        }
+
+        // ── Optional live celestial wallpaper ────────────────────────────
+        BackgroundPane {
+            Layout.fillWidth: true
+            symbol: "nightlight"
+            shapeIdle: MaterialShape.Shape.Cookie6Sided
+            shapeEngaged: MaterialShape.Shape.Flower
+            title: Translation.tr("Celestial Moonphase")
+            subtitle: backgroundRoot.background.celestial.enable
+                ? (backgroundRoot.background.celestial.simulationEnabled
+                    ? Translation.tr("Simulated astrolabe · %1").arg(backgroundRoot.celestialSimulationSpeedName(
+                        backgroundRoot.background.celestial.simulationDaysPerSecond))
+                    : backgroundRoot.background.celestial.animate
+                    ? Translation.tr("Live astrolabe · %1 FPS").arg(backgroundRoot.background.celestial.fps)
+                    : Translation.tr("Static astrolabe · low power"))
+                : Translation.tr("Off · keeps the current wallpaper")
+            switchable: true
+            checked: backgroundRoot.background.celestial.enable
+            onToggled: next => backgroundRoot.background.celestial.enable = next
+
+            ConfigSwitch {
+                buttonIcon: "animation"
+                text: Translation.tr("Animate celestial backdrop")
+                checked: backgroundRoot.background.celestial.animate
+                onCheckedChanged: backgroundRoot.background.celestial.animate = checked
+                StyledToolTip {
+                    text: Translation.tr("Runs the planisphere shader at a capped refresh rate. Leave off for a still, low-power scene.")
+                }
+            }
+
+            ConfigSwitch {
+                buttonIcon: "fast_forward"
+                text: Translation.tr("Simulate time")
+                description: Translation.tr("Advance one shared date so the Moon, orbit, Earth, and prayer clock change together.")
+                checked: backgroundRoot.background.celestial.simulationEnabled
+                onCheckedChanged: {
+                    if (backgroundRoot.background.celestial.simulationEnabled !== checked)
+                        backgroundRoot.background.celestial.simulationEnabled = checked;
+                }
+                StyledToolTip {
+                    text: Translation.tr("Starts at the current time and runs the astronomy preview faster. It uses local calculations and makes no prayer API requests while active.")
+                }
+            }
+
+            ConfigSelectionArray {
+                visible: backgroundRoot.background.celestial.simulationEnabled
+                currentValue: backgroundRoot.background.celestial.simulationDaysPerSecond ?? 1.0
+                onSelected: value => backgroundRoot.background.celestial.simulationDaysPerSecond = value
+                options: [
+                    { displayName: Translation.tr("1 hour / second"), icon: "schedule", value: 1.0 / 24.0 },
+                    { displayName: Translation.tr("1 day / second"), icon: "today", value: 1.0 },
+                    { displayName: Translation.tr("7 days / second"), icon: "date_range", value: 7.0 }
+                ]
+            }
+
+            ConfigSwitch {
+                visible: backgroundRoot.background.celestial.simulationEnabled
+                buttonIcon: "pause"
+                text: Translation.tr("Pause simulation")
+                checked: backgroundRoot.background.celestial.simulationPaused
+                onCheckedChanged: {
+                    if (backgroundRoot.background.celestial.simulationPaused !== checked)
+                        backgroundRoot.background.celestial.simulationPaused = checked;
+                }
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                visible: backgroundRoot.background.celestial.simulationEnabled
+                text: Translation.tr("Preview speed: %1").arg(backgroundRoot.celestialSimulationSpeedName(
+                    backgroundRoot.background.celestial.simulationDaysPerSecond))
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.small
+                wrapMode: Text.WordWrap
+            }
+
+            RippleButtonWithIcon {
+                visible: backgroundRoot.background.celestial.simulationEnabled
+                Layout.fillWidth: true
+                materialIcon: "schedule"
+                mainText: Translation.tr("Return to live time")
+                centerContent: true
+                onClicked: backgroundRoot.returnCelestialToLive()
+            }
+
+            ConfigSlider {
+                buttonIcon: "speed"
+                text: Translation.tr("Animation refresh rate")
+                from: 5
+                to: 30
+                stepSize: 1
+                value: backgroundRoot.background.celestial.fps ?? 10
+                onValueChanged: backgroundRoot.background.celestial.fps = value
+            }
+
+            ConfigSelectionArray {
+                currentValue: backgroundRoot.background.celestial.backgroundStyle ?? 0
+                onSelected: value => backgroundRoot.background.celestial.backgroundStyle = value
+                options: [
+                    { displayName: Translation.tr("Planisphere"), icon: "star", value: 0 },
+                    { displayName: Translation.tr("Seasonal etchings"), icon: "timeline", value: 1 },
+                    { displayName: Translation.tr("Combined"), icon: "auto_awesome", value: 2 }
+                ]
+            }
+
+            ConfigSlider {
+                buttonIcon: "brightness_6"
+                text: Translation.tr("Instrument brightness")
+                usePercentTooltip: true
+                from: 10
+                to: 100
+                stepSize: 1
+                value: Math.round((backgroundRoot.background.celestial.intensity ?? 0.65) * 100)
+                onValueChanged: backgroundRoot.background.celestial.intensity = value / 100
+            }
+
+            ConfigSwitch {
+                buttonIcon: "subtitles"
+                text: Translation.tr("Show telemetry captions")
+                checked: backgroundRoot.background.celestial.showTelemetry
+                onCheckedChanged: backgroundRoot.background.celestial.showTelemetry = checked
+            }
+
+            ConfigSwitch {
+                buttonIcon: "my_location"
+                text: Translation.tr("Use weather location for prayer and Earth")
+                checked: backgroundRoot.background.celestial.followWeatherLocation
+                onCheckedChanged: backgroundRoot.background.celestial.followWeatherLocation = checked
+                StyledToolTip {
+                    text: Translation.tr("Uses the location already resolved by Bar → Weather. Turn off to use the fixed coordinates in the config.")
+                }
+            }
         }
 
         // ── Parallax and window blur ──────────────────────────────────────
@@ -558,7 +710,7 @@ Item {
 
         // ── Context menus ─────────────────────────────────────────────────
         // The desktop's right-click menu leads, but the sub-page styles every ii menu.
-        // The waffle and tablet families draw their own menus.
+        // The tablet family draws its own menus.
         ContentSection {
             visible: PanelFamily.current === "ii"
             title: Translation.tr("Context menus")

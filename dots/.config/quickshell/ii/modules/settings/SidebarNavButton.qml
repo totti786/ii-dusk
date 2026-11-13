@@ -23,7 +23,7 @@ Item {
 
     Behavior on scale {
         NumberAnimation {
-            duration: 150
+            duration: Appearance.dur(150)
             easing.type: Easing.OutQuad
         }
     }
@@ -131,7 +131,7 @@ Item {
                 }
                 Behavior on fill {
                     NumberAnimation {
-                        duration: 150
+                        duration: Appearance.dur(150)
                     }
                 }
             }

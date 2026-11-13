@@ -168,23 +168,8 @@ Rectangle {
         height: root.footerHeight - 16
         spacing: 4
 
-        Repeater {
-            model: root.keys
-            delegate: Rectangle {
-                required property string modelData
-                implicitHeight: 26
-                implicitWidth: Math.max(26, keyText.implicitWidth + 14)
-                radius: Appearance.rounding.verysmall
-                color: Appearance.colors.colSurfaceContainerHighest
-                StyledText {
-                    id: keyText
-                    anchors.centerIn: parent
-                    text: parent.modelData
-                    font.pixelSize: Appearance.font.pixelSize.smallest
-                    font.weight: Font.Bold
-                    color: Appearance.colors.colOnSurface
-                }
-            }
+        KeyCaps {
+            keys: root.keys
         }
 
         Item {

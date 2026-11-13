@@ -219,6 +219,7 @@ ContentPage {
         icon: "tune"
 
         DesktopWidgetVisualOptions {
+                widgetId: "phone_key"
             Layout.fillWidth: true
         }
     }

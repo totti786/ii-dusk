@@ -32,7 +32,7 @@ Item {
             isFirst: true
             isLast: true
             materialIcon: "mobile_share"
-            text: Translation.tr("Ways to share files with your phone:\n\n• KDE Connect: Drag files into the Phone tab in Sidebar Policies, drop files onto the Dynamic Island, use the 'Send file' toggle inside Phone in Sidebar Policies, or use More Actions in Search (Ctrl+K).\n\n• LocalSend: Use More Actions in Search (Ctrl+K), drop files onto the Dynamic Island, use the LocalSend Quick Toggle, or drag files onto the Clock widget in the bar.")
+            text: Translation.tr("Ways to share files with your phone:\n\n• KDE Connect: Drag files into the Phone tab in Sidebar Policies, drop files onto the Dynamic Island, use the 'Send file' toggle inside Phone in Sidebar Policies, or use More Actions in Search (Ctrl+K).\n\n• LocalSend: Use More Actions in Search (Ctrl+K), drop files onto the Dynamic Island, use the LocalSend Quick Toggle, or drag files onto the Clock widget in the bar.\n\n• Quick Share: Android phones nearby, no pairing. Drop files onto the Dynamic Island or the Send tile, or use the Quick Share tile to let a phone send to this computer.")
         }
 
     ContentSection {
@@ -175,6 +175,121 @@ Item {
             enabled: LocalSend.available
             onTextChanged: {
                 Config.options.localsend.downloadPath = text;
+            }
+        }
+    }
+
+    ContentSection {
+        icon: "send_to_mobile"
+        title: Translation.tr("Quick Share")
+
+        ConfigSwitch {
+            buttonIcon: "power_settings_new"
+            text: Translation.tr("Enable Quick Share")
+            checked: Config.options.quickShare.enable
+            onCheckedChanged: {
+                if (Config.options.quickShare.enable !== checked)
+                    Config.options.quickShare.enable = checked;
+            }
+        }
+
+        // The daemon is compiled here, once, the first time Quick Share is turned on.
+        NoticeBox {
+            Layout.fillWidth: true
+            isFirst: true
+            visible: QuickShareService.enabled && (QuickShareService.building || !QuickShareService.binaryExists)
+            materialIcon: QuickShareService.helperBuild.buildResult === "failed" ? "error"
+                : !QuickShareService.helperBuild.cargoAvailable ? "download" : "construction"
+            text: QuickShareService.building
+                    ? Translation.tr("Building the Quick Share service from source (first time, about two minutes)… %1").arg(QuickShareService.helperBuild.progressText)
+                : QuickShareService.helperBuild.buildResult === "failed"
+                    ? Translation.tr("The build failed, so Quick Share is not running.")
+                : !QuickShareService.helperBuild.cargoAvailable
+                    ? Translation.tr("Quick Share's background service is compiled from source here, and the Rust toolchain is not installed.")
+                : Translation.tr("The Quick Share service has not been built yet.")
+
+            RippleButtonWithIcon {
+                visible: !QuickShareService.building && QuickShareService.helperBuild.cargoAvailable
+                materialIcon: QuickShareService.helperBuild.buildResult === "failed" ? "refresh" : "build"
+                mainText: QuickShareService.helperBuild.buildResult === "failed" ? Translation.tr("Retry") : Translation.tr("Build now")
+                colBackground: Appearance.colors.colTertiary
+                colText: Appearance.colors.colOnTertiary
+                onClicked: QuickShareService.helperBuild.build()
+            }
+            MaterialLoadingIndicator {
+                visible: QuickShareService.building
+                loading: QuickShareService.building
+                implicitSize: 20
+            }
+        }
+
+        StyledProgressBar {
+            Layout.fillWidth: true
+            visible: QuickShareService.building
+            value: QuickShareService.helperBuild.progress
+        }
+
+        HelperCodeBox {
+            Layout.fillWidth: true
+            visible: QuickShareService.helperBuild.buildResult === "failed"
+            icon: "error"
+            title: Translation.tr("Build output")
+            codeSnippet: QuickShareService.helperBuild.buildOutput.split("\n").slice(-12).join("\n")
+            snippetWrapMode: Text.WrapAnywhere
+        }
+
+        HelperCodeBox {
+            Layout.fillWidth: true
+            visible: QuickShareService.enabled && !QuickShareService.binaryExists && !QuickShareService.helperBuild.cargoAvailable
+            icon: "terminal"
+            title: Translation.tr("Install Rust, then build")
+            codeSnippet: "yay -S --needed rust\n" + Directories.rustHelpersScriptPath + " build ii-quickshare"
+            snippetWrapMode: Text.WrapAnywhere
+        }
+
+        // Built from older source (after an update): keeps running, just without the newest fixes.
+        NoticeBox {
+            Layout.fillWidth: true
+            visible: QuickShareService.binaryExists && QuickShareService.helperBuild.outdated && !QuickShareService.building
+            materialIcon: "update"
+            text: QuickShareService.helperBuild.state === "stale"
+                ? Translation.tr("The running service was built from older source than the one installed now.")
+                : Translation.tr("This service has no build record, so it may be behind its source.")
+
+            RippleButtonWithIcon {
+                visible: QuickShareService.helperBuild.cargoAvailable
+                materialIcon: "refresh"
+                mainText: Translation.tr("Rebuild")
+                colBackground: Appearance.colors.colTertiary
+                colText: Appearance.colors.colOnTertiary
+                onClicked: QuickShareService.helperBuild.build()
+            }
+        }
+
+        NoticeBox {
+            Layout.fillWidth: true
+            isFirst: true
+            isLast: true
+            materialIcon: !QuickShareService.enabled ? "block"
+                : QuickShareService.errorText !== "" ? "error"
+                : QuickShareService.linked ? "check_circle" : "sync_problem"
+            text: !QuickShareService.enabled ? Translation.tr("Off. This computer is invisible and the Quick Share background service is not running.")
+                : QuickShareService.errorText !== "" ? Translation.tr("Error: %1").arg(QuickShareService.errorText)
+                : !QuickShareService.linked ? Translation.tr("Starting the Quick Share service…")
+                : QuickShareService.visibility === "invisible" ? Translation.tr("Running. Hidden: Android phones can't send here until you make this computer visible (Quick Share tile, or the island).")
+                : QuickShareService.visibility === "visible" ? Translation.tr("Running. Visible to everyone nearby.")
+                : Translation.tr("Running. Visible for 10 minutes.")
+        }
+
+        MaterialTextArea {
+            Layout.fillWidth: true
+            placeholderText: Translation.tr("Download folder (empty: ~/Downloads)")
+            text: Config.options.quickShare.downloadDir
+            wrapMode: TextEdit.Wrap
+            enabled: Config.options.quickShare.enable
+            onTextChanged: {
+                if (Config.options.quickShare.downloadDir !== text)
+                    Config.options.quickShare.downloadDir = text;
             }
         }
     }

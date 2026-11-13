@@ -408,7 +408,7 @@ ContentPage {
                 cardIcon: "event"
                 configKey: "dateWithYearFormat"
                 defaultValue: "dd/MM/yyyy"
-                usedIn: Translation.tr("Waffle bar clock, weather refresh timestamp")
+                usedIn: Translation.tr("Weather refresh timestamp")
                 now: previewClock.date
                 expanded: root.expandedKey === "dateWithYearFormat"
                 onToggleRequested: root.expandedKey = (root.expandedKey === "dateWithYearFormat") ? "" : "dateWithYearFormat"

@@ -74,7 +74,7 @@ Rectangle {
                     ? Appearance.m3colors.m3primary
                     : Appearance.colors.colLayer3
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
 
             // Bottom Edge Indicator
@@ -88,7 +88,7 @@ Rectangle {
                     ? Appearance.m3colors.m3primary
                     : Appearance.colors.colLayer3
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
 
             // Left Edge Indicator
@@ -102,7 +102,7 @@ Rectangle {
                     ? Appearance.m3colors.m3primary
                     : Appearance.colors.colLayer3
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
 
             // Right Edge Indicator
@@ -116,7 +116,7 @@ Rectangle {
                     ? Appearance.m3colors.m3primary
                     : Appearance.colors.colLayer3
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
 
             // Top-Left Corner Indicator
@@ -130,7 +130,7 @@ Rectangle {
                     ? Appearance.m3colors.m3primary
                     : Appearance.colors.colLayer3
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
 
             // Top-Right Corner Indicator
@@ -144,7 +144,7 @@ Rectangle {
                     ? Appearance.m3colors.m3primary
                     : Appearance.colors.colLayer3
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
 
             // Bottom-Left Corner Indicator
@@ -158,7 +158,7 @@ Rectangle {
                     ? Appearance.m3colors.m3primary
                     : Appearance.colors.colLayer3
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
 
             // Bottom-Right Corner Indicator
@@ -172,7 +172,7 @@ Rectangle {
                     ? Appearance.m3colors.m3primary
                     : Appearance.colors.colLayer3
 
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Appearance.dur(150) } }
             }
         }
     }

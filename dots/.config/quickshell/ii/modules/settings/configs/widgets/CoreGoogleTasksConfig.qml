@@ -92,7 +92,7 @@ ColumnLayout {
                     color: Appearance.colors.colOnPrimaryContainer
 
                     RotationAnimation on rotation {
-                        running: GoogleTasksService.authenticating
+                        running: (GoogleTasksService.authenticating) && !Appearance.motionOff
                         from: 0
                         to: 360
                         duration: 1000

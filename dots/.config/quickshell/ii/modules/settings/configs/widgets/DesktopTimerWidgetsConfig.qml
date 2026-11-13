@@ -176,6 +176,7 @@ ContentPage {
         icon: "tune"
 
         DesktopWidgetVisualOptions {
+                widgetId: "timer_pomodoro"
             Layout.fillWidth: true
         }
     }

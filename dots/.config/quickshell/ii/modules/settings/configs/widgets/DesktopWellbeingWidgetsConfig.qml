@@ -148,6 +148,7 @@ ContentPage {
         icon: "tune"
 
         DesktopWidgetVisualOptions {
+                widgetId: "wellbeing_limits"
             Layout.fillWidth: true
         }
     }

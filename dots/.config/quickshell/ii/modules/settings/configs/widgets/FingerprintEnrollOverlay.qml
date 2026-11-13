@@ -192,13 +192,13 @@ Item {
 
                         Behavior on color {
                             ColorAnimation {
-                                duration: 180
+                                duration: Appearance.dur(180)
                             }
                         }
 
                         Behavior on scale {
                             NumberAnimation {
-                                duration: 180
+                                duration: Appearance.dur(180)
                                 easing.type: Easing.OutBack
                             }
                         }
@@ -215,7 +215,7 @@ Item {
                     // A slow breath while waiting for a touch, so the dialog
                     // never looks frozen between stages.
                     SequentialAnimation on opacity {
-                        running: root.scanning && Fingerprint.enrollPhase !== "authorizing"
+                        running: (root.scanning && Fingerprint.enrollPhase !== "authorizing") && !Appearance.motionOff
                         loops: Animation.Infinite
                         alwaysRunToEnd: true
 

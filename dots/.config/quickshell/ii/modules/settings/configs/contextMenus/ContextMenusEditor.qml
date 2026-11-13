@@ -55,7 +55,6 @@ WorkspacesPane {
             // but named, so a row that never shows here is not a mystery.
             "onlyIn": e.families && e.families.indexOf(PanelFamily.current) < 0
                 ? (e.families.length === 1 && e.families[0] === "tablet" ? Translation.tr("Tablet only")
-                    : e.families.length === 1 && e.families[0] === "waffle" ? Translation.tr("Waffle only")
                     : Translation.tr("Other families only"))
                 : "",
             "kind": e.header ? Translation.tr("Always on top of the menu")

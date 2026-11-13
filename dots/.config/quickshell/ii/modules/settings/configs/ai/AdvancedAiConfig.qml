@@ -252,6 +252,30 @@ ContentPage {
             }
         }
 
+        ConfigSwitch {
+            buttonIcon: "tune"
+            text: Translation.tr("OpenCode chats change shell settings without asking")
+            checked: Config.options.ai.tools.opencodeConfigWrites
+            onCheckedChanged: {
+                Config.options.ai.tools.opencodeConfigWrites = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("Every change is recorded and can be undone from the chat. Settings that give the assistant more power (its own permissions, apps the shell launches, addresses, credentials) always stay with you.")
+            }
+        }
+
+        ConfigSwitch {
+            buttonIcon: "bolt"
+            text: Translation.tr("Auto mode: OpenCode chats run commands and edit files without asking")
+            checked: Config.options.ai.tools.opencodeAuto
+            onCheckedChanged: {
+                Config.options.ai.tools.opencodeAuto = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("Commands that install or remove packages, need root, change system services or delete recursively still ask. That check catches honest mistakes; it is not a sandbox. Applies to new chats.")
+            }
+        }
+
         ConfigSpinBox {
             icon: "history"
             text: Translation.tr("Tool calls to remember")

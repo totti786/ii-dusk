@@ -777,7 +777,7 @@ Item {
                         NoticeBox {
                             Layout.fillWidth: true
                             materialIcon: "keyboard"
-                            text: Translation.tr("Open it from the game overlay (Super+G) and pin it, or bind a key to the \"perfMonitorToggle\" shortcut. From a script: qs -c ii ipc call perfMonitor toggle.")
+                            text: Translation.tr("Super+Alt+H opens it, or open it from the game overlay (Super+Alt+O) and pin it. Any other key can be bound to the \"perfMonitorToggle\" shortcut. From a script: qs -c ii ipc call perfMonitor toggle.")
                         }
                     }
                 }

@@ -37,7 +37,7 @@ Item {
             KeyboardShortcutBox {
                 Layout.fillWidth: true
                 text: Translation.tr("Toggle On-Screen Keyboard")
-                keys: ["Super", "K"]
+                keys: ["Super", "Alt", "K"]
             }
 
             ConfigSwitch {

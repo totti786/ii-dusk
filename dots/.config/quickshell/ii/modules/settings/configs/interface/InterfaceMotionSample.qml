@@ -61,7 +61,7 @@ Rectangle {
 
     SequentialAnimation {
         id: loop
-        running: root.active
+        running: (root.active) && !Appearance.motionOff
         loops: Animation.Infinite
 
         NumberAnimation {

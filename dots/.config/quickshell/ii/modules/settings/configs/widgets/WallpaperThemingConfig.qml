@@ -75,19 +75,6 @@ Item {
                     text: Translation.tr("Shell & utilities theming must also be enabled")
                 }
             }
-
-            ConfigSwitch {
-                buttonIcon: "terminal"
-                text: Translation.tr("Terminal")
-                checked: Config.options.appearance.wallpaperTheming.enableTerminal
-                enabled: Config.options.appearance.wallpaperTheming.enableAppsAndShell
-                onCheckedChanged: {
-                    Config.options.appearance.wallpaperTheming.enableTerminal = checked;
-                }
-                StyledToolTip {
-                    text: Translation.tr("Shell & utilities theming must also be enabled")
-                }
-            }
         }
     }
 }

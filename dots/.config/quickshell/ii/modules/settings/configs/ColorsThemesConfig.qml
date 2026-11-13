@@ -47,8 +47,8 @@ Item {
 
                     readonly property int gap: 12
                     readonly property int fits: Math.max(1, Math.floor((width + gap) / (300 + gap)))
-                    // Four tiles: one row of four, two of two or a column, never 3 + 1.
-                    readonly property int columns: fits >= 4 ? 4 : fits >= 2 ? 2 : 1
+                    // Five tiles: one row of five, 3 + 2, two columns or one, never 4 + 1.
+                    readonly property int columns: fits >= 5 ? 5 : fits >= 3 ? 3 : fits >= 2 ? 2 : 1
                     readonly property int tileWidth: Math.floor((width - gap * (columns - 1)) / columns)
                     readonly property int tileHeight: 200
 
@@ -107,15 +107,65 @@ Item {
                                 colOnChosen: Appearance.colors.colOnPrimary
                                 onClicked: Config.options.appearance.wallpaperTheming.enableQtApps = !chosen
                             }
+                        }
+
+                        ColorsFeatureTile {
+                            id: glassTile
+                            compactFooter: true
+                            width: tiles.tileWidth
+                            height: tiles.tileHeight
+                            symbol: "blur_on"
+                            shapeOn: MaterialShape.Shape.Pentagon
+                            title: Translation.tr("Glass")
+                            summary: Translation.tr("See-through bar, dock and panels with the same blur as the desktop widgets")
+                            checked: Config.options.appearance.transparency.enable
+                            configurable: true
+                            onConfigureRequested: colorsThemesRoot.activeSubPage = Qt.resolvedUrl("widgets/WindowsBlurConfig.qml")
+                            onToggled: value => Config.options.appearance.transparency.enable = value
+
                             ColorsChip {
-                                enabled: themingTile.checked
-                                label: Translation.tr("Terminal")
-                                symbol: "terminal"
-                                chosen: Config.options.appearance.wallpaperTheming.enableTerminal
-                                colContent: themingTile.colContent
+                                compact: true
+                                enabled: glassTile.checked
+                                label: Translation.tr("Auto")
+                                symbol: "auto_awesome"
+                                chosen: Config.options.appearance.transparency.automatic
+                                colContent: glassTile.colContent
                                 colChosen: Appearance.colors.colPrimary
                                 colOnChosen: Appearance.colors.colOnPrimary
-                                onClicked: Config.options.appearance.wallpaperTheming.enableTerminal = !chosen
+                                onClicked: Config.options.appearance.transparency.automatic = !chosen
+                            }
+                            ColorsChip {
+                                compact: true
+                                enabled: glassTile.checked
+                                label: Translation.tr("Menus")
+                                symbol: "menu_open"
+                                chosen: Config.options.appearance.transparency.popups
+                                colContent: glassTile.colContent
+                                colChosen: Appearance.colors.colPrimary
+                                colOnChosen: Appearance.colors.colOnPrimary
+                                onClicked: Config.options.appearance.transparency.popups = !chosen
+                            }
+                            ColorsChip {
+                                compact: true
+                                enabled: glassTile.checked
+                                label: Translation.tr("Widgets")
+                                symbol: "widgets"
+                                chosen: (Config.options.background.widgets.glassPreset ?? "shell") === "shell"
+                                colContent: glassTile.colContent
+                                colChosen: Appearance.colors.colPrimary
+                                colOnChosen: Appearance.colors.colOnPrimary
+                                onClicked: WidgetColorScheme.applyGlassPreset(chosen ? "solid" : "shell")
+                            }
+                            ColorsChip {
+                                compact: true
+                                enabled: glassTile.checked
+                                label: Translation.tr("Terminal")
+                                symbol: "terminal"
+                                chosen: Config.options.appearance.transparency.terminal ?? false
+                                colContent: glassTile.colContent
+                                colChosen: Appearance.colors.colPrimary
+                                colOnChosen: Appearance.colors.colOnPrimary
+                                onClicked: Config.options.appearance.transparency.terminal = !chosen
                             }
                         }
 
@@ -181,6 +231,18 @@ Item {
                     ]
                     currentValue: Config.options.wallpaperSelector.useSystemFileDialog
                     onSelected: value => Config.options.wallpaperSelector.useSystemFileDialog = value
+                }
+
+                AppChoiceRow {
+                    symbol: "view_carousel"
+                    title: Translation.tr("Picker style")
+                    description: Translation.tr("Grid, or a deck of cards showing the colours each wallpaper would give")
+                    options: [
+                        { label: Translation.tr("Grid"), value: "grid", icon: "grid_view" },
+                        { label: Translation.tr("Deck"), value: "deck", icon: "view_carousel" }
+                    ]
+                    currentValue: Config.options.wallpaperSelector.style
+                    onSelected: value => Config.options.wallpaperSelector.style = value
                 }
 
                 AppFieldRow {

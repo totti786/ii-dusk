@@ -1,6 +1,7 @@
 module qs.modules.settings.configs.overlays
 
 AppCard 1.0 AppCard.qml
+KeyCaps 1.0 KeyCaps.qml
 KeyboardConfig 1.0 KeyboardConfig.qml
 OsdConfig 1.0 OsdConfig.qml
 OverlayNavRow 1.0 OverlayNavRow.qml

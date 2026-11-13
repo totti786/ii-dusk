@@ -76,6 +76,13 @@ Item {
             summary: Translation.tr("Profiles, layouts and monitors")
         },
         {
+            key: "enableGithub",
+            symbol: "code_blocks",
+            shape: MaterialShape.Shape.Pill,
+            name: Translation.tr("GitHub"),
+            summary: Translation.tr("Notifications, pull requests and issues, through the gh CLI")
+        },
+        {
             key: "enableTypingTest",
             symbol: "speed",
             shape: MaterialShape.Shape.Cookie4Sided,
@@ -99,6 +106,7 @@ Item {
         "enableAminoAcids": Config.options.cheatsheet.enableAminoAcids,
         "enableCommands": Config.options.cheatsheet.enableCommands,
         "enableWorkspaceProfiles": Config.options.cheatsheet.enableWorkspaceProfiles,
+        "enableGithub": Config.options.cheatsheet.enableGithub,
         "enableTypingTest": Config.options.cheatsheet.enableTypingTest,
         "enableDevTools": Config.options.cheatsheet.enableDevTools
     })

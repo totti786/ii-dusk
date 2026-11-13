@@ -131,6 +131,14 @@ Item {
                         Config.options.screenRecord.service = newValue;
                     }
                     options: [{
+                        "displayName": Translation.tr("Auto (Recommended)"),
+                        "value": "auto",
+                        "icon": "auto_awesome"
+                    }, {
+                        "displayName": "GPU Screen Recorder",
+                        "value": "gsr",
+                        "icon": "memory"
+                    }, {
                         "displayName": Translation.tr("wf-recorder"),
                         "value": "wf-recorder",
                         "icon": "radio_button_checked"
@@ -140,6 +148,13 @@ Item {
                         "icon": "videocam"
                     }]
                 }
+            }
+
+            NoticeBox {
+                Layout.fillWidth: true
+                visible: Config.options.screenRecord.service === "auto"
+                materialIcon: "auto_awesome"
+                text: Translation.tr("Auto records with GPU Screen Recorder when it is installed, then wf-recorder, then OBS Studio. An explicitly selected recorder is used while its program is present.")
             }
 
             NoticeBox {
@@ -222,11 +237,20 @@ Item {
             }
         }
 
-        // ── Local recorder settings (wf-recorder) ────────────────────────────
+        // ── Local recorder settings (GSR / wf-recorder) ──────────────────────
         ContentSection {
             title: Translation.tr("Local Recorder Engine")
             icon: "tune"
-            visible: Config.options.screenRecord.service === "wf-recorder"
+            visible: Config.options.screenRecord.service !== "obs"
+
+            StyledText {
+                Layout.fillWidth: true
+                Layout.leftMargin: 4
+                text: Translation.tr("GPU Screen Recorder derives a constant-quality preset from the quality setting, while wf-recorder derives a bitrate from the resolution, frame rate and quality; the Mbps estimate is exact only for wf-recorder.")
+                wrapMode: Text.Wrap
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                color: Appearance.colors.colSubtext
+            }
 
             ConfigSwitch {
                 buttonIcon: "bolt"
@@ -300,7 +324,7 @@ Item {
 
                 StyledToolTip {
                     parent: recorderCodecSelector
-                    text: Translation.tr("Auto automatically selects the best hardware encoder on your system. NVENC is for Nvidia, VA-API is for Intel/AMD, and AMF is for AMD. CPU encodes via software and uses more resources.")
+                    text: Translation.tr("Auto automatically selects the best hardware encoder on your system. NVENC is for Nvidia, VA-API is for Intel/AMD, and AMF is for AMD. CPU encodes via software and uses more resources. GPU Screen Recorder maps these choices to H.264 or HEVC (VP9 for WebM), and its CPU encoder is H.264 only.")
                 }
             }
 

@@ -159,8 +159,8 @@ ContentPage {
 
                         readonly property bool isSelected: btImagesSection.pendingMac === (modelData ? modelData.address : "")
 
-                        Behavior on color { ColorAnimation { duration: 250; easing.type: Easing.OutQuart } }
-                        Behavior on border.color { ColorAnimation { duration: 250; easing.type: Easing.OutQuart } }
+                        Behavior on color { ColorAnimation { duration: Appearance.dur(250); easing.type: Easing.OutQuart } }
+                        Behavior on border.color { ColorAnimation { duration: Appearance.dur(250); easing.type: Easing.OutQuart } }
 
                         RowLayout {
                             anchors.fill: parent

@@ -188,6 +188,7 @@ ContentPage {
         icon: "tune"
 
         DesktopWidgetVisualOptions {
+                widgetId: "translator_widget"
             Layout.fillWidth: true
         }
     }

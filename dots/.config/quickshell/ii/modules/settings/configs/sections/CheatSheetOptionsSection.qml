@@ -136,6 +136,19 @@ ColumnLayout {
             }
 
             ConfigSwitch {
+                buttonIcon: "code_blocks"
+                text: Translation.tr("Enable GitHub")
+                checked: Config.options.cheatsheet.enableGithub
+                onCheckedChanged: {
+                    Config.options.cheatsheet.enableGithub = checked;
+                }
+
+                StyledToolTip {
+                    text: Translation.tr("A GitHub dashboard: contributions, pull requests, issues, notifications and your latest repositories. Reads through the gh CLI, so run gh auth login once.")
+                }
+            }
+
+            ConfigSwitch {
                 buttonIcon: "speed"
                 text: Translation.tr("Enable Typing test")
                 checked: Config.options.cheatsheet.enableTypingTest

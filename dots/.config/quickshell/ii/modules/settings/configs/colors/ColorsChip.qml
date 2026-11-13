@@ -16,13 +16,15 @@ RippleButton {
     property string label: ""
     property bool chosen: false
     property int count: -1
+    /// Icon only, the label moves to a tooltip; for chips in a tight footer.
+    property bool compact: false
     /// Chips on a coloured card take its content colour for the outline and text.
     property color colContent: Appearance.colors.colOnSurfaceVariant
     property color colChosen: Appearance.colors.colSecondaryContainer
     property color colOnChosen: Appearance.colors.colOnSecondaryContainer
 
     implicitHeight: 36
-    implicitWidth: chipRow.implicitWidth + 28
+    implicitWidth: root.compact ? implicitHeight : chipRow.implicitWidth + 28
     buttonRadius: height / 2
     buttonRadiusPressed: Appearance.rounding.small
     toggled: root.chosen
@@ -35,6 +37,11 @@ RippleButton {
     colBackgroundToggledActive: ColorUtils.mix(root.colChosen, root.colOnChosen, 0.8)
     colRippleToggled: ColorUtils.mix(root.colChosen, root.colOnChosen, 0.8)
     opacity: root.enabled ? 1 : 0.4
+
+    StyledToolTip {
+        extraVisibleCondition: root.compact
+        text: root.label
+    }
 
     DashedBorder {
         anchors.fill: parent
@@ -54,13 +61,14 @@ RippleButton {
 
             MaterialSymbol {
                 visible: root.chosen || root.symbol.length > 0
-                text: root.chosen ? "check" : root.symbol
+                text: root.chosen && !root.compact ? "check" : root.symbol
                 iconSize: Appearance.font.pixelSize.normal
                 fill: root.chosen ? 1 : 0
                 color: root.chosen ? root.colOnChosen : root.colContent
             }
 
             StyledText {
+                visible: !root.compact
                 text: root.label
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.weight: Font.Bold

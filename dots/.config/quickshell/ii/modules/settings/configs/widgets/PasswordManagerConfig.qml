@@ -189,6 +189,19 @@ ContentPage {
         }
 
         ConfigSwitch {
+            buttonIcon: "fingerprint"
+            text: Translation.tr("Unlock with a fingerprint")
+            checked: root.cfg.fingerprint
+            enabled: PasswordManager.fpAvailable && PasswordManager.fpEnrolled
+            onCheckedChanged: root.cfg.fingerprint = checked
+            StyledToolTip {
+                text: PasswordManager.fpAvailable && PasswordManager.fpEnrolled
+                    ? Translation.tr("Keeps your master password in memory for this login session (never on disk) and unlocks when your finger matches. Type the password once after each login. Anyone running code as you could read it, so this is a convenience, not a second lock.")
+                    : Translation.tr("Needs fprintd with an enrolled finger (fprintd-enroll) and secret-tool")
+            }
+        }
+
+        ConfigSwitch {
             buttonIcon: "web_asset"
             text: Translation.tr("Suggest the login for the focused window")
             checked: root.cfg.suggestForWindow
@@ -204,7 +217,7 @@ ContentPage {
             Layout.fillWidth: true
             icon: "keyboard_command_key"
             title: Translation.tr("Open from a keybind")
-            text: Translation.tr("Bind this to a key in Hyprland: the popup opens on the focused monitor with the search ready. Enter copies the password, Shift+Enter the username, Ctrl+T the 2FA code, Ctrl+Enter types the login (needs wtype).")
+            text: Translation.tr("Super+Ctrl+Z opens it; to use another key, bind this in Hyprland. The popup opens on the focused monitor with the search ready. Enter copies the password, Shift+Enter the username, Ctrl+T the 2FA code, Ctrl+Enter types the login (needs wtype).")
             codeSnippet: "qs -c ii ipc call passwordManager toggle"
         }
     }

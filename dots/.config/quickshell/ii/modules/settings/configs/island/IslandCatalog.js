@@ -74,6 +74,18 @@ const activities = [
     { id: "easyEffects", key: "disableEasyEffects", widget: "easyEffects", group: "live", icon: "graphic_eq", shape: "Clover8Leaf",
       label: "EasyEffects", tip: "EasyEffects' preset as a bubble beside the island while it runs: scroll it to switch presets, rest on it for the device's presets, bypass and the app",
       needs: "easyEffects" },
+    { id: "soundscapes", key: "disableSoundscapes", widget: "soundscapes", group: "live", icon: "waves", shape: "Cookie9Sided",
+      label: "Soundscapes", tip: "An ambient mix as a bubble beside the island while it plays or is paused: its lead sound rippling, the sleep timer's time left. Scroll it for the volume, rest on it for the mixer. It only watches - it never starts the mixer" },
+
+    { id: "quickShare", key: "disableQuickShare", widget: "quickShare", group: "live", icon: "send_to_mobile", shape: "Cookie9Sided",
+      label: "Quick Share", tip: "Quick Share as a bubble beside the island while this PC is visible to nearby phones, a request or transfer is in flight, or files wait for a device: accept or decline with the PIN, watch the progress, pick the phone to send to. Off until Quick Share is turned on" },
+
+    { id: "focus", key: "disableFocus", widget: "focus", group: "live", icon: "psychiatry", shape: "Cookie7Sided",
+      label: "Focus session", tip: "A Grit focus session as a bubble beside the island while it runs or is paused: the tag's shape and the time left. Rest on it to pause, skip or open Focus" },
+    { id: "prayer", key: "disablePrayer", widget: "prayer", group: "live", icon: "mosque", shape: "Cookie9Sided",
+      label: "Prayer times", tip: "The next prayer as a small bubble for the last 20 minutes before it, with its minutes left. Rest on it for the day's times" },
+    { id: "monitorAlert", key: "disableMonitorAlert", widget: "monitorAlert", group: "live", icon: "speed", shape: "Burst",
+      label: "Resource alert", tip: "A bubble when the CPU stays above 90% or memory above 92% for a while. Rest on it to see what is using it, end a program or snooze" },
 
     // ── Side glances ─────────────────────────────────────────────────────
     { id: "earbuds", key: "disableEarbuds", group: "glance", icon: "headphones", shape: "Bun",

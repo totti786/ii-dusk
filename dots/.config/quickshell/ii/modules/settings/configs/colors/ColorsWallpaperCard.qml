@@ -168,6 +168,38 @@ Item {
         }
     }
 
+    // A random picture from the folder the picker is in, next to the picker itself
+    RippleButton {
+        id: randomButton
+        visible: root.hero
+        anchors {
+            right: changeButton.left
+            rightMargin: 8
+            verticalCenter: changeButton.verticalCenter
+        }
+        implicitHeight: changeButton.implicitHeight
+        implicitWidth: implicitHeight
+        buttonRadius: height / 2
+        buttonRadiusPressed: Appearance.rounding.normal
+        colBackground: Appearance.colors.colSecondaryContainer
+        colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+        colRipple: Appearance.colors.colSecondaryContainerActive
+        onClicked: Wallpapers.randomFromCurrentFolder()
+
+        contentItem: Item {
+            MaterialSymbol {
+                anchors.centerIn: parent
+                text: "shuffle"
+                iconSize: Appearance.font.pixelSize.larger
+                color: Appearance.colors.colOnSecondaryContainer
+            }
+        }
+
+        StyledToolTip {
+            text: Translation.tr("Set random wallpaper")
+        }
+    }
+
     // The palette the wallpaper produced, as a strip of the current accents.
     Rectangle {
         visible: root.hero

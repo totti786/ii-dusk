@@ -183,7 +183,7 @@ Item {
 
                                         Behavior on opacity {
                                             NumberAnimation {
-                                                duration: 150
+                                                duration: Appearance.dur(150)
                                             }
                                         }
                                     }
@@ -197,7 +197,7 @@ Item {
 
                                         Behavior on rotation {
                                             NumberAnimation {
-                                                duration: 150
+                                                duration: Appearance.dur(150)
                                                 easing.type: Easing.OutQuad
                                             }
                                         }
@@ -221,7 +221,7 @@ Item {
 
                                 Behavior on Layout.preferredHeight {
                                     NumberAnimation {
-                                        duration: 200
+                                        duration: Appearance.dur(200)
                                         easing.type: Easing.BezierSpline
                                         easing.bezierCurve: Appearance.animationCurves.emphasizedDecel
                                     }

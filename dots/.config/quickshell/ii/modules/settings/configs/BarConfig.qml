@@ -499,9 +499,9 @@ Item {
                     shapeIdle: MaterialShape.Shape.Cookie6Sided
                     shapeHover: MaterialShape.Shape.SoftBurst
                     compactDisplayWidth: 84
-                    title: Translation.tr("Widgets & Waffle")
+                    title: Translation.tr("Widgets")
                     summary: Translation.tr("Clock, weather, battery and more")
-                    onClicked: barConfigRoot.openSubPage("BarWidgetsWaffleConfig.qml")
+                    onClicked: barConfigRoot.openSubPage("BarWidgetsConfig.qml")
 
                     // Overlapping glyph discs, the first one primary.
                     Row {

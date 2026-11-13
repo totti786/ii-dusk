@@ -189,6 +189,7 @@ Item {
         // Twenty-two of these do not fit at any window width worth having, so the row scrolls
         // rather than wrapping into four lines of chips above a short list.
         Flickable {
+            WheelScroll {}
             Layout.fillWidth: true
             implicitHeight: 34
             contentWidth: chipStrip.implicitWidth

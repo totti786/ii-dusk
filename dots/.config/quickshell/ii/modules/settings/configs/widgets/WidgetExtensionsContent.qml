@@ -199,7 +199,7 @@ ColumnLayout {
 
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: 100
+                                    duration: Appearance.dur(100)
                                 }
                             }
 
@@ -248,7 +248,7 @@ ColumnLayout {
 
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: 100
+                                    duration: Appearance.dur(100)
                                 }
                             }
 
@@ -282,7 +282,7 @@ ColumnLayout {
 
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: 100
+                                    duration: Appearance.dur(100)
                                 }
                             }
 
@@ -317,7 +317,7 @@ ColumnLayout {
 
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: 100
+                                    duration: Appearance.dur(100)
                                 }
                             }
 
@@ -351,7 +351,7 @@ ColumnLayout {
 
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: 100
+                                    duration: Appearance.dur(100)
                                 }
                             }
 
@@ -438,7 +438,7 @@ ColumnLayout {
 
                                     Behavior on color {
                                         ColorAnimation {
-                                            duration: 150
+                                            duration: Appearance.dur(150)
                                         }
                                     }
 

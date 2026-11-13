@@ -97,6 +97,7 @@ ContentPage {
         icon: "tune"
 
         DesktopWidgetVisualOptions {
+                widgetId: "water_glass"
             Layout.fillWidth: true
         }
     }

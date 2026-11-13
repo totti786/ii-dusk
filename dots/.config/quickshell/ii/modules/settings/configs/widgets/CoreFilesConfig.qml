@@ -84,7 +84,7 @@ ContentPage {
             text: Translation.tr("Use OBS for recording")
             checked: Config.options.screenRecord.service === "obs"
             onCheckedChanged: {
-                Config.options.screenRecord.service = checked ? "obs" : "wf-recorder";
+                Config.options.screenRecord.service = checked ? "obs" : "auto";
             }
         }
 
@@ -104,15 +104,15 @@ ContentPage {
         }
 
         ContentSubsectionLabel {
-            text: Translation.tr("Local recorder settings (wf-recorder)")
-            visible: Config.options.screenRecord.service === "wf-recorder"
+            text: Translation.tr("Local recorder settings (GPU Screen Recorder / wf-recorder)")
+            visible: Config.options.screenRecord.service !== "obs"
         }
 
         ConfigSwitch {
             buttonIcon: "bolt"
             text: Translation.tr("GPU Hardware Acceleration")
             checked: Config.options.screenRecord.useGpu
-            visible: Config.options.screenRecord.service === "wf-recorder"
+            visible: Config.options.screenRecord.service !== "obs"
             onCheckedChanged: {
                 Config.options.screenRecord.useGpu = checked;
             }
@@ -120,14 +120,14 @@ ContentPage {
 
         ContentSubsectionLabel {
             text: Translation.tr("Video Codec")
-            visible: Config.options.screenRecord.service === "wf-recorder"
+            visible: Config.options.screenRecord.service !== "obs"
         }
 
         StyledComboBox {
             id: recorderCodecSelector2
             buttonIcon: "movie"
             textRole: "displayName"
-            visible: Config.options.screenRecord.service === "wf-recorder"
+            visible: Config.options.screenRecord.service !== "obs"
             model: [
                 {
                     displayName: Translation.tr("Auto (Recommended)"),
@@ -183,7 +183,7 @@ ContentPage {
             id: recorderResolutionSelector2
             buttonIcon: "aspect_ratio"
             textRole: "displayName"
-            visible: Config.options.screenRecord.service === "wf-recorder"
+            visible: Config.options.screenRecord.service !== "obs"
             model: [
                 {
                     displayName: Translation.tr("Native (no scaling)"),
@@ -226,7 +226,7 @@ ContentPage {
         ContentSubsection {
             title: Translation.tr("Quality")
             icon: "high_quality"
-            visible: Config.options.screenRecord.service === "wf-recorder"
+            visible: Config.options.screenRecord.service !== "obs"
             Layout.fillWidth: true
 
             ConfigSelectionArray {
@@ -273,7 +273,7 @@ ContentPage {
             usePercentTooltip: false
             enabled: Config.options.screenRecord.frameSync !== "vfr"
             opacity: enabled ? 1 : 0.5
-            visible: Config.options.screenRecord.service === "wf-recorder"
+            visible: Config.options.screenRecord.service !== "obs"
             onValueChanged: {
                 Config.options.screenRecord.framerate = value;
             }
@@ -285,7 +285,7 @@ ContentPage {
         ContentSubsection {
             title: Translation.tr("Frame timing")
             icon: "schedule"
-            visible: Config.options.screenRecord.service === "wf-recorder"
+            visible: Config.options.screenRecord.service !== "obs"
             Layout.fillWidth: true
 
             ConfigSelectionArray {

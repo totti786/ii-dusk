@@ -280,6 +280,79 @@ Item {
                     }
                 }
 
+                ContentSubsectionLabel {
+                    text: Translation.tr("Card style")
+                }
+
+                ConfigSelectionArray {
+                    Layout.fillWidth: true
+                    currentValue: Config.options.background.widgets.glassPreset ?? "shell"
+                    onSelected: newValue => WidgetColorScheme.applyGlassPreset(String(newValue))
+                    options: [
+                        { displayName: Translation.tr("Follow shell glass"), icon: "link", value: "shell" },
+                        { displayName: Translation.tr("Solid"), icon: "square", value: "solid" },
+                        { displayName: Translation.tr("Frosted glass"), icon: "blur_on", value: "frosted" },
+                        { displayName: Translation.tr("Clear glass"), icon: "blur_circular", value: "clear" },
+                        { displayName: Translation.tr("Custom"), icon: "tune", value: "custom" }
+                    ]
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    wrapMode: Text.Wrap
+                    color: Appearance.colors.colSubtext
+                    text: Translation.tr("Glass is a see-through card with the compositor's blur behind it, a light rim and a soft sheen. Cards can override this one by one on their own settings page.")
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "border_style"
+                    text: Translation.tr("Glass rim")
+                    checked: Config.options.background.widgets.cardRim ?? false
+                    onCheckedChanged: {
+                        if (Config.ready && checked !== Config.options.background.widgets.cardRim) {
+                            Config.options.background.widgets.cardRim = checked;
+                            Config.options.background.widgets.glassPreset = "custom";
+                        }
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "light_mode"
+                    text: Translation.tr("Sheen")
+                    checked: Config.options.background.widgets.cardSheen ?? false
+                    onCheckedChanged: {
+                        if (Config.ready && checked !== Config.options.background.widgets.cardSheen) {
+                            Config.options.background.widgets.cardSheen = checked;
+                            Config.options.background.widgets.glassPreset = "custom";
+                        }
+                    }
+                }
+
+                ConfigSlider {
+                    buttonIcon: "rounded_corner"
+                    text: Translation.tr("Card corner radius")
+                    from: 0
+                    to: 2
+                    stepSize: 0.05
+                    value: Config.options.background.widgets.cardRadiusScale ?? 1
+                    badgeText: Math.round(value * 100) + "%"
+                    onMoved: Config.options.background.widgets.cardRadiusScale = value
+                }
+
+                ConfigSlider {
+                    buttonIcon: "border_outer"
+                    text: Translation.tr("Card border")
+                    from: 0
+                    to: 4
+                    stepSize: 0.5
+                    value: Config.options.background.widgets.cardBorderWidth ?? 0
+                    badgeText: value <= 0 ? Translation.tr("None") : value + " px"
+                    onMoved: {
+                        Config.options.background.widgets.cardBorderWidth = value;
+                        Config.options.background.widgets.glassPreset = "custom";
+                    }
+                }
+
                 ConfigSwitch {
                     buttonIcon: "opacity"
                     text: Translation.tr("Transparent widget backgrounds")
@@ -300,7 +373,10 @@ Item {
                     stepSize: 0.01
                     value: WidgetColorScheme.backgroundTintOpacity
                     badgeText: Math.round(value * 100) + "%"
-                    onMoved: Config.options.background.widgets.tintOpacity = value
+                    onMoved: {
+                        Config.options.background.widgets.tintOpacity = value;
+                        Config.options.background.widgets.glassPreset = "custom";
+                    }
                 }
             }
 
@@ -752,7 +828,7 @@ Item {
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: 150
+                        duration: Appearance.dur(150)
                     }
                 }
 
@@ -841,7 +917,7 @@ Item {
                                     opacity: cardItem.isActive ? 1.0 : 0.8
 
                                     Behavior on color {
-                                        ColorAnimation { duration: 150 }
+                                        ColorAnimation { duration: Appearance.dur(150) }
                                     }
                                 }
 
@@ -855,7 +931,7 @@ Item {
                                         : Appearance.colors.colOnSecondaryContainer
 
                                     Behavior on color {
-                                        ColorAnimation { duration: 150 }
+                                        ColorAnimation { duration: Appearance.dur(150) }
                                     }
                                 }
                             }
@@ -944,7 +1020,7 @@ Item {
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: 100
+                            duration: Appearance.dur(100)
                         }
                     }
 
@@ -989,7 +1065,7 @@ Item {
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: 100
+                            duration: Appearance.dur(100)
                         }
                     }
 
@@ -1039,7 +1115,7 @@ Item {
 
                     Rectangle {
                         id: settingsBtn
-                        visible: cardItem.widgetData.configPage !== undefined && cardItem.widgetData.configPage !== ""
+                        visible: !cardItem.widgetData.isExtension && cardItem.widgetData.configPage !== undefined && cardItem.widgetData.configPage !== ""
                         width: 26
                         height: 26
                         radius: Appearance.rounding.full
@@ -1047,7 +1123,7 @@ Item {
 
                         Behavior on color {
                             ColorAnimation {
-                                duration: 100
+                                duration: Appearance.dur(100)
                             }
                         }
 
@@ -1115,7 +1191,7 @@ Item {
 
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: 150
+                                    duration: Appearance.dur(150)
                                 }
                             }
 

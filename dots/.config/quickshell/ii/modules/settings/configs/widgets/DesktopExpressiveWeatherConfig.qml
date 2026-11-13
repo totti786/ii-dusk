@@ -144,6 +144,7 @@ ContentPage {
         icon: "tune"
 
         DesktopWidgetVisualOptions {
+                widgetId: "weather_monolith"
             Layout.fillWidth: true
         }
     }

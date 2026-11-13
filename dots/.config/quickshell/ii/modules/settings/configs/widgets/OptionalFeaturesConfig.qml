@@ -150,7 +150,7 @@ Item {
         ContentSection {
             icon: "extension"
             title: Translation.tr("Optional features")
-            tooltip: Translation.tr("Some features need a package the base install does not bring. Install opens a terminal running 'II-P3DROVFX deps', which asks before installing anything. 'II-P3DROVFX deps remove <id>' takes back only what it installed.")
+            tooltip: Translation.tr("Some features need a package the base install does not bring. Install opens a terminal running 'II-DUSK deps', which asks before installing anything. 'II-DUSK deps remove <id>' takes back only what it installed.")
 
             Rectangle {
                 visible: FeatureDeps.requiredMissing.length > 0

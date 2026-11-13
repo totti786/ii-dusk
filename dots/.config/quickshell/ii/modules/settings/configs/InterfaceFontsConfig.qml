@@ -34,8 +34,7 @@ Item {
     readonly property var appearance: Config.options.appearance
     readonly property var familyShapes: ({
         "ii": MaterialShape.Shape.Cookie12Sided,
-        "tablet": MaterialShape.Shape.Clover4Leaf,
-        "waffle": MaterialShape.Shape.Flower
+        "tablet": MaterialShape.Shape.Clover4Leaf
     })
     readonly property var unloadDelays: [
         { seconds: 0, label: Translation.tr("Instantly") },

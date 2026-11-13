@@ -62,6 +62,32 @@ ColumnLayout {
             }
         }
 
+        ConfigSwitch {
+            buttonIcon: "motion_photos_off"
+            text: Translation.tr("Reduce motion")
+            checked: Config.options.appearance.reduceMotion
+            onCheckedChanged: {
+                if (Config.ready && checked !== Config.options.appearance.reduceMotion)
+                    Config.options.appearance.reduceMotion = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("Turns off the shell's animations and Hyprland's. Your animation speed is kept for when it is switched off. The Lite family always runs without animations.")
+            }
+        }
+
+        ConfigSwitch {
+            buttonIcon: "energy_savings_leaf"
+            text: Translation.tr("Reduce motion on power saver")
+            checked: Config.options.appearance.powerSaving.reduceMotion
+            onCheckedChanged: {
+                if (Config.ready && checked !== Config.options.appearance.powerSaving.reduceMotion)
+                    Config.options.appearance.powerSaving.reduceMotion = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("While the power profile is Power Saver, animations are off in the shell and in Hyprland. The panel family stays as it is.")
+            }
+        }
+
         ConfigSlider {
             buttonIcon: "speed"
             text: Translation.tr("Animation speed multiplier")

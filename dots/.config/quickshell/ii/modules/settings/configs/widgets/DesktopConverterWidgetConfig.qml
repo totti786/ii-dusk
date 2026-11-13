@@ -79,6 +79,7 @@ ContentPage {
         icon: "tune"
 
         DesktopWidgetVisualOptions {
+                widgetId: "converter_2x1"
             Layout.fillWidth: true
         }
     }

@@ -45,31 +45,31 @@ RowLayout {
             target: searchInput
             property: "Layout.leftMargin"
             to: -12
-            duration: 50
+            duration: Appearance.dur(50)
         }
         NumberAnimation {
             target: searchInput
             property: "Layout.leftMargin"
             to: 12
-            duration: 50
+            duration: Appearance.dur(50)
         }
         NumberAnimation {
             target: searchInput
             property: "Layout.leftMargin"
             to: -8
-            duration: 40
+            duration: Appearance.dur(40)
         }
         NumberAnimation {
             target: searchInput
             property: "Layout.leftMargin"
             to: 8
-            duration: 40
+            duration: Appearance.dur(40)
         }
         NumberAnimation {
             target: searchInput
             property: "Layout.leftMargin"
             to: 0
-            duration: 30
+            duration: Appearance.dur(30)
         }
     }
 
@@ -94,7 +94,7 @@ RowLayout {
 
         Behavior on color {
             ColorAnimation {
-                duration: 150
+                duration: Appearance.dur(150)
                 easing.type: Easing.OutQuad
             }
         }
@@ -202,7 +202,7 @@ RowLayout {
 
         Behavior on rightPadding {
             NumberAnimation {
-                duration: 200
+                duration: Appearance.dur(200)
                 easing.type: Easing.OutCubic
             }
         }
@@ -244,28 +244,28 @@ RowLayout {
 
             Behavior on width {
                 NumberAnimation {
-                    duration: 200
+                    duration: Appearance.dur(200)
                     easing.type: Easing.OutCubic
                 }
             }
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 180
+                    duration: Appearance.dur(180)
                     easing.type: Easing.OutCubic
                 }
             }
 
             Behavior on scale {
                 NumberAnimation {
-                    duration: 200
+                    duration: Appearance.dur(200)
                     easing.type: Easing.OutCubic
                 }
             }
 
             Behavior on color {
                 ColorAnimation {
-                    duration: 150
+                    duration: Appearance.dur(150)
                     easing.type: Easing.OutQuad
                 }
             }
@@ -307,7 +307,7 @@ RowLayout {
         scale: closeBtn.down ? 0.92 : (closeBtn.hovered ? 1.06 : 1.0)
         Behavior on scale {
             NumberAnimation {
-                duration: 150
+                duration: Appearance.dur(150)
                 easing.type: Easing.OutBack
             }
         }

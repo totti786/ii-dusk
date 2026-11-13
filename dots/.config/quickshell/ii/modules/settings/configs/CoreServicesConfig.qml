@@ -223,14 +223,6 @@ Item {
                     onOpenCard: root.openSubPage("widgets/CoreTerminalConfig.qml")
                 }
 
-                ServiceCard {
-                    cardIcon: "build"
-                    cardHue: 276
-                    cardShape: "Cookie4Sided"
-                    title: qsTr("Waffle Tweaks")
-                    description: qsTr("Optional shell tweaks")
-                    onOpenCard: root.openSubPage("widgets/CoreWaffleConfig.qml")
-                }
             }
 
             Item {

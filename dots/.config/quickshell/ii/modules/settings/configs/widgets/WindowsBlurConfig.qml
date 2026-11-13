@@ -336,6 +336,34 @@ Item {
         }
 
         ContentSection {
+            icon: "terminal"
+            title: Translation.tr("Terminal")
+
+            ConfigSwitch {
+                buttonIcon: "terminal"
+                text: Translation.tr("Glass terminal")
+                description: Translation.tr("Alacritty's background follows the Glass setting: see-through, blurred by the compositor, with the text kept sharp.")
+                checked: subPageRoot.appearance.transparency.terminal ?? false
+                onCheckedChanged: {
+                    if (Config.ready && checked !== subPageRoot.appearance.transparency.terminal)
+                        subPageRoot.appearance.transparency.terminal = checked;
+                }
+            }
+
+            ConfigSlider {
+                visible: subPageRoot.appearance.transparency.terminal ?? false
+                buttonIcon: "opacity"
+                text: Translation.tr("Terminal opacity")
+                from: 0.3
+                to: 1
+                stepSize: 0.01
+                value: subPageRoot.appearance.transparency.terminalOpacity ?? 0.8
+                badgeText: Math.round(value * 100) + "%"
+                onMoved: subPageRoot.appearance.transparency.terminalOpacity = Math.round(value * 100) / 100
+            }
+        }
+
+        ContentSection {
             icon: "link"
             title: Translation.tr("Related settings")
 

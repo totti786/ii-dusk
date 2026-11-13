@@ -50,7 +50,8 @@ Item {
     }
 
     readonly property var forkPresets: [
-        { "id": "p3drovfx", "label": "II-P3DROVFX", "icon": "fork_right" },
+        { "id": "dusk", "label": "ii-dusk", "icon": "fork_right" },
+        { "id": "p3drovfx", "label": "II-P3DROVFX", "icon": "cloud_download" },
         { "id": "end4", "label": "end-4", "icon": "deployed_code" },
         { "id": "vynx", "label": "ii-vynx", "icon": "cloud_download" }
     ]
@@ -91,7 +92,11 @@ Item {
     readonly property bool checking: ShellUpdates.checking
     readonly property int behind: ShellUpdates.commitsBehind
     readonly property string forkLabel: ShellUpdates.forkLabel(ShellUpdates.activeFork)
-    readonly property bool onP3drovfx: ShellUpdates.activeFork === "p3drovfx" || ShellUpdates.activeFork === "mine"
+    // ii-dusk is this checkout's own line; II-P3DROVFX is the fork it was made from. Both
+    // are maintained with a main/dev pair, so both get the branch picker.
+    readonly property bool onOwnFork: ShellUpdates.activeFork === "dusk" || ShellUpdates.activeFork === "mine"
+    readonly property bool onP3drovfx: ShellUpdates.activeFork === "p3drovfx"
+    readonly property bool onKnownFork: root.onOwnFork || root.onP3drovfx
     readonly property string shortCommit: ShellUpdates.activeCommit.substring(0, 7)
     readonly property string repoUrl: {
         const slug = ShellUpdates.githubSlug(ShellUpdates.activeRemote);
@@ -365,6 +370,15 @@ Item {
 
                     Image {
                         anchors.fill: parent
+                        visible: root.onOwnFork
+                        source: "file://" + Quickshell.shellPath("assets/icons/ii-dusk.png")
+                        sourceSize: Qt.size(hero.logoSize * 2, hero.logoSize * 2)
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                    }
+
+                    Image {
+                        anchors.fill: parent
                         visible: root.onP3drovfx
                         source: "file://" + Quickshell.shellPath("assets/icons/ii-p3drovfx.png")
                         sourceSize: Qt.size(hero.logoSize * 2, hero.logoSize * 2)
@@ -390,7 +404,7 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        visible: !root.onP3drovfx && ShellUpdates.activeFork !== "end4" && ShellUpdates.activeFork !== "vynx" && ShellUpdates.activeFork !== "upstream"
+                        visible: !root.onKnownFork && ShellUpdates.activeFork !== "end4" && ShellUpdates.activeFork !== "vynx" && ShellUpdates.activeFork !== "upstream"
                         radius: Appearance.rounding.full
                         color: Appearance.colors.colLayer2
 
@@ -451,7 +465,7 @@ Item {
                                 }
 
                                 Rectangle {
-                                    visible: root.onP3drovfx
+                                    visible: root.onKnownFork
                                     implicitWidth: channelText.implicitWidth + 16
                                     implicitHeight: channelText.implicitHeight + 6
                                     radius: Appearance.rounding.full
@@ -790,6 +804,16 @@ Item {
             }
         }
 
+        // ── Programs compiled from source on this machine ──
+        ProgressiveSectionLoader {
+            source: Qt.resolvedUrl("sections/CompiledComponentsSection.qml")
+            active: true
+            estimatedHeight: 760
+            showSkeleton: true
+            sectionTitle: Translation.tr("Compiled components")
+            prioritizeOnSearch: true
+        }
+
         // ── Where the checkout comes from ──
         ContentSection {
             icon: "fork_right"
@@ -850,10 +874,10 @@ Item {
             ContentSubsection {
                 title: Translation.tr("Branch")
                 icon: "call_split"
-                tooltip: Translation.tr("main is what has been tested; dev gets features as they land.")
+                tooltip: Translation.tr("main is what has been tested. dev only exists on II-P3DROVFX, where features land first.")
 
                 ConfigSelectionArray {
-                    currentValue: root.onP3drovfx ? ShellUpdates.activeBranch : null
+                    currentValue: root.onKnownFork ? ShellUpdates.activeBranch : null
                     onSelected: newValue => {
                         if (newValue === ShellUpdates.activeBranch)
                             return;
@@ -864,7 +888,7 @@ Item {
                             "displayName": Translation.tr("main") + " · " + Translation.tr("stable"),
                             "icon": "verified",
                             "value": "main",
-                            "enabled": root.onP3drovfx
+                            "enabled": root.onKnownFork
                         },
                         {
                             "displayName": Translation.tr("dev") + " · " + Translation.tr("new features"),
@@ -881,9 +905,9 @@ Item {
                 icon: "swap_horiz"
 
                 ConfigSelectionArray {
-                    currentValue: root.onP3drovfx ? "p3drovfx" : ShellUpdates.activeFork
+                    currentValue: root.onOwnFork ? "dusk" : ShellUpdates.activeFork
                     onSelected: newValue => {
-                        if (newValue === ShellUpdates.activeFork || (newValue === "p3drovfx" && root.onP3drovfx))
+                        if (newValue === ShellUpdates.activeFork || (newValue === "dusk" && root.onOwnFork))
                             return;
                         const preset = root.forkPresets.find(p => p.id === newValue);
                         root.confirm("fork", newValue, preset ? preset.label : newValue);
@@ -897,9 +921,9 @@ Item {
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: Appearance.colors.colSubtext
                     wrapMode: Text.Wrap
-                    text: root.onP3drovfx
-                        ? Translation.tr("Other forks do not have this page: to come back, or to try a fork by URL, run 'II-P3DROVFX fork <name or URL>' in a terminal.")
-                        : Translation.tr("Branches are only offered for II-P3DROVFX here. For this fork, run 'II-P3DROVFX branch <name>' in a terminal.")
+                    text: root.onKnownFork
+                        ? Translation.tr("Other forks do not have this page: to come back, or to try a fork by URL, run 'II-DUSK fork <name or URL>' in a terminal.")
+                        : Translation.tr("Branches are only offered for ii-dusk and II-P3DROVFX here. For this fork, run 'II-DUSK branch <name>' in a terminal.")
                 }
             }
         }
@@ -920,16 +944,15 @@ Item {
                     topLeftRadius: Appearance.rounding.large
                     title: Translation.tr("This fork")
                     icon: "call_split"
-                    name: "II-P3DROVFX"
-                    url: "https://github.com/P3DROVFX/ii-p3drovfx"
+                    name: "ii-dusk"
+                    url: "https://github.com/totti786/ii-dusk"
                     links: [
-                        { "icon": "code", "label": Translation.tr("GitHub"), "url": "https://github.com/P3DROVFX/ii-p3drovfx" },
-                        { "icon": "auto_stories", "label": Translation.tr("Wiki"), "url": "https://github.com/P3DROVFX/ii-p3drovfx/wiki" },
-                        { "icon": "adjust", "label": Translation.tr("Issues"), "url": "https://github.com/P3DROVFX/ii-p3drovfx/issues", "fill": false }
+                        { "icon": "code", "label": Translation.tr("GitHub"), "url": "https://github.com/totti786/ii-dusk" },
+                        { "icon": "adjust", "label": Translation.tr("Issues"), "url": "https://github.com/totti786/ii-dusk/issues", "fill": false }
                     ]
                     logo: Image {
                         anchors.fill: parent
-                        source: "file://" + Quickshell.shellPath("assets/icons/ii-p3drovfx.png")
+                        source: "file://" + Quickshell.shellPath("assets/icons/ii-dusk.png")
                         sourceSize: Qt.size(width * 2, height * 2)
                         fillMode: Image.PreserveAspectFit
                     }
@@ -939,14 +962,18 @@ Item {
                     topRightRadius: Appearance.rounding.large
                     title: Translation.tr("Upstream")
                     icon: "code"
-                    name: "ii-vynx"
-                    url: "https://github.com/vaguesyntax/ii-vynx"
+                    name: "II-P3DROVFX"
+                    url: "https://github.com/P3DROVFX/ii-p3drovfx"
                     links: [
-                        { "icon": "auto_stories", "label": Translation.tr("Wiki"), "url": "https://github.com/vaguesyntax/ii-vynx/wiki" },
-                        { "icon": "adjust", "label": Translation.tr("Issues"), "url": "https://github.com/vaguesyntax/ii-vynx/issues", "fill": false }
+                        { "icon": "auto_stories", "label": Translation.tr("Wiki"), "url": "https://github.com/P3DROVFX/ii-p3drovfx/wiki" },
+                        { "icon": "adjust", "label": Translation.tr("Issues"), "url": "https://github.com/P3DROVFX/ii-p3drovfx/issues", "fill": false },
+                        { "icon": "cloud_download", "label": "ii-vynx", "url": "https://github.com/vaguesyntax/ii-vynx" }
                     ]
-                    logo: CustomIcon {
-                        source: "ii-vynx"
+                    logo: Image {
+                        anchors.fill: parent
+                        source: "file://" + Quickshell.shellPath("assets/icons/ii-p3drovfx.png")
+                        sourceSize: Qt.size(width * 2, height * 2)
+                        fillMode: Image.PreserveAspectFit
                     }
                 }
 
@@ -1047,13 +1074,13 @@ Item {
             materialIcon: "info"
             text: Translation.tr("Switching forks replaces your ii folder. You'll lose these visual buttons until you return.\n\n" +
                                  "To return or switch again from a terminal, run:\n" +
-                                 "  II-P3DROVFX fork p3drovfx\n\n" +
+                                 "  II-DUSK fork dusk\n\n" +
                                  "Or run the setup script directly:\n" +
-                                 "  ~/.local/share/ii-p3drovfx/setup-ii-p3drovfx.sh switch --fork p3drovfx\n\n" +
+                                 "  ~/.local/share/ii-dusk/setup-ii-dusk.sh switch --fork dusk\n\n" +
                                  "Useful subcommands and flags:\n" +
                                  "  switch: change fork or branch without reinstalling dependencies\n" +
                                  "  update: refresh the fork and branch you are already on\n" +
-                                 "  --fork <name|url>: a preset (p3drovfx, end4, vynx) or a GitHub URL\n" +
+                                 "  --fork <name|url>: a preset (dusk, p3drovfx, end4, vynx) or a GitHub URL\n" +
                                  "  --branch <name>: main or dev\n" +
                                  "  --keep-config: keep your current settings")
         }

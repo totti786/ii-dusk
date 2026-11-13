@@ -99,10 +99,10 @@ ContentPage {
         }
     }
 
-    // ── install invitation (only until the daemon exists) ──
+    // ── install / update invitation (until the daemon exists, and whenever the repo copy is newer) ──
     Rectangle {
         Layout.fillWidth: true
-        visible: FanControl.ready && !FanControl.daemonInstalled
+        visible: FanControl.ready && (!FanControl.daemonInstalled || FanControl.updateAvailable)
         implicitHeight: inviteRow.implicitHeight + 40
         radius: Appearance.rounding.verylarge
         color: inviteHover.hovered ? Appearance.colors.colLayer1Hover : Appearance.colors.colLayer1
@@ -133,7 +133,7 @@ ContentPage {
                 Layout.fillWidth: true
                 spacing: 2
                 StyledText {
-                    text: Translation.tr("Install the thermal service")
+                    text: FanControl.daemonInstalled ? Translation.tr("Update the thermal service") : Translation.tr("Install the thermal service")
                     font.family: Appearance.font.family.title
                     font.variableAxes: Appearance.font.variableAxes.titleRounded
                     font.pixelSize: Appearance.font.pixelSize.larger
@@ -141,7 +141,9 @@ ContentPage {
                 }
                 StyledText {
                     Layout.fillWidth: true
-                    text: Translation.tr("Fans, turbo and TCC need root. ii-fand runs as a system service and this page talks to it; installing replaces g15-fancurve and keeps its curve.")
+                    text: FanControl.daemonInstalled
+                        ? Translation.tr("The installed ii-fand is older than the one in the shell. Updating adds embedded-controller fan control and stops nbfc, which it replaces.")
+                        : Translation.tr("Fans, turbo and TCC need root. ii-fand runs as a system service and this page talks to it; installing replaces g15-fancurve and nbfc, and keeps the old curve.")
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: Appearance.colors.colSubtext
                     wrapMode: Text.WordWrap
@@ -172,11 +174,17 @@ ContentPage {
                         anchors.centerIn: parent
                         spacing: 6
                         MaterialSymbol { text: "admin_panel_settings"; iconSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnPrimary }
-                        StyledText { text: FanControl.busy ? Translation.tr("Installing…") : Translation.tr("Install"); font.weight: Font.DemiBold; color: Appearance.colors.colOnPrimary }
+                        StyledText { text: FanControl.busy ? Translation.tr("Installing…") : (FanControl.daemonInstalled ? Translation.tr("Update") : Translation.tr("Install")); font.weight: Font.DemiBold; color: Appearance.colors.colOnPrimary }
                     }
                 }
             }
         }
+    }
+
+    // ── a Framework missing a requirement: say which one instead of the generic hint ──
+    FrameworkRequirements {
+        Layout.fillWidth: true
+        visible: FanControl.ready && FanControl.isFramework && !FanControl.frameworkReady
     }
 
     ThermalHero {
@@ -186,6 +194,10 @@ ContentPage {
     FanCurvePane {
         Layout.fillWidth: true
         visible: FanControl.controllable
+    }
+
+    EcProfileSetup {
+        visible: FanControl.ready && !FanControl.controllable
     }
 
     // ── processor ──
@@ -306,6 +318,10 @@ ContentPage {
                 ? Translation.tr("alienware-wmi fan boost (kernel driver)")
                 : FanControl.backend === "hwmon_pwm"
                     ? Translation.tr("hwmon PWM, manual mode")
+                    : FanControl.backend === "ec_regs"
+                        ? Translation.tr("Embedded controller registers (ec_sys), in steps")
+                    : FanControl.backend === "framework_ec"
+                        ? Translation.tr("Framework EC duty through framework_tool")
                     : Translation.tr("None: the firmware keeps the fans")
             StyledText {
                 text: FanControl.daemonRunning ? Translation.tr("Service running") : Translation.tr("Service stopped")
@@ -318,8 +334,8 @@ ContentPage {
     // ── no control at all ──
     StyledText {
         Layout.fillWidth: true
-        visible: FanControl.ready && !FanControl.controllable
-        text: Translation.tr("No writable fan interface was found. Desktop boards usually need their Super I/O driver (nct6775, it87); ThinkPads need thinkpad_acpi with fan_control=1; other laptops may only offer the power profiles in Quick Settings.")
+        visible: FanControl.ready && !FanControl.controllable && !FanControl.isFramework
+        text: Translation.tr("No writable fan interface was found. Desktop boards usually need their Super I/O driver (nct6775, it87); ThinkPads need thinkpad_acpi with fan_control=1. Laptops with an nbfc config can be set up from the card above; other laptops may only offer the power profiles in Quick Settings.")
         font.pixelSize: Appearance.font.pixelSize.smaller
         color: Appearance.colors.colSubtext
         wrapMode: Text.WordWrap

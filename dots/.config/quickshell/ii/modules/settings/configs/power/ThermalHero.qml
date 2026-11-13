@@ -13,7 +13,7 @@ Rectangle {
     id: root
 
     readonly property bool wide: width >= 620
-    readonly property var hottestSensor: FanControl.temps.reduce((best, t) => (!best || t.c > best.c) ? t : best, null)
+    readonly property var hottestSensor: FanControl.curveTemps.reduce((best, t) => (!best || t.c > best.c) ? t : best, null)
 
     radius: Appearance.rounding.verylarge
     color: Appearance.colors.colLayer1
@@ -134,7 +134,8 @@ Rectangle {
                 model: FanControl.temps
                 delegate: MeterRow {
                     required property var modelData
-                    symbol: modelData.label === "GPU" ? "developer_board" : "memory"
+                    symbol: modelData.label.includes("GPU") ? "developer_board"
+                        : modelData.drive === false ? "device_thermostat" : "memory"
                     shape: MaterialShape.Shape.Cookie6Sided
                     label: modelData.label
                     value: `${Math.round(modelData.c)}°`
@@ -148,8 +149,11 @@ Rectangle {
                     symbol: "mode_fan"
                     shape: MaterialShape.Shape.Clover4Leaf
                     label: modelData.label
-                    value: Translation.tr("%1 RPM").arg(modelData.rpm)
-                    fraction: modelData.max > 0 ? modelData.rpm / modelData.max : 0
+                    // EC-register fans report a duty step, not a speed
+                    value: modelData.pct !== null && modelData.pct !== undefined ? `${modelData.pct}%` : Translation.tr("%1 RPM").arg(modelData.rpm)
+                    fraction: modelData.pct !== null && modelData.pct !== undefined ? modelData.pct / 100
+                        : (modelData.max > 0 ? modelData.rpm / modelData.max
+                           : (modelData.raw !== undefined && modelData.raw !== null ? modelData.raw / 255 : 0))
                 }
             }
         }

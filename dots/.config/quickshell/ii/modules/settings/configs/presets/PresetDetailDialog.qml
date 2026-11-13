@@ -124,6 +124,7 @@ WindowDialog {
     // Screenshots come from the repository over the network, so the strip is
     // only there once at least one of them has actually been named.
     Flickable {
+        WheelScroll {}
         Layout.fillWidth: true
         Layout.preferredHeight: 170
         visible: dialog.manifest !== null && (dialog.manifest.screenshotUrls ?? []).length > 0

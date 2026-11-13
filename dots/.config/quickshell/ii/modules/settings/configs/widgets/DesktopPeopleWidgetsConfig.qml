@@ -186,6 +186,7 @@ ContentPage {
         icon: "tune"
 
         DesktopWidgetVisualOptions {
+                widgetId: "people_birthday"
             Layout.fillWidth: true
         }
     }

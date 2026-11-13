@@ -134,7 +134,7 @@ Rectangle {
                     color: Appearance.m3colors.m3surfaceContainer
 
                     Behavior on height {
-                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic }
                     }
 
                     ColumnLayout {

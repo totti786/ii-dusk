@@ -48,6 +48,24 @@ ContentPage {
         }
 
         ConfigSwitch {
+            buttonIcon: "timer"
+            text: Translation.tr("Hold notifications during a focus session")
+            checked: Config.options.notifications.holdDuringFocus
+            onCheckedChanged: {
+                Config.options.notifications.holdDuringFocus = checked;
+            }
+        }
+
+        ConfigSwitch {
+            buttonIcon: "auto_awesome"
+            text: Translation.tr("Add Copy code and Open link buttons")
+            checked: Config.options.notifications.smartActions
+            onCheckedChanged: {
+                Config.options.notifications.smartActions = checked;
+            }
+        }
+
+        ConfigSwitch {
             buttonIcon: "desktop_windows"
             text: Translation.tr("Force specific monitor")
             checked: Config.options.notifications.monitor.enable

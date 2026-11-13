@@ -11,6 +11,45 @@ import qs.services
 // from their own sub-pages.
 ColumnLayout {
     ContentSection {
+        title: Translation.tr("Celestial Moonphase")
+        icon: "nightlight"
+
+        ConfigSwitch {
+            buttonIcon: "nightlight"
+            text: Translation.tr("Enable celestial wallpaper")
+            checked: Config.options.background.celestial.enable
+            onCheckedChanged: Config.options.background.celestial.enable = checked
+        }
+
+        ConfigSwitch {
+            buttonIcon: "animation"
+            text: Translation.tr("Animate celestial backdrop")
+            checked: Config.options.background.celestial.animate
+            onCheckedChanged: Config.options.background.celestial.animate = checked
+        }
+
+        ConfigSlider {
+            buttonIcon: "speed"
+            text: Translation.tr("Celestial animation FPS")
+            from: 5
+            to: 30
+            stepSize: 1
+            value: Config.options.background.celestial.fps ?? 10
+            onValueChanged: Config.options.background.celestial.fps = value
+        }
+
+        ConfigSelectionArray {
+            currentValue: Config.options.background.celestial.backgroundStyle ?? 0
+            onSelected: value => Config.options.background.celestial.backgroundStyle = value
+            options: [
+                { displayName: Translation.tr("Planisphere"), icon: "star", value: 0 },
+                { displayName: Translation.tr("Seasonal etchings"), icon: "timeline", value: 1 },
+                { displayName: Translation.tr("Combined"), icon: "auto_awesome", value: 2 }
+            ]
+        }
+    }
+
+    ContentSection {
         title: Translation.tr("Parallax Engine")
         icon: "sync_alt"
 

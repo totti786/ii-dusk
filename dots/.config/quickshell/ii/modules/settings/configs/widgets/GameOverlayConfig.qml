@@ -47,7 +47,7 @@ ContentPage {
         Layout.fillWidth: true
         Layout.bottomMargin: 8
         text: Translation.tr("Toggle Game Overlay")
-        keys: ["Super", "G"]
+        keys: ["Super", "Alt", "O"]
     }
 
     ContentSection {
@@ -123,7 +123,7 @@ ContentPage {
                     Layout.leftMargin: 10
                     color: Appearance.colors.colSubtext
                     font.pixelSize: Appearance.font.pixelSize.smallie
-                    text: Translation.tr("Press Super+G to open the overlay and pin the crosshair")
+                    text: Translation.tr("Press Super+Alt+O to open the overlay and pin the crosshair")
                 }
                 Item { Layout.fillWidth: true }
                 RippleButtonWithIcon {

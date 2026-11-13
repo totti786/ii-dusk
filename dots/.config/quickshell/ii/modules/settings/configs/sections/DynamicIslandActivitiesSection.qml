@@ -253,6 +253,32 @@ ColumnLayout {
                 }
                 StyledToolTip { text: Translation.tr("EasyEffects' preset as a bubble beside the island while it runs: scroll it to switch presets, rest on it for the device's presets, bypass and the app") }
             }
+
+            ConfigSwitch {
+                buttonIcon: "waves"
+                text: Translation.tr("Soundscapes")
+                visible: (Config.options.bar.floatingNotch.enable || Config.options.bar.floatingNotch.centerInBar) && (Config.options.soundscapes?.enable ?? true)
+                checked: !(Config.options.bar.floatingNotch.disableSoundscapes ?? false)
+                onCheckedChanged: {
+                    Config.options.bar.floatingNotch.disableSoundscapes = !checked;
+                    if (Config.options.dynamicIsland?.widgets?.soundscapes)
+                        Config.options.dynamicIsland.widgets.soundscapes.enable = checked;
+                }
+                StyledToolTip { text: Translation.tr("An ambient mix as a bubble beside the island while it plays or is paused: scroll it for the volume, rest on it for the mixer. It only watches - it never starts the mixer") }
+            }
+
+            ConfigSwitch {
+                buttonIcon: "send_to_mobile"
+                text: Translation.tr("Quick Share")
+                visible: (Config.options.bar.floatingNotch.enable || Config.options.bar.floatingNotch.centerInBar) && (Config.options.quickShare?.enable ?? false)
+                checked: !(Config.options.bar.floatingNotch.disableQuickShare ?? false)
+                onCheckedChanged: {
+                    Config.options.bar.floatingNotch.disableQuickShare = !checked;
+                    if (Config.options.dynamicIsland?.widgets?.quickShare)
+                        Config.options.dynamicIsland.widgets.quickShare.enable = checked;
+                }
+                StyledToolTip { text: Translation.tr("Quick Share as a bubble beside the island while this PC is visible to nearby phones, a request or transfer is in flight, or files wait for a device") }
+            }
         }
     }
 

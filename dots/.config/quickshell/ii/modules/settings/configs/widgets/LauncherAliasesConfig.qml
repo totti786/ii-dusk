@@ -5,7 +5,7 @@ import Quickshell
 import Quickshell.Widgets
 import qs.modules.common
 import qs.modules.common.widgets
-import qs.modules.waffle.looks
+import org.kde.kirigami as Kirigami
 import qs.services
 
 Item {
@@ -104,10 +104,10 @@ Item {
                                 Component {
                                     id: appIconComp
 
-                                    WAppIcon {
-                                        iconName: modelData.target.replace(".desktop", "")
-                                        implicitSize: 20
-                                        tryCustomIcon: false
+                                    Kirigami.Icon {
+                                        source: modelData.target.replace(".desktop", "")
+                                        implicitWidth: 20
+                                        implicitHeight: 20
                                     }
                                 }
 
@@ -687,10 +687,10 @@ Item {
                                             anchors.centerIn: parent
                                             spacing: 6
 
-                                            WAppIcon {
-                                                iconName: modelData.icon
-                                                implicitSize: 16
-                                                tryCustomIcon: false
+                                            Kirigami.Icon {
+                                                source: modelData.icon
+                                                implicitWidth: 16
+                                                implicitHeight: 16
                                             }
 
                                             StyledText {

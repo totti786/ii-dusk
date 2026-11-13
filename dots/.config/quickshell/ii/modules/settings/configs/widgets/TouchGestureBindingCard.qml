@@ -30,7 +30,7 @@ Rectangle {
     readonly property var currentAction: TouchGestureActionRegistry.actionById(actionId)
 
     Behavior on color {
-        ColorAnimation { duration: 150 }
+        ColorAnimation { duration: Appearance.dur(150) }
     }
 
     MouseArea {

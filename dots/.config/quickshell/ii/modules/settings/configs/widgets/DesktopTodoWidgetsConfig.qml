@@ -177,6 +177,7 @@ ContentPage {
         icon: "tune"
 
         DesktopWidgetVisualOptions {
+                widgetId: "todo_focus"
             Layout.fillWidth: true
         }
     }

@@ -262,6 +262,20 @@ ContentPage {
         }
 
         ContentSubsection {
+            title: Translation.tr("Quota window")
+
+            ConfigSelectionArray {
+                currentValue: Config.options.bar.aiPlanUsage.windowKind
+                onSelected: newValue => Config.options.bar.aiPlanUsage.windowKind = String(newValue)
+                options: [
+                    { displayName: Translation.tr("5 hours"), icon: "schedule", value: "short" },
+                    { displayName: Translation.tr("Weekly"), icon: "date_range", value: "weekly" },
+                    { displayName: Translation.tr("Both"), icon: "stacked_bar_chart", value: "both" }
+                ]
+            }
+        }
+
+        ContentSubsection {
             title: Translation.tr("Percentage meaning")
 
             ConfigSelectionArray {

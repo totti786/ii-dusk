@@ -18,7 +18,7 @@ Rectangle {
     scale: userHeaderMouse.pressed ? 0.95 : (userHeaderMouse.containsMouse ? 1.03 : 1.0)
     Behavior on scale {
         NumberAnimation {
-            duration: 150
+            duration: Appearance.dur(150)
             easing.type: Easing.OutQuad
         }
     }

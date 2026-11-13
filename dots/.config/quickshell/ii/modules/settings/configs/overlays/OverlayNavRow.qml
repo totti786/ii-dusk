@@ -21,6 +21,8 @@ Rectangle {
     property bool first: false
     property bool last: false
     property bool hasSwitch: false
+    // The shortcut, as keycaps before the switch
+    property var keys: []
     property bool checked: false
     // Without a page behind it the row is just a switch: the arrow goes and a tap toggles.
     property bool hasOpen: true
@@ -92,6 +94,10 @@ Rectangle {
                 color: Appearance.colors.colSubtext
                 elide: Text.ElideRight
             }
+        }
+
+        KeyCaps {
+            keys: root.keys
         }
 
         StyledSwitch {

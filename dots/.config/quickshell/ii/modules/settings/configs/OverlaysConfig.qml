@@ -28,7 +28,7 @@ Item {
 
     readonly property bool modesAvailable: ["ii", "waffle"].includes(PanelFamily.current)
 
-    // Super + Y is bound in the Hyprland config, which the shell's update never touches
+    // Super + Alt + Y is bound in the Hyprland config, which the shell's update never touches
     property bool modesKeybindFound: true
     Process {
         running: overlaysConfigRoot.modesAvailable
@@ -128,7 +128,7 @@ Item {
                 summary: EasyEffects.available
                     ? Translation.tr("Presets, the effect chain and per-device defaults in one window.")
                     : Translation.tr("EasyEffects isn't installed.")
-                keys: ["Super", "Ctrl", "E"]
+                keys: ["Super", "Alt", "E"]
                 canOpen: EasyEffects.available
                 checked: Config.options.easyEffects?.appEnable ?? true
                 onToggled: value => { if (Config.ready && Config.options.easyEffects) Config.options.easyEffects.appEnable = value; }
@@ -186,7 +186,7 @@ Item {
                 summary: Config.options.appStats.enable
                     ? Translation.tr("Recording screen time, network and battery. Views and retention live in the app.")
                     : Translation.tr("Not recording. The history already kept stays.")
-                keys: ["Super", "U"]
+                keys: ["Super", "Alt", "U"]
                 checked: Config.options.appStats.overlayEnabled
                 onToggled: value => Config.options.appStats.overlayEnabled = value
                 onOpenRequested: GlobalStates.openUsageApp("")
@@ -221,9 +221,9 @@ Item {
                         : line + " " + Translation.tr("Nothing is on right now.");
                 }
                 warning: checked && !overlaysConfigRoot.modesKeybindFound
-                    ? Translation.tr("Hyprland has no binding for Super + Y. Re-run the setup with --hypr or bind quickshell:modesToggle.")
+                    ? Translation.tr("Hyprland has no binding for Super + Alt + Y. Re-run the setup with --hypr or bind quickshell:modesToggle.")
                     : ""
-                keys: ["Super", "Y"]
+                keys: ["Super", "Alt", "Y"]
                 checked: Config.options.modes.overlayEnabled
                 onToggled: value => Config.options.modes.overlayEnabled = value
                 onOpenRequested: GlobalStates.openModesApp("")
@@ -295,9 +295,9 @@ Item {
                 title: Translation.tr("On-screen keyboard")
                 summary: {
                     const style = (Config.options.osk.style ?? "deck") === "deck" ? Translation.tr("Deck") : Translation.tr("Classic");
-                    const auto = Config.options.osk.autoShow.enable ? Translation.tr("shows on touch") : Translation.tr("Super + K");
-                    return `${style} · ${auto}`;
+                    return Config.options.osk.autoShow.enable ? `${style} · ${Translation.tr("shows on touch")}` : style;
                 }
+                keys: ["Super", "Alt", "K"]
                 hasSwitch: true
                 checked: GlobalStates.oskOpen
                 onToggled: value => GlobalStates.oskOpen = value
@@ -309,10 +309,21 @@ Item {
                 shape: MaterialShape.Shape.Clover4Leaf
                 title: Translation.tr("Game overlay")
                 summary: Translation.tr("Crosshair, media, notes, Discord voice and floating image")
+                keys: ["Super", "Alt", "O"]
                 onOpenRequested: overlaysConfigRoot.open("widgets/GameOverlayConfig.qml")
             }
 
             OverlayNavRow {
+                symbol: "speed"
+                shape: MaterialShape.Shape.SoftBurst
+                title: Translation.tr("Performance HUD")
+                summary: Translation.tr("FPS, 1% low, CPU, GPU, RAM, VRAM and battery over your games")
+                keys: ["Super", "Alt", "H"]
+                onOpenRequested: overlaysConfigRoot.open("widgets/PerfMonitorConfig.qml")
+            }
+
+            OverlayNavRow {
+                last: true
                 symbol: "auto_awesome"
                 shape: MaterialShape.Shape.Sunny
                 title: Translation.tr("Wallpaper upscaling")
@@ -323,15 +334,6 @@ Item {
                 hasSwitch: true
                 checked: Config.options.background.upscaylPrompt
                 onToggled: value => Config.options.background.upscaylPrompt = value
-            }
-
-            OverlayNavRow {
-                last: true
-                symbol: "speed"
-                shape: MaterialShape.Shape.SoftBurst
-                title: Translation.tr("Performance HUD")
-                summary: Translation.tr("FPS, 1% low, CPU, GPU, RAM, VRAM and battery over your games")
-                onOpenRequested: overlaysConfigRoot.open("widgets/PerfMonitorConfig.qml")
             }
         }
     }

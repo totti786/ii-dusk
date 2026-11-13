@@ -285,6 +285,7 @@ Item {
                     }
 
                     GridView {
+                        WheelScroll {}
                         id: wpeGrid
                         anchors.fill: parent
                         cellWidth: 200
@@ -295,7 +296,7 @@ Item {
                         interactive: true
 
                         Behavior on contentX {
-                            NumberAnimation { duration: 300; easing.type: Easing.OutQuad }
+                            NumberAnimation { duration: Appearance.dur(300); easing.type: Easing.OutQuad }
                         }
 
                         delegate: Rectangle {

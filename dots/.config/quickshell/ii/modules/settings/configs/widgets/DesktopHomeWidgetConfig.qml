@@ -74,6 +74,7 @@ ContentPage {
         icon: "tune"
 
         DesktopWidgetVisualOptions {
+                widgetId: "home_devices"
             Layout.fillWidth: true
         }
     }

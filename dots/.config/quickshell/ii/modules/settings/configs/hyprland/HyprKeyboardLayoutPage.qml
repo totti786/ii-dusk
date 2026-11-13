@@ -266,6 +266,17 @@ Item {
             textOff: Translation.tr("Alt+Shift does nothing special; layouts are switched from the bar or a shortcut.")
         }
 
+        HyprToggle {
+            visible: root.chosen.length > 1
+            buttonIcon: "web_asset"
+            alwaysExplain: true
+            text: Translation.tr("Remember the layout per window")
+            switchOn: Config.options.hyprland.layoutPerWindow
+            textOn: Translation.tr("Each window keeps the layout you last used in it. New windows start on the first layout.")
+            textOff: Translation.tr("One layout for everything; switching in one window switches all of them.")
+            onRequested: wanted => Config.options.hyprland.layoutPerWindow = wanted
+        }
+
         MaterialTextField {
             id: searchField
             Layout.fillWidth: true

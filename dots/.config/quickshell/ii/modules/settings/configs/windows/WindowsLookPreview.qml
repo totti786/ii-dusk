@@ -497,7 +497,7 @@ Item {
                 }
             }
         }
-        PauseAnimation { duration: 450 }
+        PauseAnimation { duration: Appearance.dur(450) }
         ScriptAction {
             script: {
                 second.zoom = root.slide || !root.animEnabled ? 1 : root.startPercent / 100;

@@ -142,6 +142,7 @@ ContentPage {
         icon: "tune"
 
         DesktopWidgetVisualOptions {
+                widgetId: "search_pixel"
             Layout.fillWidth: true
         }
     }

@@ -80,7 +80,7 @@ Item {
                 checked: Config.options.bar.tooltips.enableDisplayModesPopup
                 onCheckedChanged: Config.options.bar.tooltips.enableDisplayModesPopup = checked
                 StyledToolTip {
-                    text: Translation.tr("Extend, duplicate or show only one screen. Opens with Super+Alt+P")
+                    text: Translation.tr("Extend, duplicate or show only one screen. Opens with Ctrl+Alt+D")
                 }
             }
             ConfigSwitch {

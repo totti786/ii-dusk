@@ -80,13 +80,19 @@ ContentPage {
     KeyboardShortcutBox {
         Layout.fillWidth: true
         Layout.bottomMargin: 8
-        text: Translation.tr("Start or stop dictation")
-        keys: ["Super", "Shift", "D"]
+        text: Translation.tr("Hold to dictate, release to type")
+        keys: ["Alt", "Space"]
+    }
+    KeyboardShortcutBox {
+        Layout.fillWidth: true
+        Layout.bottomMargin: 8
+        text: Translation.tr("Press once to start, again to stop")
+        keys: ["Alt", "Shift", "Space"]
     }
 
     // ── Setup ────────────────────────────────────────────────────────────────
     ContentSection {
-        visible: !page.installed
+        visible: !page.installed && !DictationService.useHex
         icon: "download"
         title: Translation.tr("Install Voxtype")
 
@@ -129,7 +135,7 @@ ContentPage {
             buttonIcon: "keyboard_voice"
             text: Translation.tr("Type what I say into the focused window")
             checked: Config.options.dictation.enabled
-            enabled: page.installed
+            enabled: page.installed || DictationService.hexInstalled
             onCheckedChanged: {
                 Config.options.dictation.enabled = checked;
             }
@@ -154,7 +160,8 @@ ContentPage {
                 StyledText {
                     Layout.fillWidth: true
                     text: page.ready
-                        ? Translation.tr("Ready — %1, %2.").arg(DictationService.qualityLabel).arg(DictationService.requiredModel)
+                        ? (DictationService.useHex ? Translation.tr("Ready — Hex.")
+                            : Translation.tr("Ready — %1, %2.").arg(DictationService.qualityLabel).arg(DictationService.requiredModel))
                         : Translation.tr("Not ready yet")
                     wrapMode: Text.Wrap
                     font.pixelSize: Appearance.font.pixelSize.small
@@ -172,7 +179,7 @@ ContentPage {
 
                 StyledText {
                     Layout.fillWidth: true
-                    visible: page.installed && !DictationService.bridgeInstalled
+                    visible: page.installed && !DictationService.bridgeInstalled && !DictationService.useHex
                     text: Translation.tr("The voxtype-audio-bridge helper is missing, so the notch shows a pulse instead of your voice's waveform. Dictation itself is unaffected.")
                     wrapMode: Text.Wrap
                     font.pixelSize: Appearance.font.pixelSize.smaller
@@ -193,7 +200,46 @@ ContentPage {
         StyledText {
             Layout.fillWidth: true
             Layout.topMargin: 4
-            text: Translation.tr("The daemon runs for as long as the shell does, and stops when this switch is off.")
+            text: DictationService.useHex
+                ? Translation.tr("Hex is started by the shell when it is not running, and keeps running on its own.")
+                : Translation.tr("The daemon runs for as long as the shell does, and stops when this switch is off.")
+            wrapMode: Text.Wrap
+            font.pixelSize: Appearance.font.pixelSize.smaller
+            color: Appearance.colors.colSubtext
+        }
+    }
+
+    // ── Which program listens ────────────────────────────────────────────────
+    ContentSection {
+        icon: "hearing"
+        title: Translation.tr("Engine")
+
+        ConfigSelectionArray {
+            currentValue: DictationService.activeEngine
+            onSelected: newValue => {
+                Config.options.dictation.engine = newValue;
+            }
+            options: [
+                {
+                    displayName: Translation.tr("Hex"),
+                    icon: "bolt",
+                    value: "hex"
+                },
+                {
+                    displayName: Translation.tr("Voxtype"),
+                    icon: "graphic_eq",
+                    value: "voxtype"
+                }
+            ]
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            text: DictationService.useHex
+                ? Translation.tr("Hex transcribes while you are still talking with a small English model on the graphics card, so the text lands about a second after you let go. English only. The Whisper settings below do not apply to it.")
+                : DictationService.engine === "hex"
+                    ? Translation.tr("Hex was not found (expected at ~/hex), so Voxtype is being used.")
+                    : Translation.tr("Voxtype runs OpenAI's Whisper locally. It knows many languages and can translate to English, but it waits until you stop before transcribing, which takes longer on this machine.")
             wrapMode: Text.Wrap
             font.pixelSize: Appearance.font.pixelSize.smaller
             color: Appearance.colors.colSubtext
@@ -202,7 +248,7 @@ ContentPage {
 
     // ── Engine ───────────────────────────────────────────────────────────────
     ContentSection {
-        visible: page.installed
+        visible: page.installed && !DictationService.useHex
         icon: "graphic_eq"
         title: Translation.tr("Speech model")
 

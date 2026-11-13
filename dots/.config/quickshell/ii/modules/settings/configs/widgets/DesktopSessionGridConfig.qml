@@ -99,6 +99,7 @@ ContentPage {
         icon: "tune"
 
         DesktopWidgetVisualOptions {
+                widgetId: "session_grid"
             Layout.fillWidth: true
         }
     }

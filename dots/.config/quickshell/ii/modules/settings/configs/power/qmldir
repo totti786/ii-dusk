@@ -1,6 +1,7 @@
 module qs.modules.settings.configs.power
 
 FanControlConfig 1.0 FanControlConfig.qml
+EcProfileSetup 1.0 EcProfileSetup.qml
 FanCurveGraph 1.0 FanCurveGraph.qml
 FanCurvePane 1.0 FanCurvePane.qml
 ThermalHero 1.0 ThermalHero.qml
@@ -10,3 +11,5 @@ BatteryTodayCard 1.0 BatteryTodayCard.qml
 BatteryUsageConfig 1.0 BatteryUsageConfig.qml
 KeepAwakeConfig 1.0 KeepAwakeConfig.qml
 PowerModePane 1.0 PowerModePane.qml
+FrameworkRequirements 1.0 FrameworkRequirements.qml
+FrameworkConfig 1.0 FrameworkConfig.qml
