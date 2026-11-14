@@ -73,9 +73,9 @@
 # feature, are only ever installed through `deps`; `deps --remove` uninstalls
 # only what `deps` itself installed, recorded in ~/.local/state/ii-dusk.
 #
-# On Arch, `install` ends by putting the AUR quickshell-git back: the base
-# installer builds its own pinned quickshell and this fork is written against
-# master. That happens before any config lands, and asks first unless -y.
+# On Arch, `install` selects the AUR quickshell-dusk-git package: the base
+# installer builds its own pinned quickshell. The Dusk fork adds startup
+# optimizations. Selection happens before config deployment and asks unless -y.
 #
 # Given neither --keep-config nor --reset-config, config.json is kept on
 # updates and branch hops and reset on fork switches, where the schema changes.
@@ -2007,20 +2007,18 @@ local_origin() {
 # Quickshell
 #══════════════════════════════════════════════════════════════════════════════
 
-# ensure_quickshell_git — put the AUR quickshell-git back after a base install.
+# ensure_quickshell_git — put the AUR quickshell-dusk-git back after a base install.
 #
-# The base installer builds its own illogical-impulse-quickshell-git from a
-# commit pinned months ago and drops quickshell-git on the way. This fork is
-# written against Quickshell master, so the pinned build is normally older
-# than the QML expects and the shell fails to start. Undo that before any
-# config lands, which is why install is the only command that calls this.
+# The base installer builds its own pinned Quickshell. Use the Dusk fork's
+# maintained package for the startup scanner and compiled-QML cache changes.
+# This runs before deploying the config during install.
 #
 # Arch only: every other distro packages Quickshell its own way, and the
 # pinned PKGBUILD is an Arch-specific problem.
 ensure_quickshell_git() {
     have pacman || return 0
-    if pacman -Qq quickshell-git >/dev/null 2>&1; then
-        ui_verbose "quickshell-git already installed"
+    if pacman -Qq quickshell-dusk-git >/dev/null 2>&1; then
+        ui_verbose "quickshell-dusk-git already installed"
         return 0
     fi
 
@@ -2029,10 +2027,10 @@ ensure_quickshell_git() {
 
     ui_frame_open "Quickshell package"
     ui_kv "installed" "${current:-none}"
-    ui_kv "wanted" "quickshell-git"
+    ui_kv "wanted" "quickshell-dusk-git"
     ui_frame_close
-    ui_note "This fork follows Quickshell master. The pinned build the base"
-    ui_note "installer ships is older, and the shell will not start on it."
+    ui_note "Quickshell Dusk includes the startup scanner and QML cache optimizations."
+    ui_note "It replaces the base installer's pinned Quickshell package."
 
     # yay first because that is what the base installer bootstraps, but paru
     # takes the same flags and plenty of people have only that one.
@@ -2044,13 +2042,13 @@ ensure_quickshell_git() {
         }
     done
     [[ -n "$helper" ]] || {
-        ui_warn "No AUR helper found — install quickshell-git with yay or paru yourself."
+        ui_warn "No AUR helper found — install quickshell-dusk-git with yay or paru yourself."
         return 0
     }
 
     if [[ "$OPT_ASSUME_YES" != true ]]; then
-        local q="Install quickshell-git?"
-        [[ -n "$current" ]] && q="Replace $current with quickshell-git?"
+        local q="Install quickshell-dusk-git?"
+        [[ -n "$current" ]] && q="Replace $current with quickshell-dusk-git?"
         ui_confirm "$q" || {
             ui_note "Left as is. The shell may not start."
             return 0
@@ -2065,17 +2063,16 @@ ensure_quickshell_git() {
     before="$(pacman -Qdtq 2>/dev/null | sort || true)"
 
     sudo_prime || true
-    ui_info "Running $helper -S aur/quickshell-git — its own output follows."
+    ui_info "Running $helper -S aur/quickshell-dusk-git — its own output follows."
     printf '\n'
     local -a flags=(-S --needed)
     [[ "$OPT_ASSUME_YES" == true ]] && flags+=(--noconfirm)
     local rc=0
-    # aur/: a repository package may provide quickshell-git (CachyOS's
-    # noctalia-qs), and --noconfirm would take it over the AUR's.
-    "$helper" "${flags[@]}" aur/quickshell-git || rc=$?
+    # Select the named AUR recipe explicitly, rather than a repository provider.
+    "$helper" "${flags[@]}" aur/quickshell-dusk-git || rc=$?
     printf '\n'
     if ((rc != 0)); then
-        ui_warn "quickshell-git install failed (exit $rc) — fix it before starting the shell."
+        ui_warn "quickshell-dusk-git install failed (exit $rc) — fix it before starting the shell."
         return 0
     fi
 
@@ -2089,7 +2086,7 @@ ensure_quickshell_git() {
         ui_ok "Kept" "${#stranded[@]} Qt deps marked explicit"
     fi
 
-    ui_ok "Quickshell" "$(pacman -Qq quickshell-git 2>/dev/null || printf 'quickshell-git')"
+    ui_ok "Quickshell" "$(pacman -Qq quickshell-dusk-git 2>/dev/null || printf 'quickshell-dusk-git')"
 }
 
 qt_mismatch() {
@@ -2130,17 +2127,18 @@ build_quickshell() {
     build_dir="$(mktemp -d "${TMPDIR:-/tmp}/quickshell-build-XXXXXX")"
 
     ui_step "Fetching"
-    if ! run_logged git clone --depth=1 --recursive \
-        https://github.com/outfoxxed/quickshell.git "$build_dir"; then
+    if ! run_logged git clone --depth=1 --recursive --branch dusk \
+        https://github.com/totti786/quickshell-dusk.git "$build_dir"; then
         rm -rf "$build_dir"
         ui_fail "Quickshell source" "clone failed"
         return 1
     fi
-    ui_ok "Fetched" "outfoxxed/quickshell"
+    ui_ok "Fetched" "totti786/quickshell-dusk (dusk)"
 
     ui_step "Configuring"
     if ! run_logged cmake -B "$build_dir/build" -S "$build_dir" \
-        -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DCRASH_HANDLER=OFF; then
+        -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DCRASH_HANDLER=OFF \
+        '-DDISTRIBUTOR=ii-dusk (local Quickshell Dusk build)'; then
         rm -rf "$build_dir"
         ui_fail "Quickshell build" "cmake configure failed"
         return 1
@@ -3468,7 +3466,7 @@ show_help() {
     printf '  %sinstall and update offer the fork'"'"'s core packages; optional ones are%s\n' "$C_SUB" "$C_RST"
     printf '  %sonly installed through deps. deps --remove takes back only what it added.%s\n' "$C_SUB" "$C_RST"
     printf '  %sOn Arch, install swaps the base installer'"'"'s pinned quickshell for the%s\n' "$C_SUB" "$C_RST"
-    printf '  %sAUR quickshell-git this fork targets, before any config lands.%s\n' "$C_SUB" "$C_RST"
+    printf '  %sAUR quickshell-dusk-git this fork targets, before any config lands.%s\n' "$C_SUB" "$C_RST"
     printf '  %sGiven neither --keep-config nor --reset-config, config.json is kept on%s\n' "$C_SUB" "$C_RST"
     printf '  %supdates and branch hops and reset on fork switches, where the schema%s\n' "$C_SUB" "$C_RST"
     printf '  %schanges.%s\n' "$C_SUB" "$C_RST"
