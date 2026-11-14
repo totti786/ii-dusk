@@ -1,5 +1,9 @@
 # Quickshell startup caches
 
+The maintained fork is now [Quickshell Dusk](https://github.com/totti786/quickshell-dusk).
+Install it with `yay -S quickshell-dusk-git` or `paru -S quickshell-dusk-git`.
+The files below preserve the original pinned build for reproducibility.
+
 Optional native optimization for ii-dusk, pinned to upstream revision
 `9b0f339b19057f4731bf3b48293307d7ef241671` (package release 3).
 The source archive and checked patches reproduce the locally validated build.
