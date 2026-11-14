@@ -1037,8 +1037,8 @@ Item {
             anchors.fill: parent
             sideIds: content.sideIds
             restHeight: content.restingHeight
-            sportsGame: content.controller.sources.sports.liveGame
-            phoneLive: content.controller.sources.phoneLive.current
+            sportsGame: content.controller.sources.sports?.liveGame ?? null
+            phoneLive: content.controller.sources.phoneLive?.current ?? null
             visible: !content.hasWidget && !content.isSearch && !content.isOsd && !content.isWallpaper
                 && !content.isSession && !content.isColorPicker && !content.isDisplayModes
                 && !content.isLocalSendRequest && !content.isAskpass

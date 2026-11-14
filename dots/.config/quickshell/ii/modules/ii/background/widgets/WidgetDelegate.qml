@@ -15,6 +15,7 @@ import qs.modules.ii.background.widgets.utility
 import qs.modules.ii.background.widgets.weather
 import qs.modules.ii.background.widgets.wellbeing
 import qs.modules.ii.background.widgets.people
+import qs.modules.ii.background.widgets.visualizer
 import qs
 import qs.services
 
@@ -37,14 +38,23 @@ Item {
     // monitor from the config entry (see WidgetPlacement); the widgetX/widgetY
     // roles only carry the legacy, unforked coordinates.
     property string monitorName: ""
+    // Edit Mode's lock preview is the edited screen's alone (GlobalStates.lockLookFor).
+    readonly property bool editLockHere: GlobalStates.editLockLayout
+        && (delegateRoot.monitorName === "" || GlobalStates.editModeMonitor === delegateRoot.monitorName)
+    readonly property bool lockLookHere: GlobalStates.screenLocked || delegateRoot.editLockHere
     // While the lock look is up (a real lock or Edit Mode's Lockscreen tab)
     // the lock fork is read, which follows the desktop until forked.
     readonly property var placement: {
         const list = Config.options.background.activeWidgets;
-        return WidgetPlacement.resolveIn(list, delegateRoot.instanceId, delegateRoot.monitorName, GlobalStates.lockLookActive, delegateRoot.screenWidth, delegateRoot.screenHeight);
+        return WidgetPlacement.resolveIn(list, delegateRoot.instanceId, delegateRoot.monitorName, delegateRoot.lockLookHere, delegateRoot.screenWidth, delegateRoot.screenHeight);
     }
     // The entry itself, for the flags that are not placement (pinned).
     readonly property var configEntry: WidgetPlacement.findEntry(Config.options.background.activeWidgets, delegateRoot.instanceId)
+    // Every screen's Repeater walks the shared model; only the screens this copy
+    // is assigned to build its widget (WidgetPlacement.showsOn). The others keep
+    // an empty, invisible delegate.
+    readonly property bool onThisMonitor: WidgetPlacement.showsOn(delegateRoot.configEntry, delegateRoot.monitorName)
+    visible: delegateRoot.onThisMonitor
     required property real wallpaperScale
     required property bool wallpaperSafetyTriggered
     required property bool lockAnimationActive
@@ -137,6 +147,12 @@ Item {
         "media_android": component_media_android,
         "media_cd": component_media_cd,
         "nothing_ring_media": component_nothing_ring_media,
+        "visualizer": component_visualizer,
+        "visualizer_ring": component_visualizer_ring,
+        "visualizer_aurora": component_visualizer_aurora,
+        "visualizer_mirror": component_visualizer_mirror,
+        "visualizer_dots": component_visualizer_dots,
+        "visualizer_bars": component_visualizer_bars,
         "compact_media": component_compact_media,
         "media_poster": component_media_poster,
         "media_deck": component_media_deck,
@@ -927,6 +943,84 @@ Item {
             scaledScreenHeight: delegateRoot.screenHeight
             wallpaperScale: delegateRoot.wallpaperScale
             wallpaperSafetyTriggered: delegateRoot.wallpaperSafetyTriggered
+        }
+
+    }
+
+    Component {
+        id: component_visualizer
+
+        VisualizerWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_visualizer_ring
+
+        VisualizerWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_visualizer_aurora
+
+        VisualizerWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_visualizer_mirror
+
+        VisualizerWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_visualizer_dots
+
+        VisualizerWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
+        }
+
+    }
+
+    Component {
+        id: component_visualizer_bars
+
+        VisualizerWidget {
+            screenWidth: delegateRoot.screenWidth
+            screenHeight: delegateRoot.screenHeight
+            scaledScreenWidth: delegateRoot.screenWidth
+            scaledScreenHeight: delegateRoot.screenHeight
+            wallpaperScale: delegateRoot.wallpaperScale
         }
 
     }
@@ -2413,7 +2507,8 @@ Item {
         // it is the ones the lock shows. Without the tab named here a
         // lock-only widget added from it is written to the config and never
         // built, so the tab looks like it ignored the click.
-        readonly property bool lockLayout: delegateRoot.lockAnimationActive || GlobalStates.editLockLayout
+        readonly property bool lockLayout: delegateRoot.lockAnimationActive || delegateRoot.editLockHere
+        active: delegateRoot.onThisMonitor && (widgetLoader.keepAlive || widgetLoader.shown)
         shown: !widgetLoader.lockLayout ? (delegateRoot.lockBehavior !== "lockOnly")
             : (delegateRoot.lockBehavior === "center" || delegateRoot.lockBehavior === "keep" || delegateRoot.lockBehavior === "custom"
                 || delegateRoot.lockBehavior === "lockOnly")

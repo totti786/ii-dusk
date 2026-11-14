@@ -211,6 +211,11 @@ MouseArea {
             root.context.currentText = "";
             layoutDialog.close();
         } 
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            root.context.tryUnlock(root.ctrlHeld);
+            event.accepted = true;
+            return;
+        }
         forceFieldFocus();
     }
     Keys.onReleased: event => {
@@ -717,16 +722,112 @@ MouseArea {
             y: root.aodSlideDown(mainIsland)
         }
 
-        // Fingerprint
-        Loader {
-            id: fingerprintLoader
-            Layout.rightMargin: 2
-            Layout.fillHeight: true
-            Layout.preferredWidth: height
-            active: root.context.fingerprintIndicatorVisible
-            visible: active
+        // Fingerprint / Face ID
+        Component {
+            id: faceIdStatusComponent
+            Rectangle {
+                id: faceIdStatus
+                radius: Appearance.rounding.full
+                color: Appearance.colors.colSurfaceContainerHigh
 
-            sourceComponent: Rectangle {
+                readonly property bool verifying: root.context.faceIdVerifying
+                readonly property bool unavailable: !FaceId.cameraAvailable
+                property bool failureFlash: false
+                property bool successFlash: false
+
+                readonly property color colContent: unavailable
+                    ? Appearance.colors.colOutline
+                    : failureFlash
+                        ? Appearance.colors.colError
+                        : (verifying || successFlash)
+                            ? Appearance.colors.colPrimary
+                            : Appearance.colors.colOnSurfaceVariant
+
+                Connections {
+                    target: root.context
+                    function onFaceIdFailed() {
+                        faceIdStatus.failureFlash = true;
+                        faceIdFailureTimer.restart();
+                        faceIdShakeAnim.restart();
+                    }
+                    function onFaceIdSucceeded() {
+                        faceIdStatus.successFlash = true;
+                    }
+                }
+
+                Timer {
+                    id: faceIdFailureTimer
+                    interval: 1000
+                    onTriggered: faceIdStatus.failureFlash = false
+                }
+
+                transform: Translate { id: faceIdShakeOffset }
+                SequentialAnimation {
+                    id: faceIdShakeAnim
+                    NumberAnimation { target: faceIdShakeOffset; property: "x"; to: -6; duration: 50 }
+                    NumberAnimation { target: faceIdShakeOffset; property: "x"; to: 6; duration: 50 }
+                    NumberAnimation { target: faceIdShakeOffset; property: "x"; to: -3; duration: 40 }
+                    NumberAnimation { target: faceIdShakeOffset; property: "x"; to: 3; duration: 40 }
+                    NumberAnimation { target: faceIdShakeOffset; property: "x"; to: 0; duration: 30 }
+                }
+
+                SequentialAnimation {
+                    running: faceIdStatus.verifying
+                    loops: Animation.Infinite
+                    NumberAnimation { target: faceIdIcon; property: "scale"; to: 1.15; duration: 450; easing.type: Easing.InOutQuad }
+                    NumberAnimation { target: faceIdIcon; property: "scale"; to: 0.92; duration: 450; easing.type: Easing.InOutQuad }
+                }
+
+                MaterialSymbol {
+                    id: faceIdIcon
+                    anchors.centerIn: parent
+                    fill: faceIdStatus.verifying || faceIdStatus.successFlash ? 1 : 0
+                    text: faceIdStatus.unavailable
+                        ? "videocam_off"
+                        : faceIdStatus.failureFlash
+                            ? "face_retouching_off"
+                            : faceIdStatus.successFlash
+                                ? "check"
+                                : "face"
+                    iconSize: Appearance.font.pixelSize.hugeass
+                    color: faceIdStatus.colContent
+                    Behavior on color {
+                        ColorAnimation { duration: 200 }
+                    }
+                    Behavior on fill {
+                        NumberAnimation { duration: 200 }
+                    }
+                }
+
+                MouseArea {
+                    id: faceIdMouseArea
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    hoverEnabled: true
+                    onClicked: {
+                        if (!root.interactive)
+                            return;
+                        root.context.tryFaceUnlock();
+                    }
+                }
+
+                StyledToolTipContent {
+                    anchors.top: parent.bottom
+                    anchors.topMargin: 8
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: faceIdStatus.verifying
+                        ? Translation.tr("Scanning face…")
+                        : faceIdStatus.failureFlash
+                            ? Translation.tr("Face not recognized")
+                            : Translation.tr("Press Enter for Face ID")
+                    shown: faceIdMouseArea.containsMouse
+                }
+            }
+        }
+
+        Component {
+            id: fingerprintStatusComponent
+            Rectangle {
                 id: fingerprintStatus
                 radius: Appearance.rounding.full
                 color: Appearance.colors.colSurfaceContainerHigh
@@ -809,10 +910,28 @@ MouseArea {
             }
         }
 
+        Loader {
+            id: fingerprintLoader
+            Layout.rightMargin: 2
+            Layout.fillHeight: true
+            Layout.preferredWidth: height
+            active: root.context.fingerprintIndicatorVisible || root.context.faceIdIndicatorVisible
+            visible: active
+            sourceComponent: (root.context.faceIdIndicatorVisible && (!Fingerprint.deviceAvailable || !root.context.fingerprintIndicatorVisible))
+                ? faceIdStatusComponent
+                : fingerprintStatusComponent
+        }
+
         ToolbarTextField {
             id: passwordBox
             Layout.rightMargin: -Layout.leftMargin
-            placeholderText: GlobalStates.screenUnlockFailed ? Translation.tr("Incorrect password") : Translation.tr("Enter password")
+            placeholderText: {
+                if (root.context.faceIdVerifying)
+                    return Translation.tr("Scanning face…");
+                if (GlobalStates.screenUnlockFailed)
+                    return Translation.tr("Incorrect password");
+                return Translation.tr("Enter password");
+            }
 
             // Style
             clip: true
@@ -1624,7 +1743,10 @@ MouseArea {
                     }
                     
                     onClicked: {
-                        Quickshell.execDetached(["hyprctl", "switchxkblayout", "all", String(index)]);
+                        const idx = index;
+                        const cmd = "hyprctl switchxkblayout all " + idx;
+                        const proc = Qt.createQmlObject('import Quickshell; Process { command: ["bash", "-c", "' + cmd + '"] }', layoutDialog);
+                        proc.running = true;
                         layoutDialog.close();
                     }
                 }

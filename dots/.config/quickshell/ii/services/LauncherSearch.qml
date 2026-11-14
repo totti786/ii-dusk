@@ -2561,8 +2561,8 @@ Singleton {
 
     /** "yt lofi" → { entry, terms } when `yt` is a configured trigger followed by text. */
     function engineShortcutMatch(queryText: string): var {
-        const cfg = Config.options.search.engineShortcuts;
-        if (!cfg.enable)
+        const cfg = Config.options?.search?.engineShortcuts;
+        if (!cfg || !cfg.enable)
             return null;
         const parts = /^\s*(\S+)\s+(\S[\s\S]*)$/.exec(String(queryText ?? ""));
         if (!parts)

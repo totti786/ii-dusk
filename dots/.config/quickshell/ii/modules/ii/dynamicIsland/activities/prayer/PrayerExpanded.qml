@@ -180,10 +180,19 @@ Item {
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.topMargin: -3
-                        text: PrayerTimes.formatTime(seg.modelData.time)
+                        text: PrayerTimes.formatClock(seg.modelData.time)
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         font.weight: seg.isNext ? Font.DemiBold : Font.Normal
                         font.features: ({ "tnum": 1 })
+                        color: seg.isNext ? Appearance.colors.colOnSurface : Appearance.colors.colSubtext
+                        opacity: seg.past ? 0.55 : 1
+                    }
+                    StyledText {
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.topMargin: -3
+                        visible: text !== ""
+                        text: PrayerTimes.formatSuffix(seg.modelData.time)
+                        font.pixelSize: Appearance.font.pixelSize.smallest
                         color: seg.isNext ? Appearance.colors.colOnSurface : Appearance.colors.colSubtext
                         opacity: seg.past ? 0.55 : 1
                     }

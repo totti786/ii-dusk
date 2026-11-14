@@ -267,6 +267,14 @@ pub fn play(provider: &Provider, title_id: &str, episode_id: &str, mut o: Play) 
         referer_flag, "--no-terminal".into(), "--resume-playback=no".into(), "--save-position-on-quit=no".into(),
         format!("--force-media-title={lbl}"), format!("--speed={}", g(speed)),
     ];
+    // Direct (scraped) streams check the player's identity: hosts answer 403 to mpv's own agent
+    // and want an Origin beside the Referer, like a browser embed sends.
+    if let Ok(u) = url::Url::parse(&source.referer) {
+        if let Some(h) = u.host_str() {
+            flags.push(format!("--user-agent={}", crate::http::UA));
+            flags.push(format!("--http-header-fields=Origin: {}://{}{}", u.scheme(), h, u.port().map(|p| format!(":{p}")).unwrap_or_default()));
+        }
+    }
     flags.extend(player::script_flags());
     flags.extend(player::NETWORK_CACHE.iter().map(|s| s.to_string()));
     if !source.subtitles.is_empty() {

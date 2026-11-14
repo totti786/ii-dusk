@@ -170,6 +170,10 @@ Singleton {
     property bool streamResolving: false
     property string streamMessage: ""
     property string streamError: ""
+    // Set when a direct stream failed and a torrent could stand in: { reason, payload }.
+    // The banner offers "Play torrent" (useTorrentInstead) or "Not now" (dismissDirectFailed).
+    property var directFailed: null
+    property var _lastLaunch: null
     property string streamQuery: ""
     property string providerPendingShowId: ""
     property string providerPendingEpisodeId: ""
@@ -232,7 +236,7 @@ Singleton {
     property bool nativeLinger: false
     property bool nativeWasActive: false
     readonly property int nativeLingerMs: 120000
-    readonly property bool nativePillVisible: root.nativeActive || root.streamBusy || root.nativeLinger
+    readonly property bool nativePillVisible: root.nativeActive || root.streamBusy || root.nativeLinger || root.directFailed !== null
     readonly property var nativeNow: root.nativeWorkerActive && root.nativePlayerPid > 0
         ? (root.nowPlaying.find(session => Number(session?.pid ?? 0) === root.nativePlayerPid
             && String(session?.path ?? "").trim() !== "") ?? null)
@@ -915,6 +919,8 @@ Singleton {
             root.streamResolving = false;
             return;
         }
+        root.directFailed = null;
+        root._lastLaunch = payload;
         root.streamBusy = true;
         root.streamResolving = true;
         root.streamQuery = String(payload.title ?? "");
@@ -937,6 +943,8 @@ Singleton {
             command.push("--poster", String(payload.poster));
         if (payload.dub)
             command.push("--dub");
+        if (payload.allowTorrent)
+            command.push("--allow-torrent");
         if (String(payload.quality ?? "").trim() !== "")
             command.push("--quality", String(payload.quality).trim());
         // Prefer an explicit AniList id from the streaming section. Otherwise, once
@@ -969,6 +977,17 @@ Singleton {
             root.retain();
         }
         providerPlayProc.running = true;
+    }
+
+    function useTorrentInstead(): void {
+        const p = root.directFailed?.payload;
+        root.directFailed = null;
+        if (p)
+            root._launchProviderEpisode(Object.assign({}, p, { "allowTorrent": true }));
+    }
+
+    function dismissDirectFailed(): void {
+        root.directFailed = null;
     }
 
     function searchProvider(query: string): void {
@@ -2024,6 +2043,10 @@ Singleton {
                 } catch (e) {}
                 if (parsed?.error)
                     providerPlayProc.replyError = String(parsed.error);
+                if (parsed?.progress && !providerPlayProc.hasStarted)
+                    root.streamMessage = String(parsed.progress);
+                if (parsed?.direct_failed)
+                    root.directFailed = { "reason": String(parsed.reason ?? ""), "payload": root._lastLaunch };
                 if (parsed?.started && !providerPlayProc.hasStarted) {
                     providerPlayProc.hasStarted = true;
                     root.nativePlayerPid = Number(parsed.pid ?? 0);
@@ -2078,6 +2101,10 @@ Singleton {
             if (code === 0 && started) {
                 root.streamError = "";
                 root.streamMessage = "Continue watching is ready.";
+            } else if (root.directFailed) {
+                // not an error: the banner asks whether a torrent should play instead
+                root.streamError = "";
+                root.streamMessage = "";
             } else {
                 root.streamMessage = "";
                 root.streamError = detail || `Could not start anime stream (exit ${code}).`;

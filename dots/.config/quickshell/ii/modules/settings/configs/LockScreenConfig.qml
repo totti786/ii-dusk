@@ -206,8 +206,7 @@ Item {
 
                 readonly property int gap: 12
                 readonly property int fits: Math.max(1, Math.floor((width + gap) / (300 + gap)))
-                // Four tiles: one row of four, two of two or a column, never 3 + 1.
-                readonly property int columns: fits >= 4 ? 4 : fits >= 2 ? 2 : 1
+                readonly property int columns: fits >= 5 ? 5 : fits >= 3 ? 3 : fits >= 2 ? 2 : 1
                 readonly property int tileWidth: Math.floor((width - gap * (columns - 1)) / columns)
                 readonly property int tileHeight: 200
 
@@ -219,14 +218,111 @@ Item {
                     ColorsFeatureTile {
                         width: tiles.tileWidth
                         height: tiles.tileHeight
+                        symbol: "face"
+                        shapeOn: MaterialShape.Shape.Cookie12Sided
+                        title: Translation.tr("Face ID")
+                        selectable: FaceId.probed && FaceId.supported
+                        warningBadge: {
+                            if (!FaceId.probed)
+                                return "";
+                            if (!FaceId.hasCameraHardware && !FaceId.cameraAvailable)
+                                return Translation.tr("No camera");
+                            if (!FaceId.gazeInstalled)
+                                return Translation.tr("Missing Gaze");
+                            if (!FaceId.daemonRunning)
+                                return Translation.tr("Service down");
+                            if (!FaceId.cameraAvailable)
+                                return Translation.tr("No camera");
+                            return "";
+                        }
+                        warningTooltip: {
+                            if (!FaceId.probed)
+                                return "";
+                            if (!FaceId.hasCameraHardware && !FaceId.cameraAvailable)
+                                return Translation.tr("No camera hardware detected on this machine");
+                            if (!FaceId.gazeInstalled)
+                                return Translation.tr("Gaze package is not installed on this system");
+                            if (!FaceId.daemonRunning)
+                                return Translation.tr("Gaze background service is not running");
+                            if (!FaceId.cameraAvailable)
+                                return Translation.tr("Camera is not accessible by Gaze");
+                            return "";
+                        }
+                        warningIcon: {
+                            if (!FaceId.hasCameraHardware && !FaceId.cameraAvailable)
+                                return "videocam_off";
+                            if (!FaceId.gazeInstalled)
+                                return "build";
+                            return "warning";
+                        }
+                        summary: {
+                            if (!FaceId.probed)
+                                return Translation.tr("Checking Face ID compatibility…");
+                            if (!FaceId.hasCameraHardware && !FaceId.cameraAvailable)
+                                return Translation.tr("No camera detected · Face ID unavailable");
+                            if (!FaceId.gazeInstalled)
+                                return Translation.tr("Gaze not installed · Tap to set up");
+                            if (!FaceId.daemonRunning)
+                                return Translation.tr("Gaze daemon not running");
+                            if (!FaceId.cameraAvailable)
+                                return Translation.tr("No camera found");
+                            if (!checked)
+                                return Translation.tr("Unlock with your password only");
+                            if (!FaceId.hasEnrolled)
+                                return Translation.tr("No face enrolled yet");
+                            const count = FaceId.enrolledCount;
+                            if (count === 0)
+                                return Translation.tr("No face enrolled yet");
+                            return count === 1 ? Translation.tr("1 face profile enrolled") : Translation.tr("%1 face profiles enrolled").arg(count);
+                        }
+                        checked: lockScreenRoot.lock.security.faceId.enable
+                        configurable: true
+                        onToggled: value => {
+                            if (FaceId.supported)
+                                lockScreenRoot.lock.security.faceId.enable = value
+                        }
+                        onConfigureRequested: lockScreenRoot.activeSubPage = Qt.resolvedUrl("widgets/FaceIdConfig.qml")
+                    }
+
+                    ColorsFeatureTile {
+                        width: tiles.tileWidth
+                        height: tiles.tileHeight
                         symbol: "fingerprint"
                         shapeOn: MaterialShape.Shape.Cookie12Sided
                         title: Translation.tr("Fingerprint")
+                        selectable: Fingerprint.probed && Fingerprint.supported
+                        warningBadge: {
+                            if (!Fingerprint.probed)
+                                return "";
+                            if (!Fingerprint.fprintdInstalled)
+                                return Translation.tr("Missing fprintd");
+                            if (!Fingerprint.deviceAvailable)
+                                return Translation.tr("No reader");
+                            return "";
+                        }
+                        warningTooltip: {
+                            if (!Fingerprint.probed)
+                                return "";
+                            if (!Fingerprint.fprintdInstalled)
+                                return Translation.tr("fprintd is not installed on this system");
+                            if (!Fingerprint.deviceAvailable)
+                                return Translation.tr("No fingerprint reader hardware detected on this machine");
+                            return "";
+                        }
+                        warningIcon: {
+                            if (!Fingerprint.fprintdInstalled)
+                                return "build";
+                            return "sensors_off";
+                        }
                         summary: {
+                            if (!Fingerprint.probed)
+                                return Translation.tr("Looking for a reader…");
+                            if (!Fingerprint.fprintdInstalled)
+                                return Translation.tr("fprintd not installed · Tap to configure");
+                            if (!Fingerprint.deviceAvailable)
+                                return Translation.tr("No fingerprint reader found");
                             if (!checked)
                                 return Translation.tr("Unlock with your password only");
-                            if (Fingerprint.probed && !Fingerprint.deviceAvailable)
-                                return Translation.tr("No fingerprint reader found");
                             if (!Fingerprint.enrolledLoaded)
                                 return Translation.tr("Looking for enrolled fingers…");
                             const count = Fingerprint.enrolled.length;
@@ -236,7 +332,10 @@ Item {
                         }
                         checked: lockScreenRoot.lock.security.fingerprint.enable
                         configurable: true
-                        onToggled: value => lockScreenRoot.lock.security.fingerprint.enable = value
+                        onToggled: value => {
+                            if (Fingerprint.supported)
+                                lockScreenRoot.lock.security.fingerprint.enable = value
+                        }
                         onConfigureRequested: lockScreenRoot.activeSubPage = Qt.resolvedUrl("widgets/FingerprintConfig.qml")
                     }
 

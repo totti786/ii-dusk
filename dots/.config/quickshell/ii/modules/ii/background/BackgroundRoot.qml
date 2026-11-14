@@ -24,6 +24,16 @@ import qs.modules.ii.background.shortcuts
 PanelWindow {
     id: bgRoot
 
+    Connections {
+        target: wallpaperImage.Window.window
+        enabled: !StartupState.desktopReady
+            && (wallpaperImage.wallpaperSourceReady || bgRoot.wallpaperIsVideo
+                || Config.options.background.useWallpaperEngine || bgRoot.celestialWallpaperActive)
+        function onFrameSwapped() {
+            StartupState.wallpaperPainted(bgRoot.screen.name);
+        }
+    }
+
     required property var modelData
     required property var widgetStateManager
 
@@ -448,13 +458,13 @@ PanelWindow {
 
     readonly property bool verticalParallax: !videoEffectsDisabled && ((Config.options.background.parallax.autoVertical && wallpaperBoxHeight > wallpaperBoxWidth) || Config.options.background.parallax.vertical)
     // Colors
-    property bool shouldBlur: (GlobalStates.lockLookActive && Config.options.lock.blur.enable)
+    property bool shouldBlur: (GlobalStates.lockLookFor(bgRoot.editScreenName) && Config.options.lock.blur.enable)
     property color dominantColor: Appearance.colors.colPrimary // Default, to be changed
     property bool dominantColorIsDark: dominantColor.hslLightness < (Config.options.background.darkTextAbove ?? 0.72)
     property color colText: {
         if (wallpaperSafetyTriggered)
             return CF.ColorUtils.mix(Appearance.colors.colOnLayer0, Appearance.colors.colPrimary, 0.75);
-        return (GlobalStates.lockLookActive && shouldBlur) ? Appearance.colors.colOnLayer0 : CF.ColorUtils.colorWithLightness(Appearance.colors.colPrimary, (dominantColorIsDark ? 0.8 : 0.12));
+        return (GlobalStates.lockLookFor(bgRoot.editScreenName) && shouldBlur) ? Appearance.colors.colOnLayer0 : CF.ColorUtils.colorWithLightness(Appearance.colors.colPrimary, (dominantColorIsDark ? 0.8 : 0.12));
     }
     // Video Wallpaper Parallax via mpv IPC
     readonly property real videoPanX: (0.5 - parallax.effectiveValueX) * 0.08
@@ -896,6 +906,7 @@ PanelWindow {
         // WallpaperImage keeps the blur in sync with its rendered wallpaper.
         BarGradientOverlay {
             sourceItem: wallpaperImage
+            lockLook: GlobalStates.lockLookFor(bgRoot.editScreenName)
             screenWidth: bgRoot.screen.width
             screenHeight: bgRoot.screen.height
         }

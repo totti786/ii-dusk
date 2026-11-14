@@ -94,6 +94,8 @@ pub struct Streaming {
     pub hls: bool,
     pub prefer_stremio: bool,
     pub stremio: bool,
+    /// when a direct stream fails, ask before playing a torrent instead of switching silently
+    pub ask_before_torrent: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -135,7 +137,7 @@ impl Default for Config {
                 token: String::new(), user_id: 0, username: String::new(), client_id: String::new(),
                 auto: true, add_missing: false, rewatch: false, complete: true, dates: true,
             },
-            streaming: Streaming { hls: false, prefer_stremio: false, stremio: true },
+            streaming: Streaming { hls: false, prefer_stremio: false, stremio: true, ask_before_torrent: true },
             auto_fetch: true,
         }
     }
@@ -238,6 +240,7 @@ pub fn parse(text: &str) -> Config {
         hls: b(st, "hls", c.streaming.hls),
         stremio: b(st, "stremio", c.streaming.stremio),
         prefer_stremio: b(st, "prefer_stremio", c.streaming.prefer_stremio),
+        ask_before_torrent: b(st, "ask_before_torrent", c.streaming.ask_before_torrent),
     };
     let al = tbl(&data, "anilist");
     let d = c.anilist.clone();
@@ -319,7 +322,7 @@ fn setting_kind(key: &str) -> Option<Kind> {
         "posters.auto_fetch" => Bool,
         "jellyfin.url" | "jellyfin.username" | "jellyfin.user_id" | "jellyfin.token" => Str,
         "jellyfin.include" => Bool,
-        "streaming.hls" | "streaming.stremio" | "streaming.prefer_stremio" => Bool,
+        "streaming.hls" | "streaming.stremio" | "streaming.prefer_stremio" | "streaming.ask_before_torrent" => Bool,
         "anilist.token" | "anilist.username" | "anilist.client_id" => Str,
         "anilist.auto" | "anilist.add_missing" | "anilist.rewatch" | "anilist.complete" | "anilist.dates" => Bool,
         _ => return None,
@@ -335,7 +338,7 @@ pub fn settings_view(c: &Config) -> Value {
         "posters": {"auto_fetch": c.auto_fetch},
         "jellyfin": {"url": c.jellyfin.url, "username": c.jellyfin.username, "user_id": c.jellyfin.user_id,
             "token_set": !c.jellyfin.token.is_empty(), "include": c.jellyfin.include, "configured": c.jellyfin.configured()},
-        "streaming": {"hls": c.streaming.hls, "stremio": c.streaming.stremio, "prefer_stremio": c.streaming.prefer_stremio},
+        "streaming": {"hls": c.streaming.hls, "stremio": c.streaming.stremio, "prefer_stremio": c.streaming.prefer_stremio, "ask_before_torrent": c.streaming.ask_before_torrent},
         "anilist": {"username": c.anilist.username, "user_id": c.anilist.user_id, "token_set": !c.anilist.token.is_empty(),
             "configured": c.anilist.configured(), "client_id": c.anilist.client_id, "auto": c.anilist.auto,
             "add_missing": c.anilist.add_missing, "rewatch": c.anilist.rewatch, "complete": c.anilist.complete,

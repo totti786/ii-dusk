@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import qs.modules.common
 
 /**
  * Every source the island has, in one place.
@@ -17,7 +18,7 @@ Item {
 
     visible: false
 
-    readonly property list<QtObject> all: [
+    readonly property list<QtObject> all: ([
         // Interrupts first, only because it reads in priority order here; the actual
         // arbitration is IslandRegistry's tier, not this list.
         windowSwitcher, askpass, search, wallpaper, session, colorPicker, displayModes, notification, osd, phoneCall, alarm, reminder, fingerprint,
@@ -28,7 +29,7 @@ Item {
         // Announcements.
         health, phoneMirrorError, phoneKeyboard, workspaces, clipboard, battery, wifi, bluetooth, keyboard, mode, update, vpn, systemTray,
         easyEffects, soundscapes, quickShare, monitorAlert
-    ]
+    ]).filter(source => source !== null)
 
     readonly property WindowSwitcherSource windowSwitcher: WindowSwitcherSource {}
     readonly property AskpassSource askpass: AskpassSource {}
@@ -44,47 +45,56 @@ Item {
     readonly property AlarmSource alarm: AlarmSource {}
     readonly property ReminderSource reminder: ReminderSource {}
     readonly property ReminderSoonSource reminderSoon: ReminderSoonSource {}
-    readonly property PrayerSource prayer: PrayerSource {}
-    readonly property SongRecSource songRec: SongRecSource {}
-    readonly property SportsSource sports: SportsSource {}
-    readonly property PhoneLiveSource phoneLive: PhoneLiveSource {}
-    readonly property VpnSource vpn: VpnSource {}
-    readonly property AiSource ai: AiSource {}
+    readonly property var prayer: optional.item ? optional.item.prayer : null
+    readonly property var songRec: optional.item ? optional.item.songRec : null
+    readonly property var sports: optional.item ? optional.item.sports : null
+    readonly property var phoneLive: optional.item ? optional.item.phoneLive : null
+    readonly property var vpn: optional.item ? optional.item.vpn : null
+    readonly property var ai: optional.item ? optional.item.ai : null
     readonly property MediaSource media: MediaSource {}
-    readonly property MediatorSource mediator: MediatorSource {}
+    readonly property var mediator: optional.item ? optional.item.mediator : null
     readonly property TimerSource timer: TimerSource {}
-    readonly property FocusSource focusSession: FocusSource {}
+    readonly property var focusSession: optional.item ? optional.item.focusSession : null
     readonly property RecordingSource recording: RecordingSource {}
     readonly property AudioRecordingSource audioRecording: AudioRecordingSource {}
     readonly property TeleprompterSource teleprompter: TeleprompterSource {}
     readonly property DictationSource dictation: DictationSource {}
     readonly property LocalSendSource localSend: LocalSendSource {}
-    readonly property ShelfSource shelf: ShelfSource {}
+    readonly property var shelf: optional.item ? optional.item.shelf : null
     readonly property ProgressSource progress: ProgressSource {}
-    readonly property EarbudsSource earbuds: EarbudsSource {}
-    readonly property BluetoothPhoneSource btPhone: BluetoothPhoneSource {}
-    readonly property WeatherSource weather: WeatherSource {}
-    readonly property BatteryGlanceSource batteryGlance: BatteryGlanceSource {}
+    readonly property var earbuds: optional.item ? optional.item.earbuds : null
+    readonly property var btPhone: optional.item ? optional.item.btPhone : null
+    readonly property var weather: optional.item ? optional.item.weather : null
+    readonly property var batteryGlance: optional.item ? optional.item.batteryGlance : null
     readonly property PrivacySource privacy: PrivacySource {}
-    readonly property DiscordVoiceSource discordVoice: DiscordVoiceSource {}
-    readonly property PhoneMirrorSource phoneMirror: PhoneMirrorSource {}
-    readonly property PhoneMirrorErrorSource phoneMirrorError: PhoneMirrorErrorSource {}
-    readonly property PhoneKeyboardSource phoneKeyboard: PhoneKeyboardSource {}
-    readonly property PhoneLinkSource phoneLink: PhoneLinkSource {}
+    readonly property var discordVoice: optional.item ? optional.item.discordVoice : null
+    readonly property var phoneMirror: optional.item ? optional.item.phoneMirror : null
+    readonly property var phoneMirrorError: optional.item ? optional.item.phoneMirrorError : null
+    readonly property var phoneKeyboard: optional.item ? optional.item.phoneKeyboard : null
+    readonly property var phoneLink: optional.item ? optional.item.phoneLink : null
     readonly property WorkspaceSource workspaces: WorkspaceSource {}
     readonly property ClipboardSource clipboard: ClipboardSource {}
     readonly property BatterySource battery: BatterySource {}
     readonly property WifiSource wifi: WifiSource {}
     readonly property BluetoothSource bluetooth: BluetoothSource {}
     readonly property KeyboardLayoutSource keyboard: KeyboardLayoutSource {}
-    readonly property ModeSource mode: ModeSource {}
-    readonly property UpdateSource update: UpdateSource {}
+    readonly property var mode: optional.item ? optional.item.mode : null
+    readonly property var update: optional.item ? optional.item.update : null
     readonly property SystemTraySource systemTray: SystemTraySource {}
-    readonly property EasyEffectsSource easyEffects: EasyEffectsSource {}
-    readonly property SoundscapesSource soundscapes: SoundscapesSource {}
-    readonly property QuickShareSource quickShare: QuickShareSource {}
-    readonly property HealthSource health: HealthSource {}
-    readonly property MonitorAlertSource monitorAlert: MonitorAlertSource {}
+    readonly property var easyEffects: optional.item ? optional.item.easyEffects : null
+    readonly property var soundscapes: optional.item ? optional.item.soundscapes : null
+    readonly property var quickShare: optional.item ? optional.item.quickShare : null
+    readonly property var health: optional.item ? optional.item.health : null
+    readonly property var monitorAlert: optional.item ? optional.item.monitorAlert : null
+
+    // The clock, media and interrupt sources draw the island's first frame.
+    // Optional integrations attach afterward without replacing the surface.
+    Loader {
+        id: optional
+        active: StartupState.desktopReady
+        source: active ? Qt.resolvedUrl("DeferredIslandSources.qml") : ""
+        onLoaded: console.info("[Startup] Optional island sources attached; total:", sources.all.length)
+    }
 
     function sourceFor(activityId) {
         for (let i = 0; i < sources.all.length; i++) {

@@ -1,5 +1,8 @@
-//! Direct HLS streams for movies and series, looked up by IMDb id (unofficial scraper-style source).
-//! Failing fast matters: callers fall back to torrents, so a dead source costs seconds, not minutes.
+//! Legacy direct-HLS path for movies and series, looked up by IMDb id.
+//! The stream-data API now mints a single-use token from the player page and returns
+//! encrypted stream lists, so this path usually fails; `vidsrc` is the primary direct
+//! provider. Failing fast matters: callers fall back to the next provider/torrents, so a
+//! dead source costs seconds, not minutes.
 use crate::errors::{describe_http, StreamError};
 use crate::http::{HttpError, Request};
 use serde_json::{json, Value};

@@ -42,12 +42,10 @@ Singleton {
         : (root.activePlayer?.trackTitle ?? "")
     readonly property string localLyricsPath: localSessionActive
         ? LocalMediaService.player.trackLyricsPath : ""
-    readonly property bool localLyricsLoading: (localSessionActive && LocalLyrics.loading)
-        || MusicLyricsBridge.loadingFor(root.activePlayer)
-    // The Music app's own player brings its lyrics with it (see MusicLyricsBridge), so they
-    // ride the same path as a local file: first in line, online providers kept quiet.
-    readonly property string localLyricsText: localSessionActive ? LocalLyrics.lyricsText
-        : MusicLyricsBridge.textFor(root.activePlayer)
+    readonly property bool localLyricsLoading: localSessionActive && LocalLyrics.loading
+    // The Music app's player goes through the same provider chain as every other player; its
+    // window reads the result from here (modules/ii/music/LyricsView.qml).
+    readonly property string localLyricsText: localSessionActive ? LocalLyrics.lyricsText : ""
     readonly property bool hasLocalLyricsFile: localLyricsText.trim().length > 0
     readonly property string customLyricsText: CustomLyricsStore.get(root.activePlayer?.trackTitle ?? "",
         root.activePlayer?.trackArtist ?? "")

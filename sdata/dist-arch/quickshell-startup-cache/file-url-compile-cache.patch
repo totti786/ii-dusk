@@ -1,0 +1,150 @@
+--- a/src/core/qsintercept.cpp	2026-11-09 18:16:37.146444341 +0300
++++ b/src/core/qsintercept.cpp	2026-11-09 18:16:37.153462693 +0300
+@@ -25,6 +25,33 @@
+ ) {
+ 	auto url = originalUrl;
+ 
++	// Qt only keeps its compiled-QML disk cache for local files. Every type served on the
++	// qs: scheme is therefore recompiled from source on every start (~1600 files, ~13 s of
++	// the QML thread for a large shell). Hand Qt the real file: URL for any type that has no
++	// preprocessed override, so the cache applies. The directory qmldirs are still synthesized
++	// by the scanner, so a file: base asks for its qmldir through qs: below.
++	if (url.scheme() == "file" && type == QQmlAbstractUrlInterceptor::DataType::QmldirFile) {
++		auto path = url.path();
++		if (path.startsWith(this->configRoot.path() % '/') && this->fileIntercepts.contains(path)) {
++			url.setScheme("qs");
++			return url;
++		}
++	}
++
++	if (url.scheme() == "qs" && type == QQmlAbstractUrlInterceptor::DataType::QmlFile) {
++		auto path = url.path();
++		if (path.startsWith("@/qs/")) path = this->configRoot.filePath(path.sliced(5));
++		else if (!path.startsWith("/")) path = QString();
++
++		// The root file is where the engine starts from; keep it on qs: (one file, never cached).
++		if (!path.isEmpty() && !this->fileIntercepts.contains(path) && path != this->configRoot.filePath("shell.qml")) {
++			auto fileUrl = url;
++			fileUrl.setScheme("file");
++			fileUrl.setPath(path);
++			return fileUrl;
++		}
++	}
++
+ 	if (url.scheme() == "root") {
+ 		url.setScheme("qs");
+ 
+@@ -55,7 +82,9 @@
+ 			// Qt.resolvedUrl and context->resolvedUrl can use this on qml files, in which
+ 			// case we want to keep the intercept, otherwise objects created from those paths
+ 			// will not be able to use singletons.
+-			if (path.endsWith(".qml")) return url;
++			// Experimental: files without a preprocessed override are served as file: URLs too,
++			// so that one type has one URL (a type loaded under two URLs is two types).
++			if (path.endsWith(".qml") && this->fileIntercepts.contains(path)) return url;
+ 
+ 			auto newUrl = url;
+ 			newUrl.setScheme("file");
+--- a/src/core/qsintercept.hpp	2026-11-09 18:16:37.764834925 +0300
++++ b/src/core/qsintercept.hpp	2026-11-09 18:16:37.769099579 +0300
+@@ -16,12 +16,15 @@
+ 
+ class QsUrlInterceptor: public QQmlAbstractUrlInterceptor {
+ public:
+-	explicit QsUrlInterceptor(const QDir& configRoot): configRoot(configRoot) {}
++	QsUrlInterceptor(const QDir& configRoot, const QHash<QString, QString>& fileIntercepts)
++	    : configRoot(configRoot)
++	    , fileIntercepts(fileIntercepts) {}
+ 
+ 	QUrl intercept(const QUrl& originalUrl, QQmlAbstractUrlInterceptor::DataType type) override;
+ 
+ private:
+ 	QDir configRoot;
++	const QHash<QString, QString>& fileIntercepts;
+ };
+ 
+ class QsInterceptDataReply: public QNetworkReply {
+--- a/src/core/generation.cpp	2026-11-09 18:16:38.525081003 +0300
++++ b/src/core/generation.cpp	2026-11-09 18:16:38.530080880 +0300
+@@ -38,7 +38,7 @@
+ EngineGeneration::EngineGeneration(const QDir& rootPath, QmlScanner scanner)
+     : rootPath(rootPath)
+     , scanner(std::move(scanner))
+-    , urlInterceptor(this->rootPath)
++    , urlInterceptor(this->rootPath, this->scanner.fileIntercepts)
+     , interceptNetFactory(this->rootPath, this->scanner.fileIntercepts)
+     , engine(new QQmlEngine()) {
+ 	g_generations.insert(this->engine, this);
+--- a/src/core/scan.cpp	2026-11-09 18:16:38.532878742 +0300
++++ b/src/core/scan.cpp	2026-11-09 18:16:38.533080806 +0300
+@@ -5,6 +5,7 @@
+ #include <qcontainerfwd.h>
+ #include <qcryptographichash.h>
+ #include <qdir.h>
++#include <qstringbuilder.h>
+ #include <qfileinfo.h>
+ #include <qjsengine.h>
+ #include <qjsonarray.h>
+@@ -41,6 +42,36 @@
+ 	return newHash != it.value();
+ }
+ 
++namespace {
++
++// A qmldir written by a previous run of this scanner. It is treated as if it were not
++// there: regenerated from the directory's files, and rewritten only when the text changed.
++constexpr const char* generatedQmldirMarker = "# quickshell-generated qmldir";
++
++bool isGeneratedQmldir(const QString& path) {
++	auto file = QFile(path);
++	if (!file.open(QFile::ReadOnly)) return false;
++	// At the end: Qt's qmldir parser rejects a file that opens with a comment.
++	return file.readAll().trimmed().endsWith(generatedQmldirMarker);
++}
++
++// Qt only caches compiled QML for local files, and finds a directory's qmldir on disk when
++// the importing file is local, so the synthesized qmldirs have to exist as real files for
++// types to be served as file: URLs. Failure (read-only config) is not an error: the in-memory
++// copy still serves qs: lookups, only the compile cache is lost for that directory.
++bool writeGeneratedQmldir(const QString& path, const QString& text) {
++	auto data = text.toUtf8();
++	auto existing = QFile(path);
++	if (existing.open(QFile::ReadOnly) && existing.readAll() == data) return true;
++	existing.close();
++
++	auto file = QFile(path);
++	if (!file.open(QFile::WriteOnly | QFile::Truncate)) return false;
++	return file.write(data) == data.size();
++}
++
++} // namespace
++
+ QString QmlScanner::dirKey(const QString& path) {
+ 	auto it = this->dirKeyCache.constFind(path);
+ 	if (it != this->dirKeyCache.constEnd()) return it.value();
+@@ -70,7 +101,9 @@
+ 	auto entries = QVector<Entry>();
+ 
+ 	for (auto& name: dir.entryList(QDir::Files | QDir::NoDotAndDotDot)) {
+-		if (name == "qmldir") {
++		if (name == "qmldir" && isGeneratedQmldir(dir.filePath(name))) {
++			// regenerated below
++		} else if (name == "qmldir") {
+ 			qCDebug(
+ 			    logQmlScanner
+ 			) << "Found qmldir file, qmldir synthesization will be disabled for directory"
+@@ -130,7 +163,13 @@
+ 		}
+ 
+ 		qCDebug(logQmlScanner) << "Synthesized qmldir for" << path << qPrintable("\n" + qmldir);
+-		this->fileIntercepts.insert(QDir(path).filePath("qmldir"), qmldir);
++		auto qmldirPath = QDir(path).filePath("qmldir");
++		auto generated = qmldir % generatedQmldirMarker % '\n';
++		// Once it is a real file, it is served as one. The in-memory copy is only for
++		// directories that cannot be written.
++		if (!path.startsWith(this->rootPath.path()) || !writeGeneratedQmldir(qmldirPath, generated)) {
++			this->fileIntercepts.insert(qmldirPath, generated);
++		}
+ 	}
+ }
+ 

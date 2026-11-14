@@ -1,11 +1,6 @@
 -- put former exec-once commands inside the func and former exec commands outside
 hl.on("hyprland.start", function()
 
-    -- Splash: ii takes ~6-8 s to load, so show the greeter's wallpaper straight away.
-    -- Quits itself once the shell has drawn its own wallpaper. Installed by
-    -- ~/Projects/qs-greeter/install.sh; skipped when absent.
-    hl.exec_cmd("[ -f /etc/greetd/qs-greeter/splash.qml ] && exec qs -p /etc/greetd/qs-greeter/splash.qml")
-
     -- Tray watcher: holds org.kde.StatusNotifierWatcher across shell restarts, so
     -- tray icons survive one. Started before the shell, which then uses it
     -- instead of registering a watcher of its own. See

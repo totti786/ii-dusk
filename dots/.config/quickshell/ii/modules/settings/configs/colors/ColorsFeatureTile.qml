@@ -23,16 +23,25 @@ Rectangle {
     property bool configurable: false
     /// Many footer chips: the Configure action shrinks to its icon and the gaps tighten.
     property bool compactFooter: false
+    property bool selectable: true
+    property string warningBadge: ""
+    property string warningTooltip: ""
+    property string warningIcon: "warning"
+    property color warningColor: Appearance.colors.colError
     default property alias footer: footerRow.data
 
     signal toggled(bool value)
     signal configureRequested()
 
     readonly property bool engaged: tileHover.hovered
-    readonly property color colContent: root.checked ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
+    readonly property color colContent: (root.checked && root.selectable) ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnLayer1
 
     radius: Appearance.rounding.verylarge
-    color: root.checked
+    opacity: root.selectable ? 1.0 : 0.65
+    Behavior on opacity {
+        NumberAnimation { duration: 150 }
+    }
+    color: (root.checked && root.selectable)
         ? (root.engaged ? Appearance.colors.colPrimaryContainerHover : Appearance.colors.colPrimaryContainer)
         : (root.engaged ? Appearance.colors.colLayer1Hover : Appearance.colors.colLayer1)
     Behavior on color {
@@ -45,8 +54,13 @@ Rectangle {
     // Under the content, so the switch and the buttons keep their own clicks.
     MouseArea {
         anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.configurable ? root.configureRequested() : root.toggled(!root.checked)
+        cursorShape: (root.configurable || root.selectable) ? Qt.PointingHandCursor : Qt.ArrowCursor
+        onClicked: {
+            if (root.configurable)
+                root.configureRequested();
+            else if (root.selectable)
+                root.toggled(!root.checked);
+        }
     }
 
     ColumnLayout {
@@ -60,16 +74,16 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 12
+            spacing: 8
 
             MaterialShapeWrappedMaterialSymbol {
                 text: root.symbol
                 iconSize: 22
                 padding: 11
-                fill: root.checked ? 1 : 0
-                shape: root.checked ? root.shapeOn : root.shapeOff
-                color: root.checked ? Appearance.colors.colPrimary : Appearance.colors.colSecondaryContainer
-                colSymbol: root.checked ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondaryContainer
+                fill: (root.checked && root.selectable) ? 1 : 0
+                shape: (root.checked && root.selectable) ? root.shapeOn : root.shapeOff
+                color: (root.checked && root.selectable) ? Appearance.colors.colPrimary : Appearance.colors.colSecondaryContainer
+                colSymbol: (root.checked && root.selectable) ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondaryContainer
                 Behavior on color {
                     animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
                 }
@@ -79,14 +93,55 @@ Rectangle {
                 Layout.fillWidth: true
             }
 
+            Rectangle {
+                visible: root.warningBadge !== ""
+                Layout.alignment: Qt.AlignVCenter
+                radius: Appearance.rounding.full
+                color: ColorUtils.applyAlpha(root.warningColor, 0.14)
+                border.color: ColorUtils.applyAlpha(root.warningColor, 0.35)
+                border.width: 1
+                implicitHeight: 24
+                implicitWidth: warningRow.implicitWidth + 14
+                clip: true
+
+                RowLayout {
+                    id: warningRow
+                    anchors.centerIn: parent
+                    spacing: 4
+
+                    MaterialSymbol {
+                        text: root.warningIcon || "warning"
+                        iconSize: 13
+                        color: root.warningColor
+                    }
+
+                    StyledText {
+                        text: root.warningBadge
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.weight: Font.DemiBold
+                        color: root.warningColor
+                        elide: Text.ElideRight
+                    }
+                }
+
+                StyledToolTip {
+                    text: root.warningTooltip !== "" ? root.warningTooltip : root.warningBadge
+                }
+            }
+
             StyledSwitch {
                 Layout.alignment: Qt.AlignVCenter
                 sizeScale: 0.85
-                checked: root.checked
+                checked: root.checked && root.selectable
+                enabled: root.selectable
+                opacity: root.selectable ? 1.0 : 0.4
                 activeColor: Appearance.colors.colPrimary
                 activeThumbColor: Appearance.colors.colOnPrimary
                 inactiveColor: Appearance.colors.colSurfaceContainerHighest
-                onToggled: root.toggled(checked)
+                onToggled: {
+                    if (root.selectable)
+                        root.toggled(checked)
+                }
             }
         }
 

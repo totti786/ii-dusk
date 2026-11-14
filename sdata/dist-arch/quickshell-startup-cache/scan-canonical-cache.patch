@@ -1,0 +1,47 @@
+--- a/src/core/scan.hpp	2026-11-09 16:04:15.489532828 +0300
++++ b/src/core/scan.hpp	2026-11-09 16:04:15.501957645 +0300
+@@ -4,6 +4,7 @@
+ #include <qcontainerfwd.h>
+ #include <qdir.h>
+ #include <qhash.h>
++#include <qset.h>
+ #include <qjsengine.h>
+ #include <qloggingcategory.h>
+ #include <qvector.h>
+@@ -22,6 +23,13 @@
+ 	void scanQmlRoot(const QString& path);
+ 
+ 	QVector<QDir> scannedDirs;
++	// scannedDirs.contains() compares QDirs, and QDir::operator== canonicalizes both paths
++	// (a readlink per path component) whenever they differ. With a few hundred directories
++	// and tens of thousands of imports that is hundreds of thousands of syscalls and seconds
++	// of startup, so membership is tracked by canonical path, computed once per input path.
++	QSet<QString> scannedDirKeys;
++	QHash<QString, QString> dirKeyCache;
++	QString dirKey(const QString& path);
+ 	QVector<QString> scannedFiles;
+ 	QHash<QString, QByteArray> fileHashes;
+ 	QHash<QString, QString> fileIntercepts;
+--- a/src/core/scan.cpp	2026-11-09 16:04:15.489511752 +0300
++++ b/src/core/scan.cpp	2026-11-09 16:04:23.386721988 +0300
+@@ -41,8 +41,19 @@
+ 	return newHash != it.value();
+ }
+ 
++QString QmlScanner::dirKey(const QString& path) {
++	auto it = this->dirKeyCache.constFind(path);
++	if (it != this->dirKeyCache.constEnd()) return it.value();
++	auto key = QFileInfo(path).canonicalFilePath();
++	if (key.isEmpty()) key = QDir::cleanPath(path);
++	this->dirKeyCache.insert(path, key);
++	return key;
++}
++
+ void QmlScanner::scanDir(const QDir& dir) {
+-	if (this->scannedDirs.contains(dir)) return;
++	auto key = this->dirKey(dir.path());
++	if (this->scannedDirKeys.contains(key)) return;
++	this->scannedDirKeys.insert(key);
+ 	this->scannedDirs.push_back(dir);
+ 
+ 	const auto& path = dir.path();

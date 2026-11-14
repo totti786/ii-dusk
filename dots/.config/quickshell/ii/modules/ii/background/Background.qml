@@ -3,8 +3,7 @@ pragma ComponentBehavior: Bound
 import qs
 import QtQuick
 import Quickshell
-import qs.modules.ii.background.widgets
-import qs.modules.ii.background.compositor
+import qs.modules.common
 
 Scope {
     id: backgroundScope
@@ -12,36 +11,25 @@ Scope {
     /// Passed to every screen's widget surface; see BackgroundWidgetsWindow.canvasOverlay.
     property Component widgetCanvasOverlay: null
 
-    WidgetStateManager {
-        id: widgetState
-    }
-
-    readonly property alias widgetSyncVersion: widgetState.syncVersion
-    readonly property alias widgetStateManager: widgetState
+    readonly property int widgetSyncVersion: widgetStateManager?.syncVersion ?? 0
+    readonly property var widgetStateManager: extras.item ? extras.item.widgetStateManager : null
 
     Variants {
         id: root
         model: Quickshell.screens
 
         BackgroundRoot {
-            widgetStateManager: widgetState
+            widgetStateManager: backgroundScope.widgetStateManager
         }
     }
 
-    Variants {
-        id: widgetsVariant
-        model: Quickshell.screens
-
-        BackgroundWidgetsWindow {
-            widgetStateManager: widgetState
-            canvasOverlay: backgroundScope.widgetCanvasOverlay
+    Loader {
+        id: extras
+        // Keep the actual wallpaper window alive while widgets arrive later.
+        active: StartupState.widgetsReady
+        source: active ? Qt.resolvedUrl("BackgroundExtras.qml") : ""
+        onLoaded: {
+            item.canvasOverlay = Qt.binding(() => backgroundScope.widgetCanvasOverlay);
         }
-    }
-
-    Variants {
-        id: blurOverlayVariant
-        model: Quickshell.screens
-
-        BlurOverlayWindow {}
     }
 }

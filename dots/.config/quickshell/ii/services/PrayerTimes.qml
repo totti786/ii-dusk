@@ -168,6 +168,23 @@ Singleton {
         return Qt.locale().toString(date, Config.options?.time?.format ?? "hh:mm");
     }
 
+    // The clock and the AM/PM mark apart, for a place too narrow to hold "12:19 PM" on one line:
+    // the mark is the trailing a/A/ap/AP of the configured format, empty in a 24-hour one.
+    readonly property string _suffixCode: {
+        const m = String(Config.options?.time?.format ?? "hh:mm").match(/(ap|AP|a|A)$/);
+        return m ? m[1] : "";
+    }
+    // Formatted WITH the mark (without it Qt switches to a 24-hour clock), then the mark is cut off.
+    function formatClock(date) {
+        const full = formatTime(date);
+        const mark = formatSuffix(date);
+        const at = mark === "" ? -1 : full.lastIndexOf(mark);
+        return at < 0 ? full : full.slice(0, at).trim();
+    }
+    function formatSuffix(date) {
+        return root._suffixCode === "" ? "" : Qt.locale().toString(date, root._suffixCode);
+    }
+
     // "2h 14m" / "14m"
     function formatRemaining(minutes) {
         const h = Math.floor(minutes / 60);

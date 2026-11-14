@@ -83,33 +83,8 @@ import qs.modules.ii.phoneControls
 import qs.modules.ii.recordingToolbar
 
 Scope {
-    property bool barExtraCondition: true
-    readonly property bool usingWrappedFrame: Config.options.appearance.fakeScreenRounding === 3
-    readonly property bool barBot: BarPlacement.bottom
-    readonly property bool barVert: BarPlacement.vertical
+    // Wallpaper and bars are owned by CoreDesktop before this family loads.
 
-    Component.onCompleted: Qt.callLater(() => updateBarExtraCondition())
-    onUsingWrappedFrameChanged: updateBarExtraCondition()
-    onBarBotChanged: updateBarExtraCondition()
-    onBarVertChanged: updateBarExtraCondition()
-
-    function updateBarExtraCondition() {
-        if (!usingWrappedFrame)
-            return;
-        barExtraCondition = false;
-        Qt.callLater(() => barExtraCondition = true);
-    }
-
-    PanelUrlLoader {
-        extraCondition: !BarPlacement.vertical && barExtraCondition && !GlobalStates.connectModeActive
-        panelUrl: Qt.resolvedUrl("../modules/ii/bar/Bar.qml")
-        priority: 4 // First paint: bar, background, island, dock (see PanelSchedule)
-    }
-    PanelUrlLoader {
-        extraCondition: Config.options.background.enable
-        panelUrl: Qt.resolvedUrl("../modules/ii/background/Background.qml")
-        priority: 5 // Above the bar: after a reload the wallpaper must not trail the bar
-    }
     PanelUrlLoader {
         // The desktop layout editor's chrome; nothing to edit without the background.
         extraCondition: Config.options.background.enable
@@ -415,11 +390,6 @@ Scope {
         panelUrl: Qt.resolvedUrl("../modules/ii/sidebarDashboard/SidebarDashboard.qml")
     }
     PanelUrlLoader {
-        extraCondition: BarPlacement.vertical && barExtraCondition && !GlobalStates.connectModeActive
-        panelUrl: Qt.resolvedUrl("../modules/ii/verticalBar/VerticalBar.qml")
-        priority: 4
-    }
-    PanelUrlLoader {
         panelUrl: Qt.resolvedUrl("../modules/ii/wallpaperSelector/WallpaperSelector.qml")
     }
     PanelUrlLoader {
@@ -479,11 +449,7 @@ Scope {
     PanelUrlLoader {
         extraCondition: GlobalStates.connectModeActive
         panelUrl: Qt.resolvedUrl("../modules/ii/topLayer/TopLayer.qml")
-    }
-    PanelUrlLoader {
-        extraCondition: IslandPolicy.enabled
-        panelUrl: Qt.resolvedUrl("../modules/ii/dynamicIsland/DynamicIsland.qml")
-        priority: 2
+        priority: 4 // Carries the bar in connect mode: first paint
     }
     PanelUrlLoader {
         extraCondition: Config.ready && Boolean(Config.options && Config.options.interactions && Config.options.interactions.touchGestures && Config.options.interactions.touchGestures.enable)

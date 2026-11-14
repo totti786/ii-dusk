@@ -1,0 +1,68 @@
+--- a/src/core/scan.hpp
++++ b/src/core/scan.hpp
+@@ -31,6 +31,7 @@
+ 	QHash<QString, QString> dirKeyCache;
+ 	QString dirKey(const QString& path);
+ 	QVector<QString> scannedFiles;
++	QSet<QString> scannedQmlFiles;
+ 	QHash<QString, QByteArray> fileHashes;
+ 	QHash<QString, QString> fileIntercepts;
+ 
+--- a/src/core/scan.cpp
++++ b/src/core/scan.cpp
+@@ -174,7 +174,8 @@
+ }
+ 
+ bool QmlScanner::scanQmlFile(const QString& path, bool& singleton, bool& internal) {
+-	if (this->scannedFiles.contains(path)) return false;
++	if (this->scannedQmlFiles.contains(path)) return false;
++	this->scannedQmlFiles.insert(path);
+ 	this->scannedFiles.push_back(path);
+ 
+ 	qCDebug(logQmlScanner) << "Scanning qml file" << path;
+@@ -185,6 +186,9 @@
+ 		return false;
+ 	}
+ 
++	// Most files have no conditional preprocessing: only their headers need parsing.
++	const bool hasPreprocessorDirectives =
++	    fileData.contains("//@ if ") || fileData.contains("//@ endif");
+ 	auto stream = QTextStream(&fileData);
+ 	auto imports = QVector<QString>();
+ 
+@@ -195,7 +199,6 @@
+ 	QString overrideText;
+ 	bool isOverridden = false;
+ 
+-	auto& pragmaEngine = *QmlScanner::preprocEngine();
+ 
+ 	auto postError = [&, this](QString error) {
+ 		this->scanErrors.append({.file = path, .message = std::move(error), .line = lineNum});
+@@ -248,9 +251,14 @@
+ 			}
+ 		}
+ 
++		if (!hasPreprocessorDirectives) {
++			if (!inHeader) break;
++			continue;
++		}
++
+ 		if (line.startsWith("//@ if ")) {
+ 			auto code = line.sliced(7);
+-			auto value = pragmaEngine.evaluate(code, path, 1234);
++			auto value = QmlScanner::preprocEngine()->evaluate(code, path, 1234);
+ 			bool mask = true;
+ 
+ 			if (value.isError()) {
+@@ -312,6 +320,11 @@
+ 		auto pathInfo = QFileInfo(ipath);
+ 		auto cpath = pathInfo.absoluteFilePath();
+ 
++		// An already visited import needs no more filesystem metadata queries.
++		const auto known = this->dirKeyCache.constFind(cpath);
++		if (known != this->dirKeyCache.constEnd() && this->scannedDirKeys.contains(known.value()))
++			continue;
++
+ 		if (!pathInfo.exists()) {
+ 			qCWarning(logQmlScanner) << "Ignoring unresolvable import" << ipath << "from" << path;
+ 			continue;

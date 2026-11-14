@@ -28,6 +28,11 @@ Item {
     readonly property var fpOptions: Config.options.lock.security.fingerprint
     readonly property string fingerBeingRenamed: renameState.finger
 
+    function launchInTerminal(cmd: string): void {
+        const terminal = (Config.options.apps && Config.options.apps.terminal) || "kitty -1";
+        Quickshell.execDetached(["bash", "-c", `${terminal} -e bash -c "${cmd}; echo; echo 'Press Enter to exit...'; read" &`]);
+    }
+
     QtObject {
         id: renameState
         property string finger: ""
@@ -96,10 +101,10 @@ Item {
                     spacing: 14
 
                     MaterialSymbol {
-                        text: Fingerprint.deviceAvailable ? "fingerprint" : "sensors_off"
+                        text: !Fingerprint.fprintdInstalled ? "build" : Fingerprint.deviceAvailable ? "fingerprint" : "sensors_off"
                         iconSize: 34
                         fill: 1
-                        color: Fingerprint.deviceAvailable ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
+                        color: Fingerprint.supported ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
                     }
 
                     ColumnLayout {
@@ -109,7 +114,13 @@ Item {
                         StyledText {
                             Layout.fillWidth: true
                             elide: Text.ElideRight
-                            text: Fingerprint.deviceAvailable ? (Fingerprint.deviceName !== "" ? Fingerprint.deviceName : Translation.tr("Fingerprint reader")) : !Fingerprint.probed ? Translation.tr("Looking for a reader…") : Translation.tr("No fingerprint reader detected")
+                            text: !Fingerprint.probed
+                                ? Translation.tr("Looking for a reader…")
+                                : !Fingerprint.fprintdInstalled
+                                    ? Translation.tr("fprintd not installed")
+                                    : Fingerprint.deviceAvailable
+                                        ? (Fingerprint.deviceName !== "" ? Fingerprint.deviceName : Translation.tr("Fingerprint reader"))
+                                        : Translation.tr("No fingerprint reader detected")
                             font.pixelSize: Appearance.font.pixelSize.small
                             font.weight: Font.DemiBold
                             color: Appearance.colors.colOnLayer2
@@ -119,8 +130,10 @@ Item {
                             Layout.fillWidth: true
                             wrapMode: Text.WordWrap
                             text: {
+                                if (!Fingerprint.fprintdInstalled)
+                                    return Translation.tr("fprintd package is required for fingerprint recognition. See the setup guide below to install it.");
                                 if (!Fingerprint.deviceAvailable)
-                                    return Translation.tr("Make sure fprintd is installed and the reader is supported by libfprint.");
+                                    return Translation.tr("Make sure your fingerprint reader is plugged in and supported by libfprint.");
                                 const kind = Fingerprint.pressType ? Translation.tr("Press reader") : Translation.tr("Swipe reader");
                                 return `${kind} · ${Translation.tr("%1 scans per fingerprint").arg(Fingerprint.numEnrollStages)}`;
                             }
@@ -151,6 +164,63 @@ Item {
             }
         }
 
+        // ── Installation & Setup Guide ──────────────────────────────────────
+        ContentSection {
+            icon: "download"
+            title: Translation.tr("Installation & Setup")
+            collapsible: true
+            expanded: !Fingerprint.deviceAvailable || !Fingerprint.fprintdInstalled
+
+            StyledText {
+                Layout.fillWidth: true
+                text: Translation.tr("Fingerprint unlock requires fprintd and a compatible biometric reader supported by libfprint.")
+                wrapMode: Text.Wrap
+                font.pixelSize: Appearance.font.pixelSize.small
+                color: Appearance.colors.colSubtext
+            }
+
+            HelperCodeBox {
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                topLeftRadius: Appearance.rounding.large
+                topRightRadius: Appearance.rounding.large
+                bottomLeftRadius: Appearance.rounding.large
+                bottomRightRadius: Appearance.rounding.large
+                icon: "download"
+                title: Translation.tr("1. Install fprintd")
+                text: Translation.tr("Install the fprintd package using your package manager:")
+                codeSnippet: "sudo pacman -S fprintd"
+                snippetWrapMode: Text.Wrap
+                actionText: Translation.tr("Install in terminal")
+                actionIcon: "terminal"
+                onActionClicked: subPageRoot.launchInTerminal("sudo pacman -S --needed fprintd || sudo apt install -y fprintd")
+            }
+
+            HelperCodeBox {
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                topLeftRadius: Appearance.rounding.large
+                topRightRadius: Appearance.rounding.large
+                bottomLeftRadius: Appearance.rounding.large
+                bottomRightRadius: Appearance.rounding.large
+                icon: "play_arrow"
+                title: Translation.tr("2. Start fprintd service")
+                text: Translation.tr("Ensure the fprintd system service is enabled and started:")
+                codeSnippet: "sudo systemctl enable --now fprintd.service"
+                snippetWrapMode: Text.Wrap
+                actionText: Translation.tr("Enable service")
+                actionIcon: "terminal"
+                onActionClicked: subPageRoot.launchInTerminal("sudo systemctl enable --now fprintd.service")
+            }
+
+            RippleButtonWithIcon {
+                Layout.topMargin: 4
+                materialIcon: "refresh"
+                mainText: Translation.tr("Check status again")
+                onClicked: Fingerprint.refresh()
+            }
+        }
+
         // ── Unlock behaviour ───────────────────────────────────────────────
         ContentSection {
             icon: "lock_open"
@@ -160,8 +230,10 @@ Item {
                 buttonIcon: "fingerprint"
                 text: Translation.tr("Unlock with fingerprint")
                 checked: subPageRoot.fpOptions.enable
+                enabled: Fingerprint.probed && Fingerprint.supported
                 onCheckedChanged: {
-                    subPageRoot.fpOptions.enable = checked;
+                    if (Fingerprint.supported)
+                        subPageRoot.fpOptions.enable = checked;
                 }
                 StyledToolTip {
                     text: Translation.tr("Arm the reader on the lock screen. Turning this off keeps your fingerprints; it only stops them from unlocking the session.")
