@@ -163,6 +163,8 @@ Scope {
             PhoneAlarmService.enabled; // Mirrors the phone's next alarm over ADB
         if (Config.options?.health?.enable ?? true)
             HealthService.enabled; // Runs health_watch: failed services, crashes, new errors, disks
+        if (Config.options?.iiTools?.enable ?? true)
+            IiLinkService.enabled; // ii tools phone link: reads peers.json, runs ii_link only with a paired phone
         return true;
         case 4: {
         const timetable = Config.options?.calendar?.timetable;

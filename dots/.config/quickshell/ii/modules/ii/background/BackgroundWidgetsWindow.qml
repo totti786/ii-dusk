@@ -1073,7 +1073,7 @@ PanelWindow {
                 z: desktopIcons.item?.dialogOpen ? 1000 : 0
                 active: PanelFamily.isIi && !GlobalStates.screenLocked
                     && DesktopShortcuts.itemsFor(bgWidgetsWindow.editScreenName).length > 0
-                visible: !GlobalStates.isMediaModeRevealingDesktop(bgWidgetsWindow.editScreenName)
+                visible: !GlobalStates.isMediaModeActiveForScreen(bgWidgetsWindow.editScreenName)
                 // The lock screen never shows desktop icons, so Edit Mode's Lock
                 // screen and AOD tabs fade them out with the tab's own scalar
                 // (opacity, not `visible`: the canvas can be a layer source under

@@ -32,7 +32,7 @@ Item {
     readonly property real sourceHeight: sourceItem ? sourceItem.height : 0
     readonly property real configuredBlurRadius: Math.max(0, Math.min(50, Config.options.lock.blur.radius ?? 40))
 
-    readonly property bool blurWanted: lockBlurRoot.lockLook
+    readonly property bool blurWanted: lockBlurRoot.lockLook || GlobalStates.scratchpadEmptyOverlayActive
 
     function startBlurEntrance() {
         blurInAnimation.stop();
@@ -78,15 +78,10 @@ Item {
         easing.type: Easing.OutCubic
     }
 
-    Connections {
-        target: GlobalStates
-        function onLockLookActiveChanged() {
-            lockBlurRoot.syncBlurWanted();
-        }
-        function onScratchpadEmptyOverlayActiveChanged() {
-            lockBlurRoot.syncBlurWanted();
-        }
-    }
+    // React to blurWanted itself, not to GlobalStates.lockLookActive: lockLook is a per-screen
+    // binding updated after that signal, so a handler on it read the old value and ran the
+    // exit animation on lock - the blur loaded at radius 0 and the wallpaper stayed sharp.
+    onBlurWantedChanged: lockBlurRoot.syncBlurWanted()
 
     Component.onCompleted: {
         if (lockBlurRoot.blurWanted && sourceReady)

@@ -39,6 +39,7 @@ Scope {
 
             PanelWindow {
                 id: controlsWindow
+                screen: screenScope.modelData
 
                 readonly property string screenName: controlsWindow.screen?.name ?? ""
 
