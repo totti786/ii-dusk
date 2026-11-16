@@ -292,7 +292,7 @@ Singleton {
         if (command.length === 0)
             return;
         Quickshell.execDetached(["bash", "-c", command.startsWith("sudo")
-            ? `${Config.options.apps.terminal} fish -C '${StringUtils.shellSingleQuoteEscape(command)}'`
+            ? `${Config.options.apps.terminal} -e sh -c '${StringUtils.shellSingleQuoteEscape(command)}; exec "\${SHELL:-sh}"'`
             : command]);
     }
 

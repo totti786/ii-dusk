@@ -3584,16 +3584,16 @@ Singleton {
             }
 
             property JsonObject apps: JsonObject {
-                property string bluetooth: "kcmshell6 kcm_bluetooth"
-                property string changePassword: "alacritty --hold -e fish -i -c 'passwd'"
-                property string editor: "zeditor" // The desktop icon menu's "Open in", given the path
-                property string network: "kcmshell6 kcm_networkmanagement"
-                property string manageUser: "kcmshell6 kcm_users"
-                property string networkEthernet: "kcmshell6 kcm_networkmanagement"
-                property string taskManager: "plasma-systemmonitor --page-name Processes"
+                property string bluetooth: "qs -c ii ipc call bluetoothManager open ''"
+                property string changePassword: "alacritty --hold -e passwd"
+                property string editor: "qs -c ii ipc call editor open" // The desktop icon menu's "Open in", given the path
+                property string network: "qs -c ii ipc call settings openPage network"
+                property string manageUser: ""
+                property string networkEthernet: "qs -c ii ipc call settings openPage network"
+                property string taskManager: "qs -c ii ipc call monitor open processes"
                 property string terminal: "alacritty" // This is only for shell actions
-                property string update: "alacritty --hold -e fish -i -c 'pkexec pacman -Syu'"
-                property string volumeMixer: `~/.config/hypr/hyprland/scripts/launch_first_available.sh "pavucontrol-qt" "pavucontrol"`
+                property string update: "qs -c ii ipc call packages open ''"
+                property string volumeMixer: "qs -c ii ipc call mixer open ''"
             }
 
             /// Built-in Anki reviewer. The app owns the collection while its window is
