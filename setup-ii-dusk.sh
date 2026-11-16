@@ -160,8 +160,8 @@ declare -A PRESET_URLS=(
     ["upstream"]="https://github.com/vaguesyntax/ii-vynx"
 )
 declare -A PRESET_BRANCHES=(
-    ["dusk"]="main"
-    ["mine"]="main"
+    ["dusk"]="dev"
+    ["mine"]="dev"
     ["p3drovfx"]="main"
     ["end4"]="main"
     ["vynx"]="main"
@@ -175,7 +175,7 @@ declare -A PRESET_CANONICAL=(
     ["https://github.com/vaguesyntax/ii-vynx"]="vynx"
 )
 FALLBACK_URL="https://github.com/totti786/ii-dusk"
-FALLBACK_BRANCH="main"
+FALLBACK_BRANCH="dev"
 
 # Where `install` gets the base illogical-impulse dotfiles from. Always end-4's
 # own installer: the fork only layers its Quickshell config on top.
