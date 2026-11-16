@@ -321,18 +321,17 @@ Singleton {
         }
     }
 
-    // ── Terminal launch — kitty-first with correct flags ───────────────────
+    // ── Terminal launch — alacritty-first with correct flags ───────────────────
     function openLogs(containerId) {
-        // kitty: `kitty --hold -- <cmd>` keeps window open after process exits
         // alacritty: `alacritty --hold -e <cmd>`
         // foot: `foot -e <cmd>` (no --hold, process stays via TTY)
-        const script = ["if command -v kitty >/dev/null 2>&1; then", "  kitty --hold -- docker logs -f " + containerId, "elif command -v alacritty >/dev/null 2>&1; then", "  alacritty --hold -e docker logs -f " + containerId, "elif command -v foot >/dev/null 2>&1; then", "  foot -e sh -c 'docker logs -f " + containerId + "; read -p \"Press Enter...\"'", "elif command -v wezterm >/dev/null 2>&1; then", "  wezterm start -- sh -c 'docker logs -f " + containerId + "; read -p \"Press Enter...\"'", "elif command -v gnome-terminal >/dev/null 2>&1; then", "  gnome-terminal -- sh -c 'docker logs -f " + containerId + "; read -p \"Press Enter...\"'", "fi"].join("\n");
+        const script = ["if command -v alacritty >/dev/null 2>&1; then", "  alacritty --hold -e docker logs -f " + containerId, "elif command -v foot >/dev/null 2>&1; then", "  foot -e sh -c 'docker logs -f " + containerId + "; read -p \"Press Enter...\"'", "elif command -v wezterm >/dev/null 2>&1; then", "  wezterm start -- sh -c 'docker logs -f " + containerId + "; read -p \"Press Enter...\"'", "elif command -v gnome-terminal >/dev/null 2>&1; then", "  gnome-terminal -- sh -c 'docker logs -f " + containerId + "; read -p \"Press Enter...\"'", "fi"].join("\n");
         Quickshell.execDetached(["sh", "-c", script]);
     }
 
     function openShell(containerId) {
         // Open an interactive shell inside the container
-        const script = ["if command -v kitty >/dev/null 2>&1; then", "  kitty -- docker exec -it " + containerId + " sh", "elif command -v alacritty >/dev/null 2>&1; then", "  alacritty -e docker exec -it " + containerId + " sh", "elif command -v foot >/dev/null 2>&1; then", "  foot -e docker exec -it " + containerId + " sh", "elif command -v wezterm >/dev/null 2>&1; then", "  wezterm start -- docker exec -it " + containerId + " sh", "elif command -v gnome-terminal >/dev/null 2>&1; then", "  gnome-terminal -- docker exec -it " + containerId + " sh", "fi"].join("\n");
+        const script = ["if command -v alacritty >/dev/null 2>&1; then", "  alacritty -e docker exec -it " + containerId + " sh", "elif command -v foot >/dev/null 2>&1; then", "  foot -e docker exec -it " + containerId + " sh", "elif command -v wezterm >/dev/null 2>&1; then", "  wezterm start -- docker exec -it " + containerId + " sh", "elif command -v gnome-terminal >/dev/null 2>&1; then", "  gnome-terminal -- docker exec -it " + containerId + " sh", "fi"].join("\n");
         Quickshell.execDetached(["sh", "-c", script]);
     }
 

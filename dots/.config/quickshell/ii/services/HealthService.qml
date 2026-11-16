@@ -1047,7 +1047,7 @@ Singleton {
 
     /// Opens a terminal running `args`, waiting for Enter at the end so the output stays.
     function runInTerminal(args): void {
-        const terminal = Config.options?.apps?.terminal || "kitty -1";
+        const terminal = Config.options?.apps?.terminal || "alacritty";
         const cmd = terminal.split(" ").filter(part => part.length > 0);
         cmd.push("-e", "bash", "-c", '"$@"; printf "\\n[Press Enter to close] "; read -r', "ii-health", ...args);
         Quickshell.execDetached(cmd);
@@ -1055,7 +1055,7 @@ Singleton {
 
     /// A terminal on a command that keeps its own window open (asks, then waits).
     function openTerminal(args): void {
-        const terminal = Config.options?.apps?.terminal || "kitty -1";
+        const terminal = Config.options?.apps?.terminal || "alacritty";
         const cmd = terminal.split(" ").filter(part => part.length > 0);
         cmd.push("-e", ...args);
         Quickshell.execDetached(cmd);

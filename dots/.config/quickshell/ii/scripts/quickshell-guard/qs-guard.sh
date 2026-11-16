@@ -96,7 +96,7 @@ open_terminal() {
     [[ "$(opt .health.guard.openTerminal true)" == true ]] || return 1
     local term=""
     have jq && term="$(jq -r '.apps.terminal // empty' "$config" 2>/dev/null)"
-    [[ -n "$term" ]] || term="kitty -1"
+    [[ -n "$term" ]] || term="alacritty"
     local cmd
     read -ra cmd <<<"$term"
     cmd+=(-e bash "$dir/qs-rebuild.sh" "${args[@]}")

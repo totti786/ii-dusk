@@ -205,7 +205,7 @@ ContentPage {
                 }
             }
             onClicked: {
-                const terminal = (Config.options.apps && Config.options.apps.terminal) || "kitty -1"
+                const terminal = (Config.options.apps && Config.options.apps.terminal) || "alacritty"
                 const scriptPath = Directories.scriptPath + "/phone/install_droidcam.sh"
                 Quickshell.execDetached(["bash", "-c",
                     terminal + " -e bash " + scriptPath + " &"])

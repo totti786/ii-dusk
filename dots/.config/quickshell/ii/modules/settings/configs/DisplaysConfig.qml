@@ -589,7 +589,7 @@ ContentPage {
             mainText: Translation.tr("Open Hyprmon")
             Layout.fillWidth: false
             onClicked: {
-                Quickshell.execDetached(["bash", "-c", "${TERMINAL:-kitty} -e hyprmon"]);
+                Quickshell.execDetached(["bash", "-c", "${TERMINAL:-alacritty} -e hyprmon"]);
             }
         }
         RippleButtonWithIcon {

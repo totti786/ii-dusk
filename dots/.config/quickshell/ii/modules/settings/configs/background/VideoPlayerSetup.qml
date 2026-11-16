@@ -56,7 +56,7 @@ Item {
 
     // Steps that need sudo or show long output run in the user's terminal.
     function runInTerminal(args) {
-        const terminal = Config.options?.apps?.terminal || "kitty -1";
+        const terminal = Config.options?.apps?.terminal || "alacritty";
         const cmd = terminal.split(" ").filter(part => part.length > 0);
         cmd.push("-e", "bash", "-c", 'script="$1"; shift; bash "$script" "$@"; printf "\\n[Press Enter to close] "; read -r', "ii-mpv-wallpaper", root.buildScript, ...args);
         Quickshell.execDetached(cmd);

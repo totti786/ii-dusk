@@ -2731,7 +2731,7 @@ Singleton {
             deepLinkCmd = "adb shell am start -a " + actionArg + dataArg + " >/dev/null 2>&1; "
         }
 
-        const terminal = Config.options.apps.terminal || "kitty -1"
+        const terminal = Config.options.apps.terminal || "alacritty"
         const fullScrcpyCmd = deepLinkCmd + baseCmd + scrcpyArgs.join(" ")
 
         if (showTerminal) {

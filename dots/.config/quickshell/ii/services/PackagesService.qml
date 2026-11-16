@@ -178,7 +178,7 @@ Singleton {
 
     /// AUR packages: build in a terminal so the PKGBUILD is read and yay can ask
     function aurInTerminal(args: var): void {
-        const terminal = String(Config.options.apps?.terminal ?? "kitty -1").split(" ").filter(part => part.length > 0);
+        const terminal = String(Config.options.apps?.terminal ?? "alacritty").split(" ").filter(part => part.length > 0);
         // The arguments are positional parameters of the inner shell, never part of its text
         Quickshell.execDetached(terminal.concat(["-e", "bash", "-c",
             "yay \"$@\"; echo; read -n1 -r -p 'Done. Press any key to close.'", "yay-session"]).concat(args));

@@ -33,7 +33,7 @@ ColumnLayout {
 
     function setUpInTerminal(): void {
         root.errorText = "";
-        const terminal = (Config.options.apps && Config.options.apps.terminal) || "kitty -1";
+        const terminal = (Config.options.apps && Config.options.apps.terminal) || "alacritty";
         Quickshell.execDetached(["bash", "-c",
             terminal + " -e bash " + Directories.scriptPath + "/preset_store_signin.sh &"]);
         // The script runs outside the shell, so there is no signal to wait on.

@@ -372,7 +372,7 @@ Singleton {
     // and watches the credentials file's mtime (never its contents) to refetch.
     // Clicking again while waiting relaunches it, in case the terminal was closed early.
     function refreshClaudeSignIn(): void {
-        const terminal = (Config.options.apps && Config.options.apps.terminal) || "kitty -1";
+        const terminal = (Config.options.apps && Config.options.apps.terminal) || "alacritty";
         Quickshell.execDetached(["bash", "-c",
             terminal + " -e bash '" + Directories.scriptPath + "/ai/claude_signin_refresh.sh' &"]);
         root.claudeSignInPending = true;

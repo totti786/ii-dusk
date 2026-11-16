@@ -326,7 +326,7 @@ Singleton {
     }
 
     function openLoginTerminal(): void {
-        const terminal = Config.options?.apps?.terminal ?? "kitty -1";
+        const terminal = Config.options?.apps?.terminal ?? "alacritty";
         // The helper finds bw/rbw outside the session PATH (nvm, cargo…) and
         // keeps the session bw prints, so the vault comes back unlocked.
         const helper = Directories.scriptPath + "/password_manager.py";

@@ -247,7 +247,7 @@ Item {
                     text: subPageRoot.actionEntry.param === "command"
                         ? Translation.tr("Command") : Translation.tr("Value")
                     placeholderText: subPageRoot.actionEntry.param === "command"
-                        ? Translation.tr("kitty -1") : ""
+                        ? Translation.tr("alacritty") : ""
                     textField.wrapMode: TextInput.NoWrap
 
                     onCurrentValueChanged: {

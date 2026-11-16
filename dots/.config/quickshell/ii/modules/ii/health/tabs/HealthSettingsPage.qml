@@ -431,7 +431,7 @@ Rectangle {
     }
 
     function openRebuild(): void {
-        const terminal = Config.options?.apps?.terminal || "kitty -1";
+        const terminal = Config.options?.apps?.terminal || "alacritty";
         const cmd = terminal.split(" ").filter(part => part.length > 0);
         cmd.push("-e", "bash", `${root.guardDir}/qs-rebuild.sh`);
         Quickshell.execDetached(cmd);

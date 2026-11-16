@@ -186,7 +186,7 @@ Singleton {
     // check that it exists at all — a fork that does not ship it would
     // otherwise open a terminal that closes on the spot.
     function launchInTerminal(args) {
-        const terminal = Config.options?.apps?.terminal || "kitty -1";
+        const terminal = Config.options?.apps?.terminal || "alacritty";
         // Array form, so a home directory with a space in it cannot break the
         // command apart the way a single shell string would.
         const cmd = terminal.split(" ").filter(part => part.length > 0);

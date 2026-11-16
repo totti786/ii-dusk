@@ -29,7 +29,7 @@ Item {
     readonly property string fingerBeingRenamed: renameState.finger
 
     function launchInTerminal(cmd: string): void {
-        const terminal = (Config.options.apps && Config.options.apps.terminal) || "kitty -1";
+        const terminal = (Config.options.apps && Config.options.apps.terminal) || "alacritty";
         Quickshell.execDetached(["bash", "-c", `${terminal} -e bash -c "${cmd}; echo; echo 'Press Enter to exit...'; read" &`]);
     }
 

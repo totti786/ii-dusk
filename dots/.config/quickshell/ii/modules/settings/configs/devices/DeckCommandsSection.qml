@@ -24,7 +24,7 @@ AppSettingsSection {
 
     readonly property var _starterPresets: [
         { name: Translation.tr("Notify ping"), icon: "notifications_active", command: "notify-send \"ii deck\" \"Triggered from phone\"" },
-        { name: Translation.tr("Open terminal"), icon: "terminal", command: "kitty || foot || alacritty" },
+        { name: Translation.tr("Open terminal"), icon: "terminal", command: "alacritty" },
         { name: Translation.tr("Home folder"), icon: "folder_open", command: "xdg-open \"$HOME\"" },
         { name: Translation.tr("Clear clipboard"), icon: "content_paste_off", command: "wl-copy --clear" }
     ]

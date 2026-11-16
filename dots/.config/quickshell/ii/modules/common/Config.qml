@@ -3585,14 +3585,14 @@ Singleton {
 
             property JsonObject apps: JsonObject {
                 property string bluetooth: "kcmshell6 kcm_bluetooth"
-                property string changePassword: "kitty -1 --hold=yes fish -i -c 'passwd'"
+                property string changePassword: "alacritty --hold -e fish -i -c 'passwd'"
                 property string editor: "zeditor" // The desktop icon menu's "Open in", given the path
                 property string network: "kcmshell6 kcm_networkmanagement"
                 property string manageUser: "kcmshell6 kcm_users"
                 property string networkEthernet: "kcmshell6 kcm_networkmanagement"
                 property string taskManager: "plasma-systemmonitor --page-name Processes"
-                property string terminal: "kitty -1" // This is only for shell actions
-                property string update: "kitty -1 --hold=yes fish -i -c 'pkexec pacman -Syu'"
+                property string terminal: "alacritty" // This is only for shell actions
+                property string update: "alacritty --hold -e fish -i -c 'pkexec pacman -Syu'"
                 property string volumeMixer: `~/.config/hypr/hyprland/scripts/launch_first_available.sh "pavucontrol-qt" "pavucontrol"`
             }
 
@@ -7012,7 +7012,7 @@ Singleton {
                 property string launchAnimation: "bounce"
                 property string notificationAnimation: "bounce"
                 property string position: "auto"
-                property list<string> pinnedApps: ["org.kde.dolphin", "kitty"]
+                property list<string> pinnedApps: ["org.kde.dolphin", "Alacritty"]
                 property list<string> ignoredAppRegexes: []
                 property list<string> pinnedFiles: []
                 // Each entry is { id: string, apps: list<string> } and is
@@ -7023,7 +7023,7 @@ Singleton {
                 // is left, so turning the feature on no longer makes the dock
                 // undo every reorder.
                 property list<string> manualOrder: []
-                property list<string> order: ["pin", "app:org.kde.dolphin", "app:kitty", "runningApps", "media", "weather", "sports", "livePreview", "phone", "trash", "overview"]
+                property list<string> order: ["pin", "app:org.kde.dolphin", "app:Alacritty", "runningApps", "media", "weather", "sports", "livePreview", "phone", "trash", "overview"]
             }
 
             property JsonObject dockToPanel: JsonObject {
@@ -7215,7 +7215,7 @@ Singleton {
             }
 
             property JsonObject launcher: JsonObject {
-                property list<string> pinnedApps: ["org.kde.dolphin", "kitty", "cmake-gui"]
+                property list<string> pinnedApps: ["org.kde.dolphin", "Alacritty", "cmake-gui"]
 
                 /**
                  * KRunner-style typing: with nothing on screen to type into, the first

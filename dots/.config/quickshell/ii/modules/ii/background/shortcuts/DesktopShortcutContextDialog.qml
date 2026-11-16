@@ -86,7 +86,7 @@ ItemContextDialog {
         const target = root.entry.path;
         if (!target)
             return;
-        const terminal = (Config.options.apps && Config.options.apps.terminal) || "kitty -1";
+        const terminal = (Config.options.apps && Config.options.apps.terminal) || "alacritty";
         const run = program ? ` ${program}` : "";
         Quickshell.execDetached(["bash", "-c",
             `p=$(readlink -f -- "$1") || p="$1"; [ -d "$p" ] || p=$(dirname -- "$p"); `
@@ -120,8 +120,8 @@ ItemContextDialog {
     // The launchers wear their app's own icon in the menu's bar; a theme
     // without one leaves the entry on its symbol.
     readonly property string terminalIcon: {
-        const command = String((Config.options.apps && Config.options.apps.terminal) || "kitty").trim();
-        const name = (command.split(/\s+/)[0] || "kitty").split("/").pop();
+        const command = String((Config.options.apps && Config.options.apps.terminal) || "alacritty").trim();
+        const name = (command.split(/\s+/)[0] || "alacritty").split("/").pop();
         return Quickshell.iconPath(name, true);
     }
     readonly property string claudeIcon: Quickshell.iconPath("claude", true)
