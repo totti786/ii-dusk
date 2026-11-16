@@ -1323,6 +1323,16 @@ resolve_target() {
     case "$rc" in
         0) ;;
         2)
+            # A recorded branch the remote has since dropped (the fork moved
+            # from main to dev): follow the remote's default branch rather than
+            # leaving every older install unable to update.
+            local fallback=""
+            if [[ "$branch" != "default" ]] && fallback="$(remote_head "$url" default)"; then
+                TARGET_SHA="${fallback%% *}"
+                TARGET_BRANCH="${fallback#* }"
+                ui_note "'$branch' no longer exists on ${url#https://}; following its default branch '$TARGET_BRANCH'."
+                return 0
+            fi
             ui_fail "No such branch" "'$branch' on ${url#https://}"
             ui_note "List what exists with: $SCRIPT_SELF list-branches"
             return 1
