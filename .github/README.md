@@ -1,6 +1,8 @@
 <div align="center">
 
-<img src="dots/.config/quickshell/ii/assets/icons/ii-dusk.png" alt="ii-dusk" width="120" />
+<img src="assets/readme/ii-dusk-banner.png" alt="ii-dusk" width="100%" />
+
+<img src="../dots/.config/quickshell/ii/assets/icons/ii-dusk.png" alt="ii-dusk" width="120" />
 
 # ii-dusk
 
@@ -100,7 +102,7 @@ A heavily customized fork of **[ii-vynx](https://github.com/vaguesyntax/ii-vynx)
 
 - **Hyprland 0.56.1 or newer**
 - **Matugen 4.1.0 or newer**
-- **quickshell-git 0.3.0 or newer**
+- **quickshell-git 0.3.0 or newer** — the installer replaces it with a patched build ([Patched Quickshell](#patched-quickshell))
 
 ## Installation
 
@@ -179,7 +181,13 @@ For example, this can happen after updates such as:
 Qt 6.11.1 -> Qt 6.11.2
 ```
 
-Rebuild `quickshell-git` against the newly installed Qt libraries:
+Rebuild it against the newly installed Qt libraries. With the patched package (the default):
+
+```bash
+./setup-ii-p3drovfx.sh quickshell rebuild
+```
+
+With the AUR package:
 
 ```bash
 yay -S --rebuild aur/quickshell-git
@@ -253,6 +261,25 @@ The left sidebar holds an **AI chat** for cloud and local models, a **Translator
   </tr>
 </table>
 
+## Side projects
+
+Two projects grew out of this shell and live in their own repositories.
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <a href="https://github.com/P3DROVFX/ii-tools"><img src="https://raw.githubusercontent.com/P3DROVFX/ii-tools/master/.github/assets/Home_Screenshot_1.0.01.jpg" width="32%" alt="ii-tools: the PC card on the phone's home" /><img src="https://raw.githubusercontent.com/P3DROVFX/ii-tools/master/.github/assets/Home_Screenshot_1.0.02.jpg" width="32%" alt="ii-tools: tools and controls" /><img src="https://raw.githubusercontent.com/P3DROVFX/ii-tools/master/.github/assets/Home_Screenshot_1.0.03.jpg" width="32%" alt="ii-tools: camera, microphone and PC load" /></a>
+    </td>
+    <td width="50%" align="center">
+      <a href="https://github.com/P3DROVFX/ii-icon-pack"><img src="https://raw.githubusercontent.com/P3DROVFX/ii-icon-pack/main/assets/hero-banner.jpg" width="100%" alt="ii-icon-pack: a monochrome icon pack in the shell's colours" /></a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><b><a href="https://github.com/P3DROVFX/ii-tools">ii-tools</a></b><br><sub>The Android companion, in place of KDE Connect. It makes the phone the PC's remote, microphone, webcam and second screen, and brings its notifications and live activities to the shell. Pairs with the <b>ii tools</b> page in Settings.</sub></td>
+    <td align="center"><b><a href="https://github.com/P3DROVFX/ii-icon-pack">ii-icon-pack</a></b><br><sub>A Material You monochrome icon pack for Linux, in any Material 3 Expressive shape. Over 33,000 vector icons that recolor with your wallpaper.</sub></td>
+  </tr>
+</table>
+
 ## Credits
 
 - **[end-4](https://github.com/end-4):** Creator of illogical-impulse.
@@ -267,6 +294,19 @@ The left sidebar holds an **AI chat** for cloud and local models, a **Translator
 - **[hyprland-scroll-overview](https://github.com/yayuuu/hyprland-scroll-overview):** zscroll overview plugin by [yayuuu](https://github.com/yayuuu).
 - **[Quickshell](https://quickshell.org/):** Widget system.
 - **[Hyprland](https://hypr.land/):** Compositor.
+
+## Patched Quickshell
+
+The installer builds **`quickshell-ii-git`**: upstream Quickshell with two startup patches
+(a faster QML scanner and Qt's QML disk cache). The bar shows in under 2 seconds instead of
+about 5. It is a native package on Arch and Fedora; elsewhere the stock `quickshell-git` is kept.
+
+```bash
+./setup-ii-p3drovfx.sh quickshell           # install only the patched Quickshell
+./setup-ii-p3drovfx.sh quickshell restore   # back to quickshell-git
+```
+
+Details: [`scripts/quickshell-build`](../dots/.config/quickshell/ii/scripts/quickshell-build/README.md).
 
 <br>
 

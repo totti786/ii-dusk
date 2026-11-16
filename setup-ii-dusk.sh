@@ -24,6 +24,8 @@
 #   restart                 Restart Quickshell (alias: run)
 #   doctor                  Report resolved paths, active state and tooling
 #   deps [add|remove|list]  Show, install or remove optional feature packages
+#   quickshell [action]     Install only the patched, fast-starting Quickshell
+#                           (install, the default | rebuild | restore | status)
 #   hyprset <args>          Write a Hyprland key or animation
 #   hyprmerge <args>        Merge a Hyprland config into the local one
 #   remove-cli              Remove the ii-dusk symlink
@@ -48,7 +50,7 @@
 #       --no-restart          Leave Quickshell alone when finished
 #       --hypr                Install the fork's ~/.config/hypr files (recommended)
 #       --no-hypr             Never install them, never ask
-#       --rebuild-quickshell  Rebuild Quickshell from source first
+#       --rebuild-quickshell  Rebuild the patched Quickshell first
 #       --skip-base-check     Do not require illogical-impulse to be present
 #       --ii-subdir <name>    Override ii* auto-detection in the clone
 #       --add <ids>           deps: install these features ("core": the required set)
@@ -158,8 +160,8 @@ declare -A PRESET_URLS=(
     ["upstream"]="https://github.com/vaguesyntax/ii-vynx"
 )
 declare -A PRESET_BRANCHES=(
-    ["dusk"]="main"
-    ["mine"]="main"
+    ["dusk"]="dev"
+    ["mine"]="dev"
     ["p3drovfx"]="main"
     ["end4"]="main"
     ["vynx"]="main"
@@ -173,7 +175,7 @@ declare -A PRESET_CANONICAL=(
     ["https://github.com/vaguesyntax/ii-vynx"]="vynx"
 )
 FALLBACK_URL="https://github.com/totti786/ii-dusk"
-FALLBACK_BRANCH="main"
+FALLBACK_BRANCH="dev"
 
 # Where `install` gets the base illogical-impulse dotfiles from. Always end-4's
 # own installer: the fork only layers its Quickshell config on top.
@@ -192,6 +194,7 @@ PROTECTED_PATTERNS=(
     "scripts/touchGestures/touch_gestures"
     "scripts/tray/sni_watcher"
     "scripts/health/health_watch"
+    "scripts/iiLink/ii_link"
     # What each of those was built from. Carried for the same reason the binaries
     # are: without it every helper reads as "never verified" after every update,
     # and a warning that fires every time is one nobody reads.
@@ -237,6 +240,7 @@ PASSTHRU_ARGS=()
 DEPS_ACTION=""       # deps: "" (table, then pick) | list | add | remove
 DEPS_IDS=""          # deps: comma-separated feature ids
 DEPS_PRECONFIRMED=false
+QS_ACTION=""         # quickshell: install | rebuild | restore | status
 
 # ── Run state (used by the exit trap) ────────────────────────────────────────
 STAGE_DIR=""
@@ -2099,6 +2103,15 @@ qt_mismatch() {
     return 0
 }
 
+# rebuild_quickshell — the patched package where it can be built, else the
+# generic cmake build into ~/.local below.
+rebuild_quickshell() {
+    local rc=0
+    run_qs_builder rebuild || rc=$?
+    ((rc == 3)) || return "$rc"
+    build_quickshell
+}
+
 build_quickshell() {
     sudo_prime || true
     ui_step "Deps"
@@ -3422,6 +3435,7 @@ show_help() {
     printf '  %s%-16s%s %s\n' "$C_OK" "restart" "$C_RST" "Restart Quickshell (alias: run)"
     printf '  %s%-16s%s %s\n' "$C_OK" "doctor" "$C_RST" "Report resolved paths, state and tooling"
     printf '  %s%-16s%s %s\n' "$C_OK" "deps" "$C_RST" "Show and install optional feature packages"
+    printf '  %s%-16s%s %s\n' "$C_OK" "quickshell [x]" "$C_RST" "Install only the fast patched Quickshell (install|rebuild|restore|status)"
     printf '  %s%-16s%s %s\n' "$C_OK" "hyprset" "$C_RST" "Write a Hyprland key/animation"
     printf '  %s%-16s%s %s\n' "$C_OK" "hyprmerge" "$C_RST" "Merge a Hyprland config into the local one"
     printf '  %s%-16s%s Remove the %s symlink\n' "$C_OK" "remove-cli" "$C_RST" "$CLI_NAME"
@@ -3444,7 +3458,7 @@ show_help() {
     printf '  %s%-24s%s %s\n' "$C_STEP" "    --no-restart" "$C_RST" "Leave Quickshell alone when finished"
     printf '  %s%-24s%s %s\n' "$C_STEP" "    --hypr" "$C_RST" "Install the fork's ~/.config/hypr files (recommended)"
     printf '  %s%-24s%s %s\n' "$C_STEP" "    --no-hypr" "$C_RST" "Never install them, never ask"
-    printf '  %s%-24s%s %s\n' "$C_STEP" "    --rebuild-quickshell" "$C_RST" "Rebuild Quickshell from source first"
+    printf '  %s%-24s%s %s\n' "$C_STEP" "    --rebuild-quickshell" "$C_RST" "Rebuild the patched Quickshell first"
     printf '  %s%-24s%s %s\n' "$C_STEP" "    --skip-base-check" "$C_RST" "Do not require illogical-impulse to be present"
     printf '  %s%-24s%s %s\n' "$C_STEP" "    --ii-subdir <name>" "$C_RST" "Override ii* auto-detection in the clone"
     printf '  %s%-24s%s %s\n' "$C_STEP" "    --log-file <path>" "$C_RST" "Write the run log elsewhere"
@@ -3685,7 +3699,7 @@ parse_args() {
         local first="${positional[0]}"
         case "$first" in
             apply | install | update | switch | fork | branch | list-forks | list-branches | \
-                restart | run | doctor | deps | remove-cli | hyprset | hyprmerge | help | version | demo)
+                restart | run | doctor | deps | quickshell | remove-cli | hyprset | hyprmerge | help | version | demo)
                 COMMAND="$first"
                 positional=("${positional[@]:1}")
                 ;;
@@ -3710,6 +3724,15 @@ parse_args() {
             ;;
         hyprset | hyprmerge)
             PASSTHRU_ARGS=("${positional[@]}" "${PASSTHRU_ARGS[@]+"${PASSTHRU_ARGS[@]}"}")
+            ;;
+        quickshell)
+            if ((${#positional[@]} > 0)); then
+                case "${positional[0]}" in
+                    install | rebuild | restore | status) QS_ACTION="${positional[0]}" ;;
+                    *) arg_error "quickshell takes install, rebuild, restore or status, not \"${positional[0]}\"" ;;
+                esac
+                ((${#positional[@]} == 1)) || arg_error "Unexpected argument \"${positional[1]}\""
+            fi
             ;;
         deps)
             # `deps add phone calendar` reads as well as `deps --add phone,calendar`.
@@ -3810,14 +3833,15 @@ main() {
             ;;
         doctor) cmd_doctor ;;
         deps) cmd_deps ;;
+        quickshell) cmd_quickshell ;;
         list-forks) cmd_list_forks ;;
         list-branches) cmd_list_branches ;;
         apply | install | update | switch)
             if [[ "$OPT_REBUILD_QS" == true ]]; then
-                build_quickshell || exit 1
+                rebuild_quickshell || exit 1
             elif [[ "$COMMAND" != "install" ]] && qt_mismatch; then
                 if ui_confirm "Rebuild Quickshell from source to match your Qt?"; then
-                    build_quickshell || exit 1
+                    rebuild_quickshell || exit 1
                 else
                     ui_note "Skipped. Crashes may persist until the ABI matches."
                 fi
