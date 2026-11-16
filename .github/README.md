@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/readme/ii-dusk-banner.png" alt="ii-dusk" width="100%" />
+
 <img src="../dots/.config/quickshell/ii/assets/icons/ii-dusk.png" alt="ii-dusk" width="120" />
 
 # ii-dusk
