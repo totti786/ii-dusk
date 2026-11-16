@@ -1,0 +1,21 @@
+# `main` is a compatibility mirror of `dev`. Installs made before the fork moved
+# to `dev` still track `main`, and their updater needs it to exist. Never commit
+# to `main` directly: this job resets it to `dev` on every push.
+name: Mirror dev to main
+
+on:
+  push:
+    branches: [dev]
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Reset main to dev
+        run: git push --force origin HEAD:refs/heads/main
