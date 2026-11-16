@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="dots/.config/quickshell/ii/assets/icons/ii-dusk.png" alt="ii-dusk" width="120" />
+<img src="../dots/.config/quickshell/ii/assets/icons/ii-dusk.png" alt="ii-dusk" width="120" />
 
 # ii-dusk
 
