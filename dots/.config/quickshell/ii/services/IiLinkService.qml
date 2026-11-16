@@ -39,6 +39,7 @@ Singleton {
             || (root._phoneService === "" && (root.hasPeers || root.pairingRequested || !root._kdeFlag)))
     readonly property bool enabled: root.serviceSelected
     readonly property bool remoteEnabled: root.opts?.remote?.enable ?? true
+    readonly property bool powerEnabled: root.remoteEnabled && (root.opts?.remote?.power ?? true)
     readonly property bool audioEnabled: root.opts?.audio?.enable ?? true
     readonly property bool deckEnabled: root.opts?.deck?.enable ?? true
     readonly property bool wallpaperEnabled: root.opts?.wallpaper?.enable ?? true
@@ -173,6 +174,7 @@ Singleton {
     readonly property var allowedActions: root.remoteEnabled ? root.actions : []
     readonly property var capabilities: (root.remoteEnabled ? ["remote", "workspaces", "modes", "presets"] : [])
         .concat(root.remoteEnabled ? ["display", "modeActions"] : [])
+        .concat(root.powerEnabled ? ["power"] : [])
         .concat(root.audioEnabled ? ["audio"] : [])
         .concat(root.deckEnabled ? ["deck", "appIcons", "deckFocus"] : [])
         .concat(root.wallpaperEnabled ? ["wallpaper"] : [])
@@ -194,7 +196,7 @@ Singleton {
         .concat(root.touchpadEnabled ? ["touchpad"] : [])
         .concat(root.drawEnabled && LiveDraw.enabled ? ["draw"] : [])
         .concat(root.presentEnabled ? ["present"] : [])
-        .concat(PhoneScreenService.enabled ? ["screen"] : [])
+        .concat(PhoneScreenService.enabled ? (PhoneScreenService.wirelessEnabled ? ["screen", "screenWifi", "screenTools", "screenAudio"] : ["screen", "screenTools"]) : [])
         .concat(root.cameraEnabled ? ["camera"] : [])
         .concat(root.micEnabled ? ["mic"] : [])
         .concat(root.usageEnabled ? ["usage"] : [])
@@ -391,6 +393,32 @@ Singleton {
         add("discordMute", DiscordVoice.channel !== null && DiscordVoice.muted);
         add("discordDeafen", DiscordVoice.channel !== null && DiscordVoice.deafened);
         return on;
+    }
+
+    // ── Power: shut down or restart from the phone ───────────────────────
+    // The phone confirms before it sends. The reply goes out first, then the timer runs
+    // the session action, so the phone sees "ok" rather than a dropped link.
+    property string _pendingPower: ""
+
+    function _runPower(kind): string {
+        if (kind !== "poweroff" && kind !== "reboot")
+            return "unknown_action";
+        root._pendingPower = kind;
+        powerTimer.restart();
+        return "";
+    }
+
+    Timer {
+        id: powerTimer
+        interval: 800
+        onTriggered: {
+            const kind = root._pendingPower;
+            root._pendingPower = "";
+            if (kind === "poweroff")
+                Session.poweroff();
+            else if (kind === "reboot")
+                Session.reboot();
+        }
     }
 
     function _runDeck(id): string {
@@ -1214,7 +1242,7 @@ Singleton {
     // the list only when it changed, then each missing photo as a file. Both are kept
     // in the state folder (PhoneContactsService reads contacts.json itself).
 
-    /// { battery: { level, charging, plug, temp, health }, net: { type, signal }, ringer, at } or null.
+    /// { battery: { level, charging, plug, temp, health }, net: { type, signal }, ringer, peripherals: [{ id, name, kind, level }], at } or null.
     property var phoneStatus: null
     readonly property string contactsDir: `${root.stateDir}/contacts`
 
@@ -1246,8 +1274,58 @@ Singleton {
             root.sendTo(root.dataDev, { t: "get", what: "contacts", have: root._contactsHash() });
     }
 
+    function _sanitizePeripherals(raw): var {
+        if (!Array.isArray(raw))
+            return [];
+        const out = [];
+        for (const item of raw) {
+            if (!item || typeof item !== "object")
+                continue;
+            const id = String(item.id ?? "").trim();
+            const name = String(item.name ?? "").trim();
+            if (!id || !name)
+                continue;
+            const level = Number(item.level);
+            if (!Number.isFinite(level) || level < 0 || level > 100)
+                continue;
+            const entry = {
+                id: id,
+                name: name,
+                kind: String(item.kind ?? "other").trim() || "other",
+                level: Math.round(level)
+            };
+            out.push(entry);
+        }
+        return out;
+    }
+
+    function peripheralIcon(kind): string {
+        switch (kind) {
+        case "earbuds":
+            return "earbuds";
+        case "watch":
+            return "watch";
+        case "headset":
+            return "headphones";
+        case "speaker":
+            return "speaker";
+        case "keyboard":
+            return "keyboard";
+        case "mouse":
+            return "mouse";
+        default:
+            return "bluetooth";
+        }
+    }
+
     function _status(m): void {
-        root.phoneStatus = { battery: m.battery ?? null, net: m.net ?? null, ringer: String(m.ringer ?? ""), at: Date.now() };
+        root.phoneStatus = {
+            battery: m.battery ?? null,
+            net: m.net ?? null,
+            ringer: String(m.ringer ?? ""),
+            peripherals: root._sanitizePeripherals(m.peripherals),
+            at: Date.now()
+        };
         if ("alarm" in m)
             PhoneAlarmService.fromLink(m.alarm);
     }
@@ -2532,6 +2610,7 @@ Singleton {
             paired: true,
             charge: conn && st?.battery ? Number(st.battery.level ?? -1) : -1,
             charging: !!(conn && st?.battery?.charging),
+            peripherals: conn && Array.isArray(st?.peripherals) ? st.peripherals : [],
             signalType: st?.net?.type === "wifi" ? "Wi-Fi" : st?.net?.type === "cellular" ? Translation.tr("Mobile") : "",
             signalStrength: Math.max(0, Number(st?.net?.signal ?? 0)),
             supportedPlugins: plugins,
@@ -3377,6 +3456,8 @@ Singleton {
                 why = root.shareEnabled ? root._share(m.arg) : "disabled";
             else if (action === "deck")
                 why = root.deckEnabled ? root._runDeck(String(m.arg ?? "")) : "disabled";
+            else if (action === "power")
+                why = root.powerEnabled ? root._runPower(String(m.arg ?? "")) : "disabled";
             else if (root._remoteArgActions.includes(action))
                 why = root.remoteEnabled ? root._runArg(action, m.arg) : "disabled";
             else if (root._audioArgActions.includes(action))
@@ -3624,6 +3705,8 @@ Singleton {
                 root._setTransfer({ received: Number(ev.received ?? 0) });
             break;
         case "screen":
+        case "screenRate":
+        case "screenAudio":
         case "screenLive":
         case "screenEnd":
             PhoneScreenService.handleEvent(ev);

@@ -108,6 +108,7 @@ Commands with an argument, answered with `ok` or `err` (`bad_arg`, `not_found`, 
 | `clipCopyPc` | `"<cliphist id>"`: copies that entry to the PC's current clipboard (`locked`, `not_found`) | clipHistory |
 | `share` | `{to: "browser"\|"ai"\|"note"\|"reminder"\|"task", text}`. `browser` takes only an `http(s)` link. | share |
 | `deck` | a deck id: `g:<gesture action>`, `c:<command id>`, `app:<desktop id>`, `discordMute`, `discordDeafen` (`locked`, `unavailable`, `not_found`) | deck |
+| `power` | `"poweroff"` / `"reboot"`: replies `ok`, then runs it 0.8 s later (the phone confirms before sending). Off with `iiTools.remote.power`. | power |
 
 ## Clipboard history
 
@@ -153,7 +154,7 @@ announces `status` and, with the contacts permission, `contacts`.
 
 | Direction | Message | |
 | --- | --- | --- |
-| phone → shell | `{"t":"status","battery":{level,charging,plug,temp,health}\|null,"net":{type,signal},"ringer":"normal"\|"vibrate"\|"silent","alarm":{at,pkg}\|null}` | On connect, when the next alarm changes (it brings the link up for that), on battery news while connected (at most every 30 s unless plugging changed), and when the ringer mode or the network type changes while connected. The Modes `phone` trigger reads `battery`, `net` and `ringer` from it. `alarm` goes to PhoneAlarmService, which then stops polling ADB. |
+| phone → shell | `{"t":"status","battery":{level,charging,plug,temp,health}\|null,"net":{type,signal},"ringer":"normal"\|"vibrate"\|"silent","alarm":{at,pkg}\|null,"peripherals":[{id,name,kind,level}]}` | On connect, when the next alarm changes (it brings the link up for that), on battery news while connected (at most every 30 s unless plugging changed), and when the ringer mode or the network type changes while connected. The Modes `phone` trigger reads `battery`, `net` and `ringer` from it. `alarm` goes to PhoneAlarmService, which then stops polling ADB. `peripherals` (optional; old shells ignore it) lists the phone's connected Bluetooth devices that report a battery level, only with the phone's `BLUETOOTH_CONNECT`: `id` is a hash of the address (never the MAC), `kind` is `earbuds`\|`watch`\|`headset`\|`speaker`\|`keyboard`\|`mouse`\|`other`, `level` 0–100; `[]` when none, so a disconnect clears them. Device changes are sent within 400 ms, level changes at most every 30 s. |
 | shell → phone | `{"t":"get","what":"contacts","have":"<hash>"}` | On connect, with the version the PC keeps in `<state>/contacts.json`. |
 | phone → shell | `{"t":"contacts","hash","list":[contact]}` | Only when `hash` differs. `contact` is the shape the shell's vCard reader gives (`id, displayName, givenName, familyName, organization, phones[{value,normalized,type}], emails[{value,type}], birthday{year,month,day}`) plus `photo`, the photo's hash or `""`. |
 | shell → phone | `{"t":"get","what":"photos","keys":["<photo>",…]}` | The photos the PC lacks; each comes as a file, purpose `contactPhoto`, name `<photo>.jpg`, kept in `<state>/contacts/`. |
@@ -277,37 +278,100 @@ Overlay surface with no input, mapped only while the dot shows).
 ## Second screen
 
 The phone as a monitor (cap `screen` in the shell's hello; Settings → ii tools → Phone as a
-monitor, `iiTools.screen`). **USB only for now:** the video does not ride the link but a
-plain socket the helper binds on 127.0.0.1, which `adb reverse` brings to the phone. The
-shell (`PhoneScreenService`) finds the phone in `adb devices -l` (a USB entry, by model),
+monitor, `iiTools.screen`). Session tools (pointer warp, workspaces, panel family, launcher)
+are announced with cap `screenTools` alongside `screen`. Two transports. **USB:** the video does not ride the link but a
+plain socket the helper binds on 127.0.0.1, which `adb reverse` brings to the phone.
+**Wi-Fi** (cap `screenWifi`, `iiTools.screen.wireless`): a side WebSocket on the link's own
+TLS port (below), no adb at all. `transport` in `start` picks one; `auto` (the default, and
+what an older phone that sends none gets) uses USB when `adb devices -l` lists the phone on
+USB and Wi-Fi otherwise. The shell (`PhoneScreenService`) finds the phone in `adb devices -l` (a USB entry, by model),
 makes the output (extend: `hyprctl output create headless II-PHONE` at the phone's size
-times `res`, `fps` and `scale`, placed against the screen that had focus on the chosen
+times `res` — landscape by default or portrait when `orient` is `"portrait"`, `fps` and `scale`, placed against the screen that had focus on the chosen
 `side`, centred, or the next free side; mirror: the focused screen) and maps the
 helper's touchscreen (`ii-tools-screen`) onto it with `hl.device`, again after a config
 reload. Whatever it made goes when the session ends.
 
 | Direction | Message | |
 | --- | --- | --- |
-| phone → shell | `{"t":"screen","a":"start","mode":"extend"\|"mirror","w":px,"h":px,"res":1\|0.75\|0.5,"fps":30\|60\|90\|120,"scale":1\|1.25\|1.5\|2,"side":"left"\|"right"\|"above"\|"below","bitrate":Mbps}` | `w`×`h`: the phone's whole display, held sideways. The phone's settings; mirror uses only the bitrate. |
+| phone → shell | `{"t":"screen","a":"start","mode":"extend"\|"mirror","orient":"landscape"\|"portrait","w":px,"h":px,"res":1\|0.75\|0.5,"fps":30\|60\|90\|120,"scale":1\|1.25\|1.5\|2,"side":"left"\|"right"\|"above"\|"below","bitrate":Mbps,"transport":"auto"\|"usb"\|"wifi","adaptive":bool}` | `w`×`h`: the phone's display pixels; extend uses `orient` (`"landscape"` default, or `"portrait"` for short×long) times `res`. The phone's settings; mirror uses only the bitrate (on Wi-Fi, the maximum when `adaptive`). A phone whose shell lacks `screenWifi` sends `usb`. |
 | phone → shell | `{"t":"screen","a":"monitors"}` → `{"t":"screen","monitors":[{"name","label","w","h","focused"}]}` | The PC's screens, for mirror's choice (`"output"` in `start`, `""` for the focused one). |
 | phone → shell | `{"t":"screen","a":"switch","output":name\|"next"}` | Mirror another screen without stopping: the capture starts again there (`{"op":"screen","a":"output","output"}` to the helper) and the phone gets `state: "size"` with `w`, `h`, `output`. |
+| phone → shell | `{"t":"screen","a":"orient","to":"landscape"\|"portrait"}` | Extend only: swap width and height while live, re-apply the Hyprland rules, re-place centred against the anchor screen, and reply `state: "size"` with `w`, `h`, `output`, `orient`. The helper restarts capture automatically when the output's mode changes. |
 | phone → shell | `{"t":"screen","a":"draw"}` | The floating toolbar: focus the phone's output and toggle live draw there. |
-| shell → phone | `{"t":"screen","state":"starting"\|"ready"\|"live"\|"stopped","port"?,"token"?,"w"?,"h"?,"mode"?,"encoder"?,"reason"?}` | `ready` carries the port to connect to on 127.0.0.1 and the one-time token; `w`×`h` is the picture. |
-| shell → phone | `{"t":"screen","err":"disabled"\|"adb"\|"usb"\|"unauthorized"\|"busy"\|"encoder"\|"timeout"\|"output"\|"bind"\|"encoder_exit"}` | `adb`: no adb on the PC; `usb`: the phone is not on USB with debugging; `unauthorized`: debugging not allowed for this PC. |
+| phone → shell | `{"t":"screen","a":"pointer"}` | Cap `screenTools`. Warp the cursor to the centre of the session's output in layout coordinates (sent when entering trackpad mode). |
+| phone → shell | `{"t":"screen","a":"workspace","to":"next"\|"prev"\|<id>}` | Cap `screenTools`. Focus the session's output and switch to `m+1`, `m-1`, or workspace `<id>` (1–100) there. |
+| phone → shell | `{"t":"screen","a":"family","to":"tablet"\|"ii"\|…}` | Cap `screenTools`. Switch panel family (`PanelFamily.select`). The shell remembers the family it switched from and restores it when the session ends if the active family is still the one it switched to. |
+| phone → shell | `{"t":"screen","a":"launcher"}` | Cap `screenTools`. Focus the session's output and toggle the current panel family's launcher (`tablet`: app drawer, `waffle`: Start menu, `ii`: overview/app drawer). |
+| shell → phone | `{"t":"screen","workspaces":[{"id","name","active","windows"}],"family":"ii"\|"tablet"\|…}` | Cap `screenTools`. Pushed when a session goes live and on change (coalesced ~100 ms): non-special workspaces on the session's output sorted by `id`, plus the active panel family. |
+| shell → phone | `{"t":"screen","state":"starting"\|"ready"\|"live"\|"size"\|"stopped","transport"?,"port"?,"token"?,"w"?,"h"?,"mode"?,"output"?,"orient"?,"encoder"?,"reason"?}` | `ready` carries `transport` (`usb`: the port to connect to on 127.0.0.1; `wifi`: no port, open `/iilink/1/screen`), the one-time token, `mode`, `output`, `orient`, and `screens`; `w`×`h` is the picture. `size` updates `w`, `h`, `output` (and `orient` when present) after `switch`, `orient`, or `adjust`. |
+| shell → phone | `{"t":"screen","err":"disabled"\|"adb"\|"usb"\|"unauthorized"\|"busy"\|"encoder"\|"timeout"\|"output"\|"bind"\|"encoder_exit"\|"wireless"}` | `adb`: no adb on the PC; `usb`: the phone is not on USB with debugging; `unauthorized`: debugging not allowed for this PC; `wireless`: Wi-Fi asked for and `iiTools.screen.wireless` is off. |
 | phone → shell | `{"t":"screen","a":"stop"}` | Leaving the picture ends it. |
 
-Helper ops: `{"op":"screen","a":"start","dev","sid","output","token","w","h","bitrate"}` /
-`{"op":"screen","a":"stop"}`; events `{"ev":"screen","dev","sid","port"}`,
-`{"ev":"screenLive","dev","sid","encoder"}` (`nvenc`, `vaapi` or `x264`) and
-`{"ev":"screenEnd","dev","sid","reason"}`.
+Helper ops: `{"op":"screen","a":"start","transport"?:"usb"|"ws","dev","sid","output","token","w","h","bitrate","rate","fps"?,"adaptive"?:bool}` /
+`{"op":"screen","a":"output","output"}` / `{"op":"screen","a":"stop"}`; events
+`{"ev":"screen","dev","sid","port"}` (USB, `port` > 0) or
+`{"ev":"screen","dev","sid","port":0,"transport":"ws"}` (`ws`),
+`{"ev":"screenLive","dev","sid","encoder"}` (`nvenc`, `vaapi` or `x264`),
+`{"ev":"screenRate","dev","sid","bitrate"}` (bps, when adaptive bitrate or live quality changes the target) and
+`{"ev":"screenEnd","dev","sid","reason"}` (`stopped`, `closed`, `timeout`, `bad_arg`, `bind`, `encoder`, `encoder_exit`).
 
-On the socket (screen.rs): the phone sends the token and `\n`, then touch frames `[1][n]`
+On the USB socket (screen.rs): the phone sends the token and `\n`, then touch frames `[1][n]`
 and n × `[u8 id][u16 x][u16 y]` (every finger down, 0–65535 of the picture), typed text
 `[2][u16 n][utf-8]` and named keys `[3][u8 n][name][u8 mods]` (1 shift, 2 ctrl, 4 alt,
 8 super) for a keyboard of its own the helper makes on the first key. The PC sends
 `[u32 length][u8 kind][u64 pts µs][Annex-B H.264]`, kind 0 the SPS/PPS, 1 a frame, 2 a key
-frame. wf-recorder captures and encodes (FLV out, one tag per frame); a still screen
-sends nothing. The phone has 60 s to connect; the session ends when the socket closes.
+frame. wf-recorder captures and encodes (FLV out, one tag per frame, `g=240`) every
+refresh (`-D`, a hardware cursor damages nothing) at the session's fps (`-r`, from the
+shell's `rate`; without it a 180 Hz screen sends 180 fps and NVENC's CBR overshoots by that
+ratio). A still screen costs ~100-byte frames. The phone has 60 s to connect; the session ends when the socket closes.
+
+On the Wi-Fi side WebSocket `/iilink/1/screen` (link's TLS port, `transport:"ws"`):
+
+- First message within 5 s: text `{"t":"hello","token":"…"}` (60 s from slot creation to
+  connect, else `screenEnd` `timeout`; wrong token closes).
+- Reconnect grace: if the socket drops, the output and touchscreen stay up and the encoder
+  stops; the phone has 10 s to reconnect with the same token (encoder restarts with a fresh
+  key frame), else `screenEnd` `closed`. Shell `stop` or a new `start` aborts at once.
+- PC → phone binary: `[u8 kind][u64 pts µs BE][Annex-B H.264]` (same packet as USB without
+  the `u32` length).
+- Phone → PC binary: the same `[1]`/`[2]`/`[3]` input frames as USB, one per WS message.
+- PC → phone text (every 1 s while live):
+  `{"t":"stats","bitrate":bps,"max":bps,"kbps":measured_out_kbps,"fps":frames_sent_last_s,"dropped":frames_dropped_last_s,"encoder":"nvenc"|"vaapi"|"x264"}`.
+- Phone → PC text:
+  - `{"t":"ping","id":n}` → `{"t":"pong","id":n}` through the same ordered writer queue as
+    video so RTT includes queued video.
+  - `{"t":"quality","bitrate":bps,"adaptive":bool}` → live max (clamped 1–80 Mbit/s) and
+    adaptive toggle; encoder restarts only if the target bitrate changes.
+  - `{"t":"idr"}` → restarts the encoder for a fresh key frame (at most once per 2 s).
+- Low latency and adaptive bitrate: packets pass through a bounded non-blocking queue.
+  Congestion (oldest queued packet > 200 ms or more than 200 ms of the target bitrate queued) drops
+  non-key frames (`kind == 1`, counted in `dropped`) until the next key frame or encoder
+  restart (`kind == 0` and `kind == 2` are never dropped). When `adaptive`, two congestion
+  events within 3 s step down ×0.7 (down to 2 Mbit/s) and 10 s without congestion step up
+  ×1.25 (up to max), at most once per 2 s, emitting `screenRate`. Either way, a drop
+  streak of 250 ms without a key frame restarts the encoder once for one. The socket has
+  `TCP_NOTSENT_LOWAT` 32 KiB, so a slow link backs up into this queue instead of the
+  kernel's send buffer, where its age could not be seen. A socket that drops lifts every
+  finger on the PC. Intended restarts (rate
+  change, `idr`, output switch) do not count toward the 5-in-30 s `encoder_exit` limit. Over Wi-Fi NVENC and x264 use
+  intra refresh (`g = fps` is the refresh period; one key frame per encoder start): a frame
+  dropped on either side heals within a second, so a refreshing encoder resumes sending as
+  soon as the backlog is gone and ignores `idr`. VA-API has no refresh and keeps key frames
+  every `fps` frames. `nvenc` passes `delay=0`.
+
+### The PC's sound on the phone (Wi-Fi sessions)
+
+Cap `screenAudio`. Phone → shell `{"t":"screen","a":"audio","on":bool}`; the shell answers
+`{"t":"screen","audio":bool}` (also when it fails or the capture ends). On: a null sink
+`ii_tools_phone` ("Phone") becomes the default and every stream moves to it; off, the end
+of the session, or the capture dying restore the previous default and unload it (a shell
+that restarts mid-session unloads a leftover one). Helper op
+`{"op":"screen","a":"audio","on":bool,"source":"ii_tools_phone.monitor"}`, event
+`{"ev":"screenAudio","dev","sid","on"}`. ffmpeg captures the monitor as Opus (48 kHz stereo,
+128 kbit/s, 10 ms frames, Ogg unwrapped by the helper). On the screen socket, ahead of any
+queued video (at most 50 packets wait; the oldest goes): `[8][u64 0][OpusHead]` (again after
+a reconnect) and `[9][u64 pts µs][Opus packet]`. The phone plays with ~40 ms in hand and skips
+to 60 ms whenever it falls 120 ms behind. USB sessions have no sound.
 
 ## Touchpad and keyboard
 

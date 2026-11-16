@@ -236,6 +236,16 @@ Item {
                         secondaryStyle: true
                     }
 
+                    Repeater {
+                        model: IiLinkService.phoneConnected ? (IiLinkService.phoneStatus?.peripherals ?? []) : []
+                        delegate: HeroPill {
+                            required property var modelData
+                            symbol: IiLinkService.peripheralIcon(modelData.kind)
+                            label: modelData.level >= 0 ? `${modelData.name} · ${modelData.level}%` : modelData.name
+                            secondaryStyle: true
+                        }
+                    }
+
                     HeroPill {
                         visible: IiLinkService.running && stats.text !== "—"
                         symbol: "memory"
@@ -273,6 +283,60 @@ Item {
 
             PairBanner {
                 Layout.fillWidth: true
+            }
+
+            // A firewall that drops the link's port makes the phone say only "can't reach
+            // the PC". Checked when this page opens and when pairing starts, never in the
+            // background: firewalld answers without root; ufw does not, so it gets a hint.
+            Process {
+                id: firewallCheck
+                property string verdict: ""
+                command: ["sh", "-c", `p=${IiLinkService.port}
+if systemctl is-active -q firewalld; then
+  firewall-cmd --state >/dev/null 2>&1 || { echo unknown; exit; }
+  for z in $(firewall-cmd --get-active-zones 2>/dev/null | grep -v '^ ' | sed 's/ (.*//'); do
+    [ "$z" = trusted ] && continue
+    firewall-cmd --zone="$z" --query-port=$p/tcp >/dev/null 2>&1 || { echo "firewalld $z"; exit; }
+  done
+  echo ok
+elif systemctl is-active -q ufw; then
+  ufw status 2>/dev/null | grep -q "^$p" && echo ok || echo ufw
+else
+  echo ok
+fi`]
+                stdout: StdioCollector {
+                    onStreamFinished: firewallCheck.verdict = text.trim()
+                }
+                Component.onCompleted: running = true
+            }
+            Connections {
+                target: IiLinkService
+                function onPairingRequestedChanged() {
+                    if (IiLinkService.pairingRequested && !firewallCheck.running)
+                        firewallCheck.running = true;
+                }
+            }
+
+            AppSettingRow {
+                Layout.fillWidth: true
+                readonly property string zone: firewallCheck.verdict.startsWith("firewalld ") ? firewallCheck.verdict.slice(10) : ""
+                readonly property string fix: firewallCheck.verdict === "ufw"
+                    ? `sudo ufw allow ${IiLinkService.port}/tcp && sudo ufw allow ${IiLinkService.port}/udp`
+                    : `sudo firewall-cmd --permanent --zone=${zone} --add-port=${IiLinkService.port}/tcp --add-port=${IiLinkService.port}/udp && sudo firewall-cmd --reload`
+                visible: firewallCheck.verdict === "ufw" || zone !== ""
+                symbol: "shield"
+                title: firewallCheck.verdict === "ufw"
+                    ? Translation.tr("ufw may block the phone")
+                    : Translation.tr("The firewall blocks the phone")
+                description: (firewallCheck.verdict === "ufw"
+                    ? Translation.tr("ufw is on and its rules need root to read. Unless port %1 is allowed, the phone only says it can't reach the PC. Tap to copy:").arg(IiLinkService.port)
+                    : Translation.tr("firewalld's %1 zone doesn't allow port %2, so the phone can't reach the PC. Tap to copy:").arg(zone).arg(IiLinkService.port))
+                    + "\n" + fix
+                clickable: true
+                onClicked: {
+                    Quickshell.clipboardText = fix;
+                    firewallCheck.running = true;
+                }
             }
 
             PairingPanel {
@@ -893,7 +957,7 @@ Item {
                         shapeOn: MaterialShape.Shape.Sunny
                         shapeOff: MaterialShape.Shape.Circle
                         title: Translation.tr("Phone as a monitor")
-                        summary: Translation.tr("Extend or mirror this PC on the phone over USB, touch included")
+                        summary: Translation.tr("Extend or mirror this PC on the phone over USB or Wi-Fi, touch included")
                         checked: Config.options.iiTools.screen.enable
                         onToggled: value => Config.options.iiTools.screen.enable = value
                     }
@@ -988,6 +1052,16 @@ Item {
 
             AppToggleRow {
                 Layout.topMargin: 4
+                visible: Config.options.iiTools.remote.enable
+                symbol: "power_settings_new"
+                title: Translation.tr("Shut down and restart from phone")
+                description: Translation.tr("The Remote page can power off or restart this PC after asking for confirmation")
+                checked: Config.options.iiTools.remote.power
+                onToggled: value => Config.options.iiTools.remote.power = value
+            }
+
+            AppToggleRow {
+                Layout.topMargin: 4
                 visible: Config.options.iiTools.clipboard.enable
                 symbol: "history"
                 title: Translation.tr("Clipboard history on phone")
@@ -996,10 +1070,20 @@ Item {
                 onToggled: value => Config.options.iiTools.clipboard.history = value
             }
 
-            // The screen goes over USB: adb carries it.
+            AppToggleRow {
+                Layout.topMargin: 4
+                visible: Config.options.iiTools.screen.enable
+                symbol: "wifi"
+                title: Translation.tr("Phone as a monitor over Wi-Fi")
+                description: Translation.tr("Without a USB cable, the screen goes over ii link on the local network. USB is still used when plugged in, for the lowest latency")
+                checked: Config.options.iiTools.screen.wireless
+                onToggled: value => Config.options.iiTools.screen.wireless = value
+            }
+
+            // The screen goes over USB when Wi-Fi is off: adb carries it.
             AppSettingRow {
                 Layout.topMargin: 4
-                visible: Config.options.iiTools.screen.enable && !PhoneScreenService.adbPresent
+                visible: Config.options.iiTools.screen.enable && !Config.options.iiTools.screen.wireless && !PhoneScreenService.adbPresent
                 symbol: "usb"
                 title: Translation.tr("Install adb for the phone as a monitor")
                 description: Translation.tr("The screen goes over USB through adb (android-tools); turn on USB debugging on the phone.")
@@ -1493,6 +1577,12 @@ Item {
             const n = st.net;
             if (n && n.type && n.type !== "none")
                 parts.push(n.type === "wifi" ? "Wi-Fi" : n.type === "cellular" ? Translation.tr("Mobile data") : n.type);
+            if (Array.isArray(st.peripherals)) {
+                for (const p of st.peripherals) {
+                    if (p.level >= 0)
+                        parts.push(`${p.name} ${p.level}%`);
+                }
+            }
             return parts;
         }
 

@@ -3007,6 +3007,8 @@ Singleton {
                 property int port: 47210
                 property JsonObject remote: JsonObject {
                     property bool enable: true
+                    // Shut down or restart the PC from the phone (the app asks first).
+                    property bool power: true
                 }
                 // The PC's audio from the phone: devices, apps, EasyEffects.
                 property JsonObject audio: JsonObject {
@@ -3082,6 +3084,8 @@ Singleton {
                 property JsonObject screen: JsonObject {
                     // Resolution, refresh, scale, side and bitrate are the phone's to choose.
                     property bool enable: true
+                    // The screen may go over Wi-Fi through the link when no USB is plugged.
+                    property bool wireless: true
                 }
                 // The phone's camera as this PC's webcam over ii link, instead of DroidCam.
                 property JsonObject camera: JsonObject {
