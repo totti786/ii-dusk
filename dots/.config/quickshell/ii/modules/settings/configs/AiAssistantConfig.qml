@@ -33,22 +33,9 @@ Item {
 
                 HelperLinkBox {
                     Layout.fillWidth: true
-                    title: Translation.tr("Google AI Studio")
-                    text: Translation.tr("Get your Gemini API Key here for free. Keys are entered from the key panel in the chat, and kept in the system keyring.")
+                    title: Translation.tr("Codex, Claude Code & OpenCode")
+                    text: Translation.tr("Use your existing agent sign-ins. Select an agent in the chat model picker; no API keys are needed in QuickShell.")
                     isFirst: true
-
-                    RippleButtonWithIcon {
-                        mainText: Translation.tr("Open Website")
-                        materialIcon: "open_in_new"
-                        Layout.topMargin: 4
-                        Layout.bottomMargin: 4
-                        colBackground: Appearance.colors.colLayer0
-                        colBackgroundHover: Appearance.colors.colLayer0Hover
-                        colRipple: Appearance.colors.colLayer0Active
-                        downAction: () => {
-                            Qt.openUrlExternally("https://aistudio.google.com/app/apikey");
-                        }
-                    }
                 }
 
                 ConfigSwitch {
@@ -146,7 +133,7 @@ Item {
         ContentSection {
             icon: "tune"
             title: Translation.tr("Models & execution")
-            tooltip: Translation.tr("Provider credentials, custom models, tool permissions and automation.")
+            tooltip: Translation.tr("Signed-in agents, shared tools and automation.")
 
             ColumnLayout {
                 Layout.fillWidth: true
@@ -154,8 +141,8 @@ Item {
 
                 ConfigSubpageRow {
                     buttonIcon: "key"
-                    title: Translation.tr("Models & Keys")
-                    description: Translation.tr("Manage provider credentials and add custom models")
+                    title: Translation.tr("Agents & Sign-in")
+                    description: Translation.tr("Check installed agents and their account sign-ins")
                     onClicked: aiRoot.activeSubPage = Qt.resolvedUrl("ai/AiModelsKeysConfig.qml")
                 }
 

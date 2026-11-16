@@ -7,6 +7,8 @@ import Quickshell.Hyprland
 import Quickshell.Widgets
 import qs
 import qs.services
+import qs.services.ai
+import qs.modules.ii.aiCompanion
 import qs.modules.common
 import qs.modules.common.functions
 import qs.modules.common.widgets
@@ -157,6 +159,7 @@ Item {
             case "mediator": return mediatorGlance;
             case "workspaces": return workspaceGlance;
             case "ai": return aiGlance;
+            case "companion": return companionGlance;
             case "dictation": return dictationGlance;
             case "recording": return recordingGlance;
             case "audioRecording": return audioRecordingGlance;
@@ -478,6 +481,23 @@ Item {
     }
 
     // ── AI ───────────────────────────────────────────────────────────────────
+    Component {
+        id: companionGlance
+        Item {
+            readonly property real preferredWidth: root.diameter
+            readonly property var heroItems: [orb]
+            CompanionOrb {
+                id: orb
+                anchors.centerIn: parent
+                width: root.diameter * .92
+                height: width
+                opacity: AiCompanionUi.dragging ? (AiCompanionUi.nearDock ? 1 : .35) : 1
+                scale: AiCompanionUi.dragging && !AiCompanionUi.nearDock ? .9 : 1
+                Behavior on opacity { NumberAnimation { duration: 120 } }
+                Behavior on scale { enabled: !AiCompanionUi.reducedMotion; NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+            }
+        }
+    }
     Component {
         id: aiGlance
 

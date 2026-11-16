@@ -4,6 +4,8 @@ import QtQuick
 import QtQuick.Effects
 import Quickshell
 import qs
+import qs.services.ai
+import qs.modules.ii.aiCompanion
 import qs.modules.common
 import qs.modules.ii.dynamicIsland.core
 
@@ -432,7 +434,8 @@ Item {
         interval: bubble.dwellMs
         onTriggered: {
             bubble.holdPending = false;
-            if (hover.hovered && bubble.mayExpand && bubble.canExpand && bubble.shown)
+            if (hover.hovered && bubble.mayExpand && bubble.canExpand && bubble.shown
+                    && !(bubble.shownId === "companion" && (AiCompanionUi.controlPressed || AiCompanionUi.dragging)))
                 bubble.expandRequested(bubble.shownId);
         }
     }
@@ -854,6 +857,18 @@ Item {
                 property: "panelWidgetsCount"
                 value: 1
             }
+            // Faces with a persistent grab target keep it at the circle's
+            // inner corner while the card grows away from the island.
+            Binding {
+                target: expandedFace.item && expandedFace.item.hasOwnProperty("bubbleSide") ? expandedFace.item : null
+                property: "bubbleSide"
+                value: surface.toRight ? "right" : "left"
+            }
+            Binding {
+                target: expandedFace.item && expandedFace.item.hasOwnProperty("bubbleDiameter") ? expandedFace.item : null
+                property: "bubbleDiameter"
+                value: bubble.diameter
+            }
             // For a face shared by several activities (the Bluetooth devices' card): which
             // one it was opened for.
             Binding {
@@ -1019,6 +1034,22 @@ Item {
         width: hit.live ? bubble.pillWidth : 0
         height: hit.live ? bubble.pillHeight : 0
 
+        Loader {
+            anchors.fill: parent
+            active: bubble.shownId === "companion"
+            sourceComponent: CompanionDragArea {
+                fromIsland: true
+                enabled: hit.live && (!bubble.isExpanded || pressed || AiCompanionUi.dragging)
+                onPressedChanged: {
+                    if (pressed) { dwellTimer.stop(); graceTimer.stop(); bubble.holdPending = false; }
+                }
+            }
+        }
+        Loader {
+            anchors.fill: parent
+            active: bubble.shownId === "companion" && hit.live
+            sourceComponent: CompanionFileDrop {}
+        }
         HoverHandler {
             id: hover
             enabled: hit.live

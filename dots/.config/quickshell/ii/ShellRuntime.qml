@@ -2,6 +2,7 @@ import "modules/common"
 import "modules/common/idleDim"
 import "services"
 import "panelFamilies"
+import "modules/ii/aiCompanion"
 
 import QtQuick
 import QtQuick.Window
@@ -11,6 +12,7 @@ import Quickshell.Hyprland
 
 Scope {
     id: root
+    AiCompanion {}
     property string openRgbApplyScript: Quickshell.shellPath("scripts/colors/openRGB/apply_openrgb.py")
     property bool openRgbStartupApplied: false
 
@@ -163,6 +165,8 @@ Scope {
             PhoneAlarmService.enabled; // Mirrors the phone's next alarm over ADB
         if (Config.options?.health?.enable ?? true)
             HealthService.enabled; // Runs health_watch: failed services, crashes, new errors, disks
+        if (Config.options?.iiTools?.enable ?? true)
+            IiLinkService.enabled; // ii tools phone link: reads peers.json, runs ii_link only with a paired phone
         return true;
         case 4: {
         const timetable = Config.options?.calendar?.timetable;
@@ -320,7 +324,7 @@ Scope {
 
         active: GlobalStates.settingsOpen || GlobalStates.settingsSuspendedForScreenshot || keptAlive
         // Synchronous: the window itself builds in a few tens of ms once
-        // compiled (see settingsWarmup), while an asynchronous build held the
+        // compiled, while an asynchronous build held the
         // window back for most of a second. Pages still load asynchronously.
         asynchronous: false
         source: "SettingsWindow.qml"
@@ -361,20 +365,7 @@ Scope {
         }
     }
 
-    // Compiles Settings and every page ahead of the first open. Compiling is
-    // what made the first open of a session (and each first page visit) slow;
-    // an asynchronous component compiles off the GUI thread, and the engine
-    // keeps compiled code after a first visit anyway. No objects are created.
-    Timer {
-        id: settingsWarmup
-        property var components: []
-        interval: 15000
-        running: Config.ready && components.length === 0
-        onTriggered: {
-            const urls = ["SettingsWindow.qml"].concat(SettingsPageRegistry.pages.map(page => page.component));
-            settingsWarmup.components = urls.map(url => Qt.createComponent(url, Component.Asynchronous));
-        }
-    }
+    // Settings pages compile on demand; do not retain every page at startup.
 
     // Loader deletion is deferred. Collect only after its tree and the
     // window-owned search data have been released, never inside destruction.

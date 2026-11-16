@@ -19,11 +19,8 @@ import qs.services
  * the audio already captured — the same reason the file picker moved into
  * `Ai` instead of living in the sidebar that opened it.
  *
- * Recording is real on any machine with PipeWire (`pw-record`, checked once).
- * Transcription only runs if a local backend is actually found — this
- * machine has none, and the honest answer to that is a setup state, not an
- * attempt to install one. There is no wake word and no listening outside the
- * `recording` state; leaving that state, by any path, always stops capture.
+ * Capture uses PipeWire; transcription uses local Voxtype exclusively.
+ * There is no wake word or capture outside the recording state.
  */
 QtObject {
     id: root
@@ -36,10 +33,8 @@ QtObject {
     property bool recorderAvailable: false
     property bool backendChecked: false
     property bool backendAvailable: false
-    /** Which backend answered `which` first: "whisper-cli", "whisper", "faster-whisper", or "". */
+    /** Voxtype is the sole transcription backend. */
     property string backendName: ""
-    /** GGML model path, only set when `backendName` is "whisper-cli". */
-    property string modelPath: ""
 
     readonly property bool enabled: Config.options?.ai?.voice?.enabled ?? true
     readonly property bool available: root.enabled && root.recorderAvailable && root.backendAvailable
@@ -109,7 +104,7 @@ QtObject {
         if (!root.recorderAvailable)
             return Translation.tr("No audio recorder was found (pw-record is missing).");
         if (!root.backendAvailable)
-            return Translation.tr("No local speech-to-text engine is installed. whisper.cpp (as `whisper-cli`) is the one this shell knows how to drive; nothing is installed automatically.");
+            return Translation.tr("Voxtype or its local base model is unavailable. Install Voxtype and its base model, then check again.");
         return "";
     }
 
@@ -223,25 +218,17 @@ QtObject {
     }
 
     function startTranscription() {
-        root.state = "transcribing";
-        const outputBase = root.recordingPath.replace(/\.wav$/, "");
-        if (root.backendName === "whisper-cli") {
-            transcribeProc.outputPath = `${outputBase}.txt`;
-            // "auto" rather than a fixed language: dictation here is not
-            // English-only, and the multilingual base model detects the
-            // spoken language itself from the first few seconds of audio.
-            transcribeProc.command = ["whisper-cli", "-m", root.modelPath, "-l", "auto",
-                "-f", root.recordingPath, "-otxt", "-of", outputBase, "-nt"];
-        } else if (root.backendName === "whisper") {
-            transcribeProc.outputPath = `${outputBase}.txt`;
-            transcribeProc.command = ["whisper", root.recordingPath, "--model", "base",
-                "--output_format", "txt", "--output_dir", root.voiceDir, "--fp16", "False"];
-        } else {
+        if (!root.available) {
             root.state = "error";
             root.errorText = root.unavailableReason();
             root.cleanupRecording();
             return;
         }
+        root.state = "transcribing";
+        const outputBase = root.recordingPath.replace(/\.wav$/, "");
+        transcribeProc.outputPath = `${outputBase}.txt`;
+        transcribeProc.command = ["python3", Directories.scriptPath + "/ai/orb_audio.py", "transcribe",
+            root.recordingPath, transcribeProc.outputPath];
         transcribeProc.running = true;
     }
 
@@ -250,6 +237,17 @@ QtObject {
         interval: 200
         repeat: true
         onTriggered: root.recordingElapsedMs = Date.now() - root.recordingStartedAt
+    }
+
+    // The voice orb captures levels and stops on pauses itself, then hands
+    // its closed WAV to the same local transcription/review pipeline.
+    function transcribeFile(path: string, surface: string): bool {
+        if (!root.available || root.state !== "idle")
+            return false;
+        root.activeSurface = surface;
+        root.recordingPath = path;
+        root.startTranscription();
+        return true;
     }
 
     property Timer maxDurationTimer: Timer {
@@ -272,28 +270,13 @@ QtObject {
 
     property Process backendCheckProc: Process {
         id: backendCheckProc
-        // Checked in the order the plan recommends: whisper.cpp's CLI first,
-        // then the openai-whisper Python package, then faster-whisper, whose
-        // presence is recorded but not yet driven (it ships no stable CLI).
-        // whisper-cli only counts as found alongside its GGML model — the
-        // binary alone cannot transcribe anything — so a second line carries
-        // the model path the same run discovered it at.
-        command: ["bash", "-c", "" +
-            "model=\"$HOME/.local/share/whisper.cpp/models/ggml-base.bin\"; " +
-            "if command -v whisper-cli >/dev/null 2>&1 && [ -f \"$model\" ]; then echo whisper-cli; echo \"$model\"; " +
-            "elif command -v whisper >/dev/null 2>&1; then echo whisper; " +
-            "elif command -v faster-whisper >/dev/null 2>&1; then echo faster-whisper; " +
-            "else echo none; fi"]
+        command: ["bash", "-c", "command -v voxtype >/dev/null 2>&1 && test -f \"$HOME/.local/share/voxtype/models/ggml-base.bin\" && echo voxtype || echo none"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const lines = text.trim().split("\n");
                 const found = lines[0] ?? "none";
                 root.backendName = found === "none" ? "" : found;
-                root.modelPath = found === "whisper-cli" ? (lines[1] ?? "").trim() : "";
-                // faster-whisper is detected but not driven yet: it has no
-                // stable CLI to shell out to, only a Python API. Reporting it
-                // as available would offer a tool that then fails every time.
-                root.backendAvailable = found === "whisper-cli" || found === "whisper";
+                root.backendAvailable = found === "voxtype";
                 root.backendChecked = true;
             }
         }

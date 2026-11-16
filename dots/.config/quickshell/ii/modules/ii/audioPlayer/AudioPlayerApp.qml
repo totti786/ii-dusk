@@ -28,10 +28,14 @@ Scope {
     }
 
     Loader {
+        id: deferredWindowLoader
         active: root.warm || GlobalStates.audioPlayerOpen
         asynchronous: !GlobalStates.audioPlayerOpen
-        sourceComponent: AudioPlayerWindow {
-            onCloseRequested: GlobalStates.audioPlayerOpen = false
+        source: "AudioPlayerWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { GlobalStates.audioPlayerOpen = false }
         }
     }
 

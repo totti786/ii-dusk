@@ -81,37 +81,20 @@ class OpenRouterCatalogueTests(unittest.TestCase):
         self.assertIn("providerIconIsRemote", PAGE)
         self.assertNotIn("text: modelCard.modelData.description", PAGE)
 
-    def test_catalogue_uses_the_host_header_and_vertical_card_metadata(self):
-        self.assertIn("property bool hostOwnsCatalogueHeader", PICKER)
-        self.assertIn("showHeader: !root.hostOwnsCatalogueHeader", PICKER)
-        self.assertIn("function closeOpenRouterModels()", PICKER)
-        self.assertIn("function refreshOpenRouterModels()", PICKER)
-        self.assertIn("property bool showHeader", PAGE)
-        self.assertIn("id: modelDetailsColumn", PAGE)
-        self.assertIn("id: modelMetadataColumn", PAGE)
-        self.assertIn("id: addModelButton", PAGE)
-        self.assertIn("readonly property bool modelCatalogueOpen", CONTROL_BAR)
-        self.assertIn("modelCatalogueTitle", CONTROL_BAR)
-        self.assertIn("picker.closeModelCatalogue()", CONTROL_BAR)
-        self.assertIn("picker.refreshModelCatalogue()", CONTROL_BAR)
+    def test_agent_picker_uses_provider_headers_and_model_metadata(self):
+        self.assertIn('header: true, providerId: providerId, title: provider.name', PICKER)
+        self.assertIn('modelButton.entry?.description', PICKER)
+        self.assertIn('modelButton.entry?.title', PICKER)
 
-    def test_catalogue_fills_the_canvas_list_area_without_affecting_compact_hosts(self):
-        self.assertIn("property bool fillAvailableHeight", PAGE)
-        self.assertIn("Layout.fillHeight: root.fillAvailableHeight", PAGE)
-        self.assertIn("property bool fillOpenRouterAvailableHeight", PICKER)
-        self.assertIn("fillAvailableHeight: root.fillOpenRouterAvailableHeight", PICKER)
-        self.assertIn("fillOpenRouterAvailableHeight: true", CONTROL_BAR)
+    def test_agent_picker_bounds_its_scrollable_model_list(self):
+        self.assertIn('ListView {', PICKER)
+        self.assertIn('bottom: parent.bottom', PICKER)
+        self.assertIn('clip: true', PICKER)
 
-    def test_import_uses_existing_openrouter_provider_and_config_shape(self):
-        self.assertIn('provider: "openrouter"', PAGE)
-        self.assertIn("Config.options.ai.customModels", PAGE)
-        self.assertIn('capabilitySource: "detected"', PAGE)
-        self.assertIn('entry?.provider === "openrouter"', PAGE)
-        entry = PAGE.split("list.push({", 1)[1].split("});", 1)[0]
-        self.assertNotIn("apiKey", entry)
-        self.assertNotIn("Authorization", entry)
-        self.assertIn('kind: "openrouter-catalog"', PICKER)
-        self.assertIn('root.openRouterModelsOpen = true', PICKER)
+    def test_active_picker_does_not_import_api_key_provider_models(self):
+        self.assertNotIn('AiOpenRouterModelsPage', PICKER)
+        self.assertNotIn('customModels', PICKER)
+        self.assertIn('Ai.refreshOpencodeModels()', PICKER)
 
 
 if __name__ == "__main__":

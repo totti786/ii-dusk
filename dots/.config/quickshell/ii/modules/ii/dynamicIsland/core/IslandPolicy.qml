@@ -176,7 +176,7 @@ Singleton {
      * and left, the rest chain outwards from them.
      */
     readonly property var bubbleActivities: {
-        const list = ["shelf", "media", "mediator", "workspaces", "ai", "recording", "audioRecording", "privacy", "discordVoice", "phoneMirror", "phoneLink",
+        const list = ["shelf", "media", "mediator", "workspaces", "ai", "companion", "recording", "audioRecording", "privacy", "discordVoice", "phoneMirror", "phoneLink",
             "timer", "dictation", "mode", "update", "earbuds", "btPhone", "systemTray", "easyEffects", "soundscapes", "quickShare", "progress", "monitorAlert", "focus", "prayer"];
         if (Config.ready && root.legacy && root.legacy.disableWorkspacesBubble === true)
             list.splice(list.indexOf("workspaces"), 1);
@@ -215,6 +215,8 @@ Singleton {
     readonly property bool ownsOsd: root.enabled && root.widgetEnabled("osd")
     readonly property bool ownsModeFlash: root.enabled
     readonly property bool ownsBluetoothPopup: root.enabled && root.widgetEnabled("bluetooth")
+    /** Calls: the island's card; otherwise the corner popup (phoneCallPopup). */
+    readonly property bool ownsPhoneCall: root.enabled && root.widgetEnabled("phoneCall")
     readonly property bool ownsKeyboardPopup: root.enabled && root.widgetEnabled("keyboard")
     readonly property bool ownsLocalSendPopup: root.enabled && root.widgetEnabled("localSend")
     /** Whether the drag panel offers a KDE Connect column beside LocalSend. */

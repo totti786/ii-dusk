@@ -41,8 +41,11 @@ Scope {
         id: windowLoader
         requested: GlobalStates.weatherAppOpen
         retainFor: 30000
-        sourceComponent: WeatherAppWindow {
-            onCloseRequested: root.requestClose()
+        source: "WeatherAppWindow.qml"
+
+        Connections {
+            target: windowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

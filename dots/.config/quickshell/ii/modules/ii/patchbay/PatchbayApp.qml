@@ -35,10 +35,14 @@ Scope {
     }
 
     RetainedLoader {
+        id: deferredWindowLoader
         requested: GlobalStates.patchbayOpen
         retainFor: 30000
-        sourceComponent: PatchbayWindow {
-            onCloseRequested: root.requestClose()
+        source: "PatchbayWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

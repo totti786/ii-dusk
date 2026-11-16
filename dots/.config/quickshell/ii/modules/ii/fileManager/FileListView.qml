@@ -371,7 +371,18 @@ Item {
         Drag.dragType: Drag.Automatic
         Drag.supportedActions: Qt.CopyAction | Qt.MoveAction | Qt.LinkAction
         Drag.proposedAction: Qt.MoveAction
-        Drag.onDragFinished: mouse.dragging = false
+        Drag.onDragFinished: {
+            // The platform drag owns the release; the source MouseArea may
+            // not receive it. Disarm the original press before the next move.
+            mouse.pressIndex = -1;
+            mouse.collapseOnRelease = false;
+            mouse.rubber = false;
+            mouse.dragging = false;
+            band.visible = false;
+            root.dropHighlight = "";
+            dragProxy.Drag.active = false;
+            dragProxy.Drag.mimeData = ({});
+        }
     }
 
     MouseArea {
@@ -472,6 +483,7 @@ Item {
                 root.selectRequested(pressIndex, 0);
             rubber = false;
             dragging = false;
+            pressIndex = -1;
         }
         onDoubleClicked: m => {
             const i = idxAt(m.x, m.y);

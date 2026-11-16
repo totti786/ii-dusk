@@ -140,11 +140,11 @@ class VoiceSectionTests(unittest.TestCase):
         self.assertIn("page.linuxFamily", guide)
         self.assertIn("codeSnippet: page.voiceDepsInstallCommand", guide)
 
-    def test_the_install_command_builds_and_links_whisper_cli(self):
+    def test_the_install_command_sets_up_voxtype_base(self):
         command = body_between(CONFIG_PAGE, "function voiceDepsInstallCommandFor(value: string): string {", "\n    }")
-        self.assertIn("whisper.cpp", command)
-        self.assertIn("whisper-cli", command)
-        self.assertIn("download-ggml-model.sh", command)
+        self.assertIn("voxtype setup --download --model base", command)
+        self.assertNotIn("whisper-cli", command)
+
 
 
 if __name__ == "__main__":

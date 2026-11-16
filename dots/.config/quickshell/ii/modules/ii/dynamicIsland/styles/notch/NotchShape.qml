@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Shapes
+import "NotchWave.js" as Wave
 
 /**
  * The island's silhouette as one antialiased path: body, bottom corners and the
@@ -47,6 +48,23 @@ Item {
     readonly property alias bodyRadius: root.bottomRadius
 
     property color color: "black"
+    // The layer may include extra room below the logical body for outward waves.
+    property real surfaceHeight: height
+
+    // Local deformation of the lower edge; zero preserves the resting silhouette.
+    property real bottomWaveAmplitude: 0
+    property real bottomWavePosition: .5
+    property real bottomWavePhase: 0
+    readonly property var bottomWave: {
+        const g = root.sculptedGeometry;
+        const left = g ? g.w-g.fo[0] : root.clampedShoulder+root.clampedBottom;
+        const right = g ? g.fo[0] : root.width-root.clampedShoulder-root.clampedBottom;
+        return Wave.segments(left, right, root.surfaceHeight,
+            Math.min(root.surfaceHeight*.2, root.bottomWaveAmplitude),
+            root.bottomWavePhase, Math.max(0, Math.min(1, root.bottomWavePosition)));
+    }
+    function bottomWaveSvg(): string { return Wave.svg(root.bottomWave); }
+
 
     /**
      * The sculpted shell: each side is one long S instead of a small concave
@@ -77,9 +95,9 @@ Item {
     /** The straight part of the silhouette: what content and bubbles measure. */
     readonly property real bodyWidth: Math.max(0, root.width - 2 * root.clampedShoulder)
 
-    readonly property real clampedShoulder: Math.min(root.shoulder, root.height, root.width / 2)
-    readonly property real clampedTop: Math.min(root.topRadius, root.height / 2, Math.max(0, root.width / 2 - root.clampedShoulder))
-    readonly property real clampedBottom: Math.min(root.bottomRadius, root.height / 2, Math.max(0, root.width / 2 - root.clampedShoulder))
+    readonly property real clampedShoulder: Math.min(root.shoulder, root.surfaceHeight, root.width / 2)
+    readonly property real clampedTop: Math.min(root.topRadius, root.surfaceHeight / 2, Math.max(0, root.width / 2 - root.clampedShoulder))
+    readonly property real clampedBottom: Math.min(root.bottomRadius, root.surfaceHeight / 2, Math.max(0, root.width / 2 - root.clampedShoulder))
 
     /**
      * The sculpted silhouette as an SVG path: the halves of each S and the
@@ -95,7 +113,7 @@ Item {
         if (!root.sculptedPath)
             return null;
         const w = root.width;
-        const h = root.height;
+        const h = root.surfaceHeight;
         const s = root.clampedShoulder;
         if (w <= 0 || h <= 0)
             return null;
@@ -131,7 +149,7 @@ Item {
             + " C " + pt(g.c1) + " " + pt(g.c2) + " " + pt(g.j1)
             + " L " + pt(g.j2)
             + " C " + pt(g.c3) + " " + pt(g.c4) + " " + pt(g.fo)
-            + " L " + pt(L.fo)
+            + root.bottomWaveSvg()
             + " C " + pt(L.c4) + " " + pt(L.c3) + " " + pt(L.j2)
             + " L " + pt(L.j1)
             + " C " + pt(L.c2) + " " + pt(L.c1) + " " + pt(L.p0) + " Z";
@@ -240,28 +258,84 @@ Item {
 
             PathLine {
                 x: path.xR
-                y: root.height - path.br
+                y: root.surfaceHeight - path.br
             }
 
             PathAngleArc {
                 moveToStart: false
                 centerX: path.xR - path.br
-                centerY: root.height - path.br
+                centerY: root.surfaceHeight - path.br
                 radiusX: path.br
                 radiusY: path.br
                 startAngle: 0
                 sweepAngle: 90
             }
 
-            PathLine {
-                x: path.xL + path.br
-                y: root.height
+            PathCubic {
+                x: root.bottomWave[0].x; y: root.bottomWave[0].y
+                control1X: root.bottomWave[0].c1x; control1Y: root.bottomWave[0].c1y
+                control2X: root.bottomWave[0].c2x; control2Y: root.bottomWave[0].c2y
+            }
+            PathCubic {
+                x: root.bottomWave[1].x; y: root.bottomWave[1].y
+                control1X: root.bottomWave[1].c1x; control1Y: root.bottomWave[1].c1y
+                control2X: root.bottomWave[1].c2x; control2Y: root.bottomWave[1].c2y
+            }
+            PathCubic {
+                x: root.bottomWave[2].x; y: root.bottomWave[2].y
+                control1X: root.bottomWave[2].c1x; control1Y: root.bottomWave[2].c1y
+                control2X: root.bottomWave[2].c2x; control2Y: root.bottomWave[2].c2y
+            }
+            PathCubic {
+                x: root.bottomWave[3].x; y: root.bottomWave[3].y
+                control1X: root.bottomWave[3].c1x; control1Y: root.bottomWave[3].c1y
+                control2X: root.bottomWave[3].c2x; control2Y: root.bottomWave[3].c2y
+            }
+            PathCubic {
+                x: root.bottomWave[4].x; y: root.bottomWave[4].y
+                control1X: root.bottomWave[4].c1x; control1Y: root.bottomWave[4].c1y
+                control2X: root.bottomWave[4].c2x; control2Y: root.bottomWave[4].c2y
+            }
+            PathCubic {
+                x: root.bottomWave[5].x; y: root.bottomWave[5].y
+                control1X: root.bottomWave[5].c1x; control1Y: root.bottomWave[5].c1y
+                control2X: root.bottomWave[5].c2x; control2Y: root.bottomWave[5].c2y
+            }
+            PathCubic {
+                x: root.bottomWave[6].x; y: root.bottomWave[6].y
+                control1X: root.bottomWave[6].c1x; control1Y: root.bottomWave[6].c1y
+                control2X: root.bottomWave[6].c2x; control2Y: root.bottomWave[6].c2y
+            }
+            PathCubic {
+                x: root.bottomWave[7].x; y: root.bottomWave[7].y
+                control1X: root.bottomWave[7].c1x; control1Y: root.bottomWave[7].c1y
+                control2X: root.bottomWave[7].c2x; control2Y: root.bottomWave[7].c2y
+            }
+            PathCubic {
+                x: root.bottomWave[8].x; y: root.bottomWave[8].y
+                control1X: root.bottomWave[8].c1x; control1Y: root.bottomWave[8].c1y
+                control2X: root.bottomWave[8].c2x; control2Y: root.bottomWave[8].c2y
+            }
+            PathCubic {
+                x: root.bottomWave[9].x; y: root.bottomWave[9].y
+                control1X: root.bottomWave[9].c1x; control1Y: root.bottomWave[9].c1y
+                control2X: root.bottomWave[9].c2x; control2Y: root.bottomWave[9].c2y
+            }
+            PathCubic {
+                x: root.bottomWave[10].x; y: root.bottomWave[10].y
+                control1X: root.bottomWave[10].c1x; control1Y: root.bottomWave[10].c1y
+                control2X: root.bottomWave[10].c2x; control2Y: root.bottomWave[10].c2y
+            }
+            PathCubic {
+                x: root.bottomWave[11].x; y: root.bottomWave[11].y
+                control1X: root.bottomWave[11].c1x; control1Y: root.bottomWave[11].c1y
+                control2X: root.bottomWave[11].c2x; control2Y: root.bottomWave[11].c2y
             }
 
             PathAngleArc {
                 moveToStart: false
                 centerX: path.xL + path.br
-                centerY: root.height - path.br
+                centerY: root.surfaceHeight - path.br
                 radiusX: path.br
                 radiusY: path.br
                 startAngle: 90

@@ -42,10 +42,14 @@ Scope {
     }
 
     RetainedLoader {
+        id: deferredWindowLoader
         requested: GlobalStates.easyEffectsAppOpen && root.appEnabled
         retainFor: 30000
-        sourceComponent: EasyEffectsAppWindow {
-            onCloseRequested: root.requestClose()
+        source: "EasyEffectsAppWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

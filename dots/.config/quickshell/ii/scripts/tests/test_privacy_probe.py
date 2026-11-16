@@ -330,7 +330,7 @@ class QmlIntegrationContractTests(unittest.TestCase):
         self.assertIn('id: "privacy_pill"', registry)
         self.assertIn('configPage: "PrivacyPillConfig.qml"', registry)
         self.assertIn('case "privacy_pill":', bar_component)
-        self.assertIn("PrivacyPill {", bar_component)
+        self.assertIn("widgets/privacy/PrivacyPill.qml", bar_component)
         self.assertIn('"widgets/PrivacyPillConfig.qml"', settings_registry)
 
     def test_the_widget_has_a_single_design(self):

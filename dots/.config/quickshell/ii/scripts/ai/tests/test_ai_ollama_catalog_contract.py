@@ -85,14 +85,10 @@ class OllamaPullServiceTests(unittest.TestCase):
 
 
 class OllamaSidebarCatalogueTests(unittest.TestCase):
-    def test_ollama_catalogue_is_reachable_from_its_provider_group(self):
-        self.assertIn('kind: "ollama-catalog"', PICKER)
-        self.assertIn("root.ollamaModelsOpen = true", PICKER)
-        self.assertIn("AiOllamaModelsPage", PICKER)
-        self.assertIn("function closeModelCatalogue()", PICKER)
-        self.assertIn("function refreshModelCatalogue()", PICKER)
-        self.assertIn('providerIds[i] === "ollama"', PICKER)
-        self.assertIn("models.length === 0 && !hasCatalogueEntry", PICKER)
+    def test_active_picker_has_only_signed_in_agent_choices(self):
+        self.assertIn('for (const providerId of Ai.providerIds)', PICKER)
+        self.assertNotIn('AiOllamaModelsPage', PICKER)
+        self.assertNotIn('OllamaCatalog', PICKER)
 
     def test_page_makes_download_explicit_and_shows_live_state(self):
         self.assertIn("Pulling downloads through your local Ollama daemon.", PAGE)
@@ -144,10 +140,9 @@ class OllamaSidebarCatalogueTests(unittest.TestCase):
         self.assertIn("if (root.canvasViewOpen)", keys_handler)
         self.assertLess(keys_handler.index("if (root.canvasViewOpen)"), keys_handler.index("messageInputField.forceActiveFocus()"))
 
-    def test_more_controls_can_open_the_ollama_catalogue_directly(self):
-        self.assertIn('root.activePopover === "ollamaModels"', CONTROL_BAR)
-        self.assertIn("id: ollamaModelsComponent", CONTROL_BAR)
-        self.assertIn('root.openView("ollamaModels", "more")', CONTROL_BAR)
+    def test_toolbar_opens_agent_signins_instead_of_ollama_catalog(self):
+        self.assertIn('Agent sign-ins', CONTROL_BAR)
+        self.assertNotIn('AiOllamaModelsPage', CONTROL_BAR)
 
 
 if __name__ == "__main__":

@@ -40,10 +40,14 @@ Scope {
     }
 
     RetainedLoader {
+        id: deferredWindowLoader
         requested: GlobalStates.soundscapesOpen
         retainFor: 30000
-        sourceComponent: SoundscapesWindow {
-            onCloseRequested: GlobalStates.soundscapesOpen = false
+        source: "SoundscapesWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { GlobalStates.soundscapesOpen = false }
         }
     }
 

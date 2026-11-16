@@ -435,6 +435,7 @@ Item {
 
     // Frosted surfaces share the artwork's coordinate space and sit under their content.
     MediaModeImmersiveGlass {
+        z: 2
         x: sourceChip.x
         y: sourceChip.y
         width: sourceChip.width
@@ -477,35 +478,102 @@ Item {
     }
 
     // Top bar ---------------------------------------------------------------
+    // Keep every source one click away; overflow scrolls before it can reach the toolbar.
     Rectangle {
         id: sourceChip
+        z: 3
         opacity: root.introChrome
         anchors.left: parent.left
         anchors.leftMargin: root.gutter
         anchors.verticalCenter: toolbar.verticalCenter
-        implicitWidth: sourceRow.implicitWidth + Appearance.sizes.elevationMargin * 3
-        implicitHeight: Appearance.sizes.minimumTouchTarget - Appearance.sizes.elevationMargin / 2
+        implicitWidth: Math.min(sourceRow.implicitWidth + 8, Math.max(48, toolbar.x - root.gutter - 16))
+        implicitHeight: Appearance.sizes.minimumTouchTarget + 8
         radius: Appearance.rounding.full
         color: ColorUtils.applyAlpha(root.glass, 0)
-        RowLayout {
-            id: sourceRow
-            anchors.centerIn: parent
-            spacing: Appearance.sizes.elevationMargin * 0.8
-            MaterialSymbol {
-                text: root.context.localSource ? "library_music" : (root.context.videoActive ? "music_video" :
-                                                                                               "graphic_eq")
-                iconSize: Appearance.font.pixelSize.large
-                color: root.foreground
-                fill: 1
+
+        component SourceButton: RippleButton {
+            id: sourceButton
+            property var targetPlayer: null
+            property bool local: false
+            readonly property bool selected: local ? root.context.localSource
+                : root.context.applicationsSource && root.context.player === targetPlayer
+            readonly property string label: local ? Translation.tr("Local music")
+                : (targetPlayer?.identity || targetPlayer?.desktopEntry || Translation.tr("Player"))
+            implicitWidth: buttonContent.implicitWidth + 24
+            implicitHeight: Appearance.sizes.minimumTouchTarget
+            buttonRadius: Appearance.rounding.full
+            colBackground: selected ? root.foreground : "transparent"
+            colBackgroundHover: selected ? ColorUtils.applyAlpha(root.foreground, 0.9)
+                : ColorUtils.applyAlpha(root.foreground, 0.12)
+            colBackgroundActive: ColorUtils.applyAlpha(root.foreground, 0.24)
+            Accessible.name: Translation.tr("Switch to ") + label
+            Accessible.role: Accessible.RadioButton
+            Accessible.checked: selected
+            RowLayout {
+                id: buttonContent
+                anchors.centerIn: parent
+                spacing: 6
+                readonly property color contentColor: sourceButton.selected
+                    ? ColorUtils.getContrastingTextColor(root.foreground) : root.foreground
+                MaterialSymbol {
+                    text: sourceButton.local ? "library_music"
+                        : (sourceButton.targetPlayer?.isPlaying ? "graphic_eq" : "music_note")
+                    iconSize: 18
+                    color: buttonContent.contentColor
+                }
+                StyledText {
+                    text: sourceButton.label
+                    Layout.maximumWidth: Math.max(0, Math.min(160, sourceChip.width - 70))
+                    elide: Text.ElideRight
+                    color: buttonContent.contentColor
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    font.weight: Font.DemiBold
+                }
             }
-            StyledText {
-                Layout.maximumWidth: root.width * 0.3
-                text: root.context.localSource ? Translation.tr("Local music") : (root.context.player?.identity
-                                                                                  || Translation.tr("Now playing"))
-                elide: Text.ElideRight
-                color: root.foreground
-                font.pixelSize: Appearance.font.pixelSize.small
-                font.weight: Font.DemiBold
+            onClicked: {
+                if (!selected) {
+                    if (local) {
+                        if (root.context.applicationsSource && root.context.player?.isPlaying)
+                            root.context.player.pause();
+                        MprisController.setMediaModeSource("local");
+                        LocalMediaService.claimMprisControl();
+                    } else {
+                        if (root.context.localSource && LocalMediaService.player?.isPlaying)
+                            LocalMediaService.pause();
+                        LocalMediaService.releaseMprisControl();
+                        MprisController.selectMediaModeApplicationPlayer(targetPlayer);
+                    }
+                }
+                root.setOptionsOpen(false);
+            }
+            PopupToolTip { text: sourceButton.label }
+        }
+
+        Flickable {
+            anchors.fill: parent
+            anchors.margins: 4
+            contentWidth: sourceRow.implicitWidth
+            contentHeight: height
+            flickableDirection: Flickable.HorizontalFlick
+            boundsBehavior: Flickable.StopAtBounds
+            clip: true
+            RowLayout {
+                id: sourceRow
+                spacing: 4
+                Repeater {
+                    model: root.context.showPlayerSwitcher ? MprisController.applicationPlayers
+                        : (root.context.applicationsSource && root.context.player ? [root.context.player] : [])
+                    delegate: SourceButton {
+                        required property var modelData
+                        targetPlayer: modelData
+                        enabled: root.context.showPlayerSwitcher
+                    }
+                }
+                SourceButton {
+                    local: true
+                    visible: root.context.showPlayerSwitcher || root.context.localSource
+                    enabled: root.context.showPlayerSwitcher
+                }
             }
         }
     }
@@ -835,6 +903,7 @@ Item {
 
                     MediaModeImmersiveButton {
                         symbol: "shuffle"
+                        enabled: (root.context.player?.canControl ?? false) && (root.context.player?.shuffleSupported ?? false)
                         quiet: true
                         foreground: root.foreground
                         highlighted: root.context.player?.shuffle ?? false
@@ -868,6 +937,7 @@ Item {
                         buttonRadius: playing ? Appearance.rounding.large : implicitWidth / 2
                         foreground: root.foreground
                         tooltip: Translation.tr("Play / Pause")
+                        enabled: root.context.player?.canTogglePlaying ?? false
                         onClicked: root.context.player?.togglePlaying()
                         Behavior on buttonRadius {
                             NumberAnimation {
@@ -896,6 +966,7 @@ Item {
                         foreground: root.foreground
                         highlighted: (root.context.player?.loopState ?? 0) !== 0
                         tooltip: Translation.tr("Repeat")
+                        enabled: (root.context.player?.canControl ?? false) && (root.context.player?.loopSupported ?? false)
                         onClicked: if (root.context.player)
                                        root.context.player.loopState = ((root.context.player.loopState ?? 0) + 1) % 3
                     }

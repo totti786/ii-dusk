@@ -42,8 +42,11 @@ Scope {
         id: windowLoader
         requested: GlobalStates.healthAppOpen
         retainFor: 30000
-        sourceComponent: HealthAppWindow {
-            onCloseRequested: root.requestClose()
+        source: "HealthAppWindow.qml"
+
+        Connections {
+            target: windowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

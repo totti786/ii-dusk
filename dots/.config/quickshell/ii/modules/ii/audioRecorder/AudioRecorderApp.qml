@@ -30,9 +30,13 @@ Scope {
     }
 
     Loader {
+        id: deferredWindowLoader
         active: GlobalStates.audioRecorderOpen
-        sourceComponent: AudioRecorderWindow {
-            onCloseRequested: root.requestClose()
+        source: "AudioRecorderWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

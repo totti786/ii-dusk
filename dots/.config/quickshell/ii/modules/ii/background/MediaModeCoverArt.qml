@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
 import qs.modules.common
 import qs.modules.common.utils
@@ -411,6 +412,7 @@ Item {
 
             // Shuffle Button
             RippleButton {
+                enabled: (coverArt.player?.canControl ?? false) && (coverArt.player?.shuffleSupported ?? false)
                 implicitWidth: 44
                 implicitHeight: 44
                 buttonRadius: Appearance.rounding.full
@@ -433,6 +435,7 @@ Item {
 
             // Previous Button
             RippleButton {
+                enabled: coverArt.player?.canGoPrevious ?? false
                 implicitWidth: 56
                 implicitHeight: 56
                 buttonRadius: Appearance.rounding.verylarge
@@ -452,6 +455,7 @@ Item {
 
             // Play / Pause Main Hero Button
             RippleButton {
+                enabled: coverArt.player?.canTogglePlaying ?? false
                 implicitWidth: 76
                 implicitHeight: 76
                 buttonRadius: Appearance.rounding.full
@@ -471,6 +475,7 @@ Item {
 
             // Next Button
             RippleButton {
+                enabled: coverArt.player?.canGoNext ?? false
                 implicitWidth: 56
                 implicitHeight: 56
                 buttonRadius: Appearance.rounding.verylarge
@@ -490,6 +495,7 @@ Item {
 
             // Loop Button
             RippleButton {
+                enabled: (coverArt.player?.canControl ?? false) && (coverArt.player?.loopSupported ?? false)
                 implicitWidth: 44
                 implicitHeight: 44
                 buttonRadius: Appearance.rounding.full
@@ -519,7 +525,8 @@ Item {
             Layout.maximumWidth: coverArt.expanded ? 520 : 420
             Layout.alignment: Qt.AlignHCenter
             spacing: 10
-            visible: Config.options.background.mediaMode.showVolumeSlider ?? true
+            visible: (Config.options.background.mediaMode.showVolumeSlider ?? true)
+                && (coverArt.player?.volumeSupported ?? false) && (coverArt.player?.canControl ?? false)
 
             Behavior on Layout.maximumWidth {
                 NumberAnimation {
@@ -549,6 +556,57 @@ Item {
                 value: coverArt.player?.volume ?? 1.0
                 onMoved: {
                     if (coverArt.player) coverArt.player.volume = value;
+                }
+            }
+        }
+
+        RippleButton {
+            Layout.alignment: Qt.AlignHCenter
+            implicitWidth: moreLabel.implicitWidth + 32
+            implicitHeight: 40
+            buttonRadius: Appearance.rounding.full
+            colBackground: Appearance.colors.colLayer2
+            Accessible.name: Translation.tr("More player controls")
+            StyledText {
+                id: moreLabel
+                anchors.centerIn: parent
+                text: Translation.tr("More player controls")
+                color: Appearance.colors.colOnLayer2
+            }
+            onClicked: playerOptions.open()
+        }
+    }
+
+    Popup {
+        id: playerOptions
+        parent: coverArt
+        width: Math.min(400, coverArt.width - 24)
+        height: Math.min(optionsContent.implicitHeight + 32, coverArt.height - 24)
+        x: (coverArt.width - width) / 2
+        y: (coverArt.height - height) / 2
+        padding: 16
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        background: Rectangle { radius: Appearance.rounding.large; color: Appearance.colors.colLayer1 }
+        contentItem: StyledFlickable {
+            contentHeight: optionsContent.implicitHeight
+            clip: true
+            ColumnLayout {
+                id: optionsContent
+                width: parent.width
+                spacing: 12
+                RowLayout {
+                    Layout.fillWidth: true
+                    StyledText { text: Translation.tr("Player controls"); Layout.fillWidth: true }
+                    MediaModeImmersiveButton {
+                        symbol: "close"; tooltip: Translation.tr("Close player controls")
+                        onClicked: playerOptions.close()
+                    }
+                }
+                MediaModePlayerControls {
+                    Layout.fillWidth: true
+                    player: coverArt.player
+                    localSource: coverArt.localSource
                 }
             }
         }

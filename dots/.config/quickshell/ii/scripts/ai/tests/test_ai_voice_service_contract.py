@@ -194,14 +194,17 @@ class UnavailableReasonTests(unittest.TestCase):
         self.assertIn("recorderAvailable", body)
         self.assertIn("backendAvailable", body)
         self.assertIn("pw-record", body)
-        self.assertIn("whisper", body)
+        self.assertIn("Voxtype", body)
 
-    def test_faster_whisper_is_named_but_not_driven(self):
-        # It has no stable CLI to shell out to; reporting it as available
-        # would offer a tool that then fails every time it is used.
+    def test_voxtype_is_the_only_detected_and_driven_backend(self):
         detection = body_between(SOURCE, "id: backendCheckProc", "\n    }")
-        self.assertIn("faster-whisper", detection)
-        self.assertIn('found === "whisper-cli" || found === "whisper"', detection)
+        self.assertIn('found === "voxtype"', detection)
+        self.assertNotIn("whisper-cli", detection)
+        self.assertNotIn("faster-whisper", detection)
+        transcription = body_between(SOURCE, "function startTranscription() {", "\n    }")
+        self.assertIn("orb_audio.py", transcription)
+        self.assertNotIn('"whisper"', transcription)
+
 
 
 if __name__ == "__main__":

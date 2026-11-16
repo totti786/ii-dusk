@@ -45,6 +45,74 @@ class Sandbox(unittest.TestCase):
             json.dump({"auto": auto}, handle)
 
 
+class NativeDesktop(Sandbox):
+    def test_background_learning_cannot_execute_a_desktop_or_shell_action(self):
+        with mock.patch.object(mcp, "LEARNING_REVIEW", {"learningReview": True}, create=True), mock.patch.object(mcp, "run_command") as run:
+            self.assertTrue(mcp.call_tool("run_shell_command", {"command": "echo should-not-run"})["isError"])
+            self.assertTrue(mcp.call_tool("desktop_input", {"action": "click"})["isError"])
+            run.assert_not_called()
+
+    def test_background_learning_cannot_promote_an_unverified_failure(self):
+        review = {"learningReview": True, "learningVerified": False, "learningJob": "test", "learningRequest": "Change wallpaper"}
+        with mock.patch.object(mcp, "LEARNING_REVIEW", review, create=True), mock.patch.dict(os.environ, {"II_AGENT_PROJECT": ""}), mock.patch.object(mcp.agent_memory, "policy", return_value={"autoLearn": True}), mock.patch.object(mcp.agent_memory, "call", return_value={"saved": True}) as save:
+            self.assertTrue(mcp.call_tool("skill_save", {"name": "failed-procedure", "status": "verified"})["isError"])
+            save.assert_not_called()
+            self.assertFalse(mcp.call_tool("skill_save", {"name": "failed-procedure", "status": "draft"})["isError"])
+            self.assertEqual(save.call_args.args[1]["learningJob"], "test")
+
+    def test_background_fact_requires_an_actual_explicit_user_quote(self):
+        review = {"learningReview": True, "learningVerified": True, "learningJob": "test", "learningRequest": "I prefer using my existing account sign-ins."}
+        with mock.patch.object(mcp, "LEARNING_REVIEW", review, create=True), mock.patch.dict(os.environ, {"II_AGENT_PROJECT": ""}), mock.patch.object(mcp.agent_memory, "policy", return_value={"autoLearn": True}), mock.patch.object(mcp.agent_memory, "call", return_value={"saved": True}) as save:
+            self.assertTrue(mcp.call_tool("remember_fact", {"fact": "CPU use is 12%"})["isError"])
+            save.assert_not_called()
+            self.assertFalse(mcp.call_tool("remember_fact", {"fact": "Prefer account sign-ins", "sourceQuote": review["learningRequest"]})["isError"])
+            self.assertEqual(save.call_args.args[1]["source"], "learning:test")
+
+    def test_background_writes_stop_if_learning_is_disabled_mid_review(self):
+        with mock.patch.object(mcp, "LEARNING_REVIEW", {"learningReview": True}, create=True), mock.patch.dict(os.environ, {"II_AGENT_PROJECT": ""}), mock.patch.object(mcp.agent_memory, "policy", return_value={"autoLearn": False}), mock.patch.object(mcp.agent_memory, "call") as save:
+            self.assertTrue(mcp.call_tool("skill_save", {"name": "test"})["isError"])
+            save.assert_not_called()
+
+    def test_context_uses_the_live_shell_endpoint(self):
+        with mock.patch.object(mcp, "shell_ipc", return_value=mcp.ok("{}")) as ipc:
+            mcp.call_tool("desktop_context", {})
+        ipc.assert_called_once_with("desktopContext")
+
+    def test_search_finds_files_in_subfolders_but_not_directories_or_external_symlinks(self):
+        library = Path(self.home, "pictures"); nested = library / "forest"; nested.mkdir(parents=True)
+        (nested / "green.png").write_bytes(b"picture")
+        outside = Path(self.home, "outside.jpg"); outside.write_bytes(b"outside")
+        (nested / "escape.jpg").symlink_to(outside)
+        with mock.patch.object(mcp, "wallpaper_context", return_value={"directory": str(library), "current": ""}):
+            result = mcp.call_tool("wallpaper_search", {"query": "forest", "limit": 999})
+        rows = json.loads(result["text"])["results"]
+        self.assertEqual([r["ref"] for r in rows], [str(nested / "green.png")])
+
+    def test_wallpaper_uses_native_apply_and_journals_the_previous_ref(self):
+        old = Path(self.home, "old.png"); old.write_bytes(b"old")
+        new = Path(self.home, "new.png"); new.write_bytes(b"new")
+        answer = {"requested": True, "ref": str(new), "previousRef": str(old)}
+        with mock.patch.object(mcp, "wallpaper_context", return_value={"directory": self.home, "current": str(old)}), mock.patch.object(mcp, "shell_ipc", return_value=mcp.ok(json.dumps(answer))) as ipc:
+            self.assertFalse(mcp.call_tool("wallpaper_set", {"ref": str(new)})["isError"])
+        ipc.assert_called_once_with("wallpaperSet", json.dumps({"ref": str(new)}))
+        entry = mcp.journal_read()[0]
+        self.assertEqual((entry["kind"], entry["old"], entry["new"]), ("wallpaper", str(old), str(new)))
+        with mock.patch.object(mcp, "shell_ipc", return_value=mcp.ok("{}")) as ipc:
+            self.assertFalse(mcp.tool_undo_change({"id": entry["id"]})["isError"])
+        ipc.assert_called_once_with("wallpaperSet", json.dumps({"ref": str(old)}))
+
+    def test_invalid_file_or_traversal_never_reaches_native_apply(self):
+        with mock.patch.object(mcp, "wallpaper_context", return_value={"directory": self.home, "current": ""}), mock.patch.object(mcp, "shell_ipc") as ipc:
+            for ref in (self.home, self.home + "/missing.png", self.home + "/../escape.jpg"):
+                self.assertTrue(mcp.call_tool("wallpaper_set", {"ref": ref})["isError"])
+            ipc.assert_not_called()
+
+    def test_failed_apply_is_not_journaled_as_a_change(self):
+        with mock.patch.object(mcp, "shell_ipc", return_value=mcp.fail("not from library")):
+            self.assertTrue(mcp.call_tool("wallpaper_set", {"ref": "/etc/passwd"})["isError"])
+        self.assertEqual(mcp.journal_read(), [])
+
+
 class RiskyCommands(unittest.TestCase):
     def test_what_changes_the_system_needs_approval(self):
         for command in (

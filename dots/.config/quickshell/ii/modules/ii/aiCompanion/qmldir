@@ -1,0 +1,10 @@
+module qs.modules.ii.aiCompanion
+AiCompanion 1.0 AiCompanion.qml
+CompanionDragArea 1.0 CompanionDragArea.qml
+CompanionOrb 1.0 CompanionOrb.qml
+# quickshell-generated qmldir
+CompanionPointer 1.0 CompanionPointer.qml
+
+CompanionSurface 1.0 CompanionSurface.qml
+
+CompanionFileDrop 1.0 CompanionFileDrop.qml

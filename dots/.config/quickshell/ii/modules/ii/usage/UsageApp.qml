@@ -44,14 +44,18 @@ Scope {
     }
 
     RetainedLoader {
+        id: deferredWindowLoader
         requested: GlobalStates.usageOpen
         retainFor: 30000
         onActiveChanged: {
             if (!active)
                 AppStats.releaseCache();
         }
-        sourceComponent: UsageAppWindow {
-            onCloseRequested: root.requestClose()
+        source: "UsageAppWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

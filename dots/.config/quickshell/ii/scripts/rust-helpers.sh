@@ -50,6 +50,7 @@ HELPERS=(
     "health_watch:health"
     "ii-quickshare:quickshare"
     "mediator-rs:mediatorRs"
+    "ii_link:iiLink"
 )
 
 # name:former name, in the same directory. An updater from before the rename

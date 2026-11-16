@@ -28,6 +28,7 @@ Scope {
     }
 
     Loader {
+        id: primaryWindow
         active: root.warm || GlobalStates.fileManagerOpen
         asynchronous: !GlobalStates.fileManagerOpen
         sourceComponent: FileManagerWindow {
@@ -80,6 +81,8 @@ Scope {
         function toggle(): void {
             root.requestToggle();
         }
+
+        function location(): string { return primaryWindow.item?.currentPath ?? ""; }
 
         function isOpen(): bool {
             return GlobalStates.fileManagerOpen;

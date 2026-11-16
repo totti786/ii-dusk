@@ -153,7 +153,8 @@ class SensitivePathTests(unittest.TestCase):
 
 class RootsAreOptInTests(unittest.TestCase):
     def test_the_config_default_is_empty(self):
-        block = body_between(CONFIG, "property JsonObject files: JsonObject {", "}")
+        ai_config = CONFIG.split("property JsonObject ai: JsonObject {", 1)[1]
+        block = body_between(ai_config, "property JsonObject files: JsonObject {", "}")
         self.assertIn("property list<string> roots: []", block)
 
     def test_the_integration_only_searches_configured_roots(self):

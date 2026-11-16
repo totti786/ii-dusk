@@ -29,9 +29,13 @@ Scope {
     }
 
     Loader {
+        id: deferredWindowLoader
         active: GlobalStates.youtubeOpen
-        sourceComponent: YouTubeWindow {
-            onCloseRequested: root.requestClose()
+        source: "YouTubeWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

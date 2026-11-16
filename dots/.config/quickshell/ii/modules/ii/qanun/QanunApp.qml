@@ -32,9 +32,13 @@ Scope {
     }
 
     Loader {
+        id: deferredWindowLoader
         active: GlobalStates.qanunOpen
-        sourceComponent: QanunWindow {
-            onCloseRequested: root.requestClose()
+        source: "QanunWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

@@ -15,18 +15,14 @@ import qs.services.ai.integrations
 /**
  * Handles LLM chats: the conversation, the tools, and which model answers.
  *
- * Three wire formats are spoken, one strategy each: Google's Gemini API,
- * Anthropic's /v1/messages, and the OpenAI-compatible /v1/chat/completions
- * that OpenRouter, DeepSeek, Mistral and Ollama all serve. Which one a model
- * uses is its own `api_format`; nothing here tests provider names.
+ * One stream adapter connects signed-in Codex, Claude Code and OpenCode.
+ * The CLIs own credentials and inference; this service owns the shared chat,
+ * attachments, voice, tool policy and durable conversation history.
  */
 Singleton {
     id: root
 
     property Component aiMessageComponent: AiMessageData {}
-    property Component geminiApiStrategy: GeminiApiStrategy {}
-    property Component openAiCompatStrategy: OpenAiCompatStrategy {}
-    property Component anthropicApiStrategy: AnthropicApiStrategy {}
     property Component opencodeApiStrategy: OpencodeStrategy {}
     readonly property string interfaceRole: "interface"
     readonly property string apiKeyEnvVarName: "API_KEY"
@@ -87,19 +83,12 @@ Singleton {
                 recoveryActionIds: ["open-models"]
             };
 
-        if (model.requires_key && !KeyringStorage.loaded)
-            return {
-                allowed: false,
-                reason: "keyring-loading",
-                recoveryActionIds: ["retry-submit"]
-            };
-
-        if (model.requires_key && !(root.apiKeys?.[model.key_id]?.length > 0))
-            return {
-                allowed: false,
-                reason: "missing-key",
-                recoveryActionIds: ["open-keys"]
-            };
+        const engine = String(model.quirks?.agentEngine ?? "");
+        const account = Array.from(root.agentBackends ?? []).find(entry => entry.id === engine);
+        if (account && !account.installed)
+            return {allowed: false, reason: "agent-not-installed", recoveryActionIds: ["open-keys"]};
+        if (account && engine !== "opencode" && !account.signedIn)
+            return {allowed: false, reason: "agent-sign-in-required", recoveryActionIds: ["open-keys"]};
 
         return {
             allowed: true,
@@ -113,8 +102,6 @@ Singleton {
         const blocksTransport = transport => transport.running && (!root.enabled || (root.localOnly && transport.model && !root.catalog.isModelLocal(transport.model)));
         if (blocksTransport(requester))
             root.stopGeneration();
-        if (blocksTransport(keyTester))
-            keyTester.abort();
         if (blocksTransport(titleRequester))
             titleRequester.abort();
         if (!root.onlineAllowed && commandExecutionProc.running)
@@ -228,7 +215,7 @@ Singleton {
         if (attachmentProblem.length > 0)
             return root.rejectSubmission("attachment-incompatible", attachmentProblem, ["open-models", "remove-attachment"]);
         const permission = root.canSubmit(modelId);
-        const waitingForKeyring = !!model && model.requires_key && !KeyringStorage.loaded;
+        const waitingForKeyring = false;
         if (!permission.allowed && !waitingForKeyring)
             return root.rejectSubmission(permission.reason || "unavailable", Translation.tr("This AI model is not ready to receive a message."), permission.recoveryActionIds ?? ["open-models"]);
 
@@ -622,13 +609,7 @@ Singleton {
         onTriggered: root.retryCompensation()
     }
 
-    Connections {
-        target: KeyringStorage
-        function onLoadedChanged() {
-            if (KeyringStorage.loaded)
-                root.resumePendingSubmission();
-        }
-    }
+
 
     function journalRun(sessionId: string, run: var) {
         root.pendingRunJournal = {
@@ -933,7 +914,7 @@ Singleton {
         // Read defensively: the prompt is evaluated while the singletons are
         // still coming up, and one that is not ready yet is not an error.
         const remembered = String(AiMemory?.promptBlock ?? "");
-        if (remembered.length > 0)
+        if (remembered.length > 0 && root.currentModelEntry?.api_format !== "opencode")
             parts.push(remembered);
         return parts.filter(part => String(part).trim().length > 0).join("\n\n");
     }
@@ -1157,17 +1138,10 @@ Singleton {
     function isFreshMessage(messageId: string): bool {
         return String(messageId ?? "").length > 0 && messageId === root.lastAppendedId && (Date.now() - root.lastAppendedAt) < 1200;
     }
-    readonly property var apiKeys: KeyringStorage.keyringData?.apiKeys ?? {}
-    readonly property var apiKeysLoaded: KeyringStorage.loaded
-    readonly property bool currentModelHasApiKey: {
-        const model = root.currentModelEntry;
-        if (!model || !model.requires_key)
-            return true;
-        if (!apiKeysLoaded)
-            return false;
-        const key = apiKeys[model.key_id];
-        return (key?.length > 0);
-    }
+    // Compatibility projections for older hosts; inference uses CLI account auth.
+    readonly property var apiKeys: ({})
+    readonly property bool apiKeysLoaded: true
+    readonly property bool currentModelHasApiKey: true
     property var postResponseHook
 
     /**
@@ -1328,15 +1302,7 @@ Singleton {
     }
 
     function createApiStrategy(format: string, owner = root): var {
-        const normalized = String(format ?? "openai").toLowerCase();
-        const parent = owner ?? root;
-        if (normalized === "gemini")
-            return root.geminiApiStrategy.createObject(parent);
-        if (normalized === "anthropic")
-            return root.anthropicApiStrategy.createObject(parent);
-        if (normalized === "opencode")
-            return root.opencodeApiStrategy.createObject(parent);
-        return root.openAiCompatStrategy.createObject(parent);
+        return root.opencodeApiStrategy.createObject(owner ?? root);
     }
 
     /**
@@ -1345,7 +1311,8 @@ Singleton {
      */
     function historyWithinWindow(messages: var, model): var {
         const all = Array.from(messages ?? []);
-        const window = Number(model?.contextWindow ?? 0);
+        const configuredWindow = Number(Config.options?.ai?.context?.maxInputTokens ?? 12000) + root.contextReserve;
+        const window = Math.min(Number(model?.contextWindow || configuredWindow), configuredWindow);
         if (!root.contextManaged || window <= 0)
             return { messages: all, pruned: [], cutId: "", oversized: null };
 
@@ -1753,6 +1720,8 @@ Singleton {
     readonly property AiMediaIntegration mediaIntegration: AiMediaIntegration {}
     /** Local speech-to-text: recording, detection and the review draft. */
     readonly property AiVoiceService voiceService: AiVoiceService {}
+    readonly property AiSpeechService speechService: AiSpeechService {}
+    readonly property AiCompanionVoiceService companionVoice: AiCompanionVoiceService {}
     /** Preview id → immutable proposed changes until the user decides. */
     property var settingsPreviews: ({})
 
@@ -2052,7 +2021,7 @@ Singleton {
             state: allowed ? "done" : "denied",
             summary: allowed ? Translation.tr("Allowed") : Translation.tr("Not allowed")
         });
-        Quickshell.execDetached(["python3", Directories.opencodeBridgeScriptPath, "answer",
+        Quickshell.execDetached(["python3", Directories.scriptPath + "/ai/agent_bridge.py", "answer",
             String(card.data?.sessionId ?? ""), String(card.data?.requestId ?? ""), decision]);
     }
 
@@ -2114,11 +2083,13 @@ Singleton {
     // Providers and models are described once, in the catalog. Nothing here
     // builds a model object or tests a provider name for substrings.
     readonly property ModelCatalog catalog: ModelCatalog {
-        ollamaModelNames: root.ollamaModels
         opencodeModelNames: root.opencodeModels
+        agentModelNames: root.agentModels
     }
     property var ollamaModels: []
     property var opencodeModels: []
+    property var agentBackends: []
+    property var agentModels: ({})
     property bool ollamaRefreshPending: false
 
     /**
@@ -2223,19 +2194,9 @@ Singleton {
         return "";
     }
 
-    property var apiStrategies: {
-        const openAiCompat = openAiCompatStrategy.createObject(this);
-        return {
-            "openai": openAiCompat,
-            // Mistral speaks the same dialect. The name is kept because user
-            // configs (and the shipped default) still ask for it.
-            "mistral": openAiCompat,
-            "gemini": geminiApiStrategy.createObject(this),
-            "anthropic": anthropicApiStrategy.createObject(this),
-            "opencode": opencodeApiStrategy.createObject(this)
-        };
-    }
-    property ApiStrategy currentApiStrategy: apiStrategies[root.currentModelEntry?.api_format || "openai"]
+    // One event adapter; all engine differences stay in agent_bridge.py.
+    property var apiStrategies: ({"opencode": root.createApiStrategy("opencode", root)})
+    property ApiStrategy currentApiStrategy: apiStrategies["opencode"]
 
     property string requestScriptFilePath: `/tmp/quickshell-${SystemInfo.username}/ai/request.sh`
 
@@ -2243,6 +2204,7 @@ Singleton {
         root.sessions.ensureLoaded();
         root.draftStore.ensureLoaded();
         root.restorePersistentDefaults();
+        root.maybeRestoreLastSession();
     }
 
     Connections {
@@ -2252,7 +2214,7 @@ Singleton {
             // Let Persistent's own ready handler migrate the retired
             // provider/model pair before Ai consumes the unified model id.
             if (Persistent.ready)
-                Qt.callLater(() => root.restorePersistentDefaults());
+                Qt.callLater(() => { root.restorePersistentDefaults(); root.maybeRestoreLastSession(); });
         }
     }
 
@@ -2265,7 +2227,7 @@ Singleton {
             // would be migrated only on the boot where Config happened to be
             // ready first.
             if (Config.ready)
-                Qt.callLater(() => root.migrateToolPermissions());
+                Qt.callLater(() => { root.migrateToolPermissions(); root.maybeRestoreLastSession(); });
         }
     }
 
@@ -2315,6 +2277,12 @@ Singleton {
                     console.log("Ai index parse error:", e)
                     return
                 }
+
+                if (parsed.agent_models && typeof parsed.agent_models === "object")
+                    root.agentModels = parsed.agent_models;
+
+                if (Array.isArray(parsed.agents))
+                    root.agentBackends = parsed.agents;
 
                 // Ollama models: handed to the catalog, which turns them into
                 // the "ollama" provider's model list.
@@ -2406,7 +2374,7 @@ Singleton {
      * instructions. Nobody reads a paragraph telling them to type a command.
      */
     function addApiKeyAdvice(model) {
-        root.addMessage(Translation.tr("%1 needs an API key.").arg(model.name), root.interfaceRole, {
+        root.addMessage(Translation.tr("Sign into %1 using its CLI, then refresh Agent sign-ins.").arg(model.name), root.interfaceRole, {
             "notice": "apiKey"
         });
     }
@@ -2566,148 +2534,10 @@ Singleton {
         return true;
     }
 
-    function setApiKey(key) {
-        const model = root.currentModelEntry;
-        if (!model)
-            return;
-        if (!model.requires_key) {
-            root.addMessage(Translation.tr("%1 does not require an API key").arg(model.name), Ai.interfaceRole);
-            return;
-        }
-        if (!key || key.length === 0) {
-            root.addApiKeyAdvice(model);
-            return;
-        }
-        KeyringStorage.setNestedField(["apiKeys", model.key_id], key.trim());
-        root.addMessage(Translation.tr("API key set for %1").arg(model.name), Ai.interfaceRole);
-    }
-
-    /**
-     * Says whether a key is set. It never prints one: the chat is a visible,
-     * screenshot-able, screen-shared surface, and a secret written into it
-     * stays there.
-     */
-    function printApiKey() {
-        const model = root.currentModelEntry;
-        if (!model)
-            return;
-        if (!model.requires_key) {
-            root.addMessage(Translation.tr("%1 does not require an API key").arg(model.name), root.interfaceRole);
-            return;
-        }
-        const key = root.apiKeys[model.key_id];
-        if (!key) {
-            root.addApiKeyAdvice(model);
-            return;
-        }
-        root.addMessage(Translation.tr("A key is set for %1 (ending %2). Open the key panel to see or change it.").arg(model.name).arg(key.slice(-4)), root.interfaceRole, {
-            "notice": "apiKey"
-        });
-    }
-
-    /** Whether a provider has a key on file, for the key panel's state dots. */
-    function hasApiKey(keyId: string): bool {
-        return (root.apiKeys?.[keyId]?.length ?? 0) > 0;
-    }
-
-    function setApiKeyFor(keyId: string, key: string) {
-        if (!keyId || keyId.length === 0)
-            return;
-        KeyringStorage.setNestedField(["apiKeys", keyId], String(key ?? "").trim());
-    }
-
-    // ── Does this key work? ───────────────────────────────────────────────
-    // One very small request, whose answer nobody reads. The only thing worth
-    // knowing is what the endpoint says about the key, in words rather than
-    // as an HTTP number.
-
-    property string keyTestId: ""
-    /** "", "running", "ok" or "failed". */
-    property string keyTestState: ""
-    property string keyTestMessage: ""
-    property AiMessageData keyTestMessageData: AiMessageData {}
-
-    function testApiKey(keyId: string) {
-        if (keyTester.running)
-            return;
-        const model = root.catalog.modelIds.map(id => root.catalog.models[id]).find(entry => entry.key_id === keyId && entry.requires_key);
-        if (!model) {
-            root.keyTestId = keyId;
-            root.keyTestState = "failed";
-            root.keyTestMessage = Translation.tr("No model uses this key.");
-            return;
-        }
-        const permission = root.canSubmit(model.id);
-        if (!permission.allowed) {
-            root.keyTestId = keyId;
-            root.keyTestState = "failed";
-            root.keyTestMessage = Translation.tr("This model is unavailable under the current AI policy.");
-            return;
-        }
-        const key = root.apiKeys?.[keyId] ?? "";
-        if (key.length === 0) {
-            root.keyTestId = keyId;
-            root.keyTestState = "failed";
-            root.keyTestMessage = Translation.tr("No key to test.");
-            return;
-        }
-        const strategy = root.titleStrategyFor(model.api_format || "openai");
-        const prompt = root.aiMessageComponent.createObject(root, {
-            "role": "user",
-            "content": "Hi",
-            "rawContent": "Hi",
-            "thinking": false,
-            "done": true
-        });
-        strategy.thinkingOverride = "off";
-        strategy.outputOverride = 16;
-        const data = strategy.buildRequestData(model, [prompt], "Reply with one word.", 0, null);
-        strategy.thinkingOverride = "";
-        strategy.outputOverride = 0;
-        prompt.destroy();
-
-        root.keyTestId = keyId;
-        root.keyTestState = "running";
-        root.keyTestMessage = "";
-        keyTester.model = model;
-        keyTester.strategy = strategy;
-        keyTester.message = root.keyTestMessageData;
-        keyTester.endpoint = strategy.buildEndpoint(model);
-        keyTester.requestData = data;
-        keyTester.apiKey = key;
-        keyTester.start();
-    }
-
-    AiRequest {
-        id: keyTester
-        apiKeyEnvVarName: root.apiKeyEnvVarName
-        scriptPath: `/tmp/quickshell-${SystemInfo.username}/ai/keytest.sh`
-        // One attempt: a key that is refused is refused, and waiting through
-        // two backoffs to be told so is not a test.
-        maxRetries: 0
-
-        onFinished: (reason, status, code) => {
-            if (reason === "done") {
-                root.keyTestState = "ok";
-                root.keyTestMessage = Translation.tr("The key works.");
-                return;
-            }
-            root.keyTestState = "failed";
-            const kind = root.transportErrorKind(status, code);
-            if (kind === "auth")
-                root.keyTestMessage = Translation.tr("Refused: the key is wrong, or not allowed to use this model.");
-            else if (kind === "quota")
-                root.keyTestMessage = Translation.tr("The key is valid but out of quota for now.");
-            else if (kind === "network" || kind === "timeout")
-                root.keyTestMessage = Translation.tr("Could not reach the provider.");
-            else if (status === 0)
-                // Nothing answered because nothing was asked: the request
-                // itself failed to run. "HTTP 0" said none of that.
-                root.keyTestMessage = Translation.tr("The request could not be sent (exit code %1).").arg(code);
-            else
-                root.keyTestMessage = Translation.tr("The provider answered with HTTP %1.").arg(status);
-        }
-    }
+    // Keep the old /key command as a shortcut to account connections. Secrets
+    // are neither accepted nor stored by the companion.
+    function setApiKey(key) { root.keyManagerRequested(); }
+    function printApiKey() { root.keyManagerRequested(); }
 
     function printTemperature() {
         root.addMessage(Translation.tr("Temperature: %1").arg(root.temperature), Ai.interfaceRole);
@@ -2787,6 +2617,7 @@ Singleton {
     // ── Telling someone it finished ───────────────────────────────────────
     /** Whether a chat surface is on screen, wherever it is. */
     readonly property bool chatOnScreen: GlobalStates.sidebarLeftOpen || GlobalStates.overviewOpen
+        || (Persistent.states.aiCompanion.visible && Persistent.states.aiCompanion.expanded && !GlobalStates.screenLocked)
 
     /**
      * A desktop notification when an answer lands.
@@ -2937,6 +2768,20 @@ Singleton {
     IpcHandler {
         target: "ai"
 
+        function sessionStatus(): string {
+            return JSON.stringify({current: root.sessions.currentId, restored: root.startupSessionRestored,
+                last: Persistent.states?.ai?.lastSessionId ?? "", saved: root.sessions.index.length});
+        }
+
+        function knowledgeStatus(): string {
+            return JSON.stringify({enabled: AiMemory.enabled, facts: AiMemory.facts.length, skills: AiMemory.skills.length});
+        }
+
+        function agents(): string {
+            return JSON.stringify({selected: root.currentModelId, providers: root.providerIds,
+                accounts: root.agentBackends, models: root.catalog.modelIds.length, choices: root.agentModels});
+        }
+
         function ask(text: string): string {
             return JSON.stringify(root.sendUserMessage(text));
         }
@@ -3050,8 +2895,75 @@ Singleton {
         return false;
     }
 
+    property var knownNativeWallpaperRefs: ({})
+
+    /** Small factual context, shared by every agent turn and the live context tool. */
+    function desktopEnvironmentContext(): var {
+        return {
+            shell: "QuickShell ii (illogical-impulse)", compositor: "Hyprland", sessionType: "Wayland",
+            shellRoot: String(Directories.scriptPath).replace(/^file:\/\//, "").replace(/\/scripts\/?$/, ""),
+            display: Quickshell.env("WAYLAND_DISPLAY"),
+            wallpaper: {
+                renderer: Config.options?.background?.useWallpaperEngine ? "Wallpaper Engine via QuickShell" : "QuickShell native background",
+                current: Wallpapers.effectiveWallpaperPath,
+                directory: Wallpapers.effectiveDirectory,
+                directoryLoading: Wallpapers.directoryLoading,
+                renderCompletion: "Not tracked by this context; use desktop_capture to verify the visible result.",
+                folderEntryCount: Wallpapers.wallpapers.length,
+                recursiveLibrary: true,
+                applyMethod: "wallpaper_search returns exact refs; wallpaper_set calls Wallpapers.apply and the existing switchwall theme pipeline"
+            },
+            controls: {
+                status: "system_get_status: battery, network, audio and media",
+                health: "system_health: CPU and memory",
+                settings: "settings_search then settings_get/settings_set: exact typed keys",
+                windows: "windows_list and keybinds_search",
+                browser: "browser_tools then browser_call: existing browse MCP and paired browser",
+                screen: "desktop_capture and desktop_input: on-demand vision and pointer/keyboard",
+                voice: "companion_status reports the configured speech backend; speak_text reads aloud"
+            },
+            verification: "Use only tools offered in this turn. Call native controls before generic commands; inspect get_environment/read_file for unfamiliar components rather than guessing programs or config. Old chat messages are not current system state."
+        };
+    }
+
     IpcHandler {
         target: "aitools"
+
+        function desktopContext(): string {
+            return JSON.stringify(root.desktopEnvironmentContext());
+        }
+
+        function wallpaperSet(argsJson: string): string {
+            let args;
+            try { args = JSON.parse(argsJson); } catch (e) { return JSON.stringify({error: "Expected a wallpaper ref."}); }
+            const ref = String(args?.ref ?? "");
+            const directory = String(Wallpapers.effectiveDirectory).replace(/\/$/, "");
+            const extension = ref.split(".").pop().toLowerCase();
+            const fromFolder = directory.length > 0 && ref.startsWith(directory + "/")
+                && !ref.split("/").includes("..") && Wallpapers.extensions.includes(extension);
+            const defaultRef = String(Directories.defaultWallpaperImagePath).replace(/^file:\/\//, "");
+            if (!fromFolder && ref !== defaultRef && !root.knownNativeWallpaperRefs[ref] && ref !== Wallpapers.effectiveWallpaperPath)
+                return JSON.stringify({error: "Choose an exact ref from wallpaper_search. Paths outside the configured library are not accepted."});
+            const previousRef = Wallpapers.effectiveWallpaperPath;
+            root.knownNativeWallpaperRefs[previousRef] = true;
+            Wallpapers.apply(ref, Appearance.m3colors.darkmode);
+            return JSON.stringify({ requested: true, ref: ref, previousRef: previousRef,
+                configured: String(Config.options.background.wallpaperPath) === ref,
+                renderer: "QuickShell native wallpaper pipeline", renderingVerified: false,
+                note: "The native renderer and theme extraction were requested. Configuration is checked; visible rendering is asynchronous. Use desktop_capture if visual verification is needed." });
+        }
+
+        function speechStatus(): string {
+            return JSON.stringify({ speaking: root.speechService.speaking, error: root.speechService.errorText });
+        }
+
+        function speak(text: string): void {
+            root.speechService.speak(text, "ipc");
+        }
+
+        function stopSpeech(): void {
+            root.speechService.stop();
+        }
 
         function status(): string {
             return JSON.stringify(root.systemIntegration.status());
@@ -3166,7 +3078,7 @@ Singleton {
      */
     function transportErrorText(status: int, code: int): string {
         if (status === 401 || status === 403)
-            return Translation.tr("**Request rejected** (HTTP %1). The API key is missing, wrong, or not allowed to use this model.").arg(status);
+            return Translation.tr("**Request rejected** (HTTP %1). The selected agent sign-in is unavailable or has expired. Sign in through its CLI.").arg(status);
         if (status === 404)
             return Translation.tr("**Not found** (HTTP 404). The model name or the endpoint is wrong.");
         if (status === 429)
@@ -3385,7 +3297,7 @@ Singleton {
             KeyringStorage.fetchKeyringData();
 
         const profile = pending ? (pending.profile ?? root.responseProfileForModel(model.id)) : root.responseProfileForModel(model.id);
-        const strategy = pending ? root.apiStrategies[model.api_format || "openai"] : root.currentApiStrategy;
+        const strategy = pending ? root.apiStrategies["opencode"] : root.currentApiStrategy;
         strategy.activeThinkingLevel = profile.thinkingLevel;
         strategy.chatSessionId = pending?.sessionId || root.sessions.currentId;
         const messageArray = root.messageIDs.map(id => root.messageByID[id]);
@@ -3826,6 +3738,7 @@ Singleton {
     property string activeProbePath: ""
     property int activeProbeGeneration: -1
     readonly property int pendingAttachmentCount: root.pendingAttachmentPaths.length
+    readonly property bool attachmentWorkPending: root.pendingAttachmentCount > 0 || root.probeQueue.length > 0 || probeProc.running || root.extractQueue.length > 0 || extractProc.running
 
     function attachFile(filePath: string) {
         const path = CF.FileUtils.trimFileProtocol(String(filePath ?? "")).trim();
@@ -7135,11 +7048,39 @@ Singleton {
     // store does the disk work; what lives here is the shape of a session,
     // how it becomes messages, and when it is worth writing.
 
+    property bool startupSessionRestored: false
+
+    function maybeRestoreLastSession(): void {
+        if (root.startupSessionRestored || !Persistent.ready || !Config.ready || !root.sessions.loaded)
+            return;
+        root.startupSessionRestored = true;
+        if (root.sessions.currentId.length > 0 || root.messageIDs.length > 0 || root.pendingSubmission)
+            return;
+        if (Config.options?.ai?.sessions?.restoreLast === false)
+            return;
+        let id = String(Persistent.states?.ai?.lastSessionId ?? "");
+        if (!Persistent.states.ai.lastSessionInitialized) {
+            const newest = Array.from(root.sessions.index).sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0))[0];
+            id = String(newest?.id ?? "");
+            Persistent.states.ai.lastSessionId = id;
+            Persistent.states.ai.lastSessionInitialized = true;
+        }
+        if (id.length > 0 && root.sessions.entryFor(id))
+            root.openSession(id);
+    }
+
     readonly property AiSessions sessions: AiSessions {
         dir: Directories.aiSessions
         legacyDir: Directories.aiChats
         scriptPath: Directories.aiSessionsScriptPath
         exportDir: Directories.aiExports
+        onLoadedChanged: Qt.callLater(root.maybeRestoreLastSession)
+        onCurrentIdChanged: {
+            if (Persistent.ready && (root.startupSessionRestored || currentId.length > 0)) {
+                Persistent.states.ai.lastSessionId = currentId;
+                Persistent.states.ai.lastSessionInitialized = true;
+            }
+        }
         onSaveRequested: root.commitSession()
         onSessionOpened: session => root.applySession(session)
         onSaveSucceeded: (operationId, sessionId) => {
@@ -7692,6 +7633,8 @@ Singleton {
 
     /** Puts the conversation away and starts an empty one. */
     function newChat() {
+        root.startupSessionRestored = true;
+        if (Persistent.ready) { Persistent.states.ai.lastSessionId = ""; Persistent.states.ai.lastSessionInitialized = true; }
         if (root.pendingToolExecution || commandExecutionProc.running) {
             root.addMessage(Translation.tr("Wait for the active tool to finish before switching chats."), root.interfaceRole, {
                 "notice": "submission"
@@ -7983,8 +7926,7 @@ Singleton {
         if (!root.titleStrategies[format]) {
             // Its own instance: strategies carry per-request state, and this
             // call must never be able to disturb an answer being streamed.
-            const component = (format === "gemini") ? root.geminiApiStrategy : ((format === "anthropic") ? root.anthropicApiStrategy : root.openAiCompatStrategy);
-            root.titleStrategies[format] = component.createObject(root);
+            root.titleStrategies[format] = root.createApiStrategy(format, root);
         }
         return root.titleStrategies[format];
     }

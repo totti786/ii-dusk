@@ -40,8 +40,11 @@ Scope {
         requested: GlobalStates.gritAppOpen
         // A closed Grit stays warm for a quick reopen, then goes entirely.
         retainFor: 30000
-        sourceComponent: GritAppWindow {
-            onCloseRequested: root.requestClose()
+        source: "GritAppWindow.qml"
+
+        Connections {
+            target: windowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

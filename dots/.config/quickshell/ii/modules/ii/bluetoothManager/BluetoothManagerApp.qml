@@ -37,10 +37,14 @@ Scope {
     }
 
     RetainedLoader {
+        id: deferredWindowLoader
         requested: GlobalStates.bluetoothManagerOpen
         retainFor: 30000
-        sourceComponent: BluetoothManagerWindow {
-            onCloseRequested: root.requestClose()
+        source: "BluetoothManagerWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

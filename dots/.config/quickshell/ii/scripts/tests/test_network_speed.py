@@ -24,8 +24,8 @@ class WiringTests(unittest.TestCase):
         self.assertIn('case "network_speed":          return s.networkSpeed ?? "default";', widget_registry)
         self.assertIn('property string networkSpeed: "default"', config)
         self.assertIn("property JsonObject networkSpeed: JsonObject {", config)
-        self.assertIn("NetworkSpeedWidget {", bar_component)
-        self.assertIn("ExpressiveNetworkSpeed {", bar_component)
+        self.assertIn("widgets/networkSpeed/NetworkSpeedWidget.qml", bar_component)
+        self.assertIn("widgets/networkSpeed/ExpressiveNetworkSpeed.qml", bar_component)
         self.assertIn('modelData.id === "network_speed" && Config.options.bar.styles.networkSpeed === "expressive"', bar_component)
 
     def test_settings_page_is_registered_and_reachable(self):

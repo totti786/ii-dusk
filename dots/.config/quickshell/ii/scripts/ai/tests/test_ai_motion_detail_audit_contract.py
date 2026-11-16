@@ -79,21 +79,9 @@ class DetailTests(unittest.TestCase):
         ):
             with self.subTest(token=token):
                 self.assertIn(token, CHAT if token != "onDoubleClicked: root.editRequested" else MESSAGE)
-        self.assertIn("function pinnedModelShortcut", PICKER)
-        self.assertIn("function modelSelectionTooltip", PICKER)
-        self.assertIn("id: modelSelectButton", PICKER)
-        self.assertIn("root.modelSelectionTooltip", PICKER)
-        self.assertIn("function togglePinned", PICKER)
-        self.assertIn("id: modelActionCircle", PICKER)
-        self.assertIn("id: modelActionMouse", PICKER)
-        self.assertIn('modelRow.pinned ? "keep_off" : "keep"', PICKER)
-        self.assertIn("function modelPinTooltip", PICKER)
-        self.assertIn("onClicked: root.togglePinned(modelRow.entry.id)", PICKER)
-        self.assertIn('groupId: "pinned"', PICKER)
-        self.assertIn("const pinnedIds", PICKER)
-        self.assertIn("!pinnedIds.includes(model.id)", PICKER)
-        self.assertIn("id: modelCheckIcon", PICKER)
-        self.assertIn("id: modelPinIcon", PICKER)
+        self.assertIn('onClicked: root.picked(entry.id)', PICKER)
+        self.assertIn('toggled: entry?.id === Ai.currentModelId', PICKER)
+        self.assertIn('onTextEdited: root.query = text', PICKER)
         self.assertIn("modelChipTooltip", CONTROL_BAR)
 
     def test_shared_buttons_enable_hover_for_cursor_and_tooltips(self):

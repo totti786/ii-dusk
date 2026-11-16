@@ -23,6 +23,10 @@ Singleton {
     property alias sidebarRightOpen: root.dashboardPanelOpen // Until all sidebars naming is fixed
 
     property bool barOpen: true
+    property int aiCompanionOpenSerial: 0
+    function openAiCompanion() {
+        root.aiCompanionOpenSerial++;
+    }
     // Driven by PresetTransition while a preset is being applied. The bar slides
     // off its edge (presetBarHidden) during the reload + widget stages and the
     // palette crossfades (presetRecoloring) instead of snapping. They live here,
@@ -2046,6 +2050,8 @@ Singleton {
 
     // LocalSend transfer popup
     property bool localSendPopupOpen: false
+    /** A file arriving from the ii tools app ("Send to PC"); IiLinkService.transfer has it. */
+    property bool phoneFilePopupOpen: false
     property var localSendPopupTransfer: null
     // Search's "Send with LocalSend" asks the dashboard to show its dialog. A
     // flag rather than a signal: the dashboard content may not exist until the

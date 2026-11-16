@@ -105,48 +105,19 @@ class LocalOnlyPolicyLeakTests(unittest.TestCase):
         self.assertIn("!Ai.localOnly", fn)
 
 
-class RemoteOllamaIsNotLocalTests(unittest.TestCase):
-    """§14.1: 'Ollama on a remote endpoint is not accepted as local'. Local
-    policy is meant to be an endpoint boundary, not a trust decision based
-    on which provider name happens to be attached to a model."""
+class AgentTransportPrivacyTests(unittest.TestCase):
+    """A loopback CLI/server does not make a cloud model local."""
 
-    def test_a_bare_ip_or_hostname_is_not_loopback(self):
-        fn = body_between(CATALOG_QML, "function isLoopbackEndpoint(endpoint: string): bool {", "\n    }")
-        # The function must resolve a real host and compare it explicitly,
-        # not just check whether the string contains "localhost" anywhere -
-        # http://not-localhost.example/localhost would otherwise pass.
-        self.assertIn('host === "localhost"', fn)
-        self.assertIn("127", fn)
-        self.assertNotIn("endpoint.includes(", fn)
-        self.assertNotIn('.indexOf("localhost")', fn)
+    def test_agent_models_are_never_classified_as_local(self):
+        self.assertIn('function isModelLocal(model): bool { return false; }', CATALOG_QML)
+        self.assertIn('local: false', CATALOG_QML)
 
-    def test_the_check_is_endpoint_based_not_provider_name_based(self):
-        # A custom model can be attached to the "ollama" provider while its
-        # own `endpoint` points anywhere; the function must not special-case
-        # the provider id as a shortcut for "trust it".
-        fn = body_between(CATALOG_QML, "function isLoopbackEndpoint(endpoint: string): bool {", "\n    }")
-        self.assertNotIn("ollama", fn.lower())
+    def test_catalog_is_empty_unless_cloud_policy_is_enabled(self):
+        self.assertIn('if (Number(Config.options?.policies?.ai ?? 1) !== 1) return result;', CATALOG_QML)
 
-    def test_is_model_local_defers_entirely_to_the_endpoint_check(self):
-        fn = body_between(CATALOG_QML, "function isModelLocal(model: var): bool {", "\n    }")
-        self.assertIn("catalog.isLoopbackEndpoint(model.endpoint)", fn)
-
-    def test_entry_allowed_under_local_only_also_defers_to_the_endpoint_check(self):
-        # entryAllowed is what actually filters the model picker under
-        # policy 2; if it used a different check than isModelLocal, the
-        # picker and the runtime enforcement in canSubmit() could disagree
-        # about which models are "local".
-        fn = body_between(CATALOG_QML, "function entryAllowed(def: var, entry: var): bool {", "\n    }")
-        self.assertIn("catalog.isLoopbackEndpoint(", fn)
-
-    def test_canonical_localhost_forms_are_recognised(self):
-        # Read as data, not executed - QML numeric/hostname literals are
-        # exercised live in test_ai_rag_contract.py's Ollama round trip and
-        # in production; this only pins which literal forms the function's
-        # own text commits to recognising.
-        fn = body_between(CATALOG_QML, "function isLoopbackEndpoint(endpoint: string): bool {", "\n    }")
-        self.assertIn('"::1"', fn)
-        self.assertIn(r"/^127(?:\.\d{1,3}){3}$/", fn)
+    def test_runtime_still_enforces_local_only(self):
+        self.assertIn('root.localOnly', AI_QML)
+        self.assertIn('root.catalog.isModelLocal(model)', AI_QML)
 
 
 class VisionGatingTests(unittest.TestCase):
@@ -217,28 +188,14 @@ class VisionGatedComposerControlsTests(unittest.TestCase):
         self.assertNotIn("currentModelSupportsVision", block)
 
 
-class CapabilityOverrideTests(unittest.TestCase):
-    """§14.1: 'a capability override is visible and reversible'. Detected
-    Ollama capabilities and the config-driven fallback must be
-    distinguishable, and the fallback must not stick once real detection
-    succeeds."""
+class AgentCapabilitiesTests(unittest.TestCase):
+    def test_opencode_capabilities_are_discovered(self):
+        self.assertIn('tools: m.tools === true, vision: m.vision === true', CATALOG_QML)
+        self.assertIn('capabilitySource: "detected"', CATALOG_QML)
 
-    def test_the_capability_source_is_exposed_per_model(self):
-        entries = body_between(CATALOG_QML, "readonly property var ollamaEntries: {", "\n        return result;")
-        self.assertIn('capabilitySource: detected ? "detected" : "userOverride"', entries)
-
-    def test_the_override_only_applies_when_nothing_was_actually_detected(self):
-        entries = body_between(CATALOG_QML, "readonly property var ollamaEntries: {", "\n        return result;")
-        self.assertIn("const detected = capabilities.length > 0;", entries)
-        self.assertIn("tools: detected ? capabilities.indexOf(\"tools\") >= 0 : toolsAllowed", entries)
-
-    def test_the_override_is_never_persisted_so_real_detection_can_take_back_over(self):
-        # ollamaEntries is a plain computed property over ollamaModelNames,
-        # not something written to Config - the moment /api/tags reports
-        # real capabilities for a model, `detected` flips to true and the
-        # override stops applying on its own, with nothing to unset by hand.
-        self.assertIn("readonly property var ollamaEntries: {", CATALOG_QML)
-        self.assertNotIn("Config.options.ai.capabilityOverride", CATALOG_QML)
+    def test_old_ollama_overrides_cannot_grant_agent_capabilities(self):
+        self.assertNotIn('ollamaEntries', CATALOG_QML)
+        self.assertNotIn('Config.options.ai.capabilityOverride', CATALOG_QML)
 
 
 if __name__ == "__main__":

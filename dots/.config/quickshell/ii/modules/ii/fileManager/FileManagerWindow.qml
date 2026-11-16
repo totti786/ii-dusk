@@ -17,6 +17,7 @@ FloatingWindow {
     /// A window opened from another one ("Open in new window"): its own folder, its own life
     property bool standalone: false
     property string startPath: ""
+    readonly property string currentPath: left.path
 
     readonly property real screenWidth: root.screen?.width ?? 1920
     readonly property real screenHeight: root.screen?.height ?? 1080

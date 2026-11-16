@@ -37,10 +37,14 @@ Scope {
     }
 
     RetainedLoader {
+        id: deferredWindowLoader
         requested: GlobalStates.packagesOpen
         retainFor: 30000
-        sourceComponent: PackagesWindow {
-            onCloseRequested: root.requestClose()
+        source: "PackagesWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

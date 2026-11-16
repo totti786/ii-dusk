@@ -33,10 +33,14 @@ Scope {
     }
 
     RetainedLoader {
+        id: deferredWindowLoader
         requested: GlobalStates.modesOpen
         retainFor: 30000
-        sourceComponent: ModesAppWindow {
-            onCloseRequested: root.requestClose()
+        source: "ModesAppWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

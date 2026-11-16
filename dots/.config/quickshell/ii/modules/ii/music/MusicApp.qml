@@ -36,10 +36,14 @@ Scope {
     }
 
     RetainedLoader {
+        id: deferredWindowLoader
         requested: GlobalStates.musicOpen
         retainFor: 30000
-        sourceComponent: MusicWindow {
-            onCloseRequested: root.requestClose()
+        source: "MusicWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

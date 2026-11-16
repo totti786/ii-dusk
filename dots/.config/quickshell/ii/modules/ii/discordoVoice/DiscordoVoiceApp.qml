@@ -35,9 +35,13 @@ Scope {
     }
 
     Loader {
+        id: deferredWindowLoader
         active: GlobalStates.discordoVoiceOpen
-        sourceComponent: DiscordoVoiceWindow {
-            onCloseRequested: root.requestClose()
+        source: "DiscordoVoiceWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

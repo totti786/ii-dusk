@@ -19,9 +19,13 @@ Scope {
     }
 
     Loader {
+        id: appWindowLoader0
         active: GlobalStates.cameraOpen
-        sourceComponent: CameraWindow {
-            onCloseRequested: GlobalStates.cameraOpen = false
+        source: "CameraWindow.qml"
+
+        Connections {
+            target: appWindowLoader0.item
+            function onCloseRequested() { GlobalStates.cameraOpen = false }
         }
     }
 

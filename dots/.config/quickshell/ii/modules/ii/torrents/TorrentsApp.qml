@@ -37,10 +37,14 @@ Scope {
     }
 
     RetainedLoader {
+        id: deferredWindowLoader
         requested: GlobalStates.torrentsOpen
         retainFor: 30000
-        sourceComponent: TorrentsWindow {
-            onCloseRequested: root.requestClose()
+        source: "TorrentsWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

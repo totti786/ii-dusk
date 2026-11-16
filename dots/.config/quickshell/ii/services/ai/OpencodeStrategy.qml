@@ -1,4 +1,5 @@
 import QtQuick
+import qs.services
 import qs.modules.common
 import qs.modules.common.functions as CF
 import "OpencodeActivity.js" as Activity
@@ -67,11 +68,21 @@ ApiStrategy {
             .filter(name => name.length > 0);
         return {
             "chatId": chatSessionId,
+            "engine": String(model.quirks?.agentEngine ?? "opencode"),
+            "projectId": Ai.sessionProjectId,
+            "contextWindow": Number(model.contextWindow || 0),
+            "knowledge": {
+                enabled: Config.options?.ai?.memory?.enabled !== false,
+                skills: Config.options?.ai?.memory?.skills !== false,
+                autoLearn: Config.options?.ai?.memory?.autoLearn !== false,
+                retrieveHistory: Config.options?.ai?.memory?.retrieveHistory !== false,
+                maxInputTokens: Number(Config.options?.ai?.context?.maxInputTokens ?? 12000)
+            },
             "prior": prior,
             "text": text,
             "context": context,
             "files": files,
-            "instructions": systemPrompt ?? "",
+            "instructions": (systemPrompt ?? "") + "\n\n## Live QuickShell desktop context\n" + JSON.stringify(Ai.desktopEnvironmentContext()),
             "tools": toolNames,
             // The user's two choices; the bridge, not this request, decides what each one allows.
             "auto": Config.options?.ai?.tools?.opencodeAuto === true,
@@ -90,7 +101,7 @@ ApiStrategy {
     function buildScript(bodyPath: string, statusMarker: string): string {
         const quote = value => `'${CF.StringUtils.shellSingleQuoteEscape(value)}'`;
         return "#!/usr/bin/env bash\n"
-            + `exec python3 ${quote(Directories.opencodeBridgeScriptPath)} turn ${quote(bodyPath)} ${quote(statusMarker)} ${quote(Directories.aiOpencodeSessionsPath)}\n`;
+            + `exec python3 ${quote(Directories.scriptPath + "/ai/agent_bridge.py")} turn ${quote(bodyPath)} ${quote(statusMarker)} ${quote(Directories.aiOpencodeSessionsPath)}\n`;
     }
 
     /** Approval cards that are still waiting on the user, set to `state`. A run that ends leaves none waiting. */
@@ -222,7 +233,9 @@ ApiStrategy {
             return { "finished": true, "toolCards": settleApprovals(message, "denied", "Not answered") };
         case "session.execution.failed": {
             closeThought(message);
-            const errorText = `**Error**: ${data.error?.message ?? "OpenCode could not finish this answer."}`;
+            message.errorKind = "agent";
+            message.errorText = String(data.error?.message ?? "The selected agent could not finish this answer.");
+            const errorText = `**Error**: ${message.errorText}`;
             message.rawContent += errorText;
             message.content += errorText;
             return { "finished": true, "toolCards": settleApprovals(message, "denied", "Not answered") };

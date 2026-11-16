@@ -31,7 +31,7 @@ Item { // Fullscreen MediaMode instance
 
     // Space pauses and resumes, as in any player; a focused text field or button keeps its own Space
     Keys.onSpacePressed: event => {
-        if (event.isAutoRepeat || !root.player)
+        if (event.isAutoRepeat || !(root.player?.canTogglePlaying ?? false))
             return;
         root.player.togglePlaying();
         event.accepted = true;

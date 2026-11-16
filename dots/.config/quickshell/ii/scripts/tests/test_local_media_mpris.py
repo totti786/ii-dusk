@@ -175,7 +175,7 @@ class LocalMediaMprisTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(reply.returncode, 0, reply.stderr)
-        self.assertIn("Audio Player", reply.stdout)
+        self.assertIn("II Music", reply.stdout)
 
         seek = subprocess.run(
             [
@@ -206,6 +206,15 @@ class LocalMediaMprisTests(unittest.TestCase):
         volume = self._request("volume-1", "setVolume", {"volume": 0.42})
         self.assertTrue(volume["ok"])
         self.assertAlmostEqual(volume["payload"]["volume"], 0.42, places=2)
+        muted = self._request("mute-1", "setVolume", {"value": 0})
+        self.assertTrue(muted["ok"])
+        self.assertEqual(muted["payload"]["volume"], 0)
+        restored = self._request("unmute-1", "setVolume", {"value": 0.42})
+        self.assertAlmostEqual(restored["payload"]["volume"], 0.42, places=2)
+        for index, requested in enumerate((0.25, 1.25, 2.0, 1.0)):
+            rate = self._request(f"rate-{index}", "setRate", {"value": requested})
+            self.assertTrue(rate["ok"])
+            self.assertAlmostEqual(rate["payload"]["rate"], requested, places=2)
         seek_capability = volume["payload"]["canSeek"]
         for attempt in range(20):
             if seek_capability:

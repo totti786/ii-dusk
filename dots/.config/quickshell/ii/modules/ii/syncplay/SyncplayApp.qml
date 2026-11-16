@@ -37,8 +37,11 @@ Scope {
     Loader {
         id: windowLoader
         active: GlobalStates.syncplayAppOpen
-        sourceComponent: SyncplayWindow {
-            onCloseRequested: root.requestClose()
+        source: "SyncplayWindow.qml"
+
+        Connections {
+            target: windowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

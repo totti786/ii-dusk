@@ -186,6 +186,12 @@ Item {
      */
     readonly property var chipModel: [
         {
+            "key": "companion",
+            "symbol": "picture_in_picture_alt",
+            "caret": false,
+            "tooltip": Translation.tr("Show the voice companion")
+        },
+        {
             "key": "projects",
             "symbol": "folder_special",
             "label": Ai.currentProject?.name ?? Translation.tr("None"),
@@ -255,10 +261,10 @@ Item {
             // Nothing else says whether the model in use can be reached at all
             // until a message fails.
             "key": "keys",
-            "symbol": (Ai.currentModelHasApiKey ?? false) ? "key" : "key_off",
-            "label": (Ai.currentModelHasApiKey ?? false) ? Translation.tr("Key") : Translation.tr("No key"),
+            "symbol": "account_circle",
+            "label": Translation.tr("Agents"),
             "caret": false,
-            "tooltip": (Ai.currentModelHasApiKey ?? false) ? Translation.tr("API keys\nAlso %1key").arg(root.commandPrefix) : Translation.tr("%1 needs an API key").arg(root.currentModel?.title ?? Translation.tr("This model"))
+            "tooltip": Translation.tr("Agent sign-ins — Codex, Claude Code and OpenCode")
         },
         {
             "key": "advanced",
@@ -288,6 +294,10 @@ Item {
     }
 
     function activateChip(key: string) {
+        if (key === "companion") {
+            GlobalStates.openAiCompanion();
+            return;
+        }
         const entry = root.chipEntry(key);
         if (entry && !(entry.available ?? true))
             return;
@@ -338,10 +348,11 @@ Item {
         "slash": "terminal",
         "advanced": "tune",
         "sessions": "history",
-        "keys": "key"
+        "keys": "account_circle"
     })
 
     readonly property var controlTitles: ({
+        "companion": Translation.tr("Voice companion"),
         "model": Translation.tr("Model"),
         "thinking": Translation.tr("Thinking"),
         "tools": Translation.tr("Tools"),
@@ -349,7 +360,7 @@ Item {
         "slash": Translation.tr("Commands"),
         "advanced": Translation.tr("Sampling & limits"),
         "sessions": Translation.tr("Saved chats"),
-        "keys": Translation.tr("API keys"),
+        "keys": Translation.tr("Agent sign-ins"),
         "ollamaModels": Translation.tr("Ollama models"),
         "shortcuts": Translation.tr("Keys"),
         "capabilities": Translation.tr("Capabilities"),
@@ -359,7 +370,7 @@ Item {
     })
 
     readonly property var overflowKeys: (root.chipModel ?? [])
-        .filter(entry => root.barKeys.indexOf(entry?.key) === -1)
+        .filter(entry => entry?.key !== "companion" && root.barKeys.indexOf(entry?.key) === -1)
         .map(entry => entry?.key)
 
     /**
@@ -1049,6 +1060,10 @@ Item {
         }
 
         ToolButton {
+            chipKey: "companion"
+        }
+
+        ToolButton {
             id: newChatButton
             chipKey: "newChat"
         }
@@ -1225,8 +1240,6 @@ Item {
                     sourceComponent: {
                         if (root.activePopover === "model")
                             return modelPickerComponent;
-                        if (root.activePopover === "ollamaModels")
-                            return ollamaModelsComponent;
                         if (root.activePopover === "regenerate")
                             return regenerateComponent;
                         if (root.activePopover === "thinking")
@@ -1268,14 +1281,6 @@ Item {
         }
     }
 
-    Component {
-        id: ollamaModelsComponent
-        AiOllamaModelsPage {
-            active: true
-            showHeader: false
-            fillAvailableHeight: true
-        }
-    }
 
     Component {
         id: thinkingComponent
@@ -1404,13 +1409,6 @@ Item {
                 }
             }
 
-            CanvasRow {
-                Layout.fillWidth: true
-                symbol: "download"
-                label: Translation.tr("Ollama models")
-                valueText: Translation.tr("Browse and pull")
-                onTriggered: root.openView("ollamaModels", "more")
-            }
 
             CanvasRow {
                 Layout.fillWidth: true

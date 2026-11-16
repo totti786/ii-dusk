@@ -200,41 +200,13 @@ Item {
                 }
 
                 SectionLabel {
-                    visible: root.context.showPlayerSwitcher
-                    text: Translation.tr("Source")
+                    text: Translation.tr("Playback controls")
                 }
-                Flow {
+                MediaModePlayerControls {
                     Layout.fillWidth: true
-                    visible: root.context.showPlayerSwitcher
-                    spacing: Appearance.sizes.elevationMargin / 2
-                    Repeater {
-                        model: MprisController.applicationPlayers
-                        delegate: SheetAction {
-                            required property var modelData
-                            symbol: "music_note"
-                            label: modelData.identity || modelData.desktopEntry || Translation.tr("Player")
-                            selected: root.context.applicationsSource && root.context.player === modelData
-                            onClicked: {
-                                if (root.context.localSource && LocalMediaService.player?.isPlaying)
-                                    LocalMediaService.pause();
-                                LocalMediaService.releaseMprisControl();
-                                MprisController.selectMediaModeApplicationPlayer(modelData);
-                                root.dismissed();
-                            }
-                        }
-                    }
-                    SheetAction {
-                        symbol: "library_music"
-                        label: Translation.tr("Local music")
-                        selected: root.context.localSource
-                        onClicked: {
-                            if (root.context.applicationsSource && root.context.player?.isPlaying)
-                                root.context.player.pause();
-                            MprisController.setMediaModeSource("local");
-                            LocalMediaService.claimMprisControl();
-                            root.dismissed();
-                        }
-                    }
+                    player: root.context.player
+                    localSource: root.context.localSource
+                    foreground: root.foreground
                 }
 
                 RowLayout {

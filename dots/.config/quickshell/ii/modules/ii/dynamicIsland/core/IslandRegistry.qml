@@ -219,6 +219,20 @@ Singleton {
             content: {}
         },
         {
+            id: "companion",
+            legacyContent: "FloatingNotchCompanion.qml",
+            tier: "ambient",
+            icon: "graphic_eq",
+            label: "Voice companion",
+            preferredSide: "right",
+            canDetach: true,
+            settleMs: 0,
+            compact: { width: 190, height: -1 },
+            orb: { size: -1 },
+            expanded: { width: 320, height: 156 },
+            content: {}
+        },
+        {
             id: "ai",
             legacyContent: "FloatingNotchAiStatus.qml",
             tier: "live",

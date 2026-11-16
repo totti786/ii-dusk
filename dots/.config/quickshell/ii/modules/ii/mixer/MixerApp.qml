@@ -37,10 +37,14 @@ Scope {
     }
 
     RetainedLoader {
+        id: deferredWindowLoader
         requested: GlobalStates.mixerOpen
         retainFor: 30000
-        sourceComponent: MixerWindow {
-            onCloseRequested: root.requestClose()
+        source: "MixerWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

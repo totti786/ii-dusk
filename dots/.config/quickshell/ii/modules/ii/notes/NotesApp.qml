@@ -74,8 +74,11 @@ Scope {
         // tree — every note, every pane — is built when it is wanted and released when it
         // is not, rather than living for the lifetime of the shell.
         active: false
-        sourceComponent: NotesAppWindow {
-            onCloseRequested: root.requestClose()
+        source: "NotesAppWindow.qml"
+
+        Connections {
+            target: windowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

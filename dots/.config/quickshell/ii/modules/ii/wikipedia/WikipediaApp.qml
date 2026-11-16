@@ -28,9 +28,13 @@ Scope {
     }
 
     Loader {
+        id: deferredWindowLoader
         active: GlobalStates.wikipediaOpen
-        sourceComponent: WikipediaWindow {
-            onCloseRequested: root.requestClose()
+        source: "WikipediaWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

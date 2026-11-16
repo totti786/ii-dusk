@@ -113,6 +113,28 @@ class Registration(unittest.TestCase):
                 return {"data": [{"name": bridge.SHELL_TOOL_SERVER, "status": {"status": self.status}}]}
             return None
 
+    def test_registration_passes_desktop_connection_without_copying_secrets(self):
+        server = self.Server("connected")
+        original = server.call
+        registrations = []
+        def call(method, path, body=None, timeout=30):
+            if method == "PUT":
+                registrations.append(body["config"]["environment"])
+            return original(method, path, body, timeout)
+        server.call = call
+        with mock.patch.dict(os.environ, {"WAYLAND_DISPLAY": "wayland-test", "XDG_RUNTIME_DIR": "/run/user/9999", "OPENAI_API_KEY": "secret"}):
+            bridge.ensure_shell_tools(server, "/w", {bridge.MCP_REVISION_KEY: "old"})
+        self.assertEqual(registrations[0]["WAYLAND_DISPLAY"], "wayland-test")
+        self.assertEqual(registrations[0]["XDG_RUNTIME_DIR"], "/run/user/9999")
+        self.assertNotIn("OPENAI_API_KEY", registrations[0])
+
+    def test_a_changed_display_invalidates_the_registered_connection(self):
+        with mock.patch.dict(os.environ, {"WAYLAND_DISPLAY": "wayland-before"}):
+            before = bridge.script_revision()
+        with mock.patch.dict(os.environ, {"WAYLAND_DISPLAY": "wayland-after"}):
+            after = bridge.script_revision()
+        self.assertNotEqual(before, after)
+
     def test_a_current_connected_server_is_left_alone(self):
         server = self.Server("connected")
         state = {bridge.MCP_REVISION_KEY: bridge.script_revision()}

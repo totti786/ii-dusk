@@ -27,9 +27,13 @@ Scope {
     }
 
     Loader {
+        id: deferredWindowLoader
         active: GlobalStates.quickShareAppOpen
-        sourceComponent: QuickShareWindow {
-            onCloseRequested: root.requestClose()
+        source: "QuickShareWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

@@ -45,6 +45,8 @@ const activities = [
     // ── Live activities ──────────────────────────────────────────────────
     { id: "media", key: "disableMedia", group: "live", icon: "music_note", shape: "Cookie12Sided",
       label: "Media", tip: "Show the playing track, its cover and the visualizer" },
+    { id: "companion", key: "disableCompanion", group: "live", icon: "graphic_eq", shape: "SoftBurst",
+      label: "Voice companion", tip: "Talk from an island bubble, or drag it out to float on the desktop" },
     { id: "ai", key: "disableAiStatus", group: "live", icon: "auto_awesome", shape: "SoftBurst",
       label: "AI agent status", tip: "Show agents working, waiting or finished" },
     { id: "timer", key: "disableTimer", group: "live", icon: "timer", shape: "Cookie9Sided",

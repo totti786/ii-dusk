@@ -36,8 +36,11 @@ Scope {
     Loader {
         id: windowLoader
         active: GlobalStates.calculatorAppOpen
-        sourceComponent: CalculatorWindow {
-            onCloseRequested: root.requestClose()
+        source: "CalculatorWindow.qml"
+
+        Connections {
+            target: windowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

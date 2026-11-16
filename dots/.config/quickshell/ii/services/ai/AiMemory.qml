@@ -27,9 +27,35 @@ Singleton {
     property bool loaded: false
     /** Facts, newest last: {id, text, at, source}. */
     property var facts: []
+    property var skills: []
+    property var learning: ({state: "idle", counts: {pending: 0}})
+    FileView {
+        id: learningFile
+        path: FileUtils.trimFileProtocol(`${Directories.state}/user/ai/learning-status.json`)
+        watchChanges: true
+        printErrors: false
+        onFileChanged: learningFile.reload()
+        onLoaded: { try { root.learning = JSON.parse(learningFile.text()); } catch (error) {} }
+    }
+    readonly property string skillsPath: (Quickshell.env("XDG_DATA_HOME") || (FileUtils.trimFileProtocol(Directories.home) + "/.local/share")) + "/quickshell-ii/skills/index.json"
+    function forgetSkill(id: string): void {
+        root.queueWrite("memory_forget", {id: id});
+    }
+    FileView {
+        id: skillsFile
+        path: root.skillsPath
+        watchChanges: true
+        printErrors: false
+        onFileChanged: skillsFile.reload()
+        onLoaded: {
+            try { root.skills = JSON.parse(skillsFile.text()).skills ?? []; }
+            catch (error) { root.skills = []; }
+        }
+        onLoadFailed: root.skills = []
+    }
 
     readonly property bool enabled: Config.options?.ai?.memory?.enabled ?? true
-    readonly property int limit: Math.max(1, Config.options?.ai?.memory?.limit ?? 40)
+    readonly property int limit: Math.max(0, Config.options?.ai?.memory?.limit ?? 40)
 
     /** The block that goes into the system prompt, empty when there is nothing. */
     readonly property string promptBlock: {
@@ -45,46 +71,52 @@ Singleton {
         return `m${Date.now().toString(36)}${Math.floor(Math.random() * 1000).toString(36)}`;
     }
 
+    property var pendingWrites: []
+    property string errorText: ""
+    function queueWrite(tool: string, args: var): void {
+        root.pendingWrites = root.pendingWrites.concat([{tool: tool, args: args}]);
+        root.startWrite();
+    }
+    function startWrite(): void {
+        if (memoryWriter.running || root.pendingWrites.length === 0) return;
+        const job = root.pendingWrites[0];
+        root.pendingWrites = root.pendingWrites.slice(1);
+        memoryWriter.command = ["python3", FileUtils.trimFileProtocol(Directories.scriptPath) + "/ai/agent_memory.py", job.tool, JSON.stringify(job.args)];
+        memoryWriter.running = true;
+    }
+    Process {
+        id: memoryWriter
+        stdout: StdioCollector { id: writeOutput }
+        onExited: (code, status) => {
+            let answer = {};
+            try { answer = JSON.parse(writeOutput.text); } catch (error) {}
+            root.errorText = code === 0 ? "" : String(answer.error || "Memory could not be saved.");
+            memoryFile.reload();
+            skillsFile.reload();
+            Qt.callLater(root.startWrite);
+        }
+    }
     function remember(text: string, source = "user"): bool {
         const value = String(text ?? "").trim();
-        if (!root.enabled || value.length === 0)
-            return false;
-        if (root.facts.some(fact => String(fact.text).toLowerCase() === value.toLowerCase()))
-            return false;
-        root.facts = [...root.facts, {
-                id: root.newId(),
-                text: value,
-                at: Date.now(),
-                source: String(source)
-            }].slice(-root.limit);
-        root.save();
-        root.factAdded(value);
+        if (!root.enabled || root.limit === 0 || value.length === 0) return false;
+        root.queueWrite("remember_fact", {fact: value, source: source});
         return true;
     }
-
     function forget(id: string): bool {
-        const before = root.facts.length;
-        root.facts = root.facts.filter(fact => String(fact.id) !== String(id));
-        if (root.facts.length === before)
-            return false;
-        root.save();
+        if (!root.facts.some(fact => fact.id === id)) return false;
+        root.queueWrite("memory_forget", {id: id});
         return true;
     }
-
     function edit(id: string, text: string): bool {
         const value = String(text ?? "").trim();
-        if (value.length === 0)
-            return root.forget(id);
-        root.facts = root.facts.map(fact => String(fact.id) === String(id) ? Object.assign({}, fact, {
-                    text: value
-                }) : fact);
-        root.save();
+        if (!value.length) return root.forget(id);
+        const fact = root.facts.find(item => item.id === id);
+        if (!fact) return false;
+        root.queueWrite("remember_fact", {id: id, fact: value, key: fact.key ?? "", projectId: fact.projectId ?? "", source: "user"});
         return true;
     }
-
-    function forgetAll() {
-        root.facts = [];
-        root.save();
+    function forgetAll(): void {
+        for (const fact of root.facts) root.queueWrite("memory_forget", {id: fact.id});
     }
 
     function save() {
@@ -96,10 +128,17 @@ Singleton {
         }, null, 2));
     }
 
-    Component.onCompleted: {
-        // The state directory may not exist yet on a fresh install, and a
-        // write into a missing directory fails silently.
-        Quickshell.execDetached(["mkdir", "-p", FileUtils.parentDirectory(root.path)]);
+    Process {
+        id: initializeMemory
+        running: true
+        command: ["python3", FileUtils.trimFileProtocol(Directories.scriptPath) + "/ai/agent_memory.py", "initialize", "{}"]
+        onExited: {
+            // The initial index creation can happen after FileView tried to
+            // watch a missing parent directory. Reload once it exists.
+            skillsFile.reload();
+            memoryFile.reload();
+            learningFile.reload();
+        }
     }
 
     FileView {

@@ -306,8 +306,8 @@ class QmlIntegrationContractTests(unittest.TestCase):
         self.assertIn('case "port_watcher":           return s.portWatcher  ?? "default";', widget_registry)
         self.assertIn('property string portWatcher: "expressive"', config)
         self.assertIn('case "port_watcher":', bar_component)
-        self.assertIn("PortWatcherWidget {", bar_component)
-        self.assertIn("ExpressivePortWatcher {", bar_component)
+        self.assertIn("widgets/portWatcher/PortWatcherWidget.qml", bar_component)
+        self.assertIn("widgets/portWatcher/ExpressivePortWatcher.qml", bar_component)
 
     def test_both_widget_variants_exist(self):
         widget_dir = REPO_ROOT / "modules/ii/bar/widgets/portWatcher"

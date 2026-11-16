@@ -28,10 +28,14 @@ Scope {
     }
 
     Loader {
+        id: deferredWindowLoader
         active: root.warm || GlobalStates.editorOpen
         asynchronous: !GlobalStates.editorOpen
-        sourceComponent: EditorWindow {
-            onCloseRequested: GlobalStates.editorOpen = false
+        source: "EditorWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { GlobalStates.editorOpen = false }
         }
     }
 

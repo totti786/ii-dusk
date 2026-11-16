@@ -65,7 +65,7 @@ Rectangle {
     /** The pill's own inset, counted once on each side of its content. */
     readonly property real pillPadding: Math.round(root.controlExtent * 0.28)
     /** How many round controls sit to the right of the model's name. */
-    readonly property int actionCount: root.minimal ? 2 : 5
+    readonly property int actionCount: root.minimal ? 3 : 6
     /**
      * Everything the actions leave over, which is what the name may use.
      *
@@ -131,7 +131,7 @@ Rectangle {
                     // A provider that ships a logo gets its logo; everything
                     // else gets the glyph the catalogue chose for it.
                     id: modelIconLoader
-                    Layout.alignment: Qt.AlignVCenter
+                    Layout.alignment: root.showModelName ? Qt.AlignVCenter : Qt.AlignCenter
                     active: (root.modelEntry?.icon ?? "").length > 0
                     visible: active
 
@@ -148,7 +148,7 @@ Rectangle {
 
                 MaterialSymbol {
                     id: modelGlyph
-                    Layout.alignment: Qt.AlignVCenter
+                    Layout.alignment: root.showModelName ? Qt.AlignVCenter : Qt.AlignCenter
                     visible: (root.modelEntry?.icon ?? "").length === 0
                     text: (root.modelEntry?.materialIcon ?? "").length > 0 ? root.modelEntry.materialIcon : "auto_awesome"
                     fill: 1
@@ -200,6 +200,20 @@ Rectangle {
             symbol: "refresh"
             tooltipText: Translation.tr("Ask again. The answer being replaced stays in its own chat")
             onTriggered: Ai.regenerate(root.messageId)
+        }
+
+        ActionButton {
+            readonly property bool readingThis: Ai.speechService.speaking && Ai.speechService.messageId === root.messageId
+            symbol: readingThis ? "stop_circle" : "volume_up"
+            tooltipText: readingThis ? Translation.tr("Stop reading aloud")
+                : Ai.speechService.errorText.length > 0 ? Ai.speechService.errorText : Translation.tr("Read aloud")
+            enabled: !Ai.speechService.speaking || readingThis
+            onTriggered: {
+                if (readingThis)
+                    Ai.speechService.stop();
+                else
+                    Ai.speechService.speak(String(root.messageData?.content ?? ""), root.messageId);
+            }
         }
 
         ActionButton {

@@ -45,8 +45,11 @@ Scope {
         requested: GlobalStates.clockAppOpen
         // The last clock stays warm for a quick reopen, then goes entirely.
         retainFor: 30000
-        sourceComponent: ClockAppWindow {
-            onCloseRequested: root.requestClose()
+        source: "ClockAppWindow.qml"
+
+        Connections {
+            target: windowLoader.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 

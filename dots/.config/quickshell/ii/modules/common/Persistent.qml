@@ -239,6 +239,14 @@ Singleton {
             property string hyprlandInstanceSignature: ""
             // Per-output desktop shortcuts; independent of tablet home pages and presets.
             property string desktopShortcutsJson: "{}"
+            property JsonObject aiCompanion: JsonObject {
+                property bool docked: true
+                property bool visible: true
+                property bool expanded: false
+                property real xRatio: 0.98
+                property real yRatio: 0.82
+                property string monitor: ""
+            }
 
             property JsonObject migrations: JsonObject {
                 property int presetUserDataVersion: 0
@@ -329,6 +337,8 @@ Singleton {
             }
 
             property JsonObject ai: JsonObject {
+                property string lastSessionId: ""
+                property bool lastSessionInitialized: false
                 // Catalog id of the model that answers, "provider:model".
                 property string modelId: "google:gemini-3.8-flash"
                 // Defaults for a new chat. The older fields below are kept so
@@ -583,6 +593,7 @@ Singleton {
                             property string cachedNotificationsJson: ""
                             property JsonObject scrcpy: JsonObject {
                                 property list<string> recentPackages: []
+                                property string hevcEncodersJson: "{}"
                             }
                             // Mirror / Webcam / Microphone group at the bottom of the tab
                             property JsonObject peripherals: JsonObject {

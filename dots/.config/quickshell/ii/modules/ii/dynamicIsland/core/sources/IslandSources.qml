@@ -23,7 +23,7 @@ Item {
         // arbitration is IslandRegistry's tier, not this list.
         windowSwitcher, askpass, search, wallpaper, session, colorPicker, displayModes, notification, osd, phoneCall, alarm, reminder, fingerprint,
         // Live and ambient.
-        ai, media, mediator, timer, focusSession, recording, audioRecording, dictation, localSend, shelf, progress, songRec, teleprompter,
+        ai, companion, media, mediator, timer, focusSession, recording, audioRecording, dictation, localSend, shelf, progress, songRec, teleprompter,
         // Side glances.
         earbuds, btPhone, weather, batteryGlance, reminderSoon, prayer, privacy, discordVoice, phoneMirror, phoneLink, sports, phoneLive,
         // Announcements.
@@ -51,6 +51,7 @@ Item {
     readonly property var phoneLive: optional.item ? optional.item.phoneLive : null
     readonly property var vpn: optional.item ? optional.item.vpn : null
     readonly property var ai: optional.item ? optional.item.ai : null
+    readonly property CompanionSource companion: CompanionSource {}
     readonly property MediaSource media: MediaSource {}
     readonly property var mediator: optional.item ? optional.item.mediator : null
     readonly property TimerSource timer: TimerSource {}

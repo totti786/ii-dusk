@@ -28,10 +28,14 @@ Scope {
     }
 
     Loader {
+        id: deferredWindowLoader
         active: root.warm || GlobalStates.imageViewerOpen
         asynchronous: !GlobalStates.imageViewerOpen
-        sourceComponent: ImageViewerWindow {
-            onCloseRequested: GlobalStates.imageViewerOpen = false
+        source: "ImageViewerWindow.qml"
+
+        Connections {
+            target: deferredWindowLoader.item
+            function onCloseRequested() { GlobalStates.imageViewerOpen = false }
         }
     }
 

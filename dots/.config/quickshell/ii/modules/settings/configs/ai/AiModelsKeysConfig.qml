@@ -39,7 +39,7 @@ Item {
             }
 
             StyledText {
-                text: Translation.tr("Models & Keys")
+                text: Translation.tr("Agents & Sign-in")
                 font.pixelSize: Appearance.font.pixelSize.large
                 font.family: Appearance.font.family.title
                 color: Appearance.colors.colOnLayer0
@@ -47,27 +47,15 @@ Item {
         }
 
         ContentSection {
-            icon: "key"
-            title: Translation.tr("API keys")
+            icon: "account_circle"
+            title: Translation.tr("Signed-in agents")
 
             AiApiKeyManager {
                 Layout.fillWidth: true
             }
         }
 
-        ContentSection {
-            icon: "dataset"
-            title: Translation.tr("Models")
 
-            SubPageEntryButton {
-                entryIcon: "add_circle"
-                entryTitle: Translation.tr("Custom models")
-                entryDescription: Translation.tr("Add provider models or your own compatible endpoint")
-                entryAccent: Appearance.colors.colPrimary
-                entryOnAccent: Appearance.colors.colOnPrimary
-                onClicked: root.activeSubPage = Qt.resolvedUrl("CustomModelsConfig.qml")
-            }
-        }
     }
 
     property bool showBackButton: false

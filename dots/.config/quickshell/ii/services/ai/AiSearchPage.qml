@@ -29,7 +29,7 @@ Item {
         "models": { title: Translation.tr("Models"), subtitle: Translation.tr("Choose the model and inspect its capabilities."), icon: "auto_awesome" },
         "history": { title: Translation.tr("History"), subtitle: Translation.tr("Return to a conversation or manage its lifecycle."), icon: "history" },
         "tools": { title: Translation.tr("Tools & web"), subtitle: Translation.tr("Control exposure, web mode, and per-tool approval."), icon: "construction" },
-        "keys": { title: Translation.tr("Provider keys"), subtitle: Translation.tr("Keys stay masked and are tested without sending a chat."), icon: "key" },
+        "keys": { title: Translation.tr("Agent sign-ins"), subtitle: Translation.tr("Use Codex, Claude Code or OpenCode without entering API keys."), icon: "account_circle" },
         "actions": { title: Translation.tr("Actions"), subtitle: Translation.tr("Keyboard actions available from Search AI."), icon: "bolt" }
     })
 

@@ -31,7 +31,7 @@ ContentPage {
 
     // Detection only otherwise runs on the first recording attempt or a
     // manual "Check again" — reached without either on a page whose whole
-    // point is showing whether whisper.cpp is there yet, which would
+    // point is showing whether Voxtype is there yet, which would
     // stick on "Checking…" until the user tried the microphone once.
     Component.onCompleted: {
         if (page.showingFiles)
@@ -82,36 +82,15 @@ ContentPage {
             : "Linux";
     }
 
-    /**
-     * Only the package-manager line differs between distros; the rest of
-     * the build is identical everywhere whisper.cpp compiles, so this
-     * returns just that one line and `voiceDepsInstallCommandFor` below
-     * appends the shared build steps to it.
-     */
     function voiceDepsPackageLineFor(value: string): string {
         const distro = String(value || "").toLowerCase();
-        if (["fedora", "rhel", "centos", "rocky", "almalinux"].indexOf(distro) >= 0)
-            return "sudo dnf install -y cmake gcc-c++ git pipewire-utils";
         if (["arch", "artix", "manjaro", "endeavouros", "cachyos"].indexOf(distro) >= 0)
-            return "sudo pacman -S --needed cmake gcc git pipewire-audio";
-        if (["debian", "ubuntu", "linuxmint", "pop", "popos", "zorin", "elementary", "kali", "raspbian"].indexOf(distro) >= 0)
-            return "sudo apt update && sudo apt install -y cmake g++ git pipewire-bin";
-        if (distro === "nixos")
-            return "nix profile install nixpkgs#cmake nixpkgs#gcc nixpkgs#git nixpkgs#pipewire";
-        return "# Install with your package manager: cmake, a C++ compiler, git, and\n" +
-            "# PipeWire's pw-record (often a separate \"utils\"/\"tools\"/\"bin\" package)";
+            return "yay -S voxtype-bin";
+        return "# Install Voxtype using the Dictation settings page first.";
     }
 
     function voiceDepsInstallCommandFor(value: string): string {
-        return [
-            page.voiceDepsPackageLineFor(value),
-            "git clone --depth 1 https://github.com/ggerganov/whisper.cpp ~/.local/share/whisper.cpp",
-            "cmake -B ~/.local/share/whisper.cpp/build -DCMAKE_BUILD_TYPE=Release",
-            "cmake --build ~/.local/share/whisper.cpp/build -j$(nproc)",
-            "mkdir -p ~/.local/bin",
-            "ln -sf ~/.local/share/whisper.cpp/build/bin/whisper-cli ~/.local/bin/whisper-cli",
-            "bash ~/.local/share/whisper.cpp/models/download-ggml-model.sh base"
-        ].join("\n");
+        return [page.voiceDepsPackageLineFor(value), "voxtype setup --download --model base"].join("\n");
     }
 
     // English and Portuguese language data named explicitly: tesseract's
@@ -619,8 +598,8 @@ ContentPage {
             bottomLeftRadius: Appearance.rounding.large
             bottomRightRadius: Appearance.rounding.large
             icon: "terminal"
-            title: Translation.tr("Build whisper.cpp · %1").arg(page.linuxFamily)
-            text: Translation.tr("Compiles a small local speech-to-text engine, links it as `whisper-cli`, and downloads its base model (about 150 MB, once). Runs entirely on this machine — nothing spoken is ever sent anywhere. Copy the command for your system, run it in a terminal, then press Check again above.")
+            title: Translation.tr("Set up Voxtype · %1").arg(page.linuxFamily)
+            text: Translation.tr("Voice input uses local Voxtype and its multilingual base model. Install Voxtype through the Dictation settings page, download the model with the command below, then press Check again. Speech stays on this machine.")
             codeSnippet: page.voiceDepsInstallCommand
             snippetWrapMode: Text.Wrap
         }

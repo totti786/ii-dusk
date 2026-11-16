@@ -4,6 +4,11 @@
 // was looked at or changed, and a few lines of detail. Pure, so it can be tested without the shell.
 
 var ICONS = {
+    memory_search: "psychology", remember_fact: "bookmark_add", memory_forget: "delete_sweep",
+    skill_search: "school", skill_save: "auto_awesome", conversation_search: "history",
+    desktop_context: "desktop_windows", wallpaper_search: "image_search", wallpaper_set: "wallpaper",
+    companion_status: "computer", browser_tools: "language", browser_call: "language",
+    desktop_capture: "screenshot_monitor", desktop_input: "mouse", speak_text: "volume_up",
     get_environment: "computer", system_get_status: "monitor_heart", system_health: "monitor_heart",
     windows_list: "window", keybinds_search: "keyboard", settings_search: "manage_search", settings_get: "settings",
     settings_set: "tune", read_file: "description", list_directory: "folder_open", read_logs: "receipt_long",
@@ -32,6 +37,21 @@ function show(value) {
 function running(tool, input) {
     input = input || {};
     switch (tool) {
+    case "memory_search": return "Recalling relevant facts";
+    case "remember_fact": return "Remembering a fact";
+    case "memory_forget": return "Removing saved knowledge";
+    case "skill_search": return "Finding learned skills";
+    case "skill_save": return "Saving a verified skill";
+    case "conversation_search": return "Searching earlier conversations";
+    case "desktop_context": return "Reading desktop context";
+    case "wallpaper_search": return "Searching the wallpaper library";
+    case "wallpaper_set": return "Applying wallpaper through QuickShell";
+    case "companion_status": return "Checking companion capabilities";
+    case "browser_tools": return "Discovering browser tools";
+    case "browser_call": return "Browser action: " + clip(input.name, 60);
+    case "desktop_capture": return "Looking at the screen";
+    case "desktop_input": return "Desktop action: " + clip(input.action, 20);
+    case "speak_text": return "Speaking aloud";
     case "get_environment": return "Looking at the system";
     case "system_get_status": return "Checking system status";
     case "system_health": return "Checking system health";
@@ -65,6 +85,9 @@ function finished(tool, input, resultText, failure) {
         return { title: title, detail: clip(failure, 300), ok: false, icon: icon };
     }
     var result = parse(resultText);
+    if (tool === "wallpaper_set" && result) {
+        return { title: "Wallpaper apply requested", detail: clip(result.ref || "", 160), ok: result.requested === true && result.configured === true, icon: icon };
+    }
     if (tool === "settings_set" && result) {
         var applied = result.applied || [];
         var skipped = result.skipped || [];

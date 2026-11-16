@@ -8,6 +8,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import qs
 import qs.services
+import qs.services.ai
 import Quickshell.Widgets
 import qs.modules.common
 import qs.modules.common.widgets
@@ -791,25 +792,21 @@ Scope {
     property real overviewFade: root.overviewVisible ? 1.0 : 0.0
     readonly property bool overviewAnimating: root.searchActive || root.overviewReveal > 0.001 || root.overviewFade > 0.001
 
-    /**
-     * The workspace grid is built once and then kept.
-     *
-     * Building it is the most expensive thing search does - a tile and a screen copy per
-     * window - and doing that on every open dropped up to a hundred milliseconds of
-     * frames right in the middle of the island's morph. The tiles already stop capturing
-     * while hidden and refresh their frozen frame when shown again, so a kept grid costs
-     * memory, not work. It is also warmed once the session is quiet, so even the first
-     * open does not pay for it.
-     */
+    // Keep the grid through the closing animation and brief reopenings only.
     property bool overviewBuilt: false
     onOverviewAnimatingChanged: {
-        if (root.overviewAnimating)
+        if (root.overviewAnimating) {
+            overviewUnloadTimer.stop();
             root.overviewBuilt = true;
+        }
     }
-    property Timer overviewWarmTimer: Timer {
-        interval: 4000
-        running: !root.overviewBuilt && !IslandPolicy.quietWindowActive && !GlobalStates.screenLocked
-        onTriggered: root.overviewBuilt = true
+    property Timer overviewUnloadTimer: Timer {
+        interval: 5000
+        running: root.overviewBuilt && !root.overviewAnimating
+        onTriggered: {
+            if (!root.overviewAnimating)
+                root.overviewBuilt = false;
+        }
     }
 
     Behavior on overviewReveal {
@@ -1255,7 +1252,7 @@ Scope {
             return false;
         // A drop target has to be visible to be a target, and no hover signal arrives
         // during a drag to reveal it.
-        if (controller.sources.localSend.dragHovering)
+        if (controller.sources.localSend.dragHovering || AiCompanionUi.dragging)
             return false;
         // A prompter being read is the point of the screen: the session holds the
         // island out — over a fullscreen window included, because presenting from
@@ -2170,6 +2167,26 @@ Scope {
             height: container.height
         }
 
+        Item {
+            id: companionDockAnchor
+            x: container.x + (container.width-width)/2
+            y: Math.max(4, container.y)
+            width: Math.min(260, container.width)
+            height: Math.max(36, root.bubbleRestHeight)
+            function publish(): void {
+                const point = mapToGlobal(0, 0);
+                AiCompanionUi.publishDockTarget(win.screen?.name ?? "", point.x, point.y, width, height);
+            }
+            onXChanged: Qt.callLater(publish)
+            onYChanged: Qt.callLater(publish)
+            onWidthChanged: Qt.callLater(publish)
+            onHeightChanged: Qt.callLater(publish)
+            Component.onCompleted: Qt.callLater(publish)
+            Connections {
+                target: win
+                function onScreenChanged() { Qt.callLater(companionDockAnchor.publish); }
+            }
+        }
         // ── Auxiliary bubbles: the shapes, beneath the body ──────────────────
         // The fields draw only the necks and the bubbles; the body drawn over them
         // is the island's own, so the surfaces read as one body pulling apart.
@@ -2214,7 +2231,7 @@ Scope {
                 bodyCenterX: container.x + container.width / 2
                 bodyTop: container.y
                 bodyWidth: notchBody.bodyWidth * container.scale
-                bodyHeight: notchBody.height * container.scale
+                bodyHeight: notchBody.surfaceHeight * container.scale
                 bodyRadius: notchBody.bodyRadius * container.scale
                 reservedRight: container.x + container.width / 2 + (IslandGeometry.centerWidth ?? 0) / 2
                 reservedLeft: container.x + container.width / 2 - (IslandGeometry.centerWidth ?? 0) / 2
@@ -2576,6 +2593,26 @@ Scope {
             NotchShape {
                 id: notchBody
                 anchors.fill: parent
+                anchors.bottomMargin: -10
+                surfaceHeight: parent.height
+                readonly property bool companionCue: AiCompanionUi.dragging && AiCompanionUi.canDock
+                    && AiCompanionUi.dragMonitor === win.screen?.name
+                property real cueStrength: companionCue ? (AiCompanionUi.nearDock ? 7 : 4) : 0
+                property real cuePhase: 0
+                Behavior on cueStrength {
+                    enabled: !AiCompanionUi.reducedMotion
+                    NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                }
+                bottomWaveAmplitude: cueStrength
+                bottomWavePhase: AiCompanionUi.reducedMotion ? Math.PI/2 : cuePhase
+                bottomWavePosition: {
+                    const origin = notchBody.mapToGlobal(0, 0);
+                    return Math.max(0, Math.min(1, (AiCompanionUi.dragX-origin.x)/Math.max(1, width)));
+                }
+                FrameAnimation {
+                    running: notchBody.cueStrength > .02 && !AiCompanionUi.reducedMotion && win.visible
+                    onTriggered: notchBody.cuePhase = (notchBody.cuePhase + Math.min(frameTime, .05)*2.8) % (Math.PI*2)
+                }
                 // The shoulder inset is reserved while floating too: the body that
                 // the clip, the mask and the bubbles measure is the straight part,
                 // and it must not change with the shell.
@@ -2760,6 +2797,9 @@ Scope {
                     flareDepth: notchBody.flareDepth
                     foot: notchBody.foot
                     slant: notchBody.slant
+                    bottomWaveAmplitude: notchBody.bottomWaveAmplitude
+                    bottomWavePhase: notchBody.bottomWavePhase
+                    bottomWavePosition: notchBody.bottomWavePosition
                     color: "black"
                 }
             }

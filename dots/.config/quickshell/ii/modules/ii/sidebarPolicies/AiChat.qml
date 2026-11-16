@@ -18,6 +18,7 @@ Item {
     property real padding: 4
     property var inputField: messageInputField
     property string commandPrefix: "/"
+    property bool companionHosted: false
     readonly property bool autoScrollEnabled: Config.options.sidebar.ai.autoScroll
     readonly property bool reducedMotion: Config.options.sidebar.ai.reducedMotion
 
@@ -852,7 +853,9 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
         // Search composer sitting loaded but hidden elsewhere.
         target: Ai.voiceService
         function onStateChanged() {
-            if (Ai.voiceService.state !== "review" || Ai.voiceService.activeSurface !== "sidebar")
+            if (Ai.voiceService.state !== "review")
+                return;
+            if (root.companionHosted ? Ai.voiceService.activeSurface !== "companion" : Ai.voiceService.activeSurface !== "sidebar")
                 return;
             const text = Ai.voiceService.draftText;
             Ai.voiceService.attachDraft(text);
@@ -1647,7 +1650,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                             bottomMargin: root.messageListInset * 2
                         }
                         width: Math.min(parent.width - root.messageListInset * 2, Appearance.font.pixelSize.huge * 20)
-                        active: Config.options.sidebar.ai.emptyStateKeys && Ai.messageIDs.length === 0 && !root.canvasViewOpen
+                        active: !root.companionHosted && Config.options.sidebar.ai.emptyStateKeys && Ai.messageIDs.length === 0 && !root.canvasViewOpen
                         opacity: active ? 1 : 0
                         visible: opacity > 0.01
 
@@ -2582,10 +2585,16 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                                                 break;
                                             case "error":
                                                 Ai.voiceService.cancel();
-                                                Ai.voiceService.startRecording("sidebar");
+                                                if (root.companionHosted)
+                                                    Ai.voiceService.startRecording("companion");
+                                                else
+                                                    Ai.voiceService.startRecording("sidebar");
                                                 break;
                                             default:
-                                                Ai.voiceService.startRecording("sidebar");
+                                                if (root.companionHosted)
+                                                    Ai.voiceService.startRecording("companion");
+                                                else
+                                                    Ai.voiceService.startRecording("sidebar");
                                                 break;
                                             }
                                         }

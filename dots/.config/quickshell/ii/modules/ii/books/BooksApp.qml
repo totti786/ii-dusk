@@ -36,16 +36,24 @@ Scope {
     }
 
     Loader {
+        id: appWindowLoader0
         active: GlobalStates.booksOpen
-        sourceComponent: BooksWindow {
-            onCloseRequested: root.requestClose()
+        source: "BooksWindow.qml"
+
+        Connections {
+            target: appWindowLoader0.item
+            function onCloseRequested() { root.requestClose() }
         }
     }
 
     Loader {
+        id: appWindowLoader1
         active: GlobalStates.booksOverlayOpen
-        sourceComponent: BooksOverlay {
-            onCloseRequested: GlobalStates.booksOverlayOpen = false
+        source: "BooksOverlay.qml"
+
+        Connections {
+            target: appWindowLoader1.item
+            function onCloseRequested() { GlobalStates.booksOverlayOpen = false }
         }
     }
 

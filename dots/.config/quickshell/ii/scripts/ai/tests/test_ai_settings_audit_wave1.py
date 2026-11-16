@@ -128,7 +128,7 @@ class WaveTwoSettingsOrganizationTests(unittest.TestCase):
     def test_configuration_routes_are_split_by_concern(self):
         source = AI_SETTINGS.read_text(encoding="utf-8")
         for label in (
-            "Models & Keys",
+            "Agents & Sign-in",
             "Tools & Permissions",
             "Files, Vision & Voice",
             "Local Retrieval (RAG)",
