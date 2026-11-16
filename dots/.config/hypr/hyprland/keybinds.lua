@@ -606,7 +606,9 @@ hl.bind("SUPER + X", hl.dsp.global("quickshell:sessionToggle"), { description = 
 hl.bind("SUPER + I", hl.dsp.global("quickshell:sidebarRightToggle"), { description = "Shell: Toggle right sidebar" })
 --##! User
 --##! Apps
-hl.bind("SUPER + Escape", hl.dsp.exec_cmd("hyprctl kill"), { description = "Window: Kill mode (click a window to kill it)" })
+-- Hyprland cancels kill mode on ANY Escape event, press or release (handleInternalKeybinds), so
+-- the script waits until Escape and Super are physically up before arming it.
+hl.bind("SUPER + Escape", hl.dsp.exec_cmd("$HOME/.config/hypr/hyprland/scripts/kill-mode.py"), { description = "Window: Kill mode (click a window to kill it)" })
 
 --##! Window
 --# Cursed stuff
