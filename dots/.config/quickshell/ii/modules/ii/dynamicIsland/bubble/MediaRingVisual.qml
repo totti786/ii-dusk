@@ -19,6 +19,8 @@ Item {
     // is important: the progress mask is a wedge, not a complete badge.
     property string artSource: ""
     property string icon: "movie"
+    // Work in progress with no position yet (finding or opening a stream): the glyph spins
+    property bool loading: false
     property color primaryColor: Appearance.colors.colPrimary
     property color iconColor: Appearance.colors.colOnPrimaryContainer
 
@@ -127,13 +129,30 @@ Item {
                 }
             }
 
+            // Over a poster the spinner rides on a scrim so it still reads
+            Rectangle {
+                anchors.fill: parent
+                radius: width / 2
+                color: Qt.alpha("black", 0.45)
+                visible: root.loading && artImage.visible
+            }
+
             MaterialSymbol {
+                id: glyph
                 anchors.centerIn: parent
-                visible: !artImage.visible
-                text: root.icon
+                visible: !artImage.visible || root.loading
+                text: root.loading ? "progress_activity" : root.icon
                 fill: 1
                 iconSize: Math.round(root.diameter * 0.36)
-                color: root.iconColor
+                color: root.loading && artImage.visible ? "white" : root.iconColor
+                RotationAnimator on rotation {
+                    from: 0
+                    to: 360
+                    duration: 1100
+                    loops: Animation.Infinite
+                    running: root.loading && !Appearance.reducedMotion && root.visible
+                }
+                onVisibleChanged: if (!visible) rotation = 0
             }
         }
     }

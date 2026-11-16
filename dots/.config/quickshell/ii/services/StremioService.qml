@@ -440,6 +440,12 @@ Singleton {
         function onProviderStreamStarted() {
             root.starting = false;
         }
+        function onDirectFailedChanged() {
+            if (MediatorService.directFailed) {
+                root.notice = "";
+                root.starting = false;
+            }
+        }
         function onStreamErrorChanged() {
             if (MediatorService.streamError !== "") {
                 root.notice = MediatorService.streamError;

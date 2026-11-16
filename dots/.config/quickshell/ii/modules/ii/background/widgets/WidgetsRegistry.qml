@@ -381,6 +381,60 @@ Singleton {
             "configPage": "widgets/DesktopNothingRingMediaConfig.qml"
         },
         {
+            "widgetId": "visualizer",
+            "name": Translation.tr("Audio Visualizer"),
+            "category": "Media",
+            "qmlPath": Qt.resolvedUrl("visualizer/VisualizerWidget.qml"),
+            "icon": "graphic_eq",
+            "description": Translation.tr("Audio visualizer with classic bars, mirror, aurora, dots, and album ring modes."),
+            "configPage": "widgets/DesktopVisualizerConfig.qml"
+        },
+        {
+            "widgetId": "visualizer_ring",
+            "name": Translation.tr("Album Ring Visualizer"),
+            "category": "Media",
+            "qmlPath": Qt.resolvedUrl("visualizer/VisualizerWidget.qml"),
+            "icon": "album",
+            "description": Translation.tr("Circular album art with reactive audio waveforms, rotating pulse, and free placement."),
+            "configPage": "widgets/DesktopVisualizerConfig.qml"
+        },
+        {
+            "widgetId": "visualizer_aurora",
+            "name": Translation.tr("Aurora Wave Visualizer"),
+            "category": "Media",
+            "qmlPath": Qt.resolvedUrl("visualizer/VisualizerWidget.qml"),
+            "icon": "waves",
+            "description": Translation.tr("Fluid, shimmering aurora waveform GPU shader visualizer along the bottom."),
+            "configPage": "widgets/DesktopVisualizerConfig.qml"
+        },
+        {
+            "widgetId": "visualizer_mirror",
+            "name": Translation.tr("Mirror Wave Visualizer"),
+            "category": "Media",
+            "qmlPath": Qt.resolvedUrl("visualizer/VisualizerWidget.qml"),
+            "icon": "equalizer",
+            "description": Translation.tr("Symmetrical vertical audio waveform GPU shader with color gradient."),
+            "configPage": "widgets/DesktopVisualizerConfig.qml"
+        },
+        {
+            "widgetId": "visualizer_dots",
+            "name": Translation.tr("Dots Matrix Visualizer"),
+            "category": "Media",
+            "qmlPath": Qt.resolvedUrl("visualizer/VisualizerWidget.qml"),
+            "icon": "grid_on",
+            "description": Translation.tr("Floating dotted matrix audio reactive GPU shader visualizer."),
+            "configPage": "widgets/DesktopVisualizerConfig.qml"
+        },
+        {
+            "widgetId": "visualizer_bars",
+            "name": Translation.tr("Classic Bars Visualizer"),
+            "category": "Media",
+            "qmlPath": Qt.resolvedUrl("visualizer/VisualizerWidget.qml"),
+            "icon": "bar_chart",
+            "description": Translation.tr("Classic rounded equalizer bars spanning the desktop."),
+            "configPage": "widgets/DesktopVisualizerConfig.qml"
+        },
+        {
             "widgetId": "weather_default",
             "family": "weather",
             "size": "1x1",

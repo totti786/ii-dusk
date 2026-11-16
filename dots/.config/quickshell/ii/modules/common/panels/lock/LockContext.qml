@@ -36,6 +36,15 @@ Scope {
     readonly property int fingerprintMaxTries: 3
     property int fingerprintTriesLeft: fingerprintMaxTries
     signal fingerprintFailed()
+
+    // Face ID (Gaze)
+    readonly property bool faceIdEnabled: Config.options?.lock?.security?.faceId?.enable ?? true
+    readonly property bool faceIdConfigured: root.faceIdEnabled && FaceId.hasEnrolled && FaceId.cameraAvailable
+    readonly property bool faceIdIndicatorVisible: root.faceIdEnabled && (Config.options?.lock?.security?.faceId?.showIndicator ?? true) && FaceId.hasEnrolled
+    readonly property bool faceIdVerifying: FaceId.verifying
+    signal faceIdFailed()
+    signal faceIdSucceeded()
+
     // Held from hypridle's before_sleep_cmd until after_sleep_cmd, so nothing
     // re-arms the reader while the system is on its way into suspend.
     property bool fingerSuspendInhibit: false
@@ -61,6 +70,7 @@ Scope {
         root.clearText();
         root.unlockInProgress = false;
         stopFingerPam();
+        stopFaceAuth();
     }
 
     Timer {
@@ -75,6 +85,7 @@ Scope {
         if (currentText.length > 0) {
             showFailure = false;
             GlobalStates.screenUnlockFailed = false;
+            stopFaceAuth();
         }
         GlobalStates.screenLockContainsCharacters = currentText.length > 0;
         passwordClearTimer.restart();
@@ -82,8 +93,46 @@ Scope {
 
     function tryUnlock(alsoInhibitIdle = false) {
         root.alsoInhibitIdle = alsoInhibitIdle;
+        if (root.currentText.length > 0) {
+            root.stopFaceAuth();
+            root.unlockInProgress = true;
+            pam.start();
+        } else if (root.faceIdConfigured) {
+            root.tryFaceUnlock();
+        } else {
+            root.unlockInProgress = true;
+            pam.start();
+        }
+    }
+
+    function tryFaceUnlock() {
+        if (!root.faceIdConfigured || FaceId.verifying)
+            return;
         root.unlockInProgress = true;
-        pam.start();
+        FaceId.startAuth();
+    }
+
+    function stopFaceAuth() {
+        FaceId.cancelAuth();
+        if (root.unlockInProgress && !pam.active) {
+            root.unlockInProgress = false;
+        }
+    }
+
+    Connections {
+        target: FaceId
+        function onAuthenticated() {
+            root.faceIdSucceeded();
+            root.unlocked(root.targetAction);
+            root.stopFaceAuth();
+            stopFingerPam();
+        }
+        function onFailed() {
+            root.faceIdFailed();
+            GlobalStates.screenUnlockFailed = true;
+            root.showFailure = true;
+            root.unlockInProgress = false;
+        }
     }
 
     function tryFingerUnlock() {
@@ -102,6 +151,7 @@ Scope {
     function suspendFingerUnlock() {
         root.fingerSuspendInhibit = true;
         stopFingerPam();
+        stopFaceAuth();
         fingerInhibitFailsafeTimer.restart();
     }
 
@@ -125,6 +175,7 @@ Scope {
         // A resume is exactly when the reader may have gone away or come back,
         // so re-check it rather than trusting what was probed at startup.
         Fingerprint.probeDevice();
+        FaceId.refresh();
         if (!root.fingerprintsConfigured || !GlobalStates.screenLocked)
             return;
         // A verify aborted here needs time to tear down before the reader is
@@ -193,6 +244,7 @@ Scope {
             if (result == PamResult.Success) {
                 root.unlocked(root.targetAction);
                 stopFingerPam();
+                stopFaceAuth();
             } else {
                 root.clearText();
                 root.unlockInProgress = false;

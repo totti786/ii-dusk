@@ -25,6 +25,8 @@ QtObject {
     signal unlocked(targetAction: var)
     signal failed()
     signal fingerprintFailed()
+    signal faceIdFailed()
+    signal faceIdSucceeded()
 
     property string currentText: ""
     property bool unlockInProgress: false
@@ -37,6 +39,12 @@ QtObject {
         && (Config.options?.lock?.security?.fingerprint?.showIndicator ?? true) && Fingerprint.hasEnrolled
     readonly property int fingerprintMaxTries: 3
     property int fingerprintTriesLeft: fingerprintMaxTries
+
+    readonly property bool faceIdEnabled: Config.options?.lock?.security?.faceId?.enable ?? true
+    readonly property bool faceIdConfigured: false
+    readonly property bool faceIdIndicatorVisible: root.faceIdEnabled
+        && (Config.options?.lock?.security?.faceId?.showIndicator ?? true) && FaceId.hasEnrolled
+    readonly property bool faceIdVerifying: false
     property bool fingerSuspendInhibit: false
     property int fingerRetries: 0
     readonly property int fingerMaxRetries: 5
@@ -73,6 +81,12 @@ QtObject {
     }
 
     function scheduleFingerRetry() {
+    }
+
+    function tryFaceUnlock() {
+    }
+
+    function stopFaceAuth() {
     }
 
     function stopFingerPam() {

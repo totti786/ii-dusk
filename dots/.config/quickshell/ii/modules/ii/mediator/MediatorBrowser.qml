@@ -1459,4 +1459,11 @@ FocusScope {
             }
         }
     }
+
+    // On top of every page (title page, stream picker, search): a failed direct stream must be
+    // answered wherever the play was started.
+    DirectFailedBanner {
+        anchors { top: parent.top; left: parent.left; right: parent.right; margins: 16 }
+        z: 100
+    }
 }

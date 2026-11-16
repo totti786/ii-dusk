@@ -399,11 +399,12 @@ Item {
                     progress: mediator.progress
                     chromeOpacity: 1 - Math.min(1, root.handOff / 0.2)
                     artSource: mediator.posterSource
-                    icon: MediatorService.streamResolving ? "hourglass_top"
+                    loading: MediatorService.streamResolving && MediatorService.directFailed === null
+                    icon: MediatorService.directFailed !== null ? "error"
                         : (mediator.active ? "play_circle" : "movie")
                     primaryColor: Appearance.colors.colPrimary
-                    iconColor: mediator.active
-                        ? Appearance.colors.colOnPrimaryContainer : root.colText
+                    iconColor: MediatorService.directFailed !== null ? Appearance.colors.colError
+                        : mediator.active ? Appearance.colors.colOnPrimaryContainer : root.colText
                 }
             }
 

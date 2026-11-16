@@ -10,6 +10,9 @@ use crate::stremio::{self, Endpoints};
 use serde_json::{json, Value};
 use std::time::Instant;
 
+/// Prefix of the error `run` returns when a direct stream failed and the user should decide.
+const DIRECT_FAILED: &str = "\u{1}direct-failed:";
+
 pub const QUEUE_WINDOW: i64 = 2; // episodes kept queued behind the one playing
 
 /// How long the detached stopper waits before stopping an idle Stremio server.
@@ -74,6 +77,7 @@ pub fn native_sync_callback<'a>(cfg: &'a Config, mut m: Mapping, disabled: bool,
     })
 }
 
+#[derive(Clone)]
 pub struct Options {
     pub title: String,
     pub poster: String,
@@ -88,11 +92,13 @@ pub struct Options {
     pub json_output: bool,
     pub lazy_title: String,
     pub queue_next: bool,
+    /// the user agreed to a torrent after the direct stream failed
+    pub allow_torrent: bool,
 }
 impl Default for Options {
     fn default() -> Self {
         Options { title: String::new(), poster: String::new(), dub: false, quality: String::new(), start: None, anilist_id: 0, season: 0, total: 0,
-            no_sync: false, dry_run: false, json_output: false, lazy_title: String::new(), queue_next: true }
+            no_sync: false, dry_run: false, json_output: false, lazy_title: String::new(), queue_next: true, allow_torrent: false }
     }
 }
 
@@ -108,8 +114,26 @@ pub fn native_play(cfg: &Config, provider_id: &str, episode_id: &str, o: Options
     let ep = Endpoints::default();
     let is_stremio = stremio::is_show(provider_id);
     let session = if is_stremio && !o.dry_run { stremio::register_session() } else { None };
-    let code = match run(cfg, &ep, provider_id, episode_id, &o, is_stremio) {
+    let mut result = run(cfg, &ep, provider_id, episode_id, &o, is_stremio);
+    if let Err(ProviderError(m)) = &result {
+        if let Some(reason) = m.strip_prefix(DIRECT_FAILED) {
+            if !o.json_output && confirm_torrent(reason) {
+                result = run(cfg, &ep, provider_id, episode_id, &Options { allow_torrent: true, ..o.clone() }, is_stremio);
+            }
+        }
+    }
+    let code = match result {
         Ok(c) => c,
+        Err(e) if e.0.starts_with(DIRECT_FAILED) => {
+            let reason = e.0.trim_start_matches(DIRECT_FAILED).to_string();
+            if o.json_output {
+                // the GUI offers "play a torrent instead" and calls again with --allow-torrent
+                provider_json(&json!({"ok": false, "direct_failed": true, "reason": reason, "error": format!("The direct stream failed: {reason}")}));
+            } else {
+                eprintln!("mediator: the direct stream failed: {reason} (rerun with --allow-torrent to use a torrent)");
+            }
+            3
+        }
         Err(e) => {
             if o.json_output {
                 provider_json(&json!({"ok": false, "error": e.0}));
@@ -127,13 +151,42 @@ pub fn native_play(cfg: &Config, provider_id: &str, episode_id: &str, o: Options
     code
 }
 
+/// Ask on the terminal whether a torrent should stand in for the failed direct stream.
+fn confirm_torrent(reason: &str) -> bool {
+    use std::io::{BufRead, IsTerminal, Write};
+    if !(std::io::stdin().is_terminal() && std::io::stderr().is_terminal()) {
+        return false;
+    }
+    eprint!("mediator: the direct stream failed: {reason}\nPlay a torrent instead? [Y/n] ");
+    let _ = std::io::stderr().flush();
+    let mut line = String::new();
+    std::io::stdin().lock().read_line(&mut line).is_ok() && !matches!(line.trim().to_lowercase().as_str(), "n" | "no")
+}
+
+/// A status line for GUI clients (`stream-play --json`): what the resolver is doing right now.
+fn progress(o: &Options, text: &str) {
+    if o.json_output && !o.dry_run {
+        provider_json(&json!({"ok": true, "progress": text}));
+    }
+}
+
 fn run(cfg: &Config, ep: &Endpoints, provider_id: &str, episode_id: &str, o: &Options, is_stremio: bool) -> Result<i32, ProviderError> {
     let kind = if is_stremio && provider_id.matches(':').count() >= 2 { provider_id.split(':').nth(1).unwrap_or("") } else { "" };
     let speed = cfg.speed_for(match kind { "series" => "shows", "movie" => "movies", _ => "anime" });
     let mut direct: Option<(Vec<Value>, Value, Source)> = None;
+    // direct stream first with torrents behind it: tell the user instead of switching silently
+    let ask = is_stremio && !o.dry_run && !o.allow_torrent && cfg.player != "syncplay" && cfg.streaming.hls && cfg.streaming.stremio
+        && !cfg.streaming.prefer_stremio && cfg.streaming.ask_before_torrent;
     if is_stremio {
-        let r = stremio::resolve(ep, provider_id, episode_id, Some(&cfg.streaming)).map_err(|e| ProviderError(e.to_string()))?;
+        progress(o, if o.allow_torrent || !cfg.streaming.hls || cfg.streaming.prefer_stremio { "Finding a torrent…" } else { "Finding a direct stream…" });
+        let hand_picked = stremio::recall(provider_id, episode_id).map(|s| s["chosen"].as_bool().unwrap_or(false)).unwrap_or(false);
+        let direct_only = Streaming { hls: true, prefer_stremio: false, stremio: false, ask_before_torrent: false };
+        let st = if ask && !hand_picked { &direct_only } else { &cfg.streaming };
+        let r = stremio::resolve(ep, provider_id, episode_id, Some(st)).map_err(|e| {
+            if std::ptr::eq(st, &direct_only) { ProviderError(format!("{DIRECT_FAILED}{}", e.0)) } else { ProviderError(e.to_string()) }
+        })?;
         let src = to_source(ep, &r.stream).map_err(|e| ProviderError(e.to_string()))?;
+        progress(o, "Opening the player…");
         direct = Some((r.episodes, r.episode, src));
     }
     let announced = std::cell::Cell::new(false);
@@ -205,8 +258,11 @@ fn run(cfg: &Config, ep: &Endpoints, provider_id: &str, episode_id: &str, o: &Op
             if !(is_stremio && hls_played && cfg.streaming.stremio && !o.dry_run && syncplay_args.is_none() && began.elapsed().as_secs_f64() < 45.0) {
                 return Err(e);
             }
+            if ask {
+                return Err(ProviderError(format!("{DIRECT_FAILED}{}", e.0)));
+            }
             eprintln!("mediator: the direct stream would not play ({}); trying torrents instead", e.0);
-            let fallback = Streaming { hls: false, prefer_stremio: false, stremio: true };
+            let fallback = Streaming { hls: false, prefer_stremio: false, stremio: true, ask_before_torrent: false };
             let r = stremio::resolve(ep, provider_id, episode_id, Some(&fallback)).map_err(|e| ProviderError(e.to_string()))?;
             let mut src = Source::new(stremio::stream_url(ep, &r.stream).map_err(|e| ProviderError(e.to_string()))?);
             src.quality = r.stream["quality"].as_str().filter(|q| !q.is_empty()).unwrap_or("best").into();

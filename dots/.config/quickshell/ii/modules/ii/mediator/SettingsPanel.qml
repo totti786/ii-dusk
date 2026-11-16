@@ -21,7 +21,7 @@ Item {
     readonly property var s: MediatorService.settings
     readonly property bool hasChanges: [jfUrl, jfUser, jfKey, jfInclude, pathAnime, pathShows, pathMovies,
                                         speed, autoFetch, alClientId, alAuto, alAddMissing,
-                                        alRewatch, alComplete, alDates, streamHls, streamStremio, streamPrefer].some(f => f.changed)
+                                        alRewatch, alComplete, alDates, streamHls, streamStremio, streamPrefer, streamAsk].some(f => f.changed)
 
     readonly property string statusLine: MediatorService.saveError !== "" ? MediatorService.saveError
         : root.hasChanges ? "Unsaved changes" : "Saved to " + (root.s.path ?? "")
@@ -46,6 +46,7 @@ Item {
         streamHls.original = streamHls.checked = st.hls ?? false;
         streamStremio.original = streamStremio.checked = st.stremio ?? true;
         streamPrefer.original = streamPrefer.checked = st.prefer_stremio ?? false;
+        streamAsk.original = streamAsk.checked = st.ask_before_torrent ?? true;
 
         const al = root.s.anilist ?? {};
         alClientId.original = alClientId.text = al.client_id ?? "";
@@ -75,6 +76,7 @@ Item {
         if (streamHls.changed) p["streaming.hls"] = streamHls.checked;
         if (streamStremio.changed) p["streaming.stremio"] = streamStremio.checked;
         if (streamPrefer.changed) p["streaming.prefer_stremio"] = streamPrefer.checked;
+        if (streamAsk.changed) p["streaming.ask_before_torrent"] = streamAsk.checked;
         if (alClientId.changed) p["anilist.client_id"] = alClientId.text;
         if (alAuto.changed) p["anilist.auto"] = alAuto.checked;
         if (alAddMissing.changed) p["anilist.add_missing"] = alAddMissing.checked;
@@ -283,6 +285,13 @@ Item {
                 opacity: streamStremio.checked ? 1 : 0.45
                 label: "Prefer Stremio for higher quality"
                 hint: "Tries torrents first and picks the highest resolution with healthy seeders. Slower to start; direct streams become the fallback. Applies to playing and downloading."
+            }
+            SettingsToggle {
+                id: streamAsk
+                enabled: streamHls.checked && streamStremio.checked
+                opacity: streamHls.checked && streamStremio.checked ? 1 : 0.45
+                label: "Ask before switching to a torrent"
+                hint: "When a direct stream fails, say so and let you choose a torrent instead of switching on its own."
             }
 
             StyledText {

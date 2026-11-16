@@ -144,6 +144,8 @@ pub enum Cmd {
         #[arg(long)] no_sync: bool,
         #[arg(long)] dry_run: bool,
         #[arg(long)] json: bool,
+        /// play a torrent when the direct stream fails, without asking
+        #[arg(long)] allow_torrent: bool,
     },
     /// continue the last native stream or its next episode
     StreamResume { #[arg(long)] no_sync: bool, #[arg(long)] dry_run: bool, #[arg(long)] json: bool, #[arg(long)] single: bool },

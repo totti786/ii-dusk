@@ -28,7 +28,9 @@ MaterialShape { // App icon
     property bool imageFailed: false
     onImageChanged: imageFailed = false
     readonly property bool useImage: image !== "" && !imageFailed
-    readonly property bool imageIsGlyph: themedImageName !== "" && Quickshell.iconPath(themedImageName, true) === ""
+    // Glyph names are short lowercase identifiers; paths, URLs and dotted names never are.
+    readonly property bool imageIsGlyph: themedImageName !== "" && themedImageName.length <= 40
+        && /^[a-z0-9_]+$/.test(themedImageName) && Quickshell.iconPath(themedImageName, true) === ""
 
     implicitSize: 38 * scale
     property list<var> urgentShapes: [MaterialShape.Shape.VerySunny, MaterialShape.Shape.SoftBurst,]

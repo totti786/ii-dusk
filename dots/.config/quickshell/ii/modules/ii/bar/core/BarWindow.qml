@@ -25,7 +25,7 @@ Scope {
 
     readonly property bool isBottom: !root.forceTop && BarPlacement.bottom
     readonly property bool lockUsesFade: Config.options.appearance.fakeScreenRounding === 3
-    readonly property real lockTransitionProgress: GlobalStates.lockBarTransitionProgress
+    readonly property real lockTransitionProgress: GlobalStates.lockBarProgressFor(root.screen ? root.screen.name : "")
     readonly property bool lockTransitionActive: lockTransitionProgress > 0.01
     readonly property real lockSlideDistance: Appearance.sizes.barHeight + Appearance.rounding.screenRounding
     readonly property real lockSlideOffsetY: root.isBottom ? lockSlideDistance : -lockSlideDistance
@@ -64,6 +64,14 @@ Scope {
     PanelWindow {
         id: barRoot
         screen: root.screen
+
+        Connections {
+            target: barRoot.contentItem.Window.window
+            enabled: !StartupState.desktopReady
+            function onFrameSwapped() {
+                StartupState.barPainted(root.screen.name);
+            }
+        }
 
         property int monitorIndex: root.monitorIndex
         property bool hasActiveWindows: false

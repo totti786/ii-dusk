@@ -466,9 +466,9 @@ Singleton {
             "name": "Lock Screen",
             "icon": "lock",
             "component": "modules/settings/configs/LockScreenConfig.qml",
-            "subPages": ["widgets/LockscreenNotificationsConfig.qml", "widgets/FingerprintConfig.qml"],
+            "subPages": ["widgets/LockscreenNotificationsConfig.qml", "widgets/FingerprintConfig.qml", "widgets/FaceIdConfig.qml"],
             "searchSources": ["sections/LockLookSection.qml", "sections/LockGeneralSection.qml"],
-            "aliases": ["Fingerprint", "Biometrics", "fprintd", "Fingerprint reader", "Lock blur", "Vignette", "Color wash", "Desaturate"]
+            "aliases": ["Face ID", "Gaze", "Facial recognition", "Fingerprint", "Biometrics", "fprintd", "Fingerprint reader", "Lock blur", "Vignette", "Color wash", "Desaturate"]
         },
         {
             "id": "about",

@@ -97,7 +97,7 @@ AbstractBackgroundWidget {
 
                         StyledText {
                             anchors.centerIn: parent
-                            text: DateTime.time.includes("PM") ? "PM" : "AM"
+                            text: (DateTime.clock?.date ?? new Date()).getHours() >= 12 ? "PM" : "AM"
                             color: root.colText
                             font.family: Appearance.font.family.main
                             font.pixelSize: 32

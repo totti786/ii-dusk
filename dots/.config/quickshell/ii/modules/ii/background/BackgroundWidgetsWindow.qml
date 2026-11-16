@@ -299,14 +299,16 @@ PanelWindow {
         if (!hasWidgets)
             return false;
         void widgetStateManager.syncVersion; // re-evaluate when the model's roles are rewritten
+        // Only this screen's widgets count: a screen nothing is assigned to
+        // unmaps its surface (swapchain + render thread) entirely.
+        const list = Config.options.background.activeWidgets || [];
+        const screenName = bgWidgetsWindow.editScreenName;
+        const here = list.filter(entry => CF.WidgetPlacement.showsOn(entry, screenName));
+        if (here.length === 0)
+            return false;
         if (GlobalStates.screenLocked || lockAnim.lockAnimationActive)
             return true;
-        const model = widgetStateManager.model;
-        for (let i = 0; i < model.count; i++) {
-            if (model.get(i).lockBehavior !== "lockOnly")
-                return true;
-        }
-        return false;
+        return here.some(entry => (entry.lockBehavior || "hide") !== "lockOnly");
     }
     property bool widgetsNeedSurface: false
     Timer {
@@ -807,6 +809,7 @@ PanelWindow {
             visible: depthCutoutLoader.item?.copyActive ?? false
             sourceComponent: DepthWallpaperCopy {
                 plane: DepthEffect.planes[bgWidgetsWindow.editScreenName] ?? null
+                lockLook: GlobalStates.lockLookFor(bgWidgetsWindow.editScreenName)
                 overviewController: bgWidgetsWindow.overviewController
                 containerEditMatrix: bgWidgetsWindow.editMatrix
                 containerScale: transformContainer.scale
@@ -1071,6 +1074,13 @@ PanelWindow {
                 active: PanelFamily.isIi && !GlobalStates.screenLocked
                     && DesktopShortcuts.itemsFor(bgWidgetsWindow.editScreenName).length > 0
                 visible: !GlobalStates.isMediaModeRevealingDesktop(bgWidgetsWindow.editScreenName)
+                // The lock screen never shows desktop icons, so Edit Mode's Lock
+                // screen and AOD tabs fade them out with the tab's own scalar
+                // (opacity, not `visible`: the canvas can be a layer source under
+                // the AOD) and take them out of the way of the widget drags.
+                opacity: bgWidgetsWindow.isEditMonitor
+                    ? 1 - Math.max(GlobalStates.editTabProgress, GlobalStates.editAodProgress) : 1
+                enabled: !(GlobalStates.editLockLayout && bgWidgetsWindow.isEditMonitor)
                 sourceComponent: DesktopShortcutsLayer {
                     screenName: bgWidgetsWindow.editScreenName
                     // The window's NET content scale (overview + edit

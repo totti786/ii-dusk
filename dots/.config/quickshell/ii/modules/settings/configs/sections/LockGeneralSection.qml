@@ -13,6 +13,18 @@ ColumnLayout {
         title: Translation.tr("Security")
 
         ConfigSwitch {
+            buttonIcon: "face"
+            text: Translation.tr("Unlock with Face ID")
+            checked: Config.options.lock.security.faceId.enable
+            onCheckedChanged: {
+                Config.options.lock.security.faceId.enable = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("Unlock the screen with Face ID by pressing Enter on the lock screen.")
+            }
+        }
+
+        ConfigSwitch {
             buttonIcon: "fingerprint"
             text: Translation.tr("Unlock with fingerprint")
             checked: Config.options.lock.security.fingerprint.enable

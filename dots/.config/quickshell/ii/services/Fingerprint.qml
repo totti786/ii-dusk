@@ -39,6 +39,7 @@ Singleton {
 
     // ── Device ─────────────────────────────────────────────────────────────
     property bool probed: false
+    property bool fprintdInstalled: false
     property string devicePath: ""
     property string deviceName: ""
     property string scanType: "press"
@@ -46,6 +47,7 @@ Singleton {
     // from the device and may be far higher on match-on-chip readers.
     property int numEnrollStages: 5
     readonly property bool deviceAvailable: root.devicePath !== ""
+    readonly property bool supported: root.fprintdInstalled && root.deviceAvailable
     readonly property bool pressType: root.scanType === "press"
 
     // ── Enrolled prints ────────────────────────────────────────────────────
@@ -201,23 +203,46 @@ Singleton {
 
     // ── Device probing ─────────────────────────────────────────────────────
     function probeDevice(): void {
-        if (deviceListProc.running)
+        if (checkFprintdProc.running || deviceListProc.running)
             return;
-        deviceListProc.running = true;
+        checkFprintdProc.running = true;
     }
 
     function refresh(): void {
         root.probeDevice();
-        root.refreshEnrolled();
     }
 
     function refreshEnrolled(): void {
+        if (!root.fprintdInstalled) {
+            root.enrolled = [];
+            root.enrolledLoaded = true;
+            return;
+        }
         if (listProc.running)
             return;
         listProc.running = true;
     }
 
     Component.onCompleted: root.refresh()
+
+    // Step 0: Check if fprintd-list is available
+    Process {
+        id: checkFprintdProc
+        command: ["which", "fprintd-list"]
+        onExited: exitCode => {
+            root.fprintdInstalled = (exitCode === 0);
+            if (root.fprintdInstalled) {
+                deviceListProc.running = true;
+                root.refreshEnrolled();
+            } else {
+                root.devicePath = "";
+                root.deviceName = "";
+                root.enrolled = [];
+                root.enrolledLoaded = true;
+                root.probed = true;
+            }
+        }
+    }
 
     Process {
         id: deviceListProc

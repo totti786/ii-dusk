@@ -345,13 +345,25 @@ ExpressiveCardWidget {
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: PrayerTimes.formatTime(station.modelData.time)
+                        text: PrayerTimes.formatClock(station.modelData.time)
                         horizontalAlignment: Text.AlignHCenter
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         font.variableAxes: ({ "wght": 650 })
                         fontSizeMode: Text.HorizontalFit
                         minimumPixelSize: 8
                         color: station.fg
+                    }
+
+                    // AM/PM under the time: beside it the 12-hour clock outgrows the column
+                    StyledText {
+                        Layout.fillWidth: true
+                        visible: text !== ""
+                        text: PrayerTimes.formatSuffix(station.modelData.time)
+                        horizontalAlignment: Text.AlignHCenter
+                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        font.variableAxes: ({ "wght": 500 })
+                        opacity: 0.75
+                        color: station.isNext ? station.fg : root.subtextColor
                     }
 
                     Item { Layout.fillHeight: true }

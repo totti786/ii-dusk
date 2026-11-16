@@ -1,0 +1,176 @@
+[
+ {
+  "raw": {
+   "format": {
+    "duration": "1420.0449",
+    "bit_rate": "5123456"
+   },
+   "chapters": [
+    {},
+    {}
+   ],
+   "streams": [
+    {
+     "codec_type": "video",
+     "codec_name": "hevc",
+     "width": 1920,
+     "height": 1080,
+     "pix_fmt": "yuv420p10le",
+     "avg_frame_rate": "24000/1001",
+     "color_transfer": "smpte2084",
+     "disposition": {}
+    },
+    {
+     "codec_type": "video",
+     "codec_name": "mjpeg",
+     "disposition": {
+      "attached_pic": 1
+     }
+    },
+    {
+     "codec_type": "audio",
+     "codec_name": "eac3",
+     "channels": 6,
+     "tags": {
+      "language": "JPN",
+      "title": "Main"
+     },
+     "disposition": {
+      "default": 1
+     }
+    },
+    {
+     "codec_type": "audio",
+     "codec_name": "aac",
+     "channels": 2,
+     "tags": {},
+     "disposition": {}
+    },
+    {
+     "codec_type": "subtitle",
+     "codec_name": "ass",
+     "tags": {
+      "language": "eng"
+     },
+     "disposition": {
+      "forced": 1
+     }
+    }
+   ]
+  },
+  "want": {
+   "duration": 1420.0,
+   "bitrate": 5123456,
+   "width": 1920,
+   "height": 1080,
+   "vcodec": "HEVC",
+   "bit_depth": 10,
+   "fps": 23.98,
+   "hdr": true,
+   "audio": [
+    {
+     "lang": "jpn",
+     "title": "Main",
+     "codec": "E-AC3",
+     "channels": 6,
+     "default": true
+    },
+    {
+     "codec": "AAC",
+     "channels": 2
+    }
+   ],
+   "subs": [
+    {
+     "lang": "eng",
+     "codec": "ASS",
+     "forced": true
+    }
+   ],
+   "chapters": 2,
+   "summary": "1080p \u00b7 HEVC 10-bit HDR \u00b7 2 audios \u00b7 1 subtitle"
+  }
+ },
+ {
+  "raw": {
+   "format": {
+    "duration": "0.05"
+   },
+   "streams": [
+    {
+     "codec_type": "video",
+     "codec_name": "h264",
+     "width": 640,
+     "height": 360,
+     "bits_per_raw_sample": "8",
+     "avg_frame_rate": "0/0",
+     "disposition": {}
+    }
+   ]
+  },
+  "want": {
+   "duration": 0.1,
+   "width": 640,
+   "height": 360,
+   "vcodec": "H.264",
+   "bit_depth": 8,
+   "audio": [],
+   "subs": [],
+   "chapters": 0,
+   "summary": "360p \u00b7 H.264"
+  }
+ },
+ {
+  "raw": {
+   "format": {
+    "duration": "N/A",
+    "bit_rate": "x"
+   },
+   "streams": [
+    {
+     "codec_type": "audio",
+     "codec_name": "weird",
+     "disposition": {}
+    }
+   ]
+  },
+  "want": {
+   "audio": [
+    {
+     "codec": "weird"
+    }
+   ],
+   "subs": [],
+   "chapters": 0,
+   "summary": "1 audio"
+  }
+ },
+ {
+  "raw": {
+   "format": {
+    "duration": "2.25"
+   },
+   "streams": [
+    {
+     "codec_type": "video",
+     "codec_name": "av1",
+     "height": 2160,
+     "bits_per_raw_sample": "12",
+     "avg_frame_rate": "30/1",
+     "disposition": {}
+    }
+   ]
+  },
+  "want": {
+   "duration": 2.2,
+   "height": 2160,
+   "vcodec": "AV1",
+   "bit_depth": 12,
+   "fps": 30.0,
+   "audio": [],
+   "subs": [],
+   "chapters": 0,
+   "summary": "2160p \u00b7 AV1 12-bit"
+  }
+ }
+]

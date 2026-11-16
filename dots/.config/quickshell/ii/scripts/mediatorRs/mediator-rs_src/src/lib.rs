@@ -33,3 +33,4 @@ pub mod stream;
 pub mod stremio;
 pub mod ui;
 pub mod vaplayer;
+pub mod vidsrc;

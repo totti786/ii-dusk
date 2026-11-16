@@ -16,8 +16,8 @@ pub fn run(cmd: Cmd, ctx: &mut Ctx) -> Res {
         Cmd::StreamControl { pid, action, value, json } => control(pid, &action, value, json),
         Cmd::StreamState { all, shows, f } => state(all, shows, f.json),
         Cmd::StreamForget { show_id, f } => forget(&show_id, f.json),
-        Cmd::StreamPlay { provider_id, episode_id, title, poster, dub, quality, start, anilist_id, season, total, single, no_sync, dry_run, json } =>
-            stream_play(ctx, provider_id, episode_id, title, poster, dub, quality, start, anilist_id, season, total, single, no_sync, dry_run, json),
+        Cmd::StreamPlay { provider_id, episode_id, title, poster, dub, quality, start, anilist_id, season, total, single, no_sync, dry_run, json, allow_torrent } =>
+            stream_play(ctx, provider_id, episode_id, title, poster, dub, quality, start, anilist_id, season, total, single, no_sync, dry_run, json, allow_torrent),
         Cmd::StreamResume { no_sync, dry_run, json, single } => resume(ctx, no_sync, dry_run, json, single),
         Cmd::StreamSync { all, json } => sync(ctx, all, json),
         Cmd::StreamCheckpoint { show_id, episode_id, position, duration, eof, json } => checkpoint(ctx, &show_id, &episode_id, position, duration, eof, json),
@@ -239,7 +239,7 @@ fn forget(show_ids: &[String], json_out: bool) -> Res {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn stream_play(ctx: &mut Ctx, provider_id: String, episode_id: String, title: String, poster: String, dub: bool, quality: String, start: Option<f64>, anilist_id: Option<i64>, season: Option<i64>, total: Option<i64>, single: bool, mut no_sync: bool, dry_run: bool, json_out: bool) -> Res {
+fn stream_play(ctx: &mut Ctx, provider_id: String, episode_id: String, title: String, poster: String, dub: bool, quality: String, start: Option<f64>, anilist_id: Option<i64>, season: Option<i64>, total: Option<i64>, single: bool, mut no_sync: bool, dry_run: bool, json_out: bool, allow_torrent: bool) -> Res {
     let anilist_id = anilist_id.unwrap_or(0);
     let mut season = season;
     let total = total.unwrap_or(0);
@@ -257,7 +257,7 @@ fn stream_play(ctx: &mut Ctx, provider_id: String, episode_id: String, title: St
     }
     Ok(native_play(&ctx.cfg, &provider_id, &episode_id, Options {
         title, poster, dub, quality: if quality.is_empty() { "best".into() } else { quality }, start, anilist_id, season: season.unwrap_or(0), total,
-        no_sync, dry_run, json_output: json_out, lazy_title, queue_next: !single,
+        no_sync, dry_run, json_output: json_out, lazy_title, queue_next: !single, allow_torrent,
     }))
 }
 

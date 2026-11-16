@@ -35,9 +35,10 @@ Item {
         || (MediatorService.streamBusy && !root.active)
     readonly property bool hasError: String(
         MediatorService.streamError || MediatorService.nativeStateError || "").trim() !== ""
-    readonly property bool showStatus: root.hasError || root.switching
+    readonly property bool askTorrent: MediatorService.directFailed !== null
+    readonly property bool showStatus: !root.askTorrent && (root.hasError || root.switching
         || (MediatorService.streamBusy && !root.active)
-        || MediatorService.nativeStateBusy
+        || MediatorService.nativeStateBusy)
     readonly property real progress: Math.max(0, Math.min(1,
         Number(MediatorService.nativeDuration) > 0
             ? Number(MediatorService.nativePosition) / Number(MediatorService.nativeDuration)
@@ -325,9 +326,95 @@ Item {
                 }
             }
 
+            // The direct stream failed: nothing switches on its own. Takes the place of the seek bar
+            // and transport buttons, which belong to an episode that never started.
+            Item {
+                id: askPanel
+                visible: root.askTorrent
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: 96
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 10
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        MaterialSymbol {
+                            text: "cloud_off"
+                            iconSize: 22
+                            color: root.shelfText
+                            opacity: 0.85
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: Translation.tr("Couldn't play this directly")
+                                elide: Text.ElideRight
+                                font.pixelSize: Appearance.font.pixelSize.normal
+                                font.weight: Font.DemiBold
+                                color: root.shelfText
+                            }
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: Translation.tr("A torrent starts slower but usually works.")
+                                elide: Text.ElideRight
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                                color: root.shelfText
+                                opacity: 0.7
+                            }
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        RippleButton {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 38
+                            buttonRadius: Appearance.rounding.full
+                            colBackground: Appearance.colors.colPrimary
+                            colBackgroundHover: Appearance.colors.colPrimaryHover
+                            colRipple: Appearance.colors.colPrimaryActive
+                            onClicked: MediatorService.useTorrentInstead()
+                            contentItem: StyledText {
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                text: Translation.tr("Play torrent")
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                font.weight: Font.DemiBold
+                                color: Appearance.colors.colOnPrimary
+                            }
+                        }
+                        RippleButton {
+                            Layout.preferredWidth: 96
+                            Layout.preferredHeight: 38
+                            buttonRadius: Appearance.rounding.full
+                            colBackground: root.chip
+                            colBackgroundHover: root.chipHover
+                            onClicked: MediatorService.dismissDirectFailed()
+                            contentItem: StyledText {
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                text: Translation.tr("Cancel")
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: root.shelfText
+                            }
+                        }
+                    }
+                }
+            }
+
             Item {
                 id: heroControls
-                visible: root.hasCurrent
+                visible: root.hasCurrent && !root.askTorrent
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom

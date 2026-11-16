@@ -926,22 +926,29 @@ Singleton {
         let startY = defaultY !== undefined ? defaultY : 200;
 
         if (defaultX === undefined && defaultY === undefined) {
-            let offset = 0;
-            while (true) {
-                let collision = false;
-                for (let i = 0; i < cloned.length; i++) {
-                    const placed = WidgetPlacement.resolve(cloned[i], monitorName);
-                    if (Math.abs(placed.x - (startX + offset)) < 30 && Math.abs(placed.y - (startY + offset)) < 30) {
-                        collision = true;
+            const isBandVisualizer = ["visualizer_aurora", "visualizer_mirror", "visualizer_dots", "visualizer_bars"].includes(widgetId)
+                || (widgetId === "visualizer" && (root.options.background?.widgets?.visualizer?.style ?? "bars") !== "ring");
+            if (isBandVisualizer) {
+                startX = 0;
+                startY = 1080 - (root.options.background?.widgets?.[widgetId]?.height ?? 260);
+            } else {
+                let offset = 0;
+                while (true) {
+                    let collision = false;
+                    for (let i = 0; i < cloned.length; i++) {
+                        const placed = WidgetPlacement.resolve(cloned[i], monitorName);
+                        if (Math.abs(placed.x - (startX + offset)) < 30 && Math.abs(placed.y - (startY + offset)) < 30) {
+                            collision = true;
+                            break;
+                        }
+                    }
+                    if (!collision) {
+                        startX += offset;
+                        startY += offset;
                         break;
                     }
+                    offset += 80;
                 }
-                if (!collision) {
-                    startX += offset;
-                    startY += offset;
-                    break;
-                }
-                offset += 80;
             }
         }
 
@@ -954,6 +961,10 @@ Singleton {
             "placementStrategy": "free",
             "lockBehavior": lockBehavior
         };
+        // Added from a screen (Edit Mode): it lives on that screen only. Without
+        // one (Settings) it follows the primary monitor; see WidgetPlacement.showsOn.
+        if (monitorName)
+            entry.monitors = [monitorName];
         cloned.push(entry);
         root.options.background.activeWidgets = cloned;
         root._recordWidgetEdit(instanceId, null, root._widgetEntryClone(entry), cloned.length - 1);
@@ -1111,6 +1122,14 @@ Singleton {
 
     // A pinned widget ignores drags and the resize grip whatever the global
     // lock says. Stored only when set, so untouched entries stay as they were.
+    // Which screens build this copy (WidgetPlacement.showsOn). Per copy, like pinned.
+    function updateWidgetMonitorShown(instanceId, monitorName, shown) {
+        root._editWidgetEntry(instanceId, entry => WidgetPlacement.setShownOn(entry, monitorName, shown));
+    }
+    function updateWidgetShownOnAll(instanceId, all, monitorName) {
+        root._editWidgetEntry(instanceId, entry => WidgetPlacement.setShownOnAll(entry, all, monitorName));
+    }
+
     function updateWidgetPinned(instanceId, pinned) {
         root._editWidgetEntry(instanceId, entry => {
             if (pinned)
@@ -4859,6 +4878,78 @@ Singleton {
                         property bool enableInnerShadow: false
                         property int widgetSize: 100
                     }
+                    property JsonObject visualizer: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 0
+                        property real y: 0
+                        property real z: -1000
+                        property string style: "bars"
+                        property string colorSource: "theme"
+                        property real sensitivity: 1
+                        property int height: 260
+                        property int ringSize: 380
+                    }
+                    property JsonObject visualizer_ring: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 200
+                        property real y: 200
+                        property real z: -1000
+                        property string style: "ring"
+                        property string colorSource: "theme"
+                        property real sensitivity: 1
+                        property int height: 260
+                        property int ringSize: 380
+                    }
+                    property JsonObject visualizer_aurora: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 0
+                        property real y: 0
+                        property real z: -1000
+                        property string style: "aurora"
+                        property string colorSource: "theme"
+                        property real sensitivity: 1
+                        property int height: 260
+                        property int ringSize: 380
+                    }
+                    property JsonObject visualizer_mirror: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 0
+                        property real y: 0
+                        property real z: -1000
+                        property string style: "mirror"
+                        property string colorSource: "theme"
+                        property real sensitivity: 1
+                        property int height: 260
+                        property int ringSize: 380
+                    }
+                    property JsonObject visualizer_dots: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 0
+                        property real y: 0
+                        property real z: -1000
+                        property string style: "dots"
+                        property string colorSource: "theme"
+                        property real sensitivity: 1
+                        property int height: 260
+                        property int ringSize: 380
+                    }
+                    property JsonObject visualizer_bars: JsonObject {
+                        property bool enable: false
+                        property string placementStrategy: "free"
+                        property real x: 0
+                        property real y: 0
+                        property real z: -1000
+                        property string style: "bars"
+                        property string colorSource: "theme"
+                        property real sensitivity: 1
+                        property int height: 260
+                        property int ringSize: 380
+                    }
                     property JsonObject todo_focus: JsonObject {
                         property bool enable: false
                         property string placementStrategy: "free"
@@ -6991,6 +7082,10 @@ Singleton {
                         property bool showIndicator: true
                         // [{ finger: "right-index-finger", label: "Trigger finger" }]
                         property list<var> labels: []
+                    }
+                    property JsonObject faceId: JsonObject {
+                        property bool enable: true
+                        property bool showIndicator: true
                     }
                 }
                 /**

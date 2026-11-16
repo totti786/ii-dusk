@@ -1914,6 +1914,12 @@ Scope {
     PanelWindow {
         id: win
 
+        Connections {
+            target: win.contentItem.Window.window
+            enabled: !StartupState.desktopReady
+            function onFrameSwapped() { StartupState.islandPainted(); }
+        }
+
         screen: root.targetScreen
 
         visible: !GlobalStates.screenLocked && !(root.oledSaverHere && root.oledFade <= 0)
