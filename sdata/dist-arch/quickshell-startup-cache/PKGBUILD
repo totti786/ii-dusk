@@ -1,0 +1,37 @@
+# Current installed revision, with scanner and compiled-QML startup caches.
+pkgname=quickshell-git
+pkgver=0.3.2.r11.g9b0f339
+pkgrel=3
+pkgdesc='Flexible toolkit for making desktop shells with QtQuick (startup caches)'
+arch=(x86_64)
+url='https://git.outfoxxed.me/quickshell/quickshell'
+license=(LGPL-3.0-only)
+options=('!strip' '!debug')
+depends=(qt6-declarative qt6-base jemalloc qt6-svg libpipewire libxcb wayland libdrm mesa cpptrace polkit)
+makedepends=(vulkan-headers spirv-tools qt6-shadertools wayland wayland-protocols cli11 ninja cmake git)
+provides=(quickshell)
+conflicts=(quickshell)
+source=(quickshell-9b0f339.tar scan-canonical-cache.patch file-url-compile-cache.patch scan-header-fast-path.patch quickshell-check.hook)
+sha256sums=('7e66adbf57dc0d52348eb516cffd304505b5ebd07648ce1af968cc21c07268bd' '51cc1cad3ffbd7bb2da0649526e92334b850c0ad49e20e6b60193f8f83ccd626' 'c70ded699734cff7b1a5612e596edb992f3994ccf552d476aa2290ba3d692581' '0dd44e73fcf034ef952e1991dc2d652fdbb8246420f168508298e15e361685de' '8543e21aeaaa5441b73a679160e7601a957f16c433e8d6bd9257e80bd0e94083')
+
+prepare() {
+    patch -d "$srcdir" -Np1 -i "$srcdir/scan-canonical-cache.patch"
+    patch -d "$srcdir" -Np1 -i "$srcdir/file-url-compile-cache.patch"
+    patch -d "$srcdir" -Np1 -i "$srcdir/scan-header-fast-path.patch"
+}
+
+build() {
+    cmake -S "$srcdir" -B "$srcdir/build" -G Ninja \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DGIT_REVISION=9b0f339b19057f4731bf3b48293307d7ef241671 \
+        -DCMAKE_INSTALL_PREFIX=/usr \
+        '-DDISTRIBUTOR=AUR (quickshell-git; startup caches)' \
+        -DINSTALL_QML_PREFIX=lib/qt6/qml
+    cmake --build "$srcdir/build" --parallel 2
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install "$srcdir/build"
+    install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 "$srcdir/quickshell-check.hook" "$pkgdir/usr/share/libalpm/hooks/quickshell-check.hook"
+}
