@@ -1,21 +1,61 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1000 1000" width="1000" height="1000">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#1c1538"/>
       <stop offset="0.6" stop-color="#4a2a5c"/>
       <stop offset="1" stop-color="#c0606a"/>
     </linearGradient>
-    <clipPath id="tile"><circle cx="500" cy="500" r="500"/></clipPath>
-  </defs>
-  <g clip-path="url(#tile)">
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffb36b" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#ffb36b" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="disc"><circle cx="500" cy="500" r="500"/></clipPath>
+    </defs>
+  <g clip-path="url(#disc)">
     <rect width="1000" height="1000" fill="url(#sky)"/>
-    <rect y="780" width="1000" height="220" fill="#161030"/>
+    <circle cx="480" cy="390" r="260" fill="url(#glow)"/>
+    <!-- the emblem: the original two i's, scaled 0.6, horizon at y=600 -->
+    <g transform="translate(200 132) scale(0.6)">
+      <g fill="#f6ecdf">
+        <path d="M 352 780 V 480 a 48 48 0 0 1 96 0 V 780 Z"/>
+        <path d="M 552 780 V 480 a 48 48 0 0 1 96 0 V 780 Z"/>
+        <circle cx="400" cy="340" r="60"/>
+      </g>
+      <circle cx="600" cy="340" r="60" fill="#ffd08a"/>
+    </g>
+    <rect y="600" width="1000" height="400" fill="#161030"/>
   </g>
-  <!-- two i's standing on the horizon; the right tittle is the setting sun -->
-  <g fill="#f6ecdf">
-    <path d="M 352 780 V 480 a 48 48 0 0 1 96 0 V 780 Z"/>
-    <path d="M 552 780 V 480 a 48 48 0 0 1 96 0 V 780 Z"/>
-    <circle cx="400" cy="340" r="60"/>
+  <!-- amber rim and the text ring -->
+  <circle cx="500" cy="500" r="492" fill="none" stroke="#ffd08a" stroke-width="10"/>
+  <circle cx="500" cy="500" r="446" fill="none" stroke="#f6ecdf" stroke-opacity="0.35" stroke-width="3"/>
+  <g>
+    <text transform="rotate(0.00 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">I</text>
+    <text transform="rotate(10.29 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">I</text>
+    <text transform="rotate(20.57 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">-</text>
+    <text transform="rotate(30.86 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">D</text>
+    <text transform="rotate(41.14 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">U</text>
+    <text transform="rotate(51.43 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">S</text>
+    <text transform="rotate(61.71 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">K</text>
+    <text transform="rotate(82.29 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">•</text>
+    <text transform="rotate(102.86 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">I</text>
+    <text transform="rotate(113.14 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">I</text>
+    <text transform="rotate(123.43 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">-</text>
+    <text transform="rotate(133.71 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">D</text>
+    <text transform="rotate(144.00 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">U</text>
+    <text transform="rotate(154.29 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">S</text>
+    <text transform="rotate(164.57 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">K</text>
+    <text transform="rotate(185.14 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">•</text>
+    <text transform="rotate(205.71 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">S</text>
+    <text transform="rotate(216.00 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">U</text>
+    <text transform="rotate(226.29 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">N</text>
+    <text transform="rotate(236.57 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">S</text>
+    <text transform="rotate(246.86 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">E</text>
+    <text transform="rotate(257.14 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">T</text>
+    <text transform="rotate(277.71 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">S</text>
+    <text transform="rotate(288.00 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">H</text>
+    <text transform="rotate(298.29 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">E</text>
+    <text transform="rotate(308.57 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">L</text>
+    <text transform="rotate(318.86 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">L</text>
+    <text transform="rotate(339.43 500 500)" x="500" y="122" text-anchor="middle" font-family="Readex Pro" font-weight="600" font-size="50" fill="#f6ecdf">•</text>
   </g>
-  <circle cx="600" cy="340" r="60" fill="#ffd08a"/>
 </svg>
