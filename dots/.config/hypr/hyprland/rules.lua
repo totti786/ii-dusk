@@ -329,6 +329,10 @@ hl.layer_rule({ match = { namespace = "quickshell:tabletLiveDraw" }, no_anim = t
 -- drawn on top), since annotating the screen means annotating the island and the OSK too.
 hl.layer_rule({ match = { namespace = "quickshell:liveDraw" }, blur = false})
 hl.layer_rule({ match = { namespace = "quickshell:liveDraw" }, no_anim = true, order = -5})
+-- The shell's kill-mode overlay: transparent, full-screen, above every other
+-- surface. It must not blur (that would be a full-screen pass for nothing) and
+-- must not animate on show; order -10 keeps its crosshair over the bars.
+hl.layer_rule({ match = { namespace = "^ii-kill-mode$" }, blur = false, no_anim = true, order = -10})
 hl.layer_rule({ match = { namespace = "quickshell:verticalBar" }, animation = "slide", order = 5})
 hl.layer_rule({ match = { namespace = "quickshell:osk" }, order = -1})
 -- Quickshell: waffles

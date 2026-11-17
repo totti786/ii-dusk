@@ -835,6 +835,7 @@ Singleton {
     property bool videoEditorPopupOpen: false
     property bool videoEditorOpen: false
     property string videoEditorPath: ""
+    property bool killModeActive: false
     property bool screenshotOverlayOpen: false
     property string screenshotOverlayImagePath: ""
     // Monitor that owns the current screenshot preview overlay.
@@ -1601,7 +1602,7 @@ Singleton {
     // window: only their overlay form is closed.
     readonly property var overlayPanelFlags: [
         "overlayOpen", "overviewOpen", "searchOpen", "cheatsheetOpen", "wallpaperSelectorOpen",
-        "regionSelectorOpen", "screenshotOverlayOpen", "videoEditorPopupOpen", "screenTranslatorOpen",
+        "regionSelectorOpen", "screenshotOverlayOpen", "killModeActive", "videoEditorPopupOpen", "screenTranslatorOpen",
         "colorPickerPopupOpen", "displayModesPopupOpen", "localSendPopupOpen", "bluetoothConnectionPopupOpen",
         "sessionOpen", "desktopMenuOpen", "dashboardPanelOpen", "policiesPanelOpen", "mediaControlsOpen"
     ]

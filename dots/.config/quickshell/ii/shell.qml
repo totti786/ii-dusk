@@ -41,10 +41,13 @@ import "modules/common"
 // types are resolved by URL when each startup stage is actually needed.
 import "services"
 import "panelFamilies"
+import qs.modules.ii.killMode
 
 ShellRoot {
     id: root
     property bool runtimeWanted: false
+
+    KillMode {}
 
     Component.onCompleted: {
         if (Qt.application) {
