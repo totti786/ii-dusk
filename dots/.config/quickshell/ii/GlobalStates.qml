@@ -425,18 +425,6 @@ Singleton {
         root.fileManagerOpen = true;
     }
 
-    property bool editorOpen: false
-    property string editorPath: ""
-    property int editorLine: 0
-    property int editorRequest: 0
-
-    function openEditorApp(path = "", line = 0): void {
-        root.editorPath = String(path ?? "");
-        root.editorLine = line;
-        root.editorRequest += 1;
-        root.editorOpen = true;
-    }
-
     /// The Camera app window.
     property bool cameraOpen: false
 

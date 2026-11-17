@@ -22,7 +22,6 @@ Item {
         grit: Translation.tr("Habit tracker and tasks with streaks and a focus timer"),
         weather: Translation.tr("Forecast, rain, wind, air quality and pollen"),
         calculator: Translation.tr("Standard and scientific calculator with history"),
-        editor: Translation.tr("Plain text and code editor with syntax highlighting"),
         mediator: Translation.tr("Your shows, anime and movies, with resume and episode info"),
         music: Translation.tr("YouTube Music player with queue, lyrics and artist pages"),
         audioPlayer: Translation.tr("Play local audio files from your library folders"),
@@ -71,7 +70,7 @@ Item {
         { name: Translation.tr("Watch and listen"), ids: ["mediator", "music", "audioPlayer", "youtube", "syncplay", "imageViewer", "camera"] },
         { name: Translation.tr("Sound"), ids: ["mixer", "easyEffects", "patchbay", "audioRecorder", "soundscapes", "qanun"] },
         { name: Translation.tr("Read and learn"), ids: ["books", "quran", "diwan", "anki", "wikipedia"] },
-        { name: Translation.tr("Day to day"), ids: ["notes", "clock", "grit", "calculator", "weather", "editor"] },
+        { name: Translation.tr("Day to day"), ids: ["notes", "clock", "grit", "calculator", "weather"] },
         { name: Translation.tr("Files and devices"), ids: ["fileManager", "downloads", "torrents", "quickshare", "bluetoothManager", "discordoVoice"] },
         { name: Translation.tr("System"), ids: ["monitor", "health", "usage", "modes", "packages"] }
     ]

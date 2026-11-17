@@ -23,7 +23,6 @@ import qs.modules.ii.imageViewer
 import qs.modules.ii.audioPlayer
 import qs.modules.ii.soundscapes
 import qs.modules.ii.fileManager
-import qs.modules.ii.textEditor
 import qs.modules.ii.mediator
 import qs.modules.ii.quran
 import qs.modules.ii.diwan
@@ -156,9 +155,6 @@ Scope {
     }
     PanelUrlLoader {
         panelUrl: Qt.resolvedUrl("../modules/ii/fileManager/FileManagerApp.qml")
-    }
-    PanelUrlLoader {
-        panelUrl: Qt.resolvedUrl("../modules/ii/textEditor/EditorApp.qml")
     }
     PanelUrlLoader {
         panelUrl: Qt.resolvedUrl("../modules/ii/wikipedia/WikipediaApp.qml")

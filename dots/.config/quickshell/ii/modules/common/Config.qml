@@ -1195,7 +1195,7 @@ Singleton {
     //
     // Bump `currentConfigVersion` and add a matching block to `migrateRaw()`
     // whenever an existing key changes type or meaning.
-    readonly property int currentConfigVersion: 33
+    readonly property int currentConfigVersion: 34
     // Defaults have to be captured before the file lands, because deserializing
     // is what destroys them. FileView loads asynchronously, so at component
     // completion the adapter still holds nothing but the QML defaults.
@@ -1974,6 +1974,13 @@ Singleton {
                 sc.bitRate = "20M";
                 console.log("[Config] Migrated phone.scrcpy.bitRate 8M -> 20M");
             }
+        }
+
+        // v33 -> v34: the in-shell text editor is gone; the desktop menu's
+        // "Open in editor" defaults to Scribe. Keep a command the user picked.
+        if (from < 34 && raw.apps?.editor === "qs -c ii ipc call editor open") {
+            raw.apps.editor = "scribe";
+            console.log("[Config] Migrated apps.editor ii editor -> Scribe");
         }
 
         raw.configVersion = root.currentConfigVersion;
@@ -3616,7 +3623,7 @@ Singleton {
             property JsonObject apps: JsonObject {
                 property string bluetooth: "qs -c ii ipc call bluetoothManager open ''"
                 property string changePassword: "alacritty --hold -e passwd"
-                property string editor: "qs -c ii ipc call editor open" // The desktop icon menu's "Open in", given the path
+                property string editor: "scribe" // The desktop icon menu's "Open in", given the path
                 property string network: "qs -c ii ipc call settings openPage network"
                 property string manageUser: ""
                 property string networkEthernet: "qs -c ii ipc call settings openPage network"

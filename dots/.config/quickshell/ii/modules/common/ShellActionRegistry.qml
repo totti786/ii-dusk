@@ -37,7 +37,6 @@ Singleton {
             mixer: ["mixer", "sound", "volume", "volume mixer", "pavucontrol", "audio", "speakers", "microphone", "output", "input", "som", "volume"],
             packages: ["packages", "package manager", "software", "updates", "update", "upgrade", "pacman", "yay", "aur", "install", "uninstall", "apps", "store"],
             books: ["books", "library", "reader", "read", "pdf", "epub", "ebook", "e-book", "zathura", "sioyek", "novel", "كتب", "مكتبة"],
-            editor: ["text editor", "editor", "notepad", "code", "edit file", "محرر"],
             fileManager: ["file manager", "files", "folders", "explorer", "thunar", "nautilus", "browse", "directory", "ملفات"],
             audioPlayer: ["audio player", "music player", "player", "songs", "local music", "mp3", "flac", "library", "tracks"],
             imageViewer: ["image viewer", "images", "photos", "pictures", "gallery", "viewer"],
@@ -83,7 +82,6 @@ Singleton {
         { id: "mediator", name: "Mediator", icon: "movie", category: "shell", searchable: true, enabled: () => true },
         { id: "books", name: "Books", icon: "menu_book", category: "shell", searchable: true, enabled: () => true },
         { id: "fileManager", name: "Files", icon: "folder", category: "shell", searchable: true, enabled: () => true },
-        { id: "editor", name: "Editor", icon: "edit_note", category: "shell", searchable: true, enabled: () => true },
         { id: "audioPlayer", name: "Audio Player", icon: "headphones", category: "shell", searchable: true, enabled: () => true },
         { id: "imageViewer", name: "Image Viewer", icon: "image", category: "shell", searchable: true, enabled: () => true },
         { id: "camera", name: "Camera", icon: "photo_camera", category: "shell", searchable: true, enabled: () => true },
@@ -103,7 +101,7 @@ Singleton {
     ]
 
     /// The shell's own windowed apps. Search lists them as apps rather than as actions.
-    readonly property var appIds: ["notes", "clock", "grit", "weather", "soundscapes", "qanun", "calculator", "quickshare", "syncplay", "easyEffects", "usage", "modes", "downloads", "mixer", "packages", "anki", "books", "mediator", "bluetoothManager", "patchbay", "torrents", "diwan", "quran", "music", "monitor", "audioRecorder", "camera", "imageViewer", "audioPlayer", "fileManager", "editor", "wikipedia", "youtube", "discordoVoice", "health"]
+    readonly property var appIds: ["notes", "clock", "grit", "weather", "soundscapes", "qanun", "calculator", "quickshare", "syncplay", "easyEffects", "usage", "modes", "downloads", "mixer", "packages", "anki", "books", "mediator", "bluetoothManager", "patchbay", "torrents", "diwan", "quran", "music", "monitor", "audioRecorder", "camera", "imageViewer", "audioPlayer", "fileManager", "wikipedia", "youtube", "discordoVoice", "health"]
 
     readonly property var actions: TouchGestureActionRegistry.actions.concat(root.extraActions).map(action => Object.assign({}, action, {
         keywords: action.keywords ?? root.keywordsFor(action),
@@ -181,10 +179,6 @@ Singleton {
         }
         if (actionId === "books") {
             GlobalStates.openBooksApp();
-            return;
-        }
-        if (actionId === "editor") {
-            GlobalStates.openEditorApp();
             return;
         }
         if (actionId === "fileManager") {
