@@ -1,0 +1,155 @@
+#!/bin/bash
+
+## Description:
+# This script provides weather information by fetching data primarily from OpenWeather API.
+# If the OpenWeather API fails or lacks details, it falls back to wttr.in for both basic and extended weather data
+# (humidity, UV index, dew point, etc.). The results are cached and can be displayed in a rofi menu.
+
+## Dependencies:
+# - wget, curl, jq, rofi
+
+info_file="$HOME/.local/bin/info"
+
+# Ensure info file exists
+if [[ -f "$info_file" ]]; then
+    source "$info_file"
+else
+	cat > "$info_file"  <<- _EOF_
+		#!/usr/bin/env bash
+		
+		## Weather data
+		KEY=""        # OpenWeather API key (optional)
+		UNIT="metric"	# 'metric' or 'imperial'
+		COUNTRY=""     # Country (optional)
+		CITY=""        # City name
+	_EOF_
+fi
+
+# Cache directories
+cache_dir="$HOME/.cache/weather"
+cache_weather_stat="${cache_dir}/weather-stat"
+cache_weather_degree="${cache_dir}/weather-degree"
+cache_weather_icon="${cache_dir}/weather-icon"
+cache_weather_rofi="${cache_dir}/weather-rofi"
+
+[[ ! -d "$cache_dir" ]] && mkdir -p "${cache_weather_rofi}"
+
+# Detect city automatically if not set
+[[ -z "$CITY" ]] && CITY=$(curl -s ifconfig.co/city)
+
+get_weather_data() {
+    local weather wttr_json
+
+    # Try OpenWeather first (if key is set)
+    if [[ -n "$KEY" ]]; then
+        weather=$(wget -qO- "https://api.openweathermap.org/data/2.5/weather?q=$CITY,$COUNTRY&appid=$KEY&units=$UNIT")
+    fi
+
+    if [[ -n "$weather" && $(echo "$weather" | jq -r ".cod") == "200" ]]; then
+        # Parse OpenWeather data
+        weather_temp=$(echo "$weather" | jq ".main.temp" | cut -d "." -f 1)
+        weather_icon_code=$(echo "$weather" | jq -r ".weather[].icon" | head -1)
+        weather_description=$(echo "$weather" | jq -r ".weather[].description" | head -1 | sed -e "s/\b\(.\)/\u\1/g")
+        humidity=$(echo "$weather" | jq -r ".main.humidity")
+        windspeed=$(echo "$weather" | jq -r ".wind.speed")
+        pressure=$(echo "$weather" | jq -r ".main.pressure")
+        visibility=$(echo "$weather" | jq -r ".visibility" | awk '{printf "%.1f", $1/1000}')
+        lat=$(echo "$weather" | jq -r ".coord.lat")
+        lon=$(echo "$weather" | jq -r ".coord.lon")
+
+        # Get UV and precipitation via wttr.in fallback (more reliable for these)
+        wttr_json=$(curl -s "https://wttr.in/${CITY// /+}?format=j1")
+        uv=$(echo "$wttr_json" | jq -r '.current_condition[0].uvIndex')
+        dewpt=$(echo "$wttr_json" | jq -r '.current_condition[0].DewPointC')
+        precipitation=$(echo "$wttr_json" | jq -r '.current_condition[0].precipMM')
+        sunrise=$(echo "$wttr_json" | jq -r '.weather[0].astronomy[0].sunrise')
+        sunset=$(echo "$wttr_json" | jq -r '.weather[0].astronomy[0].sunset')
+
+        # Cache extended info for rofi
+        cat > "$cache_weather_rofi" <<- _EOF_
+			City: $CITY
+			Temperature: ${weather_temp}°C
+			Description: $weather_description
+			Dew Point: ${dewpt}°C
+			Humidity: ${humidity}%
+			UV Index: ${uv}
+			Precipitation: ${precipitation}mm
+			Wind Speed: ${windspeed} m/s
+			Visibility: ${visibility} km
+			Pressure: ${pressure} hPa
+			Sunrise: ${sunrise}
+			Sunset: ${sunset}
+		_EOF_
+
+        # Determine icon
+        case "$weather_icon_code" in
+            50d|50n) weather_icon=" " ;;
+            01d) weather_icon="󰖨 " ;;
+            01n) weather_icon=" " ;;
+            02d) weather_icon=" " ;;
+            02n) weather_icon=" " ;;
+            03d|03n) weather_icon=" " ;;
+            04d|04n) weather_icon=" " ;;
+            09d) weather_icon=" " ;;
+            09n|10n) weather_icon=" " ;;
+            10d) weather_icon=" " ;;
+            11d|11n) weather_icon="󰙾 " ;;
+            13d|13n) weather_icon=" " ;;
+            40d|40n) weather_icon=" " ;;
+            *) weather_icon=" " ;;
+        esac
+
+        echo "$weather_icon" > "$cache_weather_icon"
+        echo "$weather_description" > "$cache_weather_stat"
+        echo "${weather_temp}° " > "$cache_weather_degree"
+
+    else
+        # Full wttr.in fallback
+        wttr_json=$(curl -s "https://wttr.in/${CITY// /+}?format=j1")
+        [[ -z "$wttr_json" ]] && { echo "Weather Unavailable" > "$cache_weather_stat"; return; }
+
+        condition=$(echo "$wttr_json" | jq -r '.current_condition[0].weatherDesc[0].value')
+        temp=$(echo "$wttr_json" | jq -r '.current_condition[0].temp_C')
+        humidity=$(echo "$wttr_json" | jq -r '.current_condition[0].humidity')
+        uv=$(echo "$wttr_json" | jq -r '.current_condition[0].uvIndex')
+        wind=$(echo "$wttr_json" | jq -r '.current_condition[0].windspeedKmph')
+        dewpt=$(echo "$wttr_json" | jq -r '.current_condition[0].DewPointC')
+        precip=$(echo "$wttr_json" | jq -r '.current_condition[0].precipMM')
+        visibility=$(echo "$wttr_json" | jq -r '.current_condition[0].visibility')
+        pressure=$(echo "$wttr_json" | jq -r '.current_condition[0].pressure')
+        sunrise=$(echo "$wttr_json" | jq -r '.weather[0].astronomy[0].sunrise')
+        sunset=$(echo "$wttr_json" | jq -r '.weather[0].astronomy[0].sunset')
+
+        echo "  " > "$cache_weather_icon"
+        echo "$condition" > "$cache_weather_stat"
+        echo "$temp°C " > "$cache_weather_degree"
+
+        cat > "$cache_weather_rofi" <<- _EOF_
+			City: $CITY
+			Temperature: ${temp}°C
+			Condition: $condition
+			Dew Point: $dewpt°C
+			Humidity: $humidity%
+			UV Index: $uv
+			Precipitation: ${precip}mm
+			Wind Speed: ${wind} km/h
+			Visibility: ${visibility} km
+			Pressure: ${pressure} hPa
+			Sunrise: ${sunrise}
+			Sunset: ${sunset}
+		_EOF_
+    fi
+}
+
+case "$1" in
+    --getdata) get_weather_data ;;
+    --icon) cat "${cache_weather_icon}" ;;
+    --temp) cat "${cache_weather_degree}" ;;
+    --stat) cat "${cache_weather_stat}" ;;
+    --full)
+        get_weather_data &> /dev/null
+        cat "${cache_weather_icon}" "${cache_weather_degree}" "${cache_weather_stat}" | tr -d '\n'
+        ;;
+    --rofi) cat "${cache_weather_rofi}" | rofi -dmenu -p "Weather" -theme menu ;;
+    *) echo "Usage: $0 [--getdata | --icon | --temp | --stat | --full | --rofi]" ;;
+esac

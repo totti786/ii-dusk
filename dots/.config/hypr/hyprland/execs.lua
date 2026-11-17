@@ -77,12 +77,11 @@ hl.on("hyprland.start", function()
 
     -- Optional
     hl.exec_cmd("kdeconnectd")
-    hl.exec_cmd("gesture-hold") -- 4-finger hold to play/pause, replaces fusuma
+    hl.exec_cmd("$HOME/.config/hypr/hyprland/scripts/gesture-hold.sh") -- 4-finger hold to play/pause, replaces fusuma
 
     -- Our own launches. The "[workspace N silent]" form is not a Lua exec: it reached the
     -- shell as a literal "[" command. Kept here, commented, until it is rewritten.
     -- hl.exec_cmd("[workspace 2 silent] firefox")
     -- hl.exec_cmd("[workspace 3 silent] thunar")
     -- hl.exec_cmd("[workspace 3 silent] geany")
-    hl.exec_cmd("proto-recall --shoot")
 end)

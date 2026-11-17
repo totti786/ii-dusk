@@ -24,14 +24,14 @@ hl.config({
             natural_scroll = false,
             clickfinger_behavior = true,
             middle_button_emulation = true,
-            tap_to_click = true, -- TODO: confirm key name (hyprlang used tap-to-click)
+            tap_to_click = true,
             scroll_factor = 0.5,
         },
     },
 })
 
 -- Gestures from the gestures {} block.
--- TODO: confirm these keys still exist in 0.56 (hyprctl configerrors will report them).
+-- Checked against `hyprctl getoption` on 0.57: every key below exists.
 hl.config({
     gestures = {
         workspace_swipe_use_r = true,
