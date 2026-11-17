@@ -1269,6 +1269,7 @@ Singleton {
                             return
                         }
                         if (msg.id === root.recordSessionId) root.recordingLaunching = false
+                        if (errSid === "mirror") PhoneMirrorService.resetMirrorOrientation()
                         root.reportFailure(errSid, msg.message || "")
                     }
                 } catch (e) {

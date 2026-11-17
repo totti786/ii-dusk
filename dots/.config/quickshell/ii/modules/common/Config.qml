@@ -3007,6 +3007,8 @@ Singleton {
                 property int port: 47210
                 property JsonObject remote: JsonObject {
                     property bool enable: true
+                    // Shut down or restart the PC from the phone (the app asks first).
+                    property bool power: true
                 }
                 // The PC's audio from the phone: devices, apps, EasyEffects.
                 property JsonObject audio: JsonObject {
@@ -3023,6 +3025,17 @@ Singleton {
                 // Tell the phone this PC's MAC addresses, so the app can wake it (Wake-on-LAN).
                 property JsonObject wol: JsonObject {
                     property bool enable: true
+                }
+                // Reach this PC from the phone away from home, over Tailscale: keeps
+                // Tailscale up while the link runs and tells the phone its tailnet address.
+                property JsonObject tailscale: JsonObject {
+                    property bool enable: false
+                }
+                // Other PCs linked to this one, straight from helper to helper (paired once
+                // through the phone): the copied text and images go to them.
+                property JsonObject pcLink: JsonObject {
+                    property bool enable: true
+                    property bool clipboard: true
                 }
                 // Do Not Disturb both ways: the shell's own (and chosen modes) silence the
                 // phone; the phone's turns on the shell's, or a mode.
@@ -3082,6 +3095,8 @@ Singleton {
                 property JsonObject screen: JsonObject {
                     // Resolution, refresh, scale, side and bitrate are the phone's to choose.
                     property bool enable: true
+                    // The screen may go over Wi-Fi through the link when no USB is plugged.
+                    property bool wireless: true
                 }
                 // The phone's camera as this PC's webcam over ii link, instead of DroidCam.
                 property JsonObject camera: JsonObject {
@@ -3106,6 +3121,21 @@ Singleton {
                 // the app instead of ADB and KDE Connect.
                 property JsonObject phoneData: JsonObject {
                     property bool enable: true
+                }
+                // The phone's calendars (Google, Samsung, Outlook…) in the Timetable, beside or
+                // instead of khal. `hidden`/`shown` are phone calendar ids the user chose; one
+                // never chosen follows the phone's own visibility. `prefer` is the source kept
+                // when khal and the phone hold the same event ("khal" | "phone").
+                property JsonObject calendar: JsonObject {
+                    property bool enable: true
+                    property bool write: true
+                    property bool dedupe: true
+                    property string prefer: "khal"
+                    property bool colors: true
+                    property bool hideDeclined: true
+                    property bool notify: false
+                    property list<string> hidden: []
+                    property list<string> shown: []
                 }
                 // Screenshots both ways: the PC's go to the phone's gallery (queued until
                 // it connects), the phone's land in Pictures/Screenshots/Phone with the

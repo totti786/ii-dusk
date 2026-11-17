@@ -16,6 +16,7 @@ mod gallery;
 mod icons;
 mod input;
 mod mpris;
+mod pclink;
 mod screen;
 
 use std::collections::HashMap;
@@ -91,11 +92,24 @@ struct Shared {
     /// Whether a phone may be a slide clicker here (the shell's setting).
     present: bool,
     input_tx: std::sync::mpsc::Sender<input::Cmd>,
-    /// The phone being a screen here (one at a time), and its device.
-    screen: Option<(String, tokio::task::AbortHandle, tokio::sync::watch::Sender<String>)>,
+    /// The phone being a screen here (one at a time): USB or `/iilink/1/screen`.
+    screen: Option<screen::Slot>,
     /// The phone being a webcam here (one at a time): armed, then streaming.
     camera: Option<camera::Slot>,
     mic: Option<mic::Slot>,
+    /// Other PCs linked to this one (pclink.rs), their sockets, and an open pairing.
+    pcs: Vec<pclink::PcPeer>,
+    pc_conns: HashMap<String, Conn>,
+    pc_pairing: Option<pclink::PcPairing>,
+    /// The shell's switch (`config.pcLink`); off until it says.
+    pc_enabled: bool,
+    /// Bumped to retire the dial loops; they sleep on [pc_wake].
+    pc_gen: u64,
+    pc_wake: Arc<tokio::sync::Notify>,
+    /// The PCs a dial loop runs for, by the generation it runs under.
+    pc_dialing: HashMap<String, u64>,
+    /// Each linked PC's file lane: bounded, so a large file is read only as fast as it leaves.
+    pc_files: HashMap<String, pclink::FileLane>,
 }
 
 type State = Arc<Mutex<Shared>>;
@@ -334,43 +348,56 @@ async fn serve(stream: TcpStream, addr: SocketAddr, acceptor: TlsAcceptor, state
     };
     // Frames up to 4 MiB: a webcam key frame is one message.
     let config = WebSocketConfig::default().max_message_size(Some(8 << 20)).max_frame_size(Some(4 << 20));
-    let side = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let side = Arc::new(std::sync::atomic::AtomicU8::new(0));
     let side_cb = side.clone();
-    let mic_side = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let mic_cb = mic_side.clone();
     let check_path = move |req: &Request, resp: Response| -> Result<Response, ErrorResponse> {
-        if req.uri().path() == WS_PATH {
-            Ok(resp)
-        } else if req.uri().path() == camera::WS_PATH || req.uri().path() == mic::WS_PATH {
-            // The webcam's video or the microphone's audio: its own socket, authenticated by the session's token.
-            side_cb.store(true, std::sync::atomic::Ordering::Relaxed);
-            mic_cb.store(req.uri().path() == mic::WS_PATH, std::sync::atomic::Ordering::Relaxed);
-            Ok(resp)
-        } else {
-            let mut err = ErrorResponse::new(None);
-            *err.status_mut() = StatusCode::NOT_FOUND;
-            Err(err)
-        }
+        let kind = match req.uri().path() {
+            WS_PATH => 0,
+            camera::WS_PATH => 1,
+            mic::WS_PATH => 2,
+            screen::WS_PATH => 3,
+            _ => {
+                let mut err = ErrorResponse::new(None);
+                *err.status_mut() = StatusCode::NOT_FOUND;
+                return Err(err);
+            }
+        };
+        // Side sockets carry media/screen streams, authenticated by their session token.
+        side_cb.store(kind, std::sync::atomic::Ordering::Relaxed);
+        Ok(resp)
     };
     let ws = match timeout(HANDSHAKE_TIMEOUT, tokio_tungstenite::accept_hdr_async_with_config(tls, check_path, Some(config))).await {
         Ok(Ok(ws)) => ws,
         _ => return,
     };
-    if side.load(std::sync::atomic::Ordering::Relaxed) {
-        if mic_side.load(std::sync::atomic::Ordering::Relaxed) {
-            mic::serve(ws, state).await;
-        } else {
+    match side.load(std::sync::atomic::Ordering::Relaxed) {
+        1 => {
             camera::serve(ws, state).await;
+            return;
         }
-        return;
+        2 => {
+            mic::serve(ws, state).await;
+            return;
+        }
+        3 => {
+            screen::serve(ws, state).await;
+            return;
+        }
+        _ => {}
     }
     let (mut sink, mut stream) = ws.split();
 
-    let hello: Option<Hello> = match timeout(HANDSHAKE_TIMEOUT, stream.next()).await {
+    let first: Option<Value> = match timeout(HANDSHAKE_TIMEOUT, stream.next()).await {
         Ok(Some(Ok(Message::Text(text)))) => serde_json::from_str(text.as_str()).ok(),
         _ => None,
     };
-    let Some(hello) = hello else { return };
+    let Some(first) = first else { return };
+    // Another PC (pclink.rs), not a phone.
+    if first["t"].as_str().is_some_and(|t| t.starts_with("pc")) {
+        pclink::accept(sink, stream, first, addr, state).await;
+        return;
+    }
+    let Ok(hello) = serde_json::from_value::<Hello>(first) else { return };
     let (dev, reply) = match authenticate(&state, &hello) {
         Ok(ok) => ok,
         Err(code) => {
@@ -698,8 +725,17 @@ fn handle_op(state: &State, line: &str) {
                 emit(json!({"ev": if ok { "fileSent" } else { "fileSendFailed" }, "dev": dev, "id": id}));
             });
         }
+        "pcPairOpen" | "pcPairJoin" | "pcSend" | "pcUnpair" | "pcSendFile" | "pcShelf" | "pcWake" | "pcDiscover" | "pcPairClose" => pclink::op(state, &op),
+        // The phone asks this PC to wake another on its LAN (it is away, or on Tailscale).
+        "wake" => {
+            let targets: Vec<Value> = op["targets"].as_array().cloned().unwrap_or_default();
+            emit(json!({"ev": "woke", "ok": pclink::wake(&targets)}));
+        }
         // Settings the shell holds: for now, whether the phones' media become MPRIS players.
         "config" => {
+            if let Some(on) = op["pcLink"].as_bool() {
+                pclink::set_enabled(state, on);
+            }
             let mut s = state.lock().unwrap();
             if let Some(on) = op["present"].as_bool() {
                 s.present = on;
@@ -719,47 +755,8 @@ fn handle_op(state: &State, line: &str) {
                 }
             }
         }
-        // The phone as a screen (screen.rs): the shell made the output and runs adb.
-        "screen" => {
-            let mut s = state.lock().unwrap();
-            // Another screen for the running session (mirror's switch).
-            if op["a"] == "output" {
-                if let (Some((_, _, out)), Some(name)) = (s.screen.as_ref(), op["output"].as_str()) {
-                    let _ = out.send(name.to_string());
-                }
-                return;
-            }
-            if let Some((_, task, _)) = s.screen.take() {
-                task.abort();
-            }
-            if op["a"] != "start" {
-                return;
-            }
-            let dev = op["dev"].as_str().unwrap_or("").to_string();
-            let sid = op["sid"].as_u64().unwrap_or(0);
-            let (out_tx, out_rx) = tokio::sync::watch::channel(op["output"].as_str().unwrap_or("").to_string());
-            let params = screen::Params {
-                dev: dev.clone(),
-                sid,
-                output: out_rx,
-                token: op["token"].as_str().unwrap_or("").to_string(),
-                w: op["w"].as_i64().unwrap_or(1920) as i32,
-                h: op["h"].as_i64().unwrap_or(1080) as i32,
-                bitrate: op["bitrate"].as_u64().unwrap_or(16_000_000).clamp(1_000_000, 80_000_000),
-                input_tx: s.input_tx.clone(),
-            };
-            if params.output.borrow().is_empty() || params.token.len() < 16 {
-                emit(json!({"ev": "screenEnd", "dev": dev, "sid": sid, "reason": "bad_arg"}));
-                return;
-            }
-            match screen::start(params) {
-                Ok((port, task)) => {
-                    s.screen = Some((dev.clone(), task, out_tx));
-                    emit(json!({"ev": "screen", "dev": dev, "sid": sid, "port": port}));
-                }
-                Err(_) => emit(json!({"ev": "screenEnd", "dev": dev, "sid": sid, "reason": "bind"})),
-            }
-        }
+        // The phone as a screen (screen.rs): the shell made the output and runs adb or uses ws.
+        "screen" => screen::op(state, &op),
         // The phone as a webcam (camera.rs): the shell found the device to write to.
         "camera" => camera::op(state, &op),
         // The phone as a microphone (mic.rs).
@@ -859,6 +856,7 @@ async fn main() {
     let udp = UdpSocket::bind(("0.0.0.0", port)).await.ok();
 
     let peers = load_peers(&dir);
+    let pcs = pclink::load(&dir);
     let (media_tx, media_rx) = mpsc::unbounded_channel();
     tokio::spawn(mpris::run(media_rx, dir.join("media")));
     let state: State = Arc::new(Mutex::new(Shared {
@@ -880,10 +878,19 @@ async fn main() {
         screen: None,
         camera: None,
         mic: None,
+        pcs,
+        pc_conns: HashMap::new(),
+        pc_pairing: None,
+        pc_enabled: false,
+        pc_gen: 0,
+        pc_wake: pclink::notifier(),
+        pc_dialing: HashMap::new(),
+        pc_files: HashMap::new(),
     }));
 
     emit(json!({"ev": "ready", "port": port, "fp": fingerprint, "name": name, "addrs": addresses(), "wake": wake_targets(), "discovery": udp.is_some()}));
     emit(peers_event(&state.lock().unwrap().peers));
+    emit(pclink::peers_event(&state.lock().unwrap().pcs));
 
     if let Some(sock) = udp {
         tokio::spawn(discovery(sock, state.clone()));
