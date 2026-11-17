@@ -72,7 +72,8 @@ __pycache__/
 /dots/.config/quickshell/ii/scripts/health/health_watch_src/target/
 /dots/.config/quickshell/ii/scripts/health/health_watch_src/Cargo.lock
 
-# Compiled binary — build it from ii_link_src/ instead (see scripts/iiLink/PROTOCOL.md)
+# Compiled binary — never committed: the CI publishes it per source hash
+# (.github/workflows/rust-helpers.yml) and rust-helpers.sh fetches it; or build it from ii_link_src/.
 /dots/.config/quickshell/ii/scripts/iiLink/ii_link
 /dots/.config/quickshell/ii/scripts/iiLink/ii_link_src/target/
 /dots/.config/quickshell/ii/scripts/iiLink/ii_link_src/Cargo.lock
@@ -80,6 +81,10 @@ __pycache__/
 # What each locally built helper was built from — written by scripts/rust-helpers.sh,
 # meaningful only on the machine that compiled it.
 /dots/.config/quickshell/ii/scripts/*/.*.stamp
+# The same for the C++ helpers built locally by scripts/cpp-helpers.sh; their
+# committed binaries stay tracked, only the stamp of a local build is ignored.
+/dots/.config/quickshell/ii/scripts/.*.stamp
+/dots/.config/quickshell/ii/services/.*.stamp
 
 /dots/.config/quickshell/ii/.tmp
 /dots/.config/quickshell/ii/.commandcode

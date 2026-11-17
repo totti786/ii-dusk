@@ -183,8 +183,8 @@ Scope {
         id: stateResetTimer
         interval: 150
         repeat: true
-        // Only an OSD window can be left stuck; without one (closed, or the tuner style) there
-        // is nothing to check, and this would wake the shell seven times a second for nothing
+        // Its check needs an OSD window; without one it only woke the shell
+        // ~7 times a second for nothing.
         running: osdLoader.item !== null
         onTriggered: {
             // If the OSD Loader has a live item but the shell-level flags say it
