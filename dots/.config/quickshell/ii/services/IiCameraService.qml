@@ -27,9 +27,14 @@ Singleton {
         if (!root.activeIsIi)
             return "";
         const active = String(KdeConnectService.activeDeviceId ?? "");
-        if (active.startsWith("iitools:"))
-            return active.slice(8);
-        return String(IiLinkService.peers[0]?.id ?? "");
+        if (active.startsWith("iitools:")) {
+            const id = active.slice(8);
+            // The persisted id can point at the record left behind by an older
+            // pairing. Only take it when that phone is the one connected now.
+            if (IiLinkService.connections[id] !== undefined)
+                return id;
+        }
+        return String(IiLinkService.connectedList[0]?.id ?? IiLinkService.peers[0]?.id ?? "");
     }
     readonly property bool connected: root.activeDev !== ""
         && IiLinkService.connections[root.activeDev] !== undefined

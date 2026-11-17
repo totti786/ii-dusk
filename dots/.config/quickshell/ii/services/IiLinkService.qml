@@ -3327,7 +3327,10 @@ Singleton {
     readonly property var phoneDevice: {
         if (!root.enabled || root.peers.length === 0)
             return null;
-        const peer = root.peers[0];
+        // Prefer the phone that is connected right now. A re-pair leaves the old
+        // record behind, and peers[0] may then be a phone that has been offline
+        // since (the camera, mic and gallery all resolve through this object).
+        const peer = root.connectedList[0] ?? root.peers[0];
         const conn = root.connections[peer.id] ?? null;
         const caps = root.phoneCaps[peer.id] ?? [];
         const st = root.phoneStatus;

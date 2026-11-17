@@ -71,7 +71,7 @@ Singleton {
     readonly property bool pcAudioEnabled: (Config.options?.iiTools?.callAudio?.enable ?? true) && root.linkLive
     /// The phone among this PC's paired Bluetooth devices, by the name ii tools knows.
     readonly property var phoneBluetooth: {
-        const name = String(IiLinkService.peers[0]?.name ?? "").trim();
+        const name = String(IiLinkService.connectedList[0]?.name ?? IiLinkService.peers[0]?.name ?? "").trim();
         if (name === "")
             return null;
         return Bluetooth.devices.values.find(d => d.paired && (d.name === name || d.deviceName === name)) ?? null;
