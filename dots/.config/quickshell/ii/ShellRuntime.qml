@@ -3,6 +3,7 @@ import "modules/common/idleDim"
 import "services"
 import "panelFamilies"
 import "modules/ii/aiCompanion"
+import qs.modules.ii.killMode
 
 import QtQuick
 import QtQuick.Window
@@ -12,7 +13,8 @@ import Quickshell.Hyprland
 
 Scope {
     id: root
-    AiCompanion {}
+     AiCompanion {}
+    KillMode {}
     property string openRgbApplyScript: Quickshell.shellPath("scripts/colors/openRGB/apply_openrgb.py")
     property bool openRgbStartupApplied: false
 
