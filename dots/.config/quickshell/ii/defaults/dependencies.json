@@ -95,6 +95,15 @@
             ]
         },
         {
+            "id": "phone-screen",
+            "tier": "optional",
+            "label": "Phone as a monitor",
+            "description": "Capture and encode the extended screen sent to the phone over ii link.",
+            "packages": [
+                { "name": "wf-recorder", "bin": "wf-recorder" }
+            ]
+        },
+        {
             "id": "phone-camera",
             "tier": "optional",
             "label": "Phone as webcam and mic",
