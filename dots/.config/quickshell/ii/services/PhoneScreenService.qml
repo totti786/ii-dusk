@@ -153,6 +153,22 @@ Singleton {
         onExited: code => root.adbPresent = code === 0
     }
 
+    // wf-recorder captures and encodes the output for the phone: without it every encoder
+    // fails and the phone only hears "encoder". Looked up when a session ends with that error.
+    property bool recorderPresent: true
+    Process {
+        id: recorderCheck
+        command: ["sh", "-c", "command -v wf-recorder"]
+        onExited: code => {
+            root.recorderPresent = code === 0;
+            // Only looked up after an "encoder" failure, so it is never stale after an install.
+            if (code !== 0 && root.lastError === "encoder") {
+                root.lastError = "recorder_missing";
+                Quickshell.execDetached(["notify-send", "-a", "ii tools", "Phone as a monitor needs wf-recorder", "Install it (sudo pacman -S wf-recorder) and start the screen again."]);
+            }
+        }
+    }
+
     function _reply(m): void {
         if (root.dev !== "")
             IiLinkService.sendTo(root.dev, Object.assign({ t: "screen" }, m));
@@ -406,12 +422,29 @@ Singleton {
         root.w = root.h;
         root.h = prevW;
         root.orient = to;
-        const monitors = (HyprlandData.monitors ?? []).length > 0
-            ? HyprlandData.monitors
-            : (Hyprland.monitors?.values ?? []).map(m => m.lastIpcObject).filter(Boolean);
-        root.position = root._place(monitors);
-        root._applyRules();
-        root._reply({ state: "size", w: root.w, h: root.h, output: root.output, orient: root.orient });
+        // New mode first, at a safe place, then the layout read: Hyprland nudges a scale whose
+        // logical size is not whole, so placing before the mode lands used the wrong size.
+        root.position = "auto-right";
+        reorient.command = ["sh", "-c", `${root._rulesScript()}; hyprctl monitors -j`];
+        reorient.running = true;
+    }
+
+    Process {
+        id: reorient
+        stdout: StdioCollector {
+            id: reorientOut
+        }
+        onExited: code => {
+            if (root.state !== "ready" && root.state !== "live")
+                return;
+            try {
+                root.position = root._place(JSON.parse(reorientOut.text));
+            } catch (e) {
+                root.position = "auto-right";
+            }
+            root._applyRules();
+            root._reply({ state: "size", w: root.w, h: root.h, output: root.output, orient: root.orient });
+        }
     }
 
     /// A change to the extended output from the Displays page: kept for the rest of the
@@ -688,6 +721,8 @@ Singleton {
             if (reason === "encoder" || reason === "timeout" || reason === "bind" || reason === "encoder_exit") {
                 root.lastError = reason;
                 root._reply({ err: reason });
+                if (reason === "encoder")
+                    recorderCheck.running = true;
             }
             root._cleanup(reason);
             break;
