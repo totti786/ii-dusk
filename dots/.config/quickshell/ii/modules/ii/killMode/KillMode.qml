@@ -12,7 +12,8 @@ import qs.services
 
 /**
  * Kill mode: Super+Esc turns a full-screen crosshair on; clicking an app
- * window force-quits it. Escape or a right click leaves the mode.
+ * window force-quits it and closes the mode. Escape or a right click leaves
+ * without killing anything.
  *
  * Hyprland's own `hyprctl kill` is a one-shot compositor click mode: it cannot
  * be toggled from a bind, has no cursor of its own, and cancels itself when the
@@ -86,7 +87,7 @@ Scope {
         if (!client)
             return;
         if (Number(client.pid) > 0) {
-            Quickshell.execDetached(["kill", "-KILL", String(client.pid)]);
+            Quickshell.execDetached(["/bin/kill", "-KILL", String(client.pid)]);
             return;
         }
         Hyprland.dispatch(`hl.dsp.window.close({ window = "address:${client.address}" })`);
@@ -181,8 +182,12 @@ Scope {
                             return;
                         }
                         const client = root.windowAt(window, event.x, event.y);
-                        if (client)
+                        if (client) {
                             root.kill(client);
+                            // One kill per activation: the overlay closes so the
+                            // next click is an ordinary click again.
+                            root.setActive(false);
+                        }
                     }
                 }
 
@@ -250,7 +255,7 @@ Scope {
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
-                            text: Translation.tr("Kill mode — click a window to kill it · Esc or right-click to exit")
+                            text: Translation.tr("Kill mode — click a window to kill it · Esc or right-click to cancel")
                             color: Appearance.colors.colOnSurface
                             font.family: Appearance.font.family.main
                             font.pixelSize: Appearance.font.pixelSize.normal
