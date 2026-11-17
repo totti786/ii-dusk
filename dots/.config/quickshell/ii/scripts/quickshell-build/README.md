@@ -45,7 +45,7 @@ Each package records a *build stamp* in `/usr/share/quickshell-ii-git/build-stam
 
 Each package also records the directory it was built from (`source <dir>`, printed by `./qs-build.sh source`).
 
-`setup-ii-p3drovfx.sh` runs `check` on the staged config during every deployment (`update`, `switch`, `apply`), before it restarts the shell: when the installed `quickshell-ii-git` is `outdated` it runs `qs-build.sh install` from that staged tree, so the restart that follows runs the new build. It never passes `--yes`, not even when the updater itself got one (Settings' branch and fork switches do): replacing a system package is asked about in the terminal, and declined where there is none. Every package from before stamps has none and reads `outdated`, so each existing installation is rebuilt once, on its first update after stamps arrived.
+`setup-ii-dusk.sh` runs `check` on the staged config during every deployment (`update`, `switch`, `apply`), before it restarts the shell: when the installed `quickshell-ii-git` is `outdated` it runs `qs-build.sh install` from that staged tree, so the restart that follows runs the new build. It never passes `--yes`, not even when the updater itself got one (Settings' branch and fork switches do): replacing a system package is asked about in the terminal, and declined where there is none. Every package from before stamps has none and reads `outdated`, so each existing installation is rebuilt once, on its first update after stamps arrived.
 
 An update made by an older updater, which has no such step, is caught by the start guard (`../quickshell-guard/qs-guard.sh`): once the shell is up it runs `check` in the background and, when `outdated`, opens a terminal on `qs-build.sh install` (or, with `health.guard.openTerminal` off or no terminal installed, says the command in a notification). The offer is keyed on the build stamp in `~/.local/state/quickshell/qs-build-offered`: the same build is offered again at most once every 7 days, a different one at once, and an offer nobody saw (no terminal, no notification daemon) is not recorded. A "no" in the updater is written there too, so the restart does not ask a second time. The guard says nothing when the installed build came from another checkout that still exists (a developer's tree with its own patches): offering this tree's set would undo it.
 
@@ -62,7 +62,7 @@ An update made by an older updater, which has no such step, is caught by the sta
 ```
 
 `-y` answers every question. The setup script does the same through
-`setup-ii-p3drovfx.sh quickshell [install|rebuild|restore|status]`, and `install`
+`setup-ii-dusk.sh quickshell [install|rebuild|restore|status]`, and `install`
 runs it after the base dotfiles.
 
 | Distribution | How |
