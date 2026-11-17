@@ -672,7 +672,7 @@ end
 local qsConfig = "ii"
 local qs = "qs -c " .. qsConfig
 local mainMod = "SUPER"
-local terminal = "terminal" -- your own wrapper script on PATH
+local terminal = "alacritty"
 
 
 ---------------
@@ -780,8 +780,8 @@ rebind("ALT + Return", hl.dsp.workspace.toggle_special("drop"), { description = 
 -----------------
 
 --##! Apps
--- Floating terminal (the terminal script's --float flag)
-rebind(mainMod .. " + SHIFT + Return", hl.dsp.exec_cmd(terminal .. " --float"), { description = "Apps: Floating Terminal" })
+-- Floating terminal (class Alacritty-float, floated and centred by a window rule)
+rebind(mainMod .. " + SHIFT + Return", hl.dsp.exec_cmd(terminal .. " --class Alacritty-float"), { description = "Apps: Floating Terminal" })
 --##! System apps
 rebind("CTRL + SHIFT + Return", hl.dsp.global("quickshell:monitorOverlayToggle"), { description = "Monitor: Toggle the full-screen system overview" })
 --##! Apps

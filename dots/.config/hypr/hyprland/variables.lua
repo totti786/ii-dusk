@@ -6,7 +6,7 @@ hl.env("qsConfig", "ii")
 
 -- Apps
 -- PULL REQUESTS ADDING MORE WILL NOT BE ACCEPTED, CONFIG FOR YOURSELF
-terminal = "terminal" -- our wrapper script on PATH
+terminal = "alacritty"
 fileManager = "~/.config/hypr/hyprland/scripts/launch_first_available.sh 'ii-files' 'qs -c $qsConfig ipc call fileManager toggle' 'thunar' 'nautilus' 'dolphin' 'nemo' 'alacritty -e yazi'"
 browser = "~/.config/hypr/hyprland/scripts/launch_first_available.sh 'firefox' 'google-chrome-stable' 'zen-browser' 'brave' 'chromium' 'microsoft-edge-stable' 'opera' 'librewolf'"
 codeEditor = "~/.config/hypr/hyprland/scripts/launch_first_available.sh 'windsurf' 'antigravity' 'code' 'codium' 'cursor' 'zed' 'zedit' 'zeditor' 'kate' 'gnome-text-editor' 'emacs' 'command -v nvim && alacritty -e nvim' 'command -v micro && alacritty -e micro'"

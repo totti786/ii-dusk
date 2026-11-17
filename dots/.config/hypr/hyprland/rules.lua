@@ -483,7 +483,7 @@ hl.layer_rule({ match = { namespace = "gtk4-layer-shell" }, no_anim = true })
 -- event with an is_empty check is the replacement.
 hl.on("workspace.created", function(ws)
     if ws and ws.is_empty and ws.name == "special:drop" then
-        hl.exec_cmd("terminal --drop")
+        hl.exec_cmd("alacritty --class Alacritty-drop")
     end
 end)
 
@@ -499,5 +499,8 @@ if okTransparency and transparency.enabled then
     hl.window_rule({ name = "opacity-find", match = { title = "^(Find)$" }, opacity = "0.75 0.75" })
 end
 
--- Floating terminal (SUPER+SHIFT+Return runs `terminal --float`): float and center it.
+-- Drop-down terminal window: lives on special:drop, floated near the top.
+hl.window_rule({ match = { class = "^(Alacritty-drop)$" }, workspace = "special:drop", float = true, size = { "1200", "500" }, move = { "360", "51" } })
+
+-- Floating terminal (SUPER+SHIFT+Return runs `alacritty --class Alacritty-float`): float and center it.
 hl.window_rule({ match = { class = "^(Alacritty-float)$" }, float = true, center = true })
