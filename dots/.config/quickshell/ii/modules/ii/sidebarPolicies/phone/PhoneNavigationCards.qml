@@ -236,76 +236,73 @@ Item {
                 }
             }
         }
-    }
 
-    // Lock, volume and the phone's own commands
-    RowLayout {
-        id: controlsRow
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: navigationRow.bottom
-        anchors.topMargin: 8
-        visible: root.hasPhoneControls
-        spacing: 8
-
-        RippleButton {
+        // Lock, volume and the phone's own commands
+        RowLayout {
+            id: controlsRow
             Layout.fillWidth: true
-            Layout.preferredHeight: 58
-            buttonRadius: Appearance.rounding.normal
-            colBackground: Appearance.colors.colLayer3
-            colBackgroundHover: Appearance.colors.colLayer3Hover
-            colBackgroundActive: Appearance.colors.colLayer3Active ?? Appearance.colors.colLayer3Hover
+            visible: root.hasPhoneControls
+            spacing: 8
 
-            contentItem: RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
-                spacing: 10
+            RippleButton {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 58
+                buttonRadius: Appearance.rounding.normal
+                colBackground: Appearance.colors.colLayer3
+                colBackgroundHover: Appearance.colors.colLayer3Hover
+                colBackgroundActive: Appearance.colors.colLayer3Active ?? Appearance.colors.colLayer3Hover
 
-                MaterialShapeWrappedMaterialSymbol {
-                    Layout.alignment: Qt.AlignVCenter
-                    text: "tune"
-                    iconSize: 20
-                    padding: 8
-                    fill: 1.0
-                    color: Appearance.colors.colTertiaryContainer
-                    colSymbol: Appearance.colors.colOnTertiaryContainer
-                    shape: MaterialShape.Shape.Cookie9Sided
-                }
+                contentItem: RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 12
+                    anchors.rightMargin: 12
+                    spacing: 10
 
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
-                    spacing: 0
-
-                    StyledText {
-                        Layout.fillWidth: true
-                        text: Translation.tr("Phone controls")
-                        font.pixelSize: Appearance.font.pixelSize.small
-                        font.weight: Font.DemiBold
-                        color: Appearance.colors.colOnLayer3
-                        elide: Text.ElideRight
+                    MaterialShapeWrappedMaterialSymbol {
+                        Layout.alignment: Qt.AlignVCenter
+                        text: "tune"
+                        iconSize: 20
+                        padding: 8
+                        fill: 1.0
+                        color: Appearance.colors.colTertiaryContainer
+                        colSymbol: Appearance.colors.colOnTertiaryContainer
+                        shape: MaterialShape.Shape.Cookie9Sided
                     }
 
-                    StyledText {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        text: Translation.tr("Lock, volume, commands")
-                        font.pixelSize: Appearance.font.pixelSize.smallest
+                        Layout.alignment: Qt.AlignVCenter
+                        spacing: 0
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: Translation.tr("Phone controls")
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            font.weight: Font.DemiBold
+                            color: Appearance.colors.colOnLayer3
+                            elide: Text.ElideRight
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: Translation.tr("Lock, volume, commands")
+                            font.pixelSize: Appearance.font.pixelSize.smallest
+                            color: Appearance.colors.colSubtext
+                            opacity: 0.8
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                    MaterialSymbol {
+                        Layout.alignment: Qt.AlignVCenter
+                        text: "chevron_right"
+                        iconSize: Appearance.font.pixelSize.normal
                         color: Appearance.colors.colSubtext
-                        opacity: 0.8
-                        elide: Text.ElideRight
                     }
                 }
 
-                MaterialSymbol {
-                    Layout.alignment: Qt.AlignVCenter
-                    text: "chevron_right"
-                    iconSize: Appearance.font.pixelSize.normal
-                    color: Appearance.colors.colSubtext
-                }
+                onClicked: root.requestOpenSubPage(Qt.resolvedUrl("PhoneRemotePage.qml"))
             }
-
-            onClicked: root.requestOpenSubPage(Qt.resolvedUrl("PhoneRemotePage.qml"))
         }
     }
 }
