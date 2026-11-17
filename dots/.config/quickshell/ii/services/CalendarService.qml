@@ -670,7 +670,7 @@ Singleton {
         const current = root.calendarCurrentRequest;
         root.calendarCurrentRequest = null;
         if (!reply || !reply.ok) {
-            console.warn("[CalendarService] Calendar request failed:", String(reply?.error ?? "No response from calendar helper."));
+            console.warn("[CalendarService] Calendar request failed:", String(reply?.error || "No response from calendar helper.") + " (request: " + String(current?.payload?.action ?? current?.payload?.op ?? "unknown") + ")");
         } else if (current?.payload?.op === "read" && reply?.event?.uid) {
             const nextDetails = Object.assign({}, root.eventDetailsByUid);
             const uid = String(reply.event.uid);

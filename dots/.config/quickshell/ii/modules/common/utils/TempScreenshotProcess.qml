@@ -9,7 +9,7 @@ Process {
     running: true
     property string screenshotDir: Directories.screenshotTemp
     required property ShellScreen screen
-    property string screenshotPath: `${screenshotDir}/image-${screen.name}`
+    property string screenshotPath: `${screenshotDir}/image-${screen?.name ?? ""}`
     property bool completed: false
     property int startedToken: 0
     property bool restarting: false
@@ -18,7 +18,7 @@ Process {
     // (magick/Qt/OpenCV). Anything shipping the bytes as-is to an external API
     // must stay on png, so this is opt-in rather than the default.
     property string format: "png"
-    command: ["bash", "-c", `mkdir -p '${StringUtils.shellSingleQuoteEscape(screenshotDir)}' && exec grim -t ${StringUtils.shellSingleQuoteEscape(format)} -o '${StringUtils.shellSingleQuoteEscape(screen.name)}' '${StringUtils.shellSingleQuoteEscape(screenshotPath)}'`]
+    command: ["bash", "-c", `mkdir -p '${StringUtils.shellSingleQuoteEscape(screenshotDir)}' && exec grim -t ${StringUtils.shellSingleQuoteEscape(format)} -o '${StringUtils.shellSingleQuoteEscape(screen?.name ?? "")}' '${StringUtils.shellSingleQuoteEscape(screenshotPath)}'`]
 
     // runningChanged is emitted from Process::onFinished, never synchronously
     // from `running = false` (that only sends SIGTERM), so the restart guard has
