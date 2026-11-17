@@ -502,7 +502,10 @@ Singleton {
             root.w = even((portrait ? root._phoneH : root._phoneW) * root._res);
             root.h = even((portrait ? root._phoneW : root._phoneH) * root._res);
             // Made, then the layout read to place it against the focused screen.
-            hyprPlace.command = ["sh", "-c", `hyprctl output create headless ${root.headlessName} >/dev/null; ${root._rulesScript()}; hyprctl monitors -j`];
+            // The rule goes in before the output exists: Hyprland keeps the last session's
+            // position for the name and applies it on connect (an overlap warning); "auto-right"
+            // is safe until the real place is worked out from the layout.
+            hyprPlace.command = ["sh", "-c", `${root._rulesScript()}; hyprctl output create headless ${root.headlessName} >/dev/null; ${root._rulesScript()}; hyprctl monitors -j`];
             hyprPlace.running = true;
             return;
         } else {
@@ -553,8 +556,12 @@ Singleton {
             return { name: mon.name, x: mon.x, y: mon.y, w: Math.round((turned ? mon.height : mon.width) / s), h: Math.round((turned ? mon.width : mon.height) / s) };
         };
         const all = monitors.filter(mon => !mon.disabled).map(logical);
-        // Its own size from what was asked: the rule may not have landed when this was read.
-        const me = { w: Math.round(root.w / root.scale), h: Math.round(root.h / root.scale) };
+        // Its own size from the scale Hyprland really applied: it nudges a scale whose logical
+        // size is not whole (1280 / 1.5), and placing against the asked one overlaps the
+        // neighbour. Falls back to what was asked while the rule has not landed on the output.
+        const self = monitors.find(mon => mon.name === root.headlessName && mon.width === root.w && mon.height === root.h && mon.scale > 0);
+        const sc = self ? self.scale : root.scale;
+        const me = { w: Math.round(root.w / sc), h: Math.round(root.h / sc) };
         const others = all.filter(mon => mon.name !== root.headlessName);
         const anchor = others.find(mon => mon.name === root._anchor) ?? others[0];
         if (!anchor)
