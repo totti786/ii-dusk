@@ -291,12 +291,6 @@ hl.bind("Print", hl.dsp.global("quickshell:fullScreenshot"),
     { locked = true, description = "Utilities: Screenshot (full screen)" })
 hl.bind("SUPER + Print", hl.dsp.exec_cmd("grim - | wl-copy"),
     { locked = true, description = "Utilities: Screenshot (fullscreen) >> clipboard" })
---##! Tools
---# AI
-hl.bind("SUPER + SHIFT + ALT + mouse:273", hl.dsp.exec_cmd(hyprScripts .. "/ai/primary-buffer-query.sh"),
-    { description = "Utilities: Generate AI summary for selected text" })
--- (requires a running ollama model)
-
 --#!
 --##! Window
 --# Window switcher: bound at runtime by the shell (services/WindowSwitcher.qml) while
@@ -561,7 +555,7 @@ hl.bind("SUPER + Minus", function() zoomfunction(-0.3) end, { repeating = true, 
 hl.bind("SUPER + Equal", function() zoomfunction(0.3) end, { repeating = true, description = "Screen: Zoom in" })
 hl.bind("SUPER + code:82", function() zoomfunction(-0.3) end, { repeating = true })
 hl.bind("SUPER + code:86", function() zoomfunction(0.3) end, { repeating = true })
-hl.bind("SUPER + XF86MonBrightnessDown", hl.dsp.exec_cmd("auto-brightness"), { locked = true })
+hl.bind("SUPER + XF86MonBrightnessDown", hl.dsp.exec_cmd(hyprScripts .. "/auto-brightness.sh"), { locked = true })
 
 --# Zoom with keypad
 
