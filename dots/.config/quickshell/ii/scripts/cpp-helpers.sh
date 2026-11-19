@@ -12,7 +12,7 @@
 # A local build replaces the binary at the same path, so nothing that launches it
 # changes. What marks it as local is a stamp beside it, `.<name>.stamp`, holding
 # a hash of what it was built from (the source file plus the recipe below) and a
-# hash of the binary that build produced. The updater (setup-ii-dusk.sh)
+# hash of the binary that build produced. The updater (setup-ii-p3drovfx.sh)
 # reads the stamp to decide whether to keep the local binary across an update or
 # to take the repository's, so the stamp is also the user's choice: no stamp,
 # the committed binary; a stamp, built here.
@@ -30,7 +30,7 @@
 #   build [name...]       build, install and stamp (all helpers when none named)
 #   build-outdated        build whatever `outdated` lists
 #   prebuilt [name...]    forget the local build: the next update installs the
-#                         repository's binary again (or now: ii-dusk update
+#                         repository's binary again (or now: ii-p3drovfx update
 #                         --force --prebuilt-helpers)
 #   mark-fallback <name>  record that a local build is wanted but the committed
 #                         binary is in place (the updater, after a failed build)
@@ -423,7 +423,7 @@ prebuilt)
         }
         rm -f "$(stamp_of "$name")"
     done < <(names_from_args "$@")
-    printf 'The repository'"'"'s binaries come back with the next update; now: ii-dusk update --force --prebuilt-helpers\n'
+    printf 'The repository'"'"'s binaries come back with the next update; now: ii-p3drovfx update --force --prebuilt-helpers\n'
     ;;
 mark-fallback)
     name="${1:?helper name required}"

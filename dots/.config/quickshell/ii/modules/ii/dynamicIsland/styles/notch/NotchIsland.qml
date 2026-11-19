@@ -137,7 +137,7 @@ Scope {
      * moment, and the resting face with its side widgets comes back after. An
      * agent asking for approval is not a side glance and takes the island.
      */
-    readonly property var sideActivities: ["media", "ai", "recording", "timer", "mode", "update", "earbuds", "weather", "batteryGlance",
+    readonly property var sideActivities: ["media", "ai", "recording", "timer", "mode", "update", "earbuds", "weather", "batteryGlance", "date",
         "reminderSoon", "privacy", "discordVoice", "phoneMirror", "phoneLink", "phoneCall", "sports", "phoneLive", "systemTray", "easyEffects", "soundscapes", "quickShare", "monitorAlert"]
 
     /** The resting face's height: what the clock face is sized to, never the live height. */

@@ -25,7 +25,11 @@ Scope {
     property real returnStartX: 0
     property real returnStartY: 0
     readonly property var orbitPositions: Placement.orbitOffsets(root.centerX, root.centerY, root.bounds)
-    readonly property bool expanded: root.controlsOpen && !root.ui.dragging
+    // Small orbs for live things (timers, alarms, music) that bud off the main one.
+    readonly property var satellites: AiCompanionSatellites {}
+    readonly property bool satellitesShown: !root.ui.docked && !root.ui.dragging && !dockFade.running
+    readonly property var satelliteOffsets: Placement.satelliteOffsets(root.satellites.ids.length, root.centerX, root.centerY, root.bounds, 78)
+    readonly property bool expanded: root.controlsOpen && !root.ui.dragging && !root.ui.approvalNeeded
     readonly property var bounds: root.ui.screenBounds(overlay.screen)
     readonly property var storedCenter: Placement.fromRatios(root.saved.xRatio, root.saved.yRatio, root.bounds, 38)
     readonly property real centerX: (root.ui.dragging ? root.ui.dragX : root.storedCenter.x) - root.bounds.x
@@ -61,13 +65,34 @@ Scope {
             const index = Ai.attachments.findIndex(file => file.path === path);
             if (index >= 0) Ai.removeAttachment(index);
         }
+        /** Wear a face (startled, delighted, curious, worried, night) to check it; empty clears. */
+        function mood(name: string): string {
+            root.ui.moodForced = name;
+            return root.ui.mood;
+        }
+        /** The model behind each stage of a spoken request, as the voice settings page sets them. */
+        function models(): string {
+            return JSON.stringify({instant: Config.options.ai.voice.rules ? "rules" : "off",
+                remoteAi: Ai.onlineAllowed ? "on" : Ai.localOnly ? "local only" : "off",
+                quick: !Config.options.ai.voice.fastPath ? "off" : !Ai.onlineAllowed ? "unavailable (remote AI is " + (Ai.localOnly ? "local only" : "off") + ")" : root.voice.claudeState === "missing" ? "unavailable (Claude Code not found)" : root.voice.claudeState === "signedOut" ? "unavailable (Claude Code not signed in)" : root.voice.fastModelId(),
+                tasks: root.voice.escalationModelId() || Ai.currentModelId + " (sidebar)"});
+        }
+        /** Remote AI for the whole shell: "on", "local" (local models only) or "off"; empty reports it. Same switch as Settings > Sidebars. */
+        function remote(mode: string): string {
+            const wanted = {on: 1, local: 2, off: 0}[String(mode).trim().toLowerCase()];
+            if (wanted !== undefined) Config.options.policies.ai = wanted;
+            return Ai.onlineAllowed ? "on" : Ai.localOnly ? "local" : "off";
+        }
+        function approve(): bool { return root.ui.answerApproval(true); }
+        function deny(): bool { return root.ui.answerApproval(false); }
         function dock(): bool { return root.ui.dock(); }
         function undock(): void { root.ui.undock(); }
         function status(): string {
             return JSON.stringify({visible: root.saved.visible, docked: root.ui.docked, canDock: root.ui.canDock,
                 dragging: root.ui.dragging, nearDock: root.ui.nearDock, dockTarget: root.ui.dockTarget,
                 timings: root.voice.timings, attachments: root.ui.attachmentCount, fileHover: root.ui.fileHover,
-                state: root.ui.phase, active: root.voice.active, level: root.ui.level, error: root.voice.errorText,
+                approval: root.ui.approvalNeeded ? root.ui.describe(root.ui.approval) : null,
+                state: root.ui.phase, mood: root.ui.mood, active: root.voice.active, runId: root.voice.runId, rawPhase: root.voice.phase, level: root.ui.level, error: root.voice.errorText,
                 x: surface.x, y: surface.y, width: surface.width, height: surface.height,
                 mapped: overlay.visible, opacity: surface.opacity, returning: dockFade.running,
                 centerX: root.centerX, centerY: root.centerY, monitor: overlay.screen?.name ?? "",
@@ -90,7 +115,9 @@ Scope {
         screen: Quickshell.screens.find(screen => screen.name === (root.ui.dragging ? root.ui.dragMonitor : root.saved.monitor))
             ?? Quickshell.screens.find(screen => screen.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
         anchors { top: true; bottom: true; left: true; right: true }
-        visible: Persistent.ready && root.saved.visible && (!root.ui.docked || root.ui.dragging || dockFade.running)
+        // Up for an approval too, so a request is answerable even while the orb is docked
+        // in the island: the window shows just the card then, not the orb.
+        visible: Persistent.ready && root.saved.visible && (!root.ui.docked || root.ui.dragging || dockFade.running || root.ui.approvalNeeded)
             && !GlobalStates.screenLocked && !GlobalStates.regionSelectorOpen
         onVisibleChanged: {
             root.motionReady = false;
@@ -103,13 +130,168 @@ Scope {
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
         // Keep the native pointer grab alive until release. The island owns
         // its own grab when pulling a bubble out; that preview stays passthrough.
-        mask: Region {
-            item: root.ui.dragging ? (root.ui.dragFromIsland ? null : fullWindow)
-                : root.ui.docked ? null : surface.inputArea
+        // The orb's own hit area is a rectangle bound to where the orb is going, not
+        // the item: a region that follows the item only refreshes when the item's
+        // own geometry changes, so after the orb was moved by a summon (not a drag,
+        // which swaps the mask for the whole window) the input stayed where it was.
+        mask: root.ui.dragging ? dragMask : orbMask
+        Region {
+            id: dragMask
+            item: root.ui.dragging ? (root.ui.dragFromIsland ? null : fullWindow) : null
+        }
+        Region {
+            id: orbMask
+            x: Math.round(root.centerX - surface.inputArea.width / 2)
+            y: Math.round(root.centerY - surface.inputArea.height / 2)
+            width: root.ui.docked ? 0 : surface.inputArea.width
+            height: root.ui.docked ? 0 : surface.inputArea.height
+            // So do the small orbs, one hit area per slot.
+            Region { x: Math.round(sat0.x); y: Math.round(sat0.y); width: sat0.shown ? sat0.width : 0; height: sat0.shown ? sat0.height : 0 }
+            Region { x: Math.round(sat1.x); y: Math.round(sat1.y); width: sat1.shown ? sat1.width : 0; height: sat1.shown ? sat1.height : 0 }
+            Region { x: Math.round(sat2.x); y: Math.round(sat2.y); width: sat2.shown ? sat2.width : 0; height: sat2.shown ? sat2.height : 0 }
+            Region { x: Math.round(sat3.x); y: Math.round(sat3.y); width: sat3.shown ? sat3.width : 0; height: sat3.shown ? sat3.height : 0 }
+            Region { x: Math.round(sat4.x); y: Math.round(sat4.y); width: sat4.shown ? sat4.width : 0; height: sat4.shown ? sat4.height : 0 }
+            // The approval buttons take clicks too while they are up.
+            Region {
+                x: denyButton.x; y: denyButton.y
+                width: ask.shown ? denyButton.width : 0; height: ask.shown ? denyButton.height : 0
+            }
+            Region {
+                x: allowButton.x; y: allowButton.y
+                width: ask.shown ? allowButton.width : 0; height: ask.shown ? allowButton.height : 0
+            }
         }
         Item { id: fullWindow; anchors.fill: parent }
+        // What the agent is waiting to do. Not a card: the orb holds out two answers, a
+        // label above says what is being asked, and the buttons pop out either side of it
+        // (under the island when it is docked there).
+        Item {
+            id: ask
+            readonly property var about: root.ui.approvalNeeded ? root.ui.describe(root.ui.approval) : ({title: "", detail: "", mono: false})
+            readonly property bool docked: root.ui.docked && !!root.ui.dockTarget
+            readonly property real cx: Math.max(60, Math.min(root.bounds.width - 60,
+                docked ? root.ui.dockTarget.x + root.ui.dockTarget.width / 2 - root.bounds.x : root.centerX))
+            readonly property real cy: docked ? root.ui.dockTarget.y + root.ui.dockTarget.height - root.bounds.y + 52 : root.centerY
+            readonly property real spread: docked ? 34 : 78
+            readonly property bool labelAbove: cy > 110
+            readonly property bool shown: root.ui.approvalNeeded && !root.ui.dragging
+            property real pop: shown ? 1 : 0
+            Behavior on pop {
+                enabled: !root.ui.reducedMotion
+                NumberAnimation { duration: ask.shown ? 360 : 140; easing.type: ask.shown ? Easing.OutBack : Easing.OutCubic; easing.overshoot: 1.6 }
+            }
+            visible: pop > 0.01
+            Rectangle {
+                id: askLabel
+                readonly property bool hasDetail: ask.about.detail.length > 0
+                anchors.horizontalCenter: undefined
+                x: ask.cx - width / 2
+                y: ask.labelAbove ? ask.cy - 62 - height : ask.cy + 62
+                width: Math.min(300, Math.max(askTitle.implicitWidth, hasDetail ? askDetail.implicitWidth : 0) + 28)
+                height: hasDetail ? 46 : 30
+                radius: 16
+                color: Appearance.m3colors.m3surfaceContainerHigh
+                opacity: ask.pop
+                scale: .85 + .15 * ask.pop
+                Accessible.role: Accessible.AlertMessage
+                Accessible.name: Translation.tr("Approval needed: %1").arg(ask.about.title)
+                Column {
+                    anchors.centerIn: parent
+                    width: parent.width - 20
+                    StyledText {
+                        id: askTitle
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                        text: Translation.tr("%1?").arg(ask.about.title)
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        font.weight: Font.Medium
+                        color: Appearance.colors.colOnSurface
+                    }
+                    StyledText {
+                        id: askDetail
+                        visible: askLabel.hasDetail
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideMiddle
+                        maximumLineCount: 1
+                        text: ask.about.detail
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        font.family: ask.about.mono ? Appearance.font.family.monospace : Appearance.font.family.main
+                        color: Appearance.colors.colSubtext
+                    }
+                }
+            }
+            component AskButton: IconToolbarButton {
+                property real side: 1
+                property int index: 0
+                width: 54; height: 54; iconSize: 28
+                buttonRadius: hovered ? 20 : 27
+                buttonRadiusPressed: 18
+                animationsEnabled: !root.ui.reducedMotion
+                x: ask.cx + side * ask.spread * ask.pop - width / 2
+                y: ask.cy - height / 2
+                opacity: ask.pop
+                scale: (.4 + .6 * ask.pop) * (down ? .94 : hovered && !root.ui.reducedMotion ? 1.06 : 1)
+                Behavior on scale { enabled: !root.ui.reducedMotion; NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+            }
+            AskButton {
+                id: denyButton
+                side: -1
+                text: "close"
+                colBackground: Appearance.m3colors.m3secondaryContainer
+                colText: Appearance.colors.colOnSecondaryContainer
+                Accessible.name: Translation.tr("Deny")
+                onClicked: root.ui.answerApproval(false)
+                StyledToolTip { text: Translation.tr("Deny") }
+            }
+            AskButton {
+                id: allowButton
+                side: 1
+                text: "check"
+                colBackground: Appearance.colors.colPrimary
+                colText: Appearance.colors.colOnPrimary
+                Accessible.name: Translation.tr("Allow")
+                onClicked: root.ui.answerApproval(true)
+                StyledToolTip { text: Translation.tr("Allow") }
+            }
+        }
+        // Small orbs: a fixed pool of slots, so each has a stable input region.
+        Item {
+            id: satelliteLayer
+            anchors.fill: parent
+            property real clock: 0
+            Timer {
+                interval: 50; repeat: true
+                running: root.satellitesShown && root.satellites.ids.length > 0 && !root.ui.reducedMotion
+                onTriggered: satelliteLayer.clock += .05
+            }
+            component Slot: CompanionSatellite {
+                id: slot
+                required property int slotIndex
+                readonly property string key: root.satellites.ids[slotIndex] ?? ""
+                readonly property var spot: root.satelliteOffsets[slotIndex] ?? null
+                readonly property bool shown: key.length > 0 && spot !== null && root.satellitesShown
+                visible: shown
+                info: { root.satellites.tick; return key.length > 0 ? root.satellites.info(key) : null; }
+                offsetX: spot?.x ?? 0
+                offsetY: spot?.y ?? 0
+                originX: root.centerX
+                originY: root.centerY
+                orbitTime: satelliteLayer.clock
+                onKeyChanged: if (key.length > 0) respawn()
+                onActivated: root.satellites.activate(key)
+                onDismissed: root.satellites.dismiss(key)
+            }
+            Slot { id: sat0; slotIndex: 0 }
+            Slot { id: sat1; slotIndex: 1 }
+            Slot { id: sat2; slotIndex: 2 }
+            Slot { id: sat3; slotIndex: 3 }
+            Slot { id: sat4; slotIndex: 4 }
+        }
         CompanionSurface {
             id: surface
+            visible: !root.ui.docked || root.ui.dragging || dockFade.running
             dragging: root.ui.dragging
             interactionHeld: root.ui.controlPressed || chatAction.down || returnAction.down || voiceAction.down || hideAction.down
             property real displayedCenterX: root.centerX
@@ -146,10 +328,12 @@ Scope {
             }
             Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: 18
+                // Above the small orbs when there are any, so the two never overlap.
+                readonly property real lift: root.satellitesShown && root.satelliteOffsets.length > 0 ? 58 : 0
+                y: 18 - lift
                 width: Math.min(260, stateLabel.implicitWidth+20)
                 height: 28; radius: 14
-                visible: !root.ui.dragging && root.centerY > 92 && (root.expanded || root.voice.active || root.ui.fileHover)
+                visible: !root.ui.dragging && !root.ui.approvalNeeded && root.centerY > 92 + lift && (root.expanded || root.voice.active || root.ui.fileHover)
                 color: Appearance.m3colors.m3surfaceContainerHigh
                 StyledText {
                     id: stateLabel
@@ -160,7 +344,7 @@ Scope {
                     font.pixelSize: Appearance.font.pixelSize.small
                     color: Appearance.colors.colOnSurface
                     text: root.ui.fileHover ? root.ui.label
-                        : root.ui.phase === "listening" ? Translation.tr("Listening · click to send")
+                        : root.ui.phase === "listening" ? Translation.tr("Listening")
                         : root.ui.phase === "speaking" ? Translation.tr("Click to interrupt") : root.ui.label
                 }
             }

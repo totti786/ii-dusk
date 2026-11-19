@@ -38,6 +38,105 @@ Singleton {
     }
     readonly property string symbol: phase === "listening" ? "mic" : phase === "speaking" ? "volume_up"
         : phase === "attention" ? "approval" : phase === "error" ? "error" : phase === "thinking" || phase === "transcribing" ? "more_horiz" : "graphic_eq"
+    // ── Personality ─────────────────────────────────────────────────────────────
+    // One mood word for the creature: a forced one (IPC, for checking each face), then the
+    // voice session's short-lived reactions, then a flinch at a new notification, then the
+    // slow states: worried on a nearly empty battery, drowsy in the small hours.
+    property string moodForced: ""
+    property string startle: ""
+    property int hourNow: new Date().getHours()
+    readonly property bool lowBattery: Battery.available && !Battery.isCharging && Battery.percentage <= 0.15
+    readonly property string mood: root.moodForced || root.voice.mood || root.startle
+        || (root.lowBattery ? "worried" : root.hourNow < 5 ? "night" : "")
+    Timer { interval: 300000; running: true; repeat: true; onTriggered: root.hourNow = new Date().getHours() }
+    Timer { id: startleTimer; interval: 1500; onTriggered: root.startle = "" }
+    Connections {
+        target: Notifications
+        function onNotify() {
+            if (root.voice.active || Notifications.effectiveSilent) return;
+            root.startle = "startled";
+            startleTimer.restart();
+        }
+    }
+
+    // ── Approvals: what the agent is waiting on, answered from the orb ──────────
+    property var approval: null
+    readonly property bool approvalNeeded: root.approval !== null
+
+    /** The newest approval card still waiting on the user, or null. */
+    function findApproval(): var {
+        const ids = Ai.messageIDs;
+        for (let i = ids.length - 1; i >= 0; i--) {
+            const message = Ai.messageByID[ids[i]];
+            for (const card of Array.from(message?.toolCards ?? [])) {
+                if (card.kind === "opencodeShellApproval" && card.state === "pending")
+                    return {message: message, callId: String(card.callId), tool: String(card.data?.tool ?? ""),
+                            input: card.data?.input ?? ({})};
+            }
+        }
+        return null;
+    }
+    function short(text: string, limit: int): string {
+        const flat = String(text ?? "").replace(/\s+/g, " ").trim();
+        return flat.length > limit ? flat.slice(0, limit - 1) + "…" : flat;
+    }
+    /** What to show and say for an approval: a title, the detail to check, and a spoken phrase. */
+    function describe(approval): var {
+        const input = approval?.input ?? ({});
+        switch (approval?.tool) {
+        case "run_shell_command":
+            return {title: Translation.tr("Run a command"), detail: root.short(input.command, 200),
+                    spoken: Translation.tr("run a command"), mono: true};
+        case "run_privileged_command":
+            return {title: Translation.tr("Run as administrator"), detail: root.short(input.command, 200),
+                    spoken: Translation.tr("run an administrator command"), mono: true, strict: true};
+        case "write_file":
+            return {title: Translation.tr("Write a file"), detail: root.short(input.path, 200),
+                    spoken: Translation.tr("write a file"), mono: true};
+        case "desktop_input":
+            return {title: Translation.tr("Control mouse and keyboard"),
+                    detail: root.short([input.action, input.key, input.text, input.x !== undefined ? input.x + "," + input.y : ""].filter(Boolean).join(" · "), 200),
+                    spoken: Translation.tr("control the mouse and keyboard"), mono: false};
+        case "desktop_capture":
+            return {title: Translation.tr("Look at your screen"), detail: String(input.monitor ?? ""),
+                    spoken: Translation.tr("take a screenshot"), mono: false};
+        case "browser_call":
+            return {title: Translation.tr("Use the browser"), detail: root.short(input.name, 120),
+                    spoken: Translation.tr("use the browser"), mono: false};
+        case "settings_set":
+            return {title: Translation.tr("Change a setting"), detail: root.short(input.key, 120),
+                    spoken: Translation.tr("change a setting"), mono: true};
+        default:
+            return {title: String(approval?.tool ?? "").replace(/_/g, " "),
+                    detail: root.short(JSON.stringify(input), 160),
+                    spoken: String(approval?.tool ?? "").replace(/_/g, " "), mono: false};
+        }
+    }
+    function refreshApproval(): void {
+        // Only while the orb's own run is in flight: the run coordinator never marks a
+        // shell approval as "needs action", so the cards themselves are the signal.
+        root.approval = root.voice.active && root.voice.runId.length > 0 ? root.findApproval() : null;
+    }
+    function answerApproval(allow: bool): bool {
+        const pending = root.approval;
+        if (!pending) return false;
+        root.approval = null;
+        Ai.answerShellApproval(pending.message, pending.callId, allow ? "once" : "reject");
+        root.voice.approvalAnswered(allow);
+        return true;
+    }
+    property Timer approvalWatch: Timer {
+        interval: 300
+        repeat: true
+        running: root.voice.active && root.voice.runId.length > 0
+        triggeredOnStart: true
+        onTriggered: root.refreshApproval()
+    }
+    property Connections approvalState: Connections {
+        target: root.voice
+        function onRunIdChanged() { if (root.voice.runId.length === 0) root.approval = null; }
+    }
+
     signal docking()
     property bool fileHover: false
     readonly property int attachmentCount: Ai.attachments.length
@@ -104,6 +203,17 @@ Singleton {
         root.saved.monitor = screen.name;
         root.saved.xRatio = ratios.x;
         root.saved.yRatio = ratios.y;
+    }
+    /**
+     * Bring a floating orb to a spot on a screen (a double-click on the desktop).
+     * Does nothing while it is docked in the island or hidden: it is only asked to
+     * come to you when it is out on its own. Coordinates are the screen's own.
+     */
+    function summon(screen, x, y): bool {
+        if (!screen || !root.saved.visible || root.docked || root.dragging) return false;
+        const b = root.screenBounds(screen);
+        root.place(b.x + x, b.y + y, screen, false);
+        return true;
     }
     function undock(): void {
         const target = root.dockTarget;

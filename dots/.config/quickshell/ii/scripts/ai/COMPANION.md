@@ -202,3 +202,135 @@ sidebar cannot interrupt same-process native drag completion. Verified against
 the actual QuickShell file manager, with the source kept open and pointer movement
 after release: the drag finished as Copy, the fixture attached without moving its
 original, and no new drag started without a press.
+
+## Context, instant actions and moods (2026-11-18)
+
+**Fast path config.** `ai.voice.fastPath` (true), `fastModel` ("haiku"), `actions` (true) and
+`screen` (true) are declared in `Config.qml`. They were missing before, so the warm session
+was silently off and every turn went to Codex.
+
+**Context.** `AiCompanionActions.snapshot()` puts a short `<desktop-context>` block in front
+of each spoken turn: time, focused window, now playing, volume, battery, unread notifications,
+next alarm, soon reminder, running timers, open tasks. Questions about these need no tool
+call. The block is declared untrusted data in the system prompt (window titles and track
+names can contain instructions). The clipboard is deliberately not included.
+
+**Actions.** The model starts a reply with `[[DO verb args]]` lines, then one short
+confirmation. `voice_agent.py` parses them (`parse_head`) and emits `action` events;
+`AiCompanionActions.run()` runs them from a closed table with validated, clamped arguments:
+`media`, `volume`, `brightness`, `theme`, `open` (desktop entries only), `timer`, `alarm`,
+`remind`, `task`, `workspace`. Locking, closing windows, typing, files and shell commands
+are not in the table. A refused or failed action sends the turn to the full agent; if
+something already ran, the orb says so instead of repeating it. What was done is recorded
+in the chat as `(Set volume to 26%)` so later Codex turns know.
+
+**Look at the screen.** "What's on my screen" makes the model reply `[[LOOK]]`; the agent
+captures the focused monitor once (grim, JPEG, scaled), sends it as an image block in the
+same turn and the answer streams as usual (about 2 s). Off with `ai.voice.screen`.
+
+**Moods.** `AiCompanionUi.mood` picks one word for the creature: forced (IPC), the voice
+session's (`delighted` after an action, `curious` while looking), `startled` on a new
+notification (not while Do Not Disturb), `worried` at 15% battery or less and not charging,
+`night` from midnight to 5. The creature (`AiCreature.qml`, `personality: true` only on the
+orb) changes eye shape, tilt and timing; a turn that runs over 6 s squints. Check each face:
+
+    qs -c ii ipc call companion mood startled   # delighted curious worried night, "" clears
+
+Tests: `python3 -m unittest tests.test_voice_agent_markers` in this folder.
+Pre-change copies: `~/.local/state/quickshell/user/ai/orb-personality-backup/`.
+
+**Rules first (Tier 1).** `voice_rules.py` matches the commonest whole-utterance commands
+before any model is asked: media (pause, play, next, previous), volume (set, up/down, mute),
+brightness, light/dark theme, timers, alarms, "remind me to ...", "add X to my tasks",
+`workspace N` and "open <app>". It handles filler ("can you please..."), number words
+("thirty", "half an hour") and am/pm, and refuses anything chatty or ambiguous ("play some
+jazz", "remind me tomorrow...", "open the sidebar", "set a timer") so those reach the model
+unchanged. A hit emits the same `action` events, so `AiCompanionActions` still validates
+everything. Measured: 1-40 ms to decide, 75 ms generation and 0.6 s to speech through the orb.
+`ai.voice.rules` turns it off. Tests: `python3 -m unittest tests.test_voice_rules`.
+
+**Transcription tuning (2026-11-18).** `stt_daemon.py` now hints Whisper with the commands the
+orb understands (`PROMPT`; English/auto only) and builds its common model at start. Measured
+on synthetic speech: "alarm at seven thirty am" went from nonsense to `alarm at 7:30 am`.
+Warm transcription is 0.7-1.4 s for a 1.5 s clip on this CPU; smaller `audio_ctx` windows and
+greedy/no-fallback decoding were not faster in a way worth the hallucination risk (a
+no-fallback run looped "next song" 60 times). The rules now also accept `brightness set N`,
+`volume set N` and `workspace3`. `voice-timings.jsonl` records each spoken turn's stages.
+
+**Latency work (2026-11-18).**
+- *Chime.* A rule-matched command that ran ends with a 0.14 s chime (`pw-play`, freedesktop `bell`)
+  instead of a spoken sentence, then listening resumes after 420 ms so the mic does not hear it. Falls back to
+  speech when shell sounds are off. `ai.voice.chime`.
+- *Speculative transcription.* While the pause detector waits, `orb_audio.py` transcribes the audio so far
+  in a thread (after 0.4 s of quiet). If no speech follows, that transcript IS the final one, so `captured`
+  carries `text` and the second transcription is skipped (`early: reuse`); a complete rule command after
+  0.55 s of quiet ends the turn at once (`early: rule`; alarms never). The audio file is deleted by
+  `orb_audio`. Speech that resumes invalidates the snapshot. Disable with `II_ORB_SPECULATE=0`.
+  Checked with synthetic speech fed through a fake microphone in real time.
+- *Escalation model.* `Ai.submit` accepts `context.modelId` for one turn. `ai.voice.escalationModel`
+  ("haiku" or "sonnet", empty = the sidebar's model) sends orb turns that need the desktop through
+  Claude Code. Same tool turn (list windows): Codex 21.6 s, Claude Haiku 3.7 s, Sonnet 4.9 s. Off by default.
+- *Not done, on purpose:* a persistent `codex app-server`. Even `codex exec` for "reply ok" takes 6-9 s, with
+  or without `--no-daemon`, and the bridge's per-turn MCP env, tool list and instructions are fixed when
+  that process starts.
+
+**Choosing models (2026-11-18).** Settings > AI Assistant > Models & execution > *Voice orb models* sets what
+handles each stage of a spoken request: instant commands (rules, no model), quick answers (a warm Claude
+Code session; Claude models only, `ai.voice.fastModel`) and desktop tasks (`ai.voice.escalationModel`: empty =
+the sidebar's model, otherwise any tool-capable catalog id such as `claude:haiku`,
+`opencode-server:opencode-go/glm-5.3-flash` or a Codex model). It changes spoken requests only. Check the
+current choice with `qs -c ii ipc call companion models`; `voice-timings.jsonl` records the serving model per
+turn. Verified live: GLM 5.3 Flash as the tasks model, 5.5 s generation for a "list my windows" turn
+(about 0.8 s of that is Haiku deciding to hand over).
+
+**Instant-command settings (2026-11-18).** The voice orb settings page lists what the rules handle in nine
+groups (media, volume, brightness, light/dark, timers, alarms, reminders & tasks, workspaces, apps) with a switch
+each (`ai.voice.rulesOff`), lets you add your own phrases (`ai.voice.customRules`: `{phrase, do, say}`, where
+`do` is a `;`-separated list of actions from the same closed table and `{n}` stands for a spoken number;
+custom phrases are tried before the built-ins) and has a "try a sentence" box that runs
+`python3 voice_rules.py PHRASE [OFF_CSV [CUSTOM_JSON]]`. The shell sends the settings to `voice_agent.py` as a
+`config` op at start and on every change. Switching a group off sends that kind of request on to the quick-answers
+stage (Haiku can still run the action, about a second slower); it does not block the action.
+
+**Small orbs (2026-11-18).** `services/ai/AiCompanionSatellites.qml` lists the live things (running or just-finished
+timers, an alarm or reminder due within the hour, the playing track; at most five) and `CompanionSatellite.qml` draws
+each as a small orb with a progress ring. They sit on the arc of `CompanionPlacement.satelliteOffsets`, opposite the
+hover control fan and kept on screen, bud out of the orb when they appear, and the state label lifts above them. Click:
+pause/resume a timer, dismiss a finished one, play/pause the track; right-click removes a timer. Only while the orb is
+floating (not docked). Each of the five slots has its own input region in `orbMask`. Config: `ai.voice.satellites`,
+`satelliteMedia`. Not built: orbs for background agent tasks (no clean per-task signal in `Ai`).
+
+**Small orbs, later the same day.** They are drawn as blobs like the main orb (timer progress = a liquid level) and each
+wears the main orb's `AiCreature` face with a mood for what it watches: a timer is calm, worried in its last 30 s, sleepy
+when paused and delighted (fidgeting for attention) when finished; the music orb sways and looks pleased; an alarm or
+reminder is curious. An orb is also shown for the running AI request (`Ai.runCoordinator`, eyes dart while it works,
+"curious" when it waits on you) and, when a request finishes while the sidebar is closed and the orb is not speaking, a
+lingering done/failed orb that opens the chat when clicked. Config: `ai.voice.satelliteTasks`.
+
+**Typed messages take the spoken route (2026-11-18).** `Ai.sendUserMessage` (sidebar composer, overview search, IPC `ai ask`)
+asks `AiCompanionVoiceService.canRouteTyped()` first; if yes, `typedAsk()` sends it to the same agent (instant rules, then
+warm Haiku) and the answer is added to the chat in text, never spoken, with no microphone or orb listening. A hand-over
+(needs the desktop / error) goes to `Ai.submit(..., "chat")` on the desktop-tasks model. Not routed: slash/! commands,
+messages with attachments, while a run is active, and when `ai.voice.typedRouting` or `fastPath` is off. The reply is a
+spoken-style Haiku answer, shorter and plainer than the chat model's. The answer appears when finished, not streamed.
+
+**No Claude Code (2026-11-18).** `AiCompanionVoiceService.claudeFound` (`command -v claude` at start, "Check again" on the
+settings page, and cleared if the agent reports it missing) gates `quickReady`. Without it the quick-answer stage is
+skipped everywhere: spoken turns go rules then the desktop-tasks model, typed messages take the ordinary chat route, the
+sidebar pill shows the real model instead of "Auto", `companion models` reports "unavailable", and the settings page shows a
+warning. Instant commands never depend on it.
+
+**Claude installed but signed out.** `claudeState` (`checking`/`ready`/`missing`/`signedOut`) comes from
+`claude auth status` run with the same environment the agent uses (it parses `loggedIn`). `signedOut` is handled like
+`missing`: the quick stage is skipped everywhere and the settings page says to sign in, with a "Check again" button. A
+login/auth error from the agent at run time also flips it. An unreadable answer (timeout, old CLI) does not block the stage.
+
+**Remote AI switch (2026-11-18).** The existing global AI policy (`policies.ai`: 1 On, 2 Local only, 0 Off; Settings >
+Sidebars, now also the top of the Voice orb models page and `qs -c ii ipc call companion remote on|local|off`) is honoured by
+everything the orb added. `Ai.onlineAllowed` false means: no warm Claude session (it is killed when the policy flips), no
+screenshot to Claude, no quick-answer stage, a pinned remote desktop-tasks model is ignored in Local only (the chat model,
+which must be local, takes over), Edge TTS (sends text to Microsoft) is refused via `II_LOCAL_ONLY=1`, and the plan-usage
+quota calls stop. The instant rules, local speech and local models keep working; the agent is still asked first with
+`quick:false` so the rules run, and anything else is handed straight back. Trap: `policies.ai` is also kept in
+`~/.config/illogical-impulse/local-preferences.json` and the shell rewrites config.json from memory, so do not toggle it by
+editing files (replacing config.json atomically also breaks its file watcher): use the IPC or the settings page.

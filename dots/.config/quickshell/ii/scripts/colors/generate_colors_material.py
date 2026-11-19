@@ -83,6 +83,23 @@ def resolve_auto_scheme(image_path):
         print(f"Auto scheme detection failed ({e}); using tonal spot", file=sys.stderr)
         return 'scheme-tonal-spot'
 
+def matugen_seed(path):
+    """The source colour matugen derives the shell theme from, as ARGB, or None."""
+    import shutil, subprocess
+    binary = shutil.which('matugen')
+    if not binary:
+        return None
+    try:
+        run = subprocess.run([binary, 'image', path, '--source-color-index', '0', '--dry-run', '-q', '-j', 'hex'],
+                             capture_output=True, text=True, timeout=30)
+        if run.returncode != 0:
+            return None
+        hex_color = json.loads(run.stdout)['colors']['source_color']['default']['color']
+        return hex_to_argb(hex_color)
+    except Exception:
+        return None
+
+
 darkmode = (args.mode == 'dark')
 transparent = (args.transparency == 'transparent')
 
@@ -100,6 +117,12 @@ if args.path is not None:
         image = image.resize((wsize_new, hsize_new), Image.Resampling.BICUBIC)
     colors = QuantizeCelebi(list(image.getdata()), 128)
     argb = Score.score(colors)[0]
+    # The theme itself is rendered by matugen, whose seed is the image's first source colour.
+    # Picking one here with a different resize and quantiser breaks ties differently on
+    # wallpapers with near-equal candidates (a pine photo came out teal here and green in the
+    # theme), so the swatches and the terminal palette disagreed with the applied colours.
+    # Ask matugen for the seed it used; keep ours when it is not available.
+    argb = matugen_seed(args.path) or argb
 
     if args.cache is not None:
         with open(args.cache, 'w') as file:

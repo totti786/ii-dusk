@@ -15,6 +15,15 @@ Item {
     function toggleProvider(id) {
         expandedProviders = expandedProviders.includes(id) ? expandedProviders.filter(value => value !== id) : expandedProviders.concat([id]);
     }
+    /** Only the sidebar's model chip shows this: the voice orb's desktop tasks follow this model, or are pinned. */
+    property bool showVoiceFooter: false
+    readonly property bool voiceFollows: String(Config.options.ai.voice.escalationModel ?? "").trim().length === 0
+    readonly property string voicePinnedName: {
+        const raw = String(Config.options.ai.voice.escalationModel ?? "").trim();
+        const id = raw.length > 0 && raw.indexOf(":") < 0 ? "claude:" + raw : raw;
+        return Ai.catalog.models[id]?.title ?? raw;
+    }
+    readonly property real footerHeight: root.showVoiceFooter ? 52 : 0
     property bool hostOwnsCatalogueHeader: false
     property bool fillOpenRouterAvailableHeight: false
     readonly property bool modelCatalogueOpen: false
@@ -27,6 +36,7 @@ Item {
     readonly property real gap: Appearance.rounding.small
     readonly property real rowHeight: Math.round(Appearance.font.pixelSize.huge * 3)
     implicitHeight: searchBox.implicitHeight + root.gap + Math.max(root.rowHeight, modelList.contentHeight)
+        + (root.showVoiceFooter ? root.footerHeight + root.gap : 0)
     readonly property var rows: {
         const result = [], needle = root.query.trim().toLowerCase();
         for (const providerId of Ai.providerIds) {
@@ -68,7 +78,7 @@ Item {
     }
     ListView {
         id: modelList
-        anchors { left: parent.left; right: parent.right; top: searchBox.bottom; bottom: parent.bottom; topMargin: root.gap }
+        anchors { left: parent.left; right: parent.right; top: searchBox.bottom; bottom: footer.visible ? footer.top : parent.bottom; topMargin: root.gap; bottomMargin: footer.visible ? root.gap : 0 }
         clip: true
         spacing: 4
         model: root.rows
@@ -118,5 +128,37 @@ Item {
             text: Translation.tr("No matching agents")
             color: Appearance.colors.colSubtext
         }
+    }
+    // The voice orb's desktop tasks: follow this chat model, or stay pinned to another one.
+    RippleButton {
+        id: footer
+        visible: root.showVoiceFooter
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+        height: root.footerHeight
+        buttonRadius: Appearance.rounding.normal
+        colBackground: Appearance.colors.colLayer1
+        onClicked: Config.options.ai.voice.escalationModel = root.voiceFollows ? Ai.currentModelId : ""
+        contentItem: RowLayout {
+            spacing: 10
+            MaterialSymbol { text: "graphic_eq"; iconSize: 22; color: Appearance.colors.colPrimary }
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 2
+                StyledText {
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    color: Appearance.colors.colOnLayer1
+                    text: root.voiceFollows ? Translation.tr("Voice orb tasks use this model") : Translation.tr("Voice orb tasks: %1").arg(root.voicePinnedName)
+                }
+                StyledText {
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    color: Appearance.colors.colSubtext
+                    text: root.voiceFollows ? Translation.tr("Click to keep them on this one") : Translation.tr("Click to follow the chat model")
+                }
+            }
+        }
+        StyledToolTip { text: Translation.tr("Only spoken requests that need tools, the browser or settings. Fine-tune in Settings > AI Assistant > Voice orb models.") }
     }
 }

@@ -8,6 +8,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import qs
 import qs.services
+import qs.services.ai
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.widgets.widgetCanvas
@@ -898,6 +899,11 @@ PanelWindow {
             // A screen that shows no widgets only maps this surface for the
             // wallpaper framing below; the canvas stays off it.
             visible: bgWidgetsWindow.isTargetMonitor
+            // A double-click on empty desktop calls a floating AI orb over.
+            onCanvasDoubleClicked: (atX, atY) => {
+                const p = widgetCanvas.mapToItem(null, atX, atY);
+                AiCompanionUi.summon(bgWidgetsWindow.screen, p.x, p.y);
+            }
             // The widgets step back while the wallpaper is being framed: still
             // there to frame the picture around, not in the way of it.
             // The window blur's sharp half is desktopStack's opacity.

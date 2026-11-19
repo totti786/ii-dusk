@@ -387,6 +387,22 @@ Item {
                     : Translation.tr("Running. Visible for 10 minutes.")
             }
 
+            RippleButtonWithIcon {
+                visible: QuickShareService.enabled
+                materialIcon: "troubleshoot"
+                mainText: QuickShareService.diagRunning ? Translation.tr("Checking…") : Translation.tr("Can't see my phone? Check connection")
+                enabled: !QuickShareService.diagRunning
+                onClicked: QuickShareService.diagnose()
+            }
+            NoticeBox {
+                visible: QuickShareService.diagText !== ""
+                Layout.fillWidth: true
+                isFirst: true
+                isLast: true
+                materialIcon: "fact_check"
+                text: QuickShareService.diagText
+            }
+
             MaterialTextArea {
                 Layout.fillWidth: true
                 placeholderText: Translation.tr("Download folder (empty: ~/Downloads)")

@@ -227,7 +227,8 @@ QtObject {
         root.state = "transcribing";
         const outputBase = root.recordingPath.replace(/\.wav$/, "");
         transcribeProc.outputPath = `${outputBase}.txt`;
-        transcribeProc.command = ["python3", Directories.scriptPath + "/ai/orb_audio.py", "transcribe",
+        transcribeProc.command = ["env", "II_ORB_STT_MODEL=" + String(Config.options.ai.voice.sttModel ?? "auto"),
+            "python3", Directories.scriptPath + "/ai/orb_audio.py", "transcribe",
             root.recordingPath, transcribeProc.outputPath];
         transcribeProc.running = true;
     }

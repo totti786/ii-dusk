@@ -1793,7 +1793,7 @@ Singleton {
                 "osd": "Osd", "recording": "Recording", "dictation": "Dictation",
                 "timer": "Timer", "clipboard": "Clipboard", "localSend": "LocalSend",
                 "progress": "Progress", "battery": "Battery", "ai": "AiStatus",
-                "earbuds": "Earbuds", "weather": "Weather", "batteryGlance": "BatteryGlance"
+                "earbuds": "Earbuds", "weather": "Weather", "batteryGlance": "BatteryGlance", "date": "Date"
             };
             island.widgets = island.widgets ?? {};
             for (const id in widgetKeys) {
@@ -3413,6 +3413,50 @@ Singleton {
                     // land on "error" until the user follows the Settings
                     // guide and turns this on themselves.
                     property bool enabled: false
+                    // The voice orb's warm Claude session (scripts/ai/voice_agent.py): it
+                    // answers chat itself and hands anything bigger to the full agent.
+                    property bool fastPath: true
+                    property string fastModel: "haiku"
+                    // Instant desktop actions from a closed list (media, volume, timers...),
+                    // run by the shell without a tool turn.
+                    property bool actions: true
+                    // Pattern-matched commands ("volume 30", "next song", "timer 10 minutes")
+                    // answered by scripts/ai/voice_rules.py without asking a model at all.
+                    property bool rules: true
+                    // Messages typed in the sidebar take the same route as spoken ones.
+                    property bool typedRouting: true
+                    // Small orbs that bud off the main one for live things (timers, alarms, music).
+                    property bool satellites: true
+                    property bool satelliteMedia: true
+                    property bool satelliteTasks: true
+                    // Instant-command groups switched off ("media", "volume", "brightness", "theme",
+                    // "timers", "alarms", "notes", "workspace", "apps"), and the user's own phrases:
+                    // {phrase, do, say}, where `do` is e.g. "theme dark; volume set 20".
+                    property list<var> rulesOff: []
+                    property list<var> customRules: []
+                    // A rule-matched command ends with a short chime, not a spoken sentence
+                    // (only while shell sounds are enabled).
+                    property bool chime: true
+                    // Model for orb turns that need the desktop (tools, browser, settings). Empty uses the
+                    // one selected in the sidebar. "haiku" or "sonnet" runs them on Claude Code: about
+                    // 4 s instead of 10-20 s on Codex in a measured test.
+                    property string escalationModel: ""
+                    // May the orb look at the screen when asked "what is on my screen".
+                    // One capture, sent only for that turn.
+                    property bool screen: true
+                    // Local voice (Kokoro) speed, 1 = normal, and the pause between sentences in ms.
+                    // The helper trims Kokoro's own sentence padding, so this pause is the whole gap.
+                    property real speechSpeed: 1.25
+                    property int speechGapMs: 130
+                    // Microphone: end a turn after this many seconds of quiet (a short phrase gets a
+                    // little more, a long one a little less); the voice-activity model; and the
+                    // speech-to-text model: "base", "small" (installed, more accurate, slower) or "auto" for the best installed.
+                    // "en": hear and speak English only (English models, no cloud voice, replies in
+                    // English). "auto": detect the spoken language, speak other scripts with Edge.
+                    property string language: "en"
+                    property real endSilence: 0.6
+                    property bool vad: true
+                    property string sttModel: "base"
                 }
                 // Local retrieval over folders the user pointed at
                 // explicitly through Settings. Off by default: nothing is
@@ -3725,6 +3769,10 @@ Singleton {
             property JsonObject quickShare: JsonObject {
                 property bool enable: false
                 property string downloadDir: ""
+                // Fixed, so a firewall rule can match. Falls back to a random port if taken.
+                property int port: 47321
+                // Names of devices sent to, newest first.
+                property list<string> recent: []
             }
 
             // Per-app usage and energy history. The sampler is a separate process
@@ -5667,6 +5715,7 @@ Singleton {
                     property bool immersive: false
                     property bool kineticLyrics: false // Immersive only, BetterLyrics word-timed lines
                     property bool kineticFisheye: false // Fisheye lens over the kinetic lyrics
+                    property bool kineticBeatShake: false // Phonk-edit camera hits on the beat (cava)
                     property bool togglePerMonitor: true
                     property string backgroundShape: "Square"
                     property bool enableBackgroundAnimation: true // It **may** cause nausea for someone
@@ -5984,6 +6033,11 @@ Singleton {
                         property string side: "right"
                         property int notchHeight: 36
                     }
+                    property JsonObject date: JsonObject {
+                        property bool enable: false
+                        property string side: "right"
+                        property int notchHeight: 36
+                    }
                     property JsonObject systemTray: JsonObject {
                         property bool enable: false
                         property string side: "right"
@@ -6055,6 +6109,8 @@ Singleton {
                     property bool showPrimary: true
                     property bool showSecondary: true
                     property bool swapPrimaryWithSecondary: false
+                    // false drops the weekday (ddd/dddd) from the date the clock shows.
+                    property bool showDayName: true
                 }
                 property JsonObject styles: JsonObject {
                     property string activeWindow: "default"
@@ -6203,6 +6259,7 @@ Singleton {
                     property bool disableEarbuds: true
                     property bool disableWeather: true
                     property bool disableBatteryGlance: true
+                    property bool disableDate: true
                     property bool disableAiStatus: false
                     property bool disableCompanion: false
                     property bool disableMode: false

@@ -3,12 +3,16 @@ import QtQuick
 import qs.services.ai
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.ii.dynamicIsland.bubble
 
 /** One theme-colored voice visual, shared by the bubble, card and floating form. */
 Item {
     id: root
     property bool hovered: false
     property bool showSymbol: true
+    /** Eyes that follow the pointer in place of the glyph, dots and bars. */
+    property bool eyes: true
+    readonly property bool showEyes: root.showSymbol && root.eyes && !root.fileHover
     readonly property bool fileHover: AiCompanionUi.fileHover
     readonly property bool busy: ["thinking", "transcribing", "preparing", "reading-files"].includes(root.phase)
     onFileHoverChanged: field.requestPaint()
@@ -56,6 +60,11 @@ Item {
     Canvas {
         id: field
         anchors.fill: parent
+        // The body leans a little after the pointer, the eyes a little more.
+        anchors.leftMargin: face.lookX * root.width * 0.03
+        anchors.topMargin: face.lookY * root.height * 0.03
+        Behavior on anchors.leftMargin { enabled: !AiCompanionUi.reducedMotion; NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on anchors.topMargin { enabled: !AiCompanionUi.reducedMotion; NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
         onPaint: {
             const ctx = getContext("2d");
             ctx.reset();
@@ -90,14 +99,14 @@ Item {
             ctx.lineTo(cx+r*1.4,cy+r*1.4);ctx.lineTo(cx-r*1.4,cy+r*1.4);ctx.closePath();ctx.fill();
             ctx.restore();
             ctx.globalAlpha=1;
-            if (root.showSymbol && root.busy && !root.fileHover) {
+            if (root.showSymbol && !root.showEyes && root.busy && !root.fileHover) {
                 ctx.fillStyle=String(Appearance.colors.colOnPrimary);
                 for(let i=0;i<3;i++) {
                     const hop=motion*Math.sin(t*4-i*.7)*width*.025;
                     ctx.beginPath();ctx.arc(cx+(i-1)*width*.11,cy+hop,width*.025,0,Math.PI*2);ctx.fill();
                 }
             }
-            if (root.showSymbol && root.waveform) {
+            if (root.showSymbol && !root.showEyes && root.waveform) {
                 ctx.fillStyle=String(root.alert ? Appearance.m3colors.m3onError : Appearance.colors.colOnPrimary);
                 const unit=width/84, bar=3*unit, gap=3*unit;
                 for (let i=0;i<5;i++) {
@@ -114,9 +123,25 @@ Item {
             }
         }
     }
+    AiCreature {
+        id: face
+        visible: root.showEyes
+        anchors.centerIn: parent
+        diameter: Math.round(root.width * 0.8)
+        live: !AiCompanionUi.reducedMotion && !AiCompanionUi.dragging
+        color: root.alert ? Appearance.m3colors.m3onError : Appearance.colors.colOnPrimary
+        listening: root.phase === "listening"
+        speaking: root.phase === "speaking"
+        working: root.busy
+        attention: root.phase === "attention"
+        error: root.phase === "error"
+        level: root.amplitude
+        personality: true
+        mood: AiCompanionUi.mood
+    }
     MaterialSymbol {
         anchors.centerIn: parent
-        visible: root.showSymbol && !root.waveform && (!root.busy || root.fileHover)
+        visible: root.showSymbol && !root.showEyes && !root.waveform && (!root.busy || root.fileHover)
         text: root.fileHover ? "attach_file" : AiCompanionUi.symbol
         iconSize: Math.max(13, Math.round(root.width*.29))
         fill: 1

@@ -64,6 +64,7 @@ pub struct RQS {
     ble_sender: broadcast::Sender<()>,
 
     port_number: Option<u32>,
+    bound_port: u16,
 
     pub message_sender: broadcast::Sender<ChannelMessage>,
 }
@@ -98,6 +99,7 @@ impl RQS {
             visibility_receiver,
             ble_sender,
             port_number,
+            bound_port: 0,
             message_sender,
         }
     }
@@ -115,9 +117,20 @@ impl RQS {
             .take(4)
             .map(u8::from)
             .collect();
-        let tcp_listener =
-            TcpListener::bind(format!("0.0.0.0:{}", self.port_number.unwrap_or(0))).await?;
+        // A fixed port lets a firewall rule match; if something else holds it, take any port
+        // rather than leave Quick Share dead.
+        let tcp_listener = match self.port_number {
+            Some(p) if p != 0 => match TcpListener::bind(format!("0.0.0.0:{p}")).await {
+                Ok(l) => l,
+                Err(e) => {
+                    warn!("port {p} unavailable ({e}), using a random one");
+                    TcpListener::bind("0.0.0.0:0").await?
+                }
+            },
+            _ => TcpListener::bind("0.0.0.0:0").await?,
+        };
         let binded_addr = tcp_listener.local_addr()?;
+        self.bound_port = binded_addr.port();
         info!("TcpListener on: {}", binded_addr);
 
         // MPSC for the TcpServer
@@ -128,6 +141,7 @@ impl RQS {
             tcp_listener,
             self.message_sender.clone(),
             send_channel.1,
+            self.visibility_receiver.clone(),
         )?;
         let ctk = ctoken.clone();
         tracker.spawn(async move { server.run(ctk).await });
@@ -163,6 +177,15 @@ impl RQS {
         tracker.close();
 
         Ok((send_channel.0, self.ble_sender.subscribe()))
+    }
+
+    pub fn bound_port(&self) -> u16 {
+        self.bound_port
+    }
+
+    /// A receiver for visibility changes, including the daemon's own expiry of "temporarily".
+    pub fn visibility_watch(&self) -> watch::Receiver<Visibility> {
+        self.visibility_receiver.clone()
     }
 
     pub fn discovery(
@@ -223,7 +246,13 @@ impl RQS {
         }
 
         if let Some(tracker) = &self.tracker {
-            tracker.wait().await;
+            // A task that ignores cancellation must not wedge shutdown.
+            if tokio::time::timeout(std::time::Duration::from_secs(5), tracker.wait())
+                .await
+                .is_err()
+            {
+                warn!("shutdown: tasks still running after 5s, leaving them");
+            }
         }
 
         self.ctoken = None;

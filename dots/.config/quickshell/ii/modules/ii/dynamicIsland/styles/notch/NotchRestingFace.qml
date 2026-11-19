@@ -72,7 +72,7 @@ Item {
     // ── Balance ──────────────────────────────────────────────────────────────
     /** Who is seated first when several arrive together. */
     readonly property var sideOrder: ["media", "phoneCall", "privacy", "discordVoice", "phoneMirror", "phoneLink", "sports", "phoneLive", "ai", "recording", "timer", "mode", "update", "earbuds", "weather",
-        "batteryGlance", "reminderSoon", "easyEffects", "soundscapes", "quickShare", "monitorAlert"]  // media brings "mediaViz"
+        "batteryGlance", "date", "reminderSoon", "easyEffects", "soundscapes", "quickShare", "monitorAlert"]  // media brings "mediaViz"
     /** Each end's widgets, from the island's edge inwards. */
     property var leftIds: []
     property var rightIds: []
@@ -133,6 +133,7 @@ Item {
         case "weather": return weatherGlance.implicitWidth;
         case "reminderSoon": return reminderGlance.implicitWidth;
         case "batteryGlance": return batteryGlance.implicitWidth;
+        case "date": return dateGlance.implicitWidth;
         case "privacy": return privacyGlance.implicitWidth;
         case "phoneCall": return callGlance.implicitWidth;
         case "sports": return sportsGlance.implicitWidth;
@@ -204,6 +205,7 @@ Item {
         case "weather": return weatherSlot;
         case "reminderSoon": return reminderSlot;
         case "batteryGlance": return batteryGlanceSlot;
+        case "date": return dateSlot;
         case "privacy": return privacySlot;
         case "phoneCall": return callSlot;
         case "sports": return sportsSlot;
@@ -745,6 +747,37 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Battery.percent + "%"
                 color: batteryGlance.tint
+                font.family: face.clockFamily
+                font.pixelSize: face.clockSize
+                font.weight: Font.Bold
+                font.features: ({ "tnum": 1 })
+            }
+        }
+    }
+
+    // Date: a calendar glyph and today's date in the shell's own date format.
+    SideSlot {
+        id: dateSlot
+        sideId: "date"
+        contentWidth: dateGlance.implicitWidth
+
+        Row {
+            id: dateGlance
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 4
+
+            MaterialSymbol {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "calendar_today"
+                fill: 1
+                iconSize: Math.round(face.glanceSize * 0.6)
+                color: Appearance.colors.colPrimary
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: DateTime.longDate
+                color: Appearance.colors.colOnLayer0
                 font.family: face.clockFamily
                 font.pixelSize: face.clockSize
                 font.weight: Font.Bold

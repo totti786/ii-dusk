@@ -58,6 +58,12 @@ MouseArea {
     signal contextMenuRequested(string instanceId, real atX, real atY)
     // A right-click that landed on no widget: the desktop's own menu.
     signal canvasContextMenuRequested(real atX, real atY)
+    // A double-click on empty canvas, in canvas coordinates.
+    signal canvasDoubleClicked(real atX, real atY)
+    onDoubleClicked: mouse => {
+        if (mouse.button === Qt.LeftButton)
+            root.canvasDoubleClicked(mouse.x, mouse.y);
+    }
     // A long press on the wallpaper / background: opens the desktop context menu.
     signal canvasLongPressed(real atX, real atY)
     // The settled marquee band, announced once the canvas has taken its own

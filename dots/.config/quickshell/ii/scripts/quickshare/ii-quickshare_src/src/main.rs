@@ -33,6 +33,8 @@ struct Shared {
     visibility: Mutex<Visibility>,
     discovering: Mutex<bool>,
     ep_tx: broadcast::Sender<EndpointInfo>,
+    port: u16,
+    quit: tokio::sync::Notify,
 }
 
 impl Shared {
@@ -40,6 +42,7 @@ impl Shared {
         json!({
             "ev": "snapshot",
             "visibility": vis_name(*self.visibility.lock().await),
+            "port": self.port,
             "discovering": *self.discovering.lock().await,
             "transfers": self.transfers.lock().await.values().cloned().collect::<Vec<_>>(),
             "endpoints": self.endpoints.lock().await.values().cloned().collect::<Vec<_>>(),
@@ -157,6 +160,7 @@ async fn handle_cmd(sh: &Arc<Shared>, v: &Value) -> Option<Value> {
     };
     match v["cmd"].as_str()? {
         "snapshot" => return Some(sh.snapshot().await),
+        "ping" => return Some(json!({"ev":"pong"})),
         "visibility" => {
             let nv = match v["value"].as_str()? {
                 "visible" => Visibility::Visible,
@@ -167,8 +171,8 @@ async fn handle_cmd(sh: &Arc<Shared>, v: &Value) -> Option<Value> {
             sh.set_visibility(nv).await;
         }
         "quit" => {
-            let _ = std::fs::remove_file(sock_path());
-            std::process::exit(0);
+            // Leave through the normal path so the mDNS record is withdrawn.
+            sh.quit.notify_one();
         }
         "accept" => act(ChannelAction::AcceptTransfer).await,
         "reject" => act(ChannelAction::RejectTransfer).await,
@@ -255,12 +259,14 @@ async fn main() -> Result<(), anyhow::Error> {
     tracing_subscriber::fmt::init();
 
     let mut download: Option<PathBuf> = None;
+    let mut port: Option<u32> = None;
     let mut args = std::env::args().skip(1);
     while let Some(a) = args.next() {
         match a.as_str() {
             "--download-dir" => download = args.next().map(PathBuf::from),
+            "--port" => port = args.next().and_then(|p| p.parse().ok()),
             "--help" | "-h" => {
-                println!("ii-quickshare [--download-dir DIR]\nQuick Share daemon; JSON lines on $XDG_RUNTIME_DIR/ii-quickshare.sock");
+                println!("ii-quickshare [--download-dir DIR] [--port N]\nQuick Share daemon; JSON lines on $XDG_RUNTIME_DIR/ii-quickshare.sock");
                 return Ok(());
             }
             other => {
@@ -277,9 +283,10 @@ async fn main() -> Result<(), anyhow::Error> {
         return Ok(());
     }
 
-    let mut rqs = RQS::new(Visibility::Invisible, None, download);
+    let mut rqs = RQS::new(Visibility::Invisible, port, download);
     let message_rx = rqs.message_sender.subscribe();
     let (send_tx, _ble) = rqs.run().await?;
+    let bound_port = rqs.bound_port();
     let (ep_tx, ep_rx) = broadcast::channel(32);
     let (out, _) = broadcast::channel(256);
 
@@ -292,9 +299,26 @@ async fn main() -> Result<(), anyhow::Error> {
         visibility: Mutex::new(Visibility::Invisible),
         discovering: Mutex::new(false),
         ep_tx,
+        port: bound_port,
+        quit: tokio::sync::Notify::new(),
     });
     tokio::spawn(pump_transfers(sh.clone(), message_rx));
     tokio::spawn(pump_endpoints(sh.clone(), ep_rx));
+    // The daemon itself ends "temporarily"; follow it so the shell never shows a stale state.
+    {
+        let sh = sh.clone();
+        let mut w = sh.rqs.lock().await.visibility_watch();
+        tokio::spawn(async move {
+            while w.changed().await.is_ok() {
+                let v = *w.borrow_and_update();
+                let mut cur = sh.visibility.lock().await;
+                if *cur != v {
+                    *cur = v;
+                    let _ = sh.out.send(json!({"ev":"visibility","value":vis_name(v)}));
+                }
+            }
+        });
+    }
 
     let path = sock_path();
     let _ = std::fs::remove_file(&path);
@@ -315,6 +339,7 @@ async fn main() -> Result<(), anyhow::Error> {
             }
             _ = tokio::signal::ctrl_c() => break,
             _ = term.recv() => break,
+            _ = sh.quit.notified() => break,
         }
     }
     let _ = std::fs::remove_file(&path);

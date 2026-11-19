@@ -6,6 +6,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import qs
 import qs.services
+import qs.services.ai
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.widgets.widgetCanvas
@@ -870,6 +871,14 @@ PanelWindow {
                     GlobalStates.openDesktopMenu(bgRoot.editScreenName, bgRootLongPress.point.position.x, bgRootLongPress.point.position.y);
                 }
             }
+        }
+
+        // A double-click on the bare wallpaper calls a floating AI orb over.
+        MouseArea {
+            anchors.fill: parent
+            z: 0
+            acceptedButtons: Qt.LeftButton
+            onDoubleClicked: mouse => AiCompanionUi.summon(bgRoot.screen, mouse.x, mouse.y)
         }
 
         DesktopShortcutDropArea {

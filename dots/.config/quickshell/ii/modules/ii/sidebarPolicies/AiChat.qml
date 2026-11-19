@@ -2528,7 +2528,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
 
                                             MaterialSymbol {
                                                 id: composerModelIcon
-                                                text: (Ai.currentModelEntry && Ai.currentModelEntry.materialIcon) ? Ai.currentModelEntry.materialIcon : "auto_awesome"
+                                                text: controlBar.routed ? "alt_route" : (Ai.currentModelEntry && Ai.currentModelEntry.materialIcon) ? Ai.currentModelEntry.materialIcon : "auto_awesome"
                                                 fill: 1
                                                 iconSize: Appearance.font.pixelSize.larger
                                                 color: Appearance.colors.colOnPrimary
@@ -2539,7 +2539,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                                                 Layout.maximumWidth: Math.max(0, composerModelPill.widthLimit
                                                     - composerModelIcon.implicitWidth - composerModelRow.spacing
                                                     - root.composerControlExtent * 0.6)
-                                                text: (Ai.currentModelEntry && Ai.currentModelEntry.title) ? Ai.currentModelEntry.title : Translation.tr("No model")
+                                                text: controlBar.routed ? Translation.tr("Auto") : (Ai.currentModelEntry && Ai.currentModelEntry.title) ? Ai.currentModelEntry.title : Translation.tr("No model")
                                                 font.pixelSize: Appearance.font.pixelSize.normal
                                                 font.bold: true
                                                 elide: Text.ElideRight
@@ -2555,6 +2555,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                                             // glance, and the level is a detail
                                             // worth a hover.
                                             text: {
+                                                if (controlBar.routed) return controlBar.modelChipTooltip();
                                                 const name = (Ai.currentModelEntry && Ai.currentModelEntry.name) ? Ai.currentModelEntry.name : Translation.tr("none");
                                                 if (!Ai.currentModelThinks || root.thinkingShortLabel.length === 0)
                                                     return Translation.tr("Model: %1").arg(name);

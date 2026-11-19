@@ -140,6 +140,16 @@ Item {
                 spacing: Appearance.sizes.elevationMargin / 2
 
                 ConfigSubpageRow {
+                    buttonIcon: "graphic_eq"
+                    title: Translation.tr("Voice orb models")
+                    description: Translation.tr("Which model handles instant commands, quick answers and desktop tasks when you talk")
+                    summary: Config.options.ai.voice.escalationModel.length > 0
+                        ? Translation.tr("Tasks: %1").arg(Config.options.ai.voice.escalationModel)
+                        : Translation.tr("Tasks: same as sidebar")
+                    onClicked: aiRoot.activeSubPage = Qt.resolvedUrl("ai/AiVoiceOrbConfig.qml")
+                }
+
+                ConfigSubpageRow {
                     buttonIcon: "key"
                     title: Translation.tr("Agents & Sign-in")
                     description: Translation.tr("Check installed agents and their account sign-ins")

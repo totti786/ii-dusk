@@ -74,6 +74,7 @@ Singleton {
     property var pending: []                      // files chosen to send, waiting for a device
     property var endpoints: []                    // nearby devices, when discovering
     property string errorText: ""
+    property int port: 0
 
     // Visibility "10 minutes" is the daemon's; the countdown is only for display.
     property real tempSince: 0
@@ -121,7 +122,84 @@ Singleton {
     function cancel(id: string): void { root.send({ cmd: "cancel", id: id }); }
     function sendFiles(endpoint: var, files: var): void {
         root.send({ cmd: "send", name: endpoint.name ?? "", addr: endpoint.id, files: files });
+        root.remember(endpoint.name ?? "");
+        root.wantName = "";
+        wantTimer.stop();
         root.pending = [];
+    }
+
+    // ── Devices we have sent to ──────────────────────────────────────────────
+    readonly property var recent: Config.options?.quickShare?.recent ?? []
+    function remember(name: string): void {
+        if (name === "")
+            return;
+        const next = [name].concat(root.recent.filter(n => n !== name)).slice(0, 5);
+        if (JSON.stringify(next) !== JSON.stringify(root.recent))
+            Config.options.quickShare.recent = next;
+    }
+    // Live phones first, then remembered ones that are not in range right now.
+    readonly property var devices: {
+        const live = root.endpoints.map(e => ({ name: e.name ?? e.id, live: true, ep: e }));
+        const rank = n => { const i = root.recent.indexOf(n); return i < 0 ? 99 : i; };
+        live.sort((a, b) => rank(a.name) - rank(b.name));
+        const seenNames = live.map(d => d.name);
+        const away = root.recent.filter(n => !seenNames.includes(n)).map(n => ({ name: n, live: false, ep: null }));
+        return live.concat(away);
+    }
+
+    // Send to a device by name: now if it is in range, otherwise as soon as it shows up,
+    // and if it never does, the files stay staged for a manual pick.
+    property string wantName: ""
+    function sendTo(name: string, files: var): void {
+        const ep = root.endpoints.find(e => e.name === name);
+        if (ep) {
+            root.sendFiles(ep, files);
+            return;
+        }
+        root.stage(files);
+        root.wantName = name;
+        wantTimer.restart();
+    }
+    function checkWanted(): void {
+        if (root.wantName === "" || root.pending.length === 0)
+            return;
+        const ep = root.endpoints.find(e => e.name === root.wantName);
+        if (ep)
+            root.sendFiles(ep, root.pending);
+    }
+    Timer {
+        id: wantTimer
+        interval: 20000
+        onTriggered: {
+            notifyProc.command = ["notify-send", "-a", "Quick Share", "-i", "send_to_mobile",
+                Translation.tr("Couldn't find %1").arg(root.wantName),
+                Translation.tr("Open Quick Share on the phone and let it receive from everyone, then pick it from the island.")];
+            notifyProc.running = true;
+            root.wantName = "";
+        }
+    }
+    Process { id: notifyProc }
+
+    // Start looking for phones a moment before they are needed (a menu opening, a drag).
+    property bool warmed: false
+    function warm(): void {
+        if (!root.enabled)
+            return;
+        if (!root.warmed) {
+            root.warmed = true;
+            root.discover();
+        }
+        warmTimer.restart();
+    }
+    Timer {
+        id: warmTimer
+        interval: 25000
+        onTriggered: {
+            if (root.warmed) {
+                root.warmed = false;
+                root.stopDiscover();
+            }
+        }
     }
 
     // ── Things to send that are not files yet ────────────────────────────────
@@ -169,6 +247,8 @@ Singleton {
         root.discovering = s.discovering === true;
         root.transfers = s.transfers ?? [];
         root.endpoints = s.endpoints ?? [];
+        root.port = s.port ?? 0;
+        root.checkWanted();
         for (const t of root.transfers)
             if (t.done)
                 root.seen[t.id] = true;
@@ -181,6 +261,7 @@ Singleton {
     function applyEndpoint(ev: var): void {
         const rest = root.endpoints.filter(e => e.id !== ev.id);
         root.endpoints = ev.present ? rest.concat([ev]) : rest;
+        root.checkWanted();
     }
 
     Socket {
@@ -197,6 +278,7 @@ Singleton {
                 case "endpoint": root.applyEndpoint(msg); break;
                 case "visibility": root.visibility = msg.value; break;
                 case "discovering": root.discovering = msg.on === true; break;
+                case "pong": root.missedPings = 0; break;
                 case "error": root.errorText = msg.error ?? ""; break;
                 }
             }
@@ -237,7 +319,9 @@ Singleton {
             return;
         }
         const dir = root.downloadDir;
-        const args = dir !== "" ? ` --download-dir '${dir.replace(/'/g, "'\\''")}'` : "";
+        const port = Number(Config.options?.quickShare?.port ?? 0);
+        const args = (dir !== "" ? ` --download-dir '${dir.replace(/'/g, "'\\''")}'` : "")
+            + (port > 0 ? ` --port ${port}` : "");
         startProc.command = ["sh", "-c",
             `pgrep -x ii-quickshare >/dev/null && exit 0; rm -f "$XDG_RUNTIME_DIR/ii-quickshare.sock"; ` +
             `l="\${XDG_STATE_HOME:-$HOME/.local/state}/quickshell"; mkdir -p "$l"; ` +
@@ -298,6 +382,56 @@ Singleton {
             root.checkBinary(false);
         else
             killProc.running = true;
+    }
+
+    // Watchdog: a daemon that is alive but not answering (the socket looks connected) is
+    // restarted after about 30 s, instead of leaving Quick Share dead without any sign.
+    property int missedPings: 0
+    Timer {
+        interval: 10000
+        repeat: true
+        running: root.linked
+        onTriggered: {
+            if (root.missedPings >= 3) {
+                root.missedPings = 0;
+                sock.connected = false;
+                killProc.running = true;
+                return;
+            }
+            root.missedPings++;
+            root.send({ cmd: "ping" });
+        }
+    }
+
+    // "Can't see my phone": the usual causes, checked without root.
+    property string diagText: ""
+    property bool diagRunning: false
+    function diagnose(): void {
+        if (diagProc.running)
+            return;
+        root.diagRunning = true;
+        const p = root.port > 0 ? root.port : Number(Config.options?.quickShare?.port ?? 0);
+        diagProc.command = ["sh", "-c",
+            `p=${p}; ` +
+            `if [ "$p" -gt 0 ] && ss -tln | grep -q ":$p "; then echo "OK   Receiver is listening on port $p"; else echo "FAIL Nothing is listening on port $p (the service is not running)"; fi; ` +
+            `r=$(ip -4 route get 1.1.1.1 2>/dev/null | head -n1); ` +
+            `set -- $(printf '%s' "$r" | awk '{for(i=1;i<NF;i++){if($i=="dev")d=$(i+1); if($i=="src")a=$(i+1)}} END{print d, a}'); d=$1; a=$2; ` +
+            `if [ -n "$a" ]; then echo "OK   Network: $d, $a (phones must be on the same network)"; else echo "FAIL No network route"; fi; ` +
+            `if [ "$(systemctl is-active ufw 2>/dev/null)" = active ]; then echo "WARN Firewall (ufw) is on. If phones cannot send here: sudo ufw allow proto tcp from 192.168.0.0/16 to any port $p"; else echo "OK   No ufw firewall active"; fi; ` +
+            `b=$(bluetoothctl show 2>/dev/null | awk '/Powered:/{print $2}'); ` +
+            `if [ "$b" = yes ]; then echo "OK   Bluetooth is on (helps phones notice this PC)"; else echo "WARN Bluetooth is off or missing"; fi; ` +
+            `echo "INFO Phone must have Quick Share open and be set to receive from everyone; this PC must be visible to be found by the phone."`];
+        diagProc.running = true;
+    }
+    Process {
+        id: diagProc
+        stdout: StdioCollector { id: diagOut }
+        onExited: {
+            root.diagText = diagOut.text.trim() + "\n" + (root.endpoints.length > 0
+                ? `OK   ${root.endpoints.length} phone(s) in range right now`
+                : "INFO No phones seen right now (the list fills while the picker is open)");
+            root.diagRunning = false;
+        }
     }
 
     // Reattach if the daemon dies and comes back, or was never up.

@@ -16,6 +16,7 @@ Item {
     readonly property BluetoothPhoneSource btPhone: BluetoothPhoneSource {}
     readonly property WeatherSource weather: WeatherSource {}
     readonly property BatteryGlanceSource batteryGlance: BatteryGlanceSource {}
+    readonly property DateGlanceSource dateGlance: DateGlanceSource {}
     readonly property DiscordVoiceSource discordVoice: DiscordVoiceSource {}
     readonly property PhoneMirrorSource phoneMirror: PhoneMirrorSource {}
     readonly property PhoneMirrorErrorSource phoneMirrorError: PhoneMirrorErrorSource {}

@@ -31,6 +31,44 @@ Item {
         const m = root.meta(t);
         return m.total_bytes > 0 ? Math.min(1, m.ack_bytes / m.total_bytes) : 0;
     }
+    function sizeLabel(b: real): string {
+        if (b >= 1073741824) return (b / 1073741824).toFixed(1) + " GB";
+        if (b >= 1048576) return (b / 1048576).toFixed(1) + " MB";
+        return Math.max(0, Math.round(b / 1024)) + " KB";
+    }
+    // Bytes per second, smoothed over the last few samples.
+    property real rate: 0
+    property real lastAck: 0
+    property string lastId: ""
+    Timer {
+        interval: 1000
+        repeat: true
+        running: root.mode === "moving"
+        onTriggered: {
+            const m = root.meta(root.moving);
+            const ack = m.ack_bytes ?? 0;
+            if (root.lastId !== root.moving.id) {
+                root.lastId = root.moving.id;
+                root.rate = 0;
+            } else {
+                const inst = Math.max(0, ack - root.lastAck);
+                root.rate = root.rate === 0 ? inst : root.rate * 0.7 + inst * 0.3;
+            }
+            root.lastAck = ack;
+        }
+    }
+    function progressLabel(): string {
+        const m = root.meta(root.moving);
+        const total = m.total_bytes ?? 0;
+        if (total <= 0) return "";
+        const ack = m.ack_bytes ?? 0;
+        let t = `${root.sizeLabel(ack)} / ${root.sizeLabel(total)}`;
+        if (root.rate > 1024) {
+            const eta = Math.ceil((total - ack) / root.rate);
+            t += ` · ${root.sizeLabel(root.rate)}/s · ${eta >= 60 ? Math.floor(eta / 60) + "m " : ""}${eta % 60}s`;
+        }
+        return t;
+    }
     function leftLabel(): string {
         if (QuickShareService.visibility !== "temporarily")
             return "";
@@ -55,8 +93,11 @@ Item {
         }
         if (root.mode === "moving")
             return root.moving.rtype === "inbound" ? Translation.tr("Receiving") : Translation.tr("Sending");
-        if (root.mode === "choose")
+        if (root.mode === "choose") {
+            if (QuickShareService.wantName !== "")
+                return Translation.tr("Waiting for %1…").arg(QuickShareService.wantName);
             return QuickShareService.endpoints.length > 0 ? Translation.tr("Pick a device") : Translation.tr("Looking for phones…");
+        }
         if (QuickShareService.visibility === "visible")
             return Translation.tr("Visible to nearby devices");
         if (QuickShareService.visibility === "temporarily")
@@ -197,6 +238,14 @@ Item {
                     }
                 }
             }
+            StyledText {
+                Layout.fillWidth: true
+                visible: text !== ""
+                text: root.mode === "moving" ? root.progressLabel() : ""
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                font.features: ({ "tnum": 1 })
+                color: Appearance.colors.colSubtext
+            }
             ActionButton {
                 Layout.fillWidth: true
                 label: Translation.tr("Cancel")
@@ -211,35 +260,45 @@ Item {
             spacing: 6
 
             Repeater {
-                model: QuickShareService.endpoints
+                model: QuickShareService.devices
                 delegate: RippleButton {
                     id: device
                     required property var modelData
+                    readonly property bool waiting: QuickShareService.wantName === device.modelData.name
                     Layout.fillWidth: true
                     implicitHeight: 44
+                    opacity: device.modelData.live || device.waiting ? 1 : 0.6
                     buttonRadius: Appearance.rounding.normal
                     colBackground: Appearance.colors.colSurfaceContainerHigh
                     colBackgroundHover: Appearance.colors.colSurfaceContainerHighest
-                    onClicked: QuickShareService.sendFiles(device.modelData, QuickShareService.pending)
+                    onClicked: device.modelData.live
+                        ? QuickShareService.sendFiles(device.modelData.ep, QuickShareService.pending)
+                        : QuickShareService.sendTo(device.modelData.name, QuickShareService.pending)
                     contentItem: RowLayout {
                         spacing: 10
                         MaterialSymbol {
                             Layout.leftMargin: 10
-                            text: device.modelData.rtype === "laptop" ? "laptop" : device.modelData.rtype === "tablet" ? "tablet" : "smartphone"
+                            text: device.modelData.ep?.rtype === "laptop" ? "laptop" : device.modelData.ep?.rtype === "tablet" ? "tablet" : "smartphone"
                             iconSize: 20
                             color: Appearance.colors.colPrimary
                         }
                         StyledText {
                             Layout.fillWidth: true
-                            text: device.modelData.name ?? device.modelData.id
+                            text: device.modelData.name
                             elide: Text.ElideRight
                             color: Appearance.colors.colOnSurface
+                        }
+                        StyledText {
+                            Layout.rightMargin: 12
+                            text: device.waiting ? Translation.tr("waiting…") : device.modelData.live ? "" : Translation.tr("not in range")
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            color: Appearance.colors.colSubtext
                         }
                     }
                 }
             }
             StyledText {
-                visible: QuickShareService.endpoints.length === 0
+                visible: QuickShareService.endpoints.length === 0 && QuickShareService.wantName === ""
                 Layout.fillWidth: true
                 wrapMode: Text.Wrap
                 text: Translation.tr("Open Quick Share on the phone and let it receive from everyone.")

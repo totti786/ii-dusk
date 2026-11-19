@@ -271,6 +271,8 @@ def desktop_input(arguments):
 
 
 def speak_edge(arguments, progress=None):
+    if os.environ.get("II_LOCAL_ONLY") == "1":
+        raise RuntimeError("Remote AI is off, so text is not sent to Edge TTS. This script can't be spoken locally.")
     text = arguments.get("text", "")
     if not isinstance(text, str) or not text.strip() or len(text) > 4000:
         raise ValueError("Speech requires 1–4000 characters.")
@@ -329,6 +331,100 @@ def speech_settings():
         return {}
 
 
+def speech_speed(arguments, settings, rate=175):
+    """The Kokoro speed: the shell's setting (`speed` in the request, the Voice orb page's slider)
+    wins over the old companion-voice.json value, and the tool's words-per-minute scales either."""
+    base = arguments.get("speed")
+    if base is None:
+        base = settings.get("speed", 1.05)
+    try:
+        base = float(base)
+    except (TypeError, ValueError):
+        base = 1.05
+    return min(2, max(.5, rate / 175 * base))
+
+
+def speak_stream(emit):
+    """A whole spoken reply on one local voice connection. stdin: a first line of options
+    ({"speed", "gapMs", "voice"}), then {"text": ...} lines as the answer is written, then
+    {"end": true}. One player and one connection for the reply, so sentences run together without
+    the process start-up and stream restart each one used to cost. Text the local voice cannot say
+    (Arabic, CJK, Cyrillic) or an Edge backend is collected and spoken once at the end."""
+    options = json.loads(sys.stdin.readline() or "{}")
+    settings = speech_settings()
+    backend = options.get("backend", settings.get("backend", "edge"))
+    voice = options.get("voice") or settings.get("voice", "af_heart")
+    request = {"stream": True, "voice": voice, "speed": speech_speed(options, settings)}   # English-only skips the cloud voice
+    if options.get("gapMs") is not None:
+        request["gapMs"] = options["gapMs"]
+    lines = []
+    client = None
+    reader = None
+    failure = []
+    done = threading.Event()
+
+    def listen(stream):
+        try:
+            for line in stream:
+                event = json.loads(line)
+                if event.get("isError"):
+                    failure.append(event.get("text", "Local speech failed."))
+                    break
+                emit(event)
+                if event.get("event") == "done":
+                    break
+        except (OSError, ValueError) as error:
+            failure.append(str(error))
+        finally:
+            done.set()
+
+    pattern = r"[\u0400-\u052f\u0590-\u08ff\u0900-\u0dff\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]"
+    while True:
+        line = sys.stdin.readline()
+        if not line:
+            break
+        message = json.loads(line)
+        if message.get("end"):
+            break
+        text = message.get("text")
+        if not isinstance(text, str) or not text.strip():
+            continue
+        if client is None and not lines:
+            if backend == "edge" or (options.get("language") != "en" and re.search(pattern, text)):
+                lines.append(text)          # collected: the cloud voice wants the whole reply
+                continue
+            sock_path = str(Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")) / "ii-companion-voice.sock")
+            client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            client.settimeout(30)
+            try:
+                client.connect(sock_path)
+            except OSError as error:
+                raise RuntimeError("Local voice is unavailable. Start ii-companion-voice.service or choose the Edge backend.") from error
+            client.settimeout(None)
+            client.sendall(json.dumps(request).encode() + b"\n")
+            reader = threading.Thread(target=listen, args=(client.makefile("r"),), daemon=True)
+            reader.start()
+        if client is not None:
+            client.sendall(json.dumps({"text": text}).encode() + b"\n")
+        else:
+            lines.append(text)
+    if client is not None:
+        try:
+            client.sendall(b'{"end": true}\n')
+        except OSError:
+            pass
+        done.wait(120)
+        client.close()
+        if failure:
+            raise RuntimeError(failure[0])
+        return {"text": "Finished speaking with local Kokoro.", "isError": False}
+    if lines:
+        edge_args = {"text": " ".join(lines)[:4000]}
+        edge_args["voice"] = settings.get("edgeVoice", "en-US-EmmaMultilingualNeural")
+        return speak_edge(edge_args, emit)
+    return {"text": "Nothing to speak.", "isError": False}
+
+
 def speak(arguments, progress=None):
     text = arguments.get("text", "")
     if not isinstance(text, str) or not text.strip() or len(text) > 4000:
@@ -353,7 +449,9 @@ def speak(arguments, progress=None):
         return speak_edge(edge_args, progress)
     sock_path = str(Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")) / "ii-companion-voice.sock")
     request = {"text": text, "voice": voice or settings.get("voice", "af_heart"),
-               "speed": min(2, max(.5, rate/175 * float(settings.get("speed", 1.05))))}
+               "speed": speech_speed(arguments, settings, rate)}
+    if arguments.get("gapMs") is not None:
+        request["gapMs"] = arguments["gapMs"]
     done = None
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
         client.settimeout(30)
@@ -429,7 +527,10 @@ if __name__ == "__main__":
     os.setpgrp()
     signal.signal(signal.SIGTERM, lambda *_: (signal.signal(signal.SIGTERM, signal.SIG_IGN), os.killpg(os.getpgrp(), signal.SIGTERM), sys.exit(0)))
     try:
-        print(json.dumps(speak(json.loads(sys.stdin.readline()), lambda event: print(json.dumps(event), flush=True))), flush=True)
+        if len(sys.argv) > 1 and sys.argv[1] == "--stream":
+            print(json.dumps(speak_stream(lambda event: print(json.dumps(event), flush=True))), flush=True)
+        else:
+            print(json.dumps(speak(json.loads(sys.stdin.readline()), lambda event: print(json.dumps(event), flush=True))), flush=True)
     except Exception as error:
         print(json.dumps({"isError": True, "text": str(error)}))
         sys.exit(1)

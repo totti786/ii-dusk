@@ -22,6 +22,10 @@ Singleton {
     property var workspaceById: ({})
     property var activeWorkspace: null
     property var monitors: []
+    // hyprctl is polled for liveness, and its answer is usually identical to the last one.
+    // Remember the last snapshot so an unchanged poll does not re-fire every monitor binding.
+    property string _monitorsSnapshot: ""
+    property string _monitorLayout: ""
     property var layers: ({})
 
     // Convenient stuff
@@ -332,6 +336,16 @@ Singleton {
         onTriggered: root.updateWindowList()
     }
 
+    // A config reload drops runtime workspace rules (`hyprctl eval hl.workspace_rule`).
+    // Re-apply the map once the reload's event burst settles; this is the one piece of
+    // the old every-poll sync that was doing real work.
+    Timer {
+        id: workspaceMapReloadDebounce
+        interval: 400
+        repeat: false
+        onTriggered: root.syncWorkspaceMap()
+    }
+
     Connections {
         target: Hyprland
 
@@ -426,6 +440,11 @@ Singleton {
                     root.updateMonitors();
                     root.updateWorkspaces();
                     break;
+
+                // Runtime rules set with `hyprctl eval` do not survive a config reload.
+                case "configreloaded":
+                    workspaceMapReloadDebounce.restart();
+                    break;
             }
         }
     }
@@ -470,11 +489,16 @@ Singleton {
                 // Ordered by Hyprland's monitor id, not by `hyprctl` order: a monitor that
                 // reconnects (e.g. HDMI on resume) keeps its id but is listed last, and the
                 // workspace map is indexed by this position.
-                root.monitors = JSON.parse(monitorsCollector.text).sort((a, b) => a.id - b.id).map(monitor => {
+                const nextMonitors = JSON.parse(monitorsCollector.text).sort((a, b) => a.id - b.id).map(monitor => {
                     root.withWorkspaceId(monitor?.activeWorkspace);
                     root.withWorkspaceId(monitor?.specialWorkspace);
                     return monitor;
                 });
+                const snapshot = JSON.stringify(nextMonitors);
+                if (snapshot !== root._monitorsSnapshot) {
+                    root._monitorsSnapshot = snapshot;
+                    root.monitors = nextMonitors;
+                }
                 root.checkEventStream();
 
                 if (root._monitorsNeedsUpdate) {
@@ -630,6 +654,13 @@ Singleton {
     }
 
     onMonitorsChanged: {
+        // Only a different set/order of monitors needs the workspace map re-applied.
+        // Active-workspace updates also reassign `monitors`, but those must not spawn
+        // a Python interpreter and `hyprctl eval` on every poll.
+        const layout = root.monitors.map(m => `${m.id}:${m.name}`).join("|");
+        if (layout === root._monitorLayout)
+            return;
+        root._monitorLayout = layout;
         root.syncWorkspaceMap();
     }
 }

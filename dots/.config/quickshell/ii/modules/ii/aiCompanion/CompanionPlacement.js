@@ -52,3 +52,25 @@ function bubbleAnchor(side, width, diameter, inset = 0) {
     const distance = diameter/2 + inset;
     return {x: side === "left" ? width-distance : distance, y: distance};
 }
+
+// Where the small orbs sit: on the arc facing away from the control fan, so hovering the orb
+// never puts a button on top of one. Returns up to `count` offsets from the orb's centre,
+// nearest-the-middle of that arc first, skipping spots that would fall off the screen.
+function satelliteOffsets(count, x, y, bounds, radius) {
+    const left = x < 140, right = x > bounds.width - 140;
+    const top = y < 140, bottom = y > bounds.height - 140;
+    let axis = bottom ? -90 : 90;
+    if (left) axis = top ? 45 : bottom ? -45 : 0;
+    else if (right) axis = top ? 135 : bottom ? -135 : 180;
+    const out = [];
+    for (const step of [0, 36, -36, 72, -72, 108, -108]) {
+        if (out.length >= count) break;
+        const angle = axis + 180 + step;
+        let apart = Math.abs(((angle - axis) % 360 + 540) % 360 - 180);
+        if (apart < 100) continue; // the control fan lives here
+        const dx = Math.cos(angle * Math.PI / 180) * radius, dy = Math.sin(angle * Math.PI / 180) * radius;
+        if (x + dx < 24 || x + dx > bounds.width - 24 || y + dy < 24 || y + dy > bounds.height - 24) continue;
+        out.push({x: dx, y: dy});
+    }
+    return out;
+}

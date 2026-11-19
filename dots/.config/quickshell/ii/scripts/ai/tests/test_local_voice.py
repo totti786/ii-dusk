@@ -38,6 +38,31 @@ class Segments(unittest.TestCase):
         self.assertTrue(all(len(part) <= 150 for part in parts))
 
 
+class Pauses(unittest.TestCase):
+    def setUp(self):
+        import numpy as np
+        self.np = np
+
+    def test_kokoro_padding_is_trimmed_to_a_sliver(self):
+        np = self.np
+        rate = 24000
+        speech = np.full(rate // 2, .3, dtype="float32")
+        padded = np.concatenate([np.zeros(rate // 20, dtype="float32"), speech, np.zeros(int(rate * .29), dtype="float32")])
+        trimmed = worker.trim_edges(np, padded, rate)
+        extra = (len(trimmed) - len(speech)) / rate * 1000
+        self.assertLess(extra, 30)
+
+    def test_pure_silence_trims_to_nothing(self):
+        self.assertEqual(len(worker.trim_edges(self.np, self.np.zeros(2400, dtype="float32"), 24000)), 0)
+
+    def test_the_pause_after_a_piece_depends_on_how_it_ended(self):
+        self.assertEqual(worker.gap_for("It is done.", 120), 120)
+        self.assertEqual(worker.gap_for("Is it done?", 120), 120)
+        self.assertEqual(worker.gap_for("Well, then,", 120), 60)
+        self.assertEqual(worker.gap_for("and then", 120), 30)
+        self.assertEqual(worker.gap_for('He said "stop."', 120), 120)
+
+
 class Selection(unittest.TestCase):
     def test_arabic_uses_the_multilingual_fallback(self):
         with mock.patch.object(client, "speech_settings", return_value={"backend": "kokoro"}), mock.patch.object(client, "speak_edge", return_value={"isError": False}) as edge:

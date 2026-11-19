@@ -17,7 +17,6 @@ import qs.modules.ii.background.widgets.utility
 import qs.modules.ii.background.widgets.weather
 import qs.modules.ii.background.widgets.wellbeing
 import qs.modules.ii.background.widgets.people
-import qs.modules.ii.background.widgets.visualizer
 import qs
 import qs.services
 
@@ -203,9 +202,7 @@ Item {
                     "monitorName": delegateRoot.monitorName,
                     "placementStrategy": delegateRoot.placementStrategy,
                     "lockBehavior": delegateRoot.lockBehavior,
-                    "pinned": delegateRoot.configEntry ? delegateRoot.configEntry.pinned === true : false,
-                    "style": delegateRoot.configEntry && delegateRoot.configEntry.style ? delegateRoot.configEntry.style : null,
-                    "size": delegateRoot.configEntry && delegateRoot.configEntry.size ? delegateRoot.configEntry.size : ""
+                    "pinned": delegateRoot.configEntry ? delegateRoot.configEntry.pinned === true : false
                 };
             }
             when: widgetLoader.status == Loader.Ready

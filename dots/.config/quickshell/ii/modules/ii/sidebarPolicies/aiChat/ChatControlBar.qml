@@ -143,7 +143,17 @@ Item {
         return Translation.tr("Persona: %1").arg(Ai.currentPersona.name);
     }
 
+    // With typed routing on, which model answers depends on the message, so the chip says so
+    // instead of naming the chat model, which only serves attachments, commands and the like.
+    readonly property bool routed: Config.options.ai.voice.typedRouting !== false && Ai.companionVoice.quickReady && Ai.enabled
+    function modelTitle(id): string { return Ai.catalog.models[id]?.title ?? String(id ?? ""); }
     function modelChipTooltip(): string {
+        if (root.routed) {
+            const voice = Ai.companionVoice;
+            return Translation.tr("Answered by whichever fits the message\n1  Instant commands, no model\n2  Quick answers: %1\n3  Desktop tasks: %2\nChat model (attachments, commands): %3")
+                .arg(root.modelTitle(voice.fastModelId())).arg(root.modelTitle(voice.escalationModelId() || Ai.currentModelId))
+                .arg(String(root.currentModel?.title ?? ""));
+        }
         const model = root.currentModel;
         if (!model)
             return Translation.tr("No model selected");
@@ -227,9 +237,9 @@ Item {
             // The one chip that keeps its label at every width: which model is
             // answering is the thing worth knowing.
             "key": "model",
-            "symbol": root.currentModel?.materialIcon ?? "wand_stars",
-            "customIcon": root.currentModel?.icon ?? "",
-            "label": root.currentModel?.title ?? Translation.tr("No model"),
+            "symbol": root.routed ? "alt_route" : (root.currentModel?.materialIcon ?? "wand_stars"),
+            "customIcon": root.routed ? "" : (root.currentModel?.icon ?? ""),
+            "label": root.routed ? Translation.tr("Auto") : (root.currentModel?.title ?? Translation.tr("No model")),
             "alwaysLabel": true,
             "tooltip": root.modelChipTooltip()
         },
@@ -1272,6 +1282,7 @@ Item {
     Component {
         id: modelPickerComponent
         AiModelPickerPopover {
+            showVoiceFooter: true
             hostOwnsCatalogueHeader: true
             fillOpenRouterAvailableHeight: true
             onPicked: modelId => {

@@ -42,6 +42,23 @@ this way, with its state and a rebuild button.
 - Changing the download folder in Settings restarts the daemon (it reads the folder once, at
   startup), never during a transfer.
 
+## Robustness (2026-11-18)
+
+- Each outgoing send is its own task, so a long transfer no longer blocks incoming connections.
+- An `accept()` error backs off and retries instead of ending the listener for good.
+- While invisible, or for a peer outside the local network, inbound connections are closed at
+  accept. At most 16 are served at once, and a peer that never starts the handshake is cut after 30 s.
+- mDNS register/unregister failures are logged, not fatal; a dead mdns-sd thread is restarted.
+- "Temporarily" really lasts 10 minutes (it was 60 s), and the daemon reports its own expiry to
+  the shell, which used to keep showing "temporarily" after the PC had gone hidden.
+- `quit` goes through the normal shutdown, so the mDNS record is withdrawn.
+
+## Port, watchdog, picker (2026-11-18)
+
+- `--port N` (shell passes `quickShare.port`, default 47321) pins the listener so a firewall rule can match; a taken port falls back to a random one. The snapshot reports the real `port`.
+- `{"cmd":"ping"}` answers `{"ev":"pong"}`. The shell pings every 10 s and restarts a daemon that misses 3 in a row.
+- Devices sent to are remembered (`quickShare.recent`). `QuickShareService.sendTo(name, files)` sends now if the phone is in range, otherwise as soon as it appears (20 s), else the files stay staged. `warm()` starts discovery early. The Files app's Share submenu uses them.
+
 ## Protocol
 
 JSON lines, one object per line. Commands: `snapshot`, `visibility` (`visible` | `invisible` |

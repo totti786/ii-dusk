@@ -208,7 +208,10 @@ Singleton {
         if (root.pendingSubmissionId.length > 0 || requester.running || root.sharedTaskOwner.length > 0 || (root.runCoordinator.activeRunId.length > 0 && root.runCoordinator.activeStates.includes(root.runCoordinator.runFor(root.runCoordinator.activeRunId)?.state)))
             return root.rejectSubmission("busy", Translation.tr("AI is busy with another conversation. Open or stop the active run first."), ["open-active-run", "stop-active-run"]);
 
-        const modelId = root.currentModelId;
+        // A surface may name the model for this one turn (the voice orb's tool turns); a name the
+        // catalog does not know leaves the chosen model alone.
+        const asked = String(context?.modelId ?? "");
+        const modelId = asked.length > 0 && root.catalog.models[asked] ? asked : root.currentModelId;
         const model = root.catalog.models[modelId] ?? null;
         const profile = root.responseProfileForModel(modelId);
         const attachmentProblem = root.attachmentRejectionForModel(files, model);
@@ -2575,8 +2578,15 @@ Singleton {
         // one notification per tool round-trip (a web search followed by
         // reading a page was three notifications for one answer).
         if ((message.toolCalls?.length ?? 0) === 0) {
-            root.notifyResponseFinished(message);
-            root.playAnswerSound(message);
+            // The orb speaks its own answer: a notification and a chime on top of it
+            // say it twice. Only one exchange runs at a time, so a voice turn in
+            // flight is the one finishing. Failures still notify: nothing is said.
+            const spokenByOrb = root.companionVoice.active && root.companionVoice.runId.length > 0
+                && (message.errorKind ?? "").length === 0;
+            if (!spokenByOrb) {
+                root.notifyResponseFinished(message);
+                root.playAnswerSound(message);
+            }
             root.writeLastAnswerFile(message);
         }
         if (root.postResponseHook) {
@@ -2963,6 +2973,15 @@ Singleton {
 
         function stopSpeech(): void {
             root.speechService.stop();
+        }
+
+        // Speaks sentences the way the orb does while a reply is written: one helper, one connection.
+        function speakStream(text: string): void {
+            if (!root.speechService.beginStream("ipc-stream"))
+                return;
+            for (const sentence of String(text).split(/(?<=[.!?])\s+/))
+                root.speechService.pushText(sentence);
+            root.speechService.endStream();
         }
 
         function status(): string {
@@ -3501,6 +3520,10 @@ Singleton {
     }
 
     function sendUserMessage(message) {
+        // Typed messages take the route speech takes: instant rules, then the warm quick-answer
+        // session, and only then the full agent (see AiCompanionVoiceService.typedAsk).
+        if (root.companionVoice.canRouteTyped(message))
+            return root.companionVoice.typedAsk(message);
         const files = root.attachments;
         if (root.pendingAttachmentCount > 0) {
             root.attachmentNotice = Translation.tr("Still checking attachments. Try sending again in a moment.");

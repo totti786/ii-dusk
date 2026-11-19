@@ -387,6 +387,7 @@ Singleton {
                 "ai/AiFilesVisionVoiceConfig.qml",
                 "ai/RagConfig.qml",
                 "ai/AiRequestLimitsConfig.qml",
+                "ai/AiVoiceOrbConfig.qml",
                 "ai/AiRemoteAccessConfig.qml",
                 "ai/AdvancedAiConfig.qml",
                 "ai/CustomModelsConfig.qml"

@@ -39,7 +39,9 @@ Singleton {
     property bool _forceQueued: false
 
     readonly property var _cfg: Config.options?.bar?.aiPlanUsage ?? null
-    readonly property bool enabled: root._cfg?.enabled ?? true
+    // The quota check calls the providers' usage endpoints with their sign-ins, so it is remote AI traffic too:
+    // it stops when the global AI policy is "Local only" or "Off".
+    readonly property bool enabled: (root._cfg?.enabled ?? true) && Ai.onlineAllowed
     readonly property bool autoRefresh: root._cfg?.autoRefresh ?? true
     readonly property int refreshInterval: Math.max(60000, root._cfg?.refreshInterval ?? 300000)
     readonly property bool claudeNetworkEnabled: root._cfg?.claudeNetworkEnabled ?? true
