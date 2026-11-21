@@ -59,6 +59,8 @@ Scope {
     }
 
     PanelWindow {
+        contentItem.LayoutMirroring.enabled: Translation.isRtl
+        contentItem.LayoutMirroring.childrenInherit: true
         id: popupWindow
         visible: root.reminder !== null && !GlobalStates.islandOwnsReminder
         color: "transparent"
