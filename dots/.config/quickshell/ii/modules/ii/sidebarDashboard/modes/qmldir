@@ -1,0 +1,3 @@
+module qs.modules.ii.sidebarDashboard.modes
+ModesDialog 1.0 ModesDialog.qml
+# quickshell-generated qmldir

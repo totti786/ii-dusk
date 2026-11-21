@@ -51,6 +51,8 @@ Scope {
         id: panelWindowComponent
 
         PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: panelWindow
 
             function hide() {
