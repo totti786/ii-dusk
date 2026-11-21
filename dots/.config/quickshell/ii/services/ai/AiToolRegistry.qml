@@ -1488,6 +1488,26 @@ Singleton {
             needsSearch: false
         },
         {
+            id: "running_now",
+            version: 1,
+            domain: "system",
+            title: Translation.tr("Read what is running"),
+            summary: Translation.tr("Reads what the shell has running right now: media, timers, soundscapes, recording, downloads, VPN, game mode, the voice orb and the AI. Names and counts only. Nothing is changed."),
+            icon: "pending_actions",
+            kind: "localRead",
+            network: "never",
+            sensitivity: "device",
+            requiredModelCapabilities: ["tools"],
+            defaultApproval: "allow",
+            timeoutMs: 5000,
+            maxResultTokens: 500,
+            idempotent: true,
+            description: "Read what is running right now on this desktop: the media player and track, timers and alarms, soundscapes, audio recording, downloads, VPN, game mode, whether sleep is blocked, unread notifications, the AI and the voice orb (trigger word, whether it is speaking). Use it for 'what is running', 'is X on', and before changing a setting that depends on current state. Names and counts only, no addresses or paths. Changes nothing.",
+            parameters: null,
+            formats: ["gemini", "openai", "anthropic", "opencode"],
+            needsSearch: false
+        },
+        {
             id: "audio_set",
             version: 1,
             domain: "system",

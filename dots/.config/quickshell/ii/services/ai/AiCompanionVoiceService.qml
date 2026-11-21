@@ -49,6 +49,8 @@ Scope {
 
     // ── Personality: a short-lived mood the creature wears ───────────────────────
     property string mood: ""
+    // Counts wake-word hits, so the orb can show it heard you.
+    property int wakeCount: 0
     function setMood(name, ms) {
         root.mood = name;
         moodTimer.interval = ms;
@@ -158,7 +160,17 @@ Scope {
         root.pendingAsk = "";
         root.route = "agent";
         root.turnText = String(text);
+        root.agentStreaming = false;
+        root.fastBuffer = "";
+        root.fastSent = 0;
+        root.fastWhole = false;
         if (Ai.isGenerating) { root.fail("The assistant is already working."); return; }
+        // With the chat's Tools switch off the model is offered nothing, and some models then act out
+        // tool calls in plain text. Say so instead of sending the turn.
+        if (Ai.functionExposure === "none") {
+            root.fail(Translation.tr("Tools are switched off in the chat, so I can't do desktop tasks. Turn Tools on in the sidebar."));
+            return;
+        }
         root.active = true;
         root.errorText = "";
         root.phase = "thinking";
@@ -277,6 +289,8 @@ Scope {
         if (rule) root.route = "rule";
         root.logTurn();
     }
+    // The context block the quick-answer model is given with each turn (read-only; used by `aitools orbContext`).
+    function contextText() { return actions.snapshot(); }
     function fastAsk(text) {
         root.route = "haiku";
         root.turnText = text;
@@ -322,6 +336,34 @@ Scope {
             root.speakChunk(rest.slice(0, cut));
             root.fastSent += cut;
         }
+    }
+    // ── Desktop-task replies, spoken while they are still being written ─────────
+    // The full agent answers through the chat, so its reply used to be spoken only once complete.
+    // This reads the growing reply and hands finished sentences to the same sentence-streamed
+    // speaker the quick path uses. A reply that shrinks (a new segment after a tool call) starts over.
+    property bool agentStreaming: false
+    function agentReply() {
+        const run = Ai.runCoordinator.runFor(root.runId);
+        const id = String(run?.responseMessageId ?? "");
+        // The reply being written lives in the running set until the run ends.
+        const message = id.length > 0 ? (Ai.runningMessageByID[id] ?? Ai.messageByID[id]) : null;
+        return String(message?.content ?? "");
+    }
+    function agentStreamTick() {
+        if (root.typed || !root.active || root.runId.length === 0) return;
+        const text = root.agentReply();
+        if (text.length === 0) return;
+        if (text.length < root.fastSent) root.fastSent = 0;
+        root.fastBuffer = text;
+        const before = Ai.speechService.streamOpen;
+        root.drainSpeech(false);
+        if (Ai.speechService.streamOpen && !before) root.agentStreaming = true;
+    }
+    Timer {
+        interval: 250
+        repeat: true
+        running: root.active && root.route === "agent" && root.runId.length > 0 && !root.typed
+        onTriggered: root.agentStreamTick()
     }
     function speakChunk(chunk) {
         if (!Ai.speechService.streamOpen) {
@@ -390,7 +432,7 @@ Scope {
     // A marker the shell could not carry out. Nothing was spoken yet, so the full agent
     // can take the turn; if something already ran, say so instead of redoing it.
     function fastAction(event) {
-        const result = actions.run(event.verb, event.args);
+        const result = actions.run(event.verb, event.args, event.confirmed === true);
         if (result.ok) {
             root.fastNotes = root.fastNotes.concat([result.note]);
             root.setMood("delighted", 2200);
@@ -543,6 +585,13 @@ Scope {
             "python3", Directories.scriptPath + "/ai/orb_audio.py", "capture", root.recordingPath];
         capture.running = true;
     }
+    // A bare "stop", "stop listening", "never mind", "be quiet"… ends the session. The whole utterance
+    // must be the phrase, so "stop the music" and "don't stop believing" still go to the assistant.
+    readonly property var stopPhrase: new RegExp("^\\s*(?:(?:ok|okay|hey|please|orb|borb|just|alright)[ ,]+)*"
+        + "(?:stop(?: it| that| now| talking| listening| speaking| please| everything)*|cancel(?: that| it| this)?"
+        + "|never ?mind|forget it|be quiet|quiet|shut up|silence|that'?s enough|enough|go away|go to sleep|that'?s all|nothing"
+        + "|اسكت|توقف|كفى|الغ[ِيى]?|خلاص)"
+        + "(?:[ ,]+(?:please|now|orb|borb|thanks|thank you))*\\s*[.!?]*\\s*$", "i")
     // What was said, however it was transcribed.
     function heard(text) {
         if (!text.length) {
@@ -550,9 +599,18 @@ Scope {
             else root.stop();
             return;
         }
+        if (AiCompanionUi.approval === null && root.stopPhrase.test(text)) {
+            console.log("[voice] stop requested by voice:", text);
+            root.stop();
+            if (Config.options.ai.voice.chime !== false)
+                Quickshell.execDetached(["pw-play", "--volume", "0.5", "/usr/share/sounds/freedesktop/stereo/service-logout.oga"]);
+            return;
+        }
         root.ask(text);
     }
-    Timer { id: listenTimer; interval: 120; onTriggered: root.beginListening() }
+    // After the wake chime the mic waits for it to finish, so the chime is not transcribed.
+    property bool wakeChimed: false
+    Timer { id: listenTimer; interval: root.wakeChimed ? 450 : 120; onTriggered: { root.wakeChimed = false; root.beginListening(); } }
     Process {
         id: capture
         stdout: SplitParser {
@@ -636,11 +694,22 @@ Scope {
             const message = Ai.messageByID[String(result.responseMessageId)];
             root.runId = "";
             if (result.state !== "completed" || !message?.content) {
+                if (root.agentStreaming) { root.agentStreaming = false; Ai.speechService.stop(); }
                 root.fail(message?.errorText ?? "The assistant could not answer. Open the sidebar for details.");
                 return;
             }
-            root.phase = "preparing";
             root.timings = Object.assign({}, root.timings, {generationMs: Date.now()-root.generationStarted});
+            if (root.agentStreaming && Ai.speechService.streamOpen) {
+                // Already speaking: say the rest of the reply and close the stream.
+                if (String(message.content).length < root.fastSent) root.fastSent = 0;
+                root.fastBuffer = String(message.content);
+                root.drainSpeech(true);
+                root.agentStreaming = false;
+                if (Ai.speechService.streamOpen) Ai.speechService.endStream();
+                return;
+            }
+            root.agentStreaming = false;
+            root.phase = "preparing";
             root.speechRequested = Date.now();
             Ai.speechService.speak(String(message.content), "orb:" + result.responseMessageId);
         }
@@ -689,7 +758,78 @@ Scope {
         target: GlobalStates
         function onScreenLockedChanged() { if (GlobalStates.screenLocked) root.stop(); }
     }
+    // The orb's helper daemons (warm Kokoro voice, private ydotoold) are started by the shell, not by systemd.
+    // The script only starts what is not running, so this also revives a crashed one.
+    Timer {
+        interval: 60000; running: true; repeat: true; triggeredOnStart: true
+        onTriggered: Quickshell.execDetached([Directories.scriptPath + "/ai/ensure_daemons.sh"])
+    }
+    // ── Wake word ────────────────────────────────────────────────────────────────
+    // The detector owns the microphone only while the orb is idle; a session (or the lock
+    // screen) stops it so capture has the mic alone and the reply cannot wake it.
+    readonly property bool wakeWanted: (Config.options.ai.voice.wakeWord ?? false)
+        && !root.active && root.phase === "idle" && !GlobalStates.screenLocked
+        && !Ai.speechService.speaking && Ai.voiceService.state === "idle"
+    property string wakeError: ""
+    onWakeWantedChanged: {
+        if (root.wakeWanted) wakeRestart.restart();
+        else { wakeRestart.stop(); wakeRetry.stop(); if (wake.running) wake.signal(15); }
+    }
+    Component.onCompleted: if (root.wakeWanted) wakeRestart.restart()
+    // The detector reads its word and threshold once at start, so a settings change restarts it.
+    Connections {
+        target: Config.options.ai.voice
+        function onWakeWordModelChanged() { root.wakeReload(); }
+        function onWakeWordThresholdChanged() { root.wakeReload(); }
+    }
+    // Set while the detector is being restarted on purpose, so its exit brings it straight back instead of
+    // waiting out the 15 s crash-loop guard.
+    property bool wakeReloading: false
+    function wakeReload() {
+        if (wake.running) { root.wakeReloading = true; wake.signal(15); }
+        else if (root.wakeWanted) wakeRestart.restart();
+    }
+    Timer {
+        id: wakeRestart
+        interval: 600   // lets the previous capture release the mic before the detector takes it
+        onTriggered: if (root.wakeWanted && !wake.running) wake.running = true
+    }
+    Timer { id: wakeRetry; interval: 15000; onTriggered: if (root.wakeWanted && !wake.running) wake.running = true }
+    Process {
+        id: wake
+        command: ["env",
+            "II_WAKE_WORD=" + String(Config.options.ai.voice.wakeWordModel ?? "hey_jarvis"),
+            "II_WAKE_THRESHOLD=" + String(Config.options.ai.voice.wakeWordThreshold ?? 0.5),
+            "OMP_NUM_THREADS=1",
+            "nice", "-n", "5",
+            "python3", Directories.scriptPath + "/ai/wake_word.py"]
+        stdout: SplitParser {
+            onRead: line => {
+                let event;
+                try { event = JSON.parse(line); } catch (e) { return; }
+                if (event.event === "ready") root.wakeError = "";
+                else if (event.event === "error") root.wakeError = String(event.message);
+                else if (event.event === "wake" && root.wakeWanted) {
+                    wake.signal(15);
+                    root.wakeCount++;
+                    root.setMood("startled", 1100);
+                    root.start();
+                    if (Config.options.ai.voice.chime !== false) {
+                        root.wakeChimed = true;
+                        listenTimer.restart();
+                        Quickshell.execDetached(["pw-play", "--volume", "0.6", "/usr/share/sounds/freedesktop/stereo/message-new-instant.oga"]);
+                    }
+                }
+            }
+        }
+        onExited: {
+            const reloading = root.wakeReloading;
+            root.wakeReloading = false;
+            if (root.wakeWanted) (reloading ? wakeRestart : wakeRetry).restart();
+        }
+    }
     Component.onDestruction: {
+        if (wake.running) wake.signal(15);
         if (capture.running) capture.signal(15);
         if (Ai.voiceService.activeSurface === "orb") Ai.voiceService.cancel();
         if (Ai.speechService.messageId.indexOf("orb:") === 0) Ai.speechService.stop();

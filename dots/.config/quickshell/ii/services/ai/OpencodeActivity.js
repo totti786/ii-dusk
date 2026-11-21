@@ -9,7 +9,7 @@ var ICONS = {
     desktop_context: "desktop_windows", wallpaper_search: "image_search", wallpaper_set: "wallpaper",
     companion_status: "computer", browser_tools: "language", browser_call: "language",
     desktop_capture: "screenshot_monitor", desktop_input: "mouse", speak_text: "volume_up",
-    get_environment: "computer", system_get_status: "monitor_heart", system_health: "monitor_heart",
+    get_environment: "computer", system_get_status: "monitor_heart", system_health: "monitor_heart", running_now: "pending_actions",
     windows_list: "window", keybinds_search: "keyboard", settings_search: "manage_search", settings_get: "settings",
     settings_set: "tune", read_file: "description", list_directory: "folder_open", read_logs: "receipt_long",
     list_changes: "history", write_file: "edit_document", undo_change: "undo", brightness_set: "brightness_6",
@@ -55,6 +55,7 @@ function running(tool, input) {
     case "get_environment": return "Looking at the system";
     case "system_get_status": return "Checking system status";
     case "system_health": return "Checking system health";
+    case "running_now": return "Checking what is running";
     case "windows_list": return "Listing open windows";
     case "keybinds_search": return "Searching keybindings: " + clip(input.query, 60);
     case "settings_search": return "Searching settings: " + clip(input.query, 60);

@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
+import Quickshell.Services.UPower
 import qs
 import qs.services
 import qs.modules.common
@@ -17,9 +18,11 @@ import qs.modules.common
  *   run(verb, args) one action from a closed table. Arguments are validated and clamped
  *                   here; nothing is ever passed to a shell. Returns {ok, note}.
  *
- * Deliberately absent: closing windows, typing, files, lock/logout, shell commands. A
- * window title or track name is attacker-controlled text and the model reads it, so
- * everything in this table is something the user can undo with one more sentence.
+ * Deliberately absent: typing, files and shell commands. A window title or track name is
+ * attacker-controlled text and the model reads it, so almost everything here is something the
+ * user can undo with one more sentence. The exceptions (lock, suspend, reboot, shutdown, close)
+ * are refused unless `run()` is told the user confirmed out loud; only the voice agent, after a
+ * fresh plain "yes", ever says so, and the model's own markers never do.
  */
 QtObject {
     id: root
@@ -77,6 +80,10 @@ QtObject {
         const open = Array.from(Todo.list ?? []).filter(task => task && task.done !== true);
         if (open.length > 0)
             lines.push("open tasks (" + open.length + "): " + open.slice(0, 3).map(task => root.clip(task.content ?? task.title, 40)).join("; "));
+        const glance = Ai.runningIntegration.glance();
+        if (glance.length > 0) lines.push(glance);
+        const running = Ai.runningIntegration.brief();
+        if (running.length > 0) lines.push(running);
         lines.push(root.pipelineLine());
         return lines.join("\n");
     }
@@ -204,15 +211,156 @@ QtObject {
             Hyprland.dispatch("hl.dsp.focus({ workspace = " + id + " })");
             return root.ok("Went to workspace " + id);
         }
+        ,
+        toggle: args => {
+            const what = String(args[0] ?? ""), state = String(args[1] ?? "toggle");
+            if (!["on", "off", "toggle"].includes(state)) return root.no("bad state");
+            // The wanted state, given what is on now (idempotent: "turn it on" twice is not a toggle).
+            const want = current => state === "toggle" ? !current : state === "on";
+            switch (what) {
+            case "wifi": {
+                const now = Network.wifiEnabled;
+                if (!NetworkState.hasWifiDevice) return root.no("no Wi-Fi adapter");
+                Network.enableWifi(want(now));
+                return root.ok("Wi-Fi " + (want(now) ? "on" : "off"));
+            }
+            case "bluetooth": {
+                if (!BluetoothStatus.available) return root.no("no Bluetooth adapter");
+                const on = want(BluetoothStatus.enabled);
+                BluetoothStatus.setEnabled(on);
+                return root.ok("Bluetooth " + (on ? "on" : "off"));
+            }
+            case "nightlight": {
+                const on = want(Hyprsunset.temperatureActive);
+                if (on !== Hyprsunset.temperatureActive) Hyprsunset.toggleTemperature(on);
+                return root.ok("Night light " + (on ? "on" : "off"));
+            }
+            case "dnd": {
+                const on = want(Notifications.effectiveSilent);
+                Notifications.silent = on;
+                return root.ok("Do not disturb " + (on ? "on" : "off"));
+            }
+            case "awake": {
+                const on = want(Idle.inhibit);
+                if (on !== Idle.inhibit) Idle.toggleInhibit(on);
+                return root.ok(on ? "Keeping the screen awake" : "Normal sleep");
+            }
+            case "gamemode": {
+                const model = QuickToggleRegistry.getModel("gameMode");
+                if (!model) return root.no("no game mode");
+                const on = want(model.toggled);
+                if (on !== model.toggled) model.mainAction();
+                return root.ok("Game mode " + (on ? "on" : "off"));
+            }
+            case "mic": {
+                const audio = Audio.source?.audio;
+                if (!audio) return root.no("no microphone");
+                const on = want(!audio.muted);
+                audio.muted = !on;
+                return root.ok(on ? "Mic on" : "Mic muted");
+            }
+            }
+            return root.no("unknown toggle");
+        },
+        power: args => {
+            const names = {saver: PowerProfile.PowerSaver, balanced: PowerProfile.Balanced, performance: PowerProfile.Performance};
+            const name = String(args[0] ?? "");
+            if (!Object.prototype.hasOwnProperty.call(names, name)) return root.no("unknown power profile");
+            if (name === "performance" && !PowerProfiles.hasPerformanceProfile) return root.no("no performance profile on this computer");
+            PowerProfiles.profile = names[name];
+            return root.ok("Power profile: " + name);
+        },
+        capture: args => {
+            const what = String(args[0] ?? "");
+            if (what === "color") { root.later(null, () => GlobalStates.launchColorPicker()); return root.ok("Color picker"); }
+            if (what === "shot") { root.later(["region", "fullscreen"]); return root.ok("Taking a screenshot"); }
+            if (what === "area") { root.later(["region", "screenshot"]); return root.ok("Select an area"); }
+            const recording = Persistent.states.screenRecord.active;
+            if (what === "stop") {
+                if (!recording) return root.no("not recording");
+                Quickshell.execDetached([Directories.recordScriptPath]);
+                return root.ok("Stopped recording");
+            }
+            if (what === "record" || what === "region") {
+                if (recording) return root.no("already recording");
+                root.later(null, () => Quickshell.execDetached([Directories.recordScriptPath, what === "record" ? "--fullscreen" : "--region"]));
+                return root.ok(what === "record" ? "Recording the screen" : "Select an area to record");
+            }
+            return root.no("unknown capture");
+        },
+        panel: args => {
+            const panels = {settings: ["settings", "open", "toggle"], sidebar: ["sidebarRight", "open", "toggle", "close"],
+                            cheatsheet: ["cheatsheet", "open", "toggle", "close"], apps: ["appDrawer", "open", "toggle", "close"],
+                            power: ["session", "open", "toggle", "close"], clipboard: ["search", "clipboardToggle"],
+                            mixer: ["mixer", "toggle", "close"]};
+            const name = String(args[0] ?? ""), how = String(args[1] ?? "open");
+            if (!Object.prototype.hasOwnProperty.call(panels, name)) return root.no("unknown panel");
+            const entry = panels[name];
+            const fn = entry[1] === "clipboardToggle" ? "clipboardToggle" : (entry.includes(how) ? how : (how === "open" ? "toggle" : ""));
+            if (fn.length === 0) return root.no("cannot " + how + " the " + name);
+            Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", entry[0], fn]);
+            return root.ok((how === "close" ? "Closed the " : "Opened the ") + name);
+        },
+        window: args => {
+            const what = String(args[0] ?? "");
+            if (what === "fullscreen") { Hyprland.dispatch("hl.dsp.window.fullscreen({ mode = 0 })"); return root.ok("Toggled fullscreen"); }
+            if (what === "float") { Hyprland.dispatch("hl.dsp.window.float({ action = \"toggle\" })"); return root.ok("Toggled floating"); }
+            if (what === "pin") { Hyprland.dispatch("hl.dsp.window.pin({ action = \"toggle\" })"); return root.ok("Toggled pin"); }
+            if (what === "move") {
+                const id = Math.round(root.number(args[1], 1, 20));
+                if (!Number.isFinite(id)) return root.no("bad workspace");
+                Hyprland.dispatch("hl.dsp.window.move({ workspace = " + id + " })");
+                return root.ok("Moved the window to workspace " + id);
+            }
+            if (what === "focus") {
+                // Resolved here against the real window list: nothing spoken goes into a dispatch string.
+                const wanted = args.slice(1).join(" ").toLowerCase().trim();
+                if (wanted.length < 2) return root.no("which window?");
+                const windows = Array.from(ToplevelManager.toplevels?.values ?? []);
+                const rank = w => {
+                    const id = String(w.appId ?? "").toLowerCase(), title = String(w.title ?? "").toLowerCase();
+                    return id === wanted ? 0 : id.startsWith(wanted) ? 1 : id.includes(wanted) ? 2 : title.includes(wanted) ? 3 : 9;
+                };
+                const best = windows.map(w => ({w: w, r: rank(w)})).filter(x => x.r < 9).sort((a, b) => a.r - b.r)[0];
+                if (!best) return root.no("no window called " + root.clip(wanted, 30));
+                best.w.activate();
+                return root.ok("Switched to " + root.clip(best.w.appId || best.w.title, 30));
+            }
+            return root.no("unknown window action");
+        },
+        // These four-plus-one are the only verbs that need the user's spoken yes (see run()).
+        lock: args => { Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", "lock", "activate"]); return root.ok("Locking"); },
+        suspend: args => { Quickshell.execDetached(["systemctl", "suspend"]); return root.ok("Going to sleep"); },
+        reboot: args => { Quickshell.execDetached(["systemctl", "reboot"]); return root.ok("Restarting"); },
+        shutdown: args => { Quickshell.execDetached(["systemctl", "poweroff"]); return root.ok("Shutting down"); },
+        close: args => { Quickshell.execDetached([Quickshell.shellPath("scripts/hyprland/close_window.sh")]); return root.ok("Closed the window"); }
     })
 
-    function run(verb, args) {
+    /** Verbs that may only run after the user confirmed out loud. */
+    readonly property var needsConfirm: ["lock", "suspend", "reboot", "shutdown", "close"]
+
+    // A short pause before anything that takes a picture, so the orb and its label are not in it.
+    property var laterTask: null
+    property Timer laterTimer: Timer {
+        interval: 450
+        onTriggered: { const task = root.laterTask; root.laterTask = null; if (task) task(); }
+    }
+    function later(ipcCall, task) {
+        root.laterTask = task ?? (() => Quickshell.execDetached(["qs", "-p", Quickshell.shellPath(""), "ipc", "call", ipcCall[0], ipcCall[1]]));
+        root.laterTimer.restart();
+    }
+
+    function run(verb, args, confirmed) {
         const name = String(verb);
         if (root.settings.actions === false) return root.no("actions are off");
         if (!Object.prototype.hasOwnProperty.call(root.table, name)) return root.no("unknown action " + root.clip(name, 20));
+        if (root.needsConfirm.includes(name) && confirmed !== true) return root.no(name + " needs the user's confirmation");
         try {
-            return root.table[name](Array.from(args ?? []).map(item => String(item)));
+            const result = root.table[name](Array.from(args ?? []).map(item => String(item)));
+            console.log("[voice] action", name, Array.from(args ?? []).join(" "), "->", result.ok ? "ok" : "refused", result.note);
+            return result;
         } catch (error) {
+            console.log("[voice] action", name, "failed:", String(error));
             return root.no(String(error));
         }
     }

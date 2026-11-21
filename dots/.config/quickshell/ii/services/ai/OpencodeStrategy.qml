@@ -115,7 +115,7 @@ ApiStrategy {
             }));
     }
 
-    function parseResponseLine(line: string, message: AiMessageData) {
+    function parseResponseLine(line: string, message: AiMessageData): var {
         const text = String(line ?? "").trim();
         if (text.length === 0)
             return {};
