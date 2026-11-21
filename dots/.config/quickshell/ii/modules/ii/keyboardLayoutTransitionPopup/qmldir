@@ -1,0 +1,4 @@
+module qs.modules.ii.keyboardLayoutTransitionPopup
+KeyboardLayoutTransitionPopup 1.0 KeyboardLayoutTransitionPopup.qml
+KeyboardLayoutTransitionPopupContent 1.0 KeyboardLayoutTransitionPopupContent.qml
+# quickshell-generated qmldir
