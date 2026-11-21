@@ -1,0 +1,17 @@
+module qs.modules.ii.quran
+AyahMark 1.0 AyahMark.qml
+QuranApp 1.0 QuranApp.qml
+QuranButton 1.0 QuranButton.qml
+QuranContents 1.0 QuranContents.qml
+QuranOverlay 1.0 QuranOverlay.qml
+QuranPageView 1.0 QuranPageView.qml
+QuranPill 1.0 QuranPill.qml
+QuranPlayer 1.0 QuranPlayer.qml
+QuranPlayerBar 1.0 QuranPlayerBar.qml
+QuranReader 1.0 QuranReader.qml
+QuranSearchPanel 1.0 QuranSearchPanel.qml
+QuranSettingsPanel 1.0 QuranSettingsPanel.qml
+QuranTafsirPanel 1.0 QuranTafsirPanel.qml
+QuranTranslationView 1.0 QuranTranslationView.qml
+QuranWindow 1.0 QuranWindow.qml
+# quickshell-generated qmldir
