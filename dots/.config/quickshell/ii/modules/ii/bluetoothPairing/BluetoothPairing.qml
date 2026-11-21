@@ -52,6 +52,8 @@ Scope {
         active: root.shouldShow || root.closing
 
         component: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: promptWindow
             screen: Quickshell.screens.find(monitor => monitor.name === Hyprland.focusedMonitor?.name) ?? null
             color: "transparent"
