@@ -57,6 +57,8 @@ Scope {
         model: Quickshell.screens
 
         PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: window
 
             required property var modelData
