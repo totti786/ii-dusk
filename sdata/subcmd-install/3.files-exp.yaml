@@ -62,6 +62,9 @@ patterns:
     to: "$XDG_CONFIG_HOME/fontconfig"
     mode: "sync"
   # MISC config directories (other .config directories)
+  - from: "dots/.config/alacritty"
+    to: "$XDG_CONFIG_HOME/alacritty"
+    mode: "sync"
   - from: "dots/.config/kde-material-you-colors"
     to: "$XDG_CONFIG_HOME/kde-material-you-colors"
     mode: "sync"
