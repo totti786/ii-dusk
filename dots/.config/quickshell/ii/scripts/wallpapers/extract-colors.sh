@@ -6,6 +6,7 @@ TARGET_DIR="${1:-$HOME/Pictures/Wallpapers}"
 
 OUTPUT_DIR="$HOME/.cache/quickshell/wallpapers"
 OUTPUT_FILE="$OUTPUT_DIR/colors.json"
+ERR_LOG="$OUTPUT_DIR/extract-colors.err"
 mkdir -p "$OUTPUT_DIR"
 
 source "$(dirname "${BASH_SOURCE[0]}")/../colors/matugen.sh"
@@ -58,11 +59,17 @@ process_img() {
     colors=()
 
     for i in "${color_indices[@]}"; do
-        c=$(matugen image "$img" \
-            --json hex \
-            --source-color-index "$i" \
-            --dry-run --quiet 2>/dev/null \
-            | jq -r '.colors.source_color.default.color')
+        local c="" attempt
+        # matugen has aborted (SIGABRT) once under parallel load; retry once, keep stderr
+        for attempt in 1 2; do
+            c=$(matugen image "$img" \
+                --json hex \
+                --source-color-index "$i" \
+                --dry-run --quiet 2>>"$ERR_LOG" \
+                | jq -r '.colors.source_color.default.color // empty')
+            [ -n "$c" ] && break
+            echo "$(date +%T) attempt $attempt failed: $img (index $i)" >> "$ERR_LOG"
+        done
 
         [ -n "$c" ] && colors+=("$c")
     done
@@ -82,7 +89,7 @@ while IFS= read -r -d '' img; do
     count=$((count + 1))
     processed=$((processed + 1))
 
-    if [ $((count % 15)) -eq 0 ]; then
+    if [ $((count % 8)) -eq 0 ]; then
         wait
         flush_results
         count=0

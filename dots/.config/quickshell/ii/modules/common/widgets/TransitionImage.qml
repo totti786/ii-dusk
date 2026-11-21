@@ -206,7 +206,12 @@ Item {
         if (root.animated) {
             if (root.transitionShader !== "") {
                 if (root.transitionShader === "random") {
-                    let list = ["circlePit", "circleSelect", "magic", "Peel", "transition", "pixelate", "stripes"];
+                    let list = ["circlePit", "circleSelect", "magic", "Peel", "transition", "pixelate", "stripes",
+                        "chromatic-bloom", "colour-distance", "crossfade", "crosshatch", "crosswarp",
+                        "directional", "directional-wipe", "fade-colour", "glitch", "glitch-displace",
+                        "heat-melt", "ink-splash", "inkwell-drop", "iris", "morph", "parametric-glitch",
+                        "perlin", "pixelfade-wave", "plasma-flow", "polka-dots-curtain", "puzzle-right",
+                        "random-squares", "smoke", "soft-warp-fade", "voronoi-shatter", "zoom-blur-pull"];
                     root.activeShader = list[Math.floor(Math.random() * list.length)];
                 } else {
                     root.activeShader = root.transitionShader;

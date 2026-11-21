@@ -795,7 +795,7 @@ def cmd_daemon():
                 "hottest": hottest,
                 "targetPct": None if current is None else round(current, 1),
                 "safety": hottest is not None and hottest >= SAFETY_TEMP,
-                "fans": [{"label": f["label"], "rpm": read_int(f["rpm"], 0), "max": f["max"],
+                "fans": [{"label": f["label"], "rpm": read_int(f["rpm"], 0) if f["rpm"] else 0, "max": f["max"],
                           "raw": (None if f["control"] is None
                                   else to_raw(fw["duty"]) if backend == "framework_ec" and fw["duty"] is not None
                                   else None if backend == "framework_ec"
