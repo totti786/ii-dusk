@@ -219,6 +219,11 @@ def run_session(args: argparse.Namespace) -> int:
     if args.player_arg:
         argv += ["--"] + list(args.player_arg)
     sys.argv = argv
+    # Syncplay also loads any syncplay.ini found in the directories above the played file,
+    # resolving a URL (or no file) against the working directory. Started from under
+    # ~/.config that picked up the user's own saved name and room over the ones given here.
+    if not args.file or "://" in args.file:
+        os.chdir("/")
 
     from twisted.internet import protocol, reactor, task
 
