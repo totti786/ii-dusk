@@ -1,0 +1,5 @@
+module qs.modules.ii.screenTranslator
+ScreenTextOverlay 1.0 ScreenTextOverlay.qml
+ScreenTranslator 1.0 ScreenTranslator.qml
+ScreenTranslatorPanel 1.0 ScreenTranslatorPanel.qml
+# quickshell-generated qmldir
