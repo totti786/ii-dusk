@@ -108,6 +108,8 @@ Scope {
         active: GlobalStates.displayModesPopupOpen && !GlobalStates.islandOwnsDisplayModes && root.enabled
 
         component: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: popupWindow
             color: "transparent"
             visible: Quickshell.screens.length > 0 && root.enabled
