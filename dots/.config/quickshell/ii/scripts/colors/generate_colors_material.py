@@ -115,7 +115,7 @@ if args.path is not None:
     wsize_new, hsize_new = calculate_optimal_size(wsize, hsize, args.size)
     if wsize_new < wsize or hsize_new < hsize:
         image = image.resize((wsize_new, hsize_new), Image.Resampling.BICUBIC)
-    colors = QuantizeCelebi(list(image.getdata()), 128)
+    colors = QuantizeCelebi(list(image.get_flattened_data()), 128)
     argb = Score.score(colors)[0]
     # The theme itself is rendered by matugen, whose seed is the image's first source colour.
     # Picking one here with a different resize and quantiser breaks ties differently on
@@ -156,7 +156,7 @@ else:
             wsize_new, hsize_new = calculate_optimal_size(wsize, hsize, args.size)
             if wsize_new < wsize or hsize_new < hsize:
                 image = image.resize((wsize_new, hsize_new), Image.Resampling.BICUBIC)
-            colors = QuantizeCelebi(list(image.getdata()), 128)
+            colors = QuantizeCelebi(list(image.get_flattened_data()), 128)
             argb = Score.score(colors)[0]
             hct = Hct.from_int(argb)
         except Exception:

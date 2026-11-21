@@ -49,7 +49,7 @@ def source_colors(image_path, count=6):
     image.draft("RGB", (256, 256))  # JPEG: decode at a fraction of the size
     image = image.convert("RGB")
     image.thumbnail((128, 128))
-    ranked = Score.score(QuantizeCelebi(list(image.getdata()), 128),
+    ranked = Score.score(QuantizeCelebi(list(image.get_flattened_data()), 128),
                          ScoreOptions(count, 0xFF4285F4, True, False))
     return ["#%06x" % (argb & 0xFFFFFF) for argb in ranked]
 
