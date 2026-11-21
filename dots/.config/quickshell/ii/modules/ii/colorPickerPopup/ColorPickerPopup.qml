@@ -74,6 +74,8 @@ Scope {
             && Config.options.bar.tooltips.enableColorPickerPopup
 
         component: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: popupWindow
             color: "transparent"
             visible: Quickshell.screens.length > 0
