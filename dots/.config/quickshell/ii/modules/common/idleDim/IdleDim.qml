@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import qs.modules.common
+import qs.services
 
 /**
  * Idle dim: a click-through 50 % black scrim over every output, driven by
