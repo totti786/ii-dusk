@@ -1,0 +1,6 @@
+module qs.modules.common.dashboardWidgets.calendar
+CalendarDayButton 1.0 CalendarDayButton.qml
+CalendarHeaderButton 1.0 CalendarHeaderButton.qml
+CalendarPopup 1.0 CalendarPopup.qml
+CalendarWidget 1.0 CalendarWidget.qml
+# quickshell-generated qmldir

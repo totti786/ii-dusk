@@ -1,0 +1,3 @@
+module qs.modules.common.dashboardWidgets.reminders
+RemindersDashboardWidget 1.0 RemindersDashboardWidget.qml
+# quickshell-generated qmldir
