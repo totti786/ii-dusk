@@ -7,8 +7,11 @@ import Quickshell.Hyprland
 
 import qs
 import qs.modules.ii.clock.components
+import qs.services
 
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
