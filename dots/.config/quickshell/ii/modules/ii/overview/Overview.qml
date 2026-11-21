@@ -83,6 +83,8 @@ Scope {
                     }
 
                     component: PanelWindow {
+                        contentItem.LayoutMirroring.enabled: Translation.isRtl
+                        contentItem.LayoutMirroring.childrenInherit: true
                         id: root
 
                         screen: realOverviewLoader.modelData

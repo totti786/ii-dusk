@@ -1,0 +1,6 @@
+module qs.modules.ii.overview.calendar
+CalendarAgendaList 1.0 CalendarAgendaList.qml
+CalendarCreateForm 1.0 CalendarCreateForm.qml
+CalendarEventBlock 1.0 CalendarEventBlock.qml
+CalendarQuickCreate 1.0 CalendarQuickCreate.qml
+# quickshell-generated qmldir
