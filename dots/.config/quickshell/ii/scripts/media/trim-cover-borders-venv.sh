@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs trim_cover_borders.py inside the shell's shared Python environment, where its
-# dependencies are declared (sdata/uv/requirements.in); a bare python3 only works
+# dependencies are declared (scripts/deps/requirements.in); a bare python3 only works
 # on machines that happen to have them installed system-wide.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
