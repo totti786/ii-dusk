@@ -41,6 +41,8 @@ Scope {
         active: PhoneCallService.active && !root.hiddenForThisCall
 
         component: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: popupWindow
             color: "transparent"
             visible: true
