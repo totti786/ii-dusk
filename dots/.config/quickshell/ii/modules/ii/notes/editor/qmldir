@@ -1,0 +1,15 @@
+module qs.modules.ii.notes.editor
+NoteBlockDelegate 1.0 NoteBlockDelegate.qml
+NoteCodeBlock 1.0 NoteCodeBlock.qml
+NoteDividerBlock 1.0 NoteDividerBlock.qml
+NoteFileBlock 1.0 NoteFileBlock.qml
+NoteImageBlock 1.0 NoteImageBlock.qml
+NoteInkBlock 1.0 NoteInkBlock.qml
+NoteLinkPreviewBlock 1.0 NoteLinkPreviewBlock.qml
+NoteMediaBlock 1.0 NoteMediaBlock.qml
+NotesEditor 1.0 NotesEditor.qml
+NotesEditorToolbar 1.0 NotesEditorToolbar.qml
+NotesSelectionBar 1.0 NotesSelectionBar.qml
+NoteTableBlock 1.0 NoteTableBlock.qml
+NoteTextBlock 1.0 NoteTextBlock.qml
+# quickshell-generated qmldir
