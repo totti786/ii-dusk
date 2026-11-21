@@ -5,6 +5,7 @@ import Quickshell
 
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.services
 
 /**
  * A hover tooltip for the Lite bar: a small popup window under `target`, shown after a short
@@ -33,6 +34,8 @@ Item {
         active: root.shown && root.text !== ""
 
         PopupWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             anchor.window: root.barWindow
             anchor.item: root.target
             anchor.edges: Edges.Bottom

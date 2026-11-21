@@ -101,6 +101,8 @@ Scope {
         active: root.open
 
         PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: win
             screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
 

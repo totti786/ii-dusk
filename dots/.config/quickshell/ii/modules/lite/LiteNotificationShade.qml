@@ -27,6 +27,8 @@ Scope {
         active: GlobalStates.liteNotificationsOpen
 
         PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
 
             anchors {
