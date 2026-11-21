@@ -18,6 +18,8 @@ import "MonitorFormat.js" as Fmt
  * dimmed screen, the overview page filling it. Esc, the close button or a click outside closes it.
  */
 PanelWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
