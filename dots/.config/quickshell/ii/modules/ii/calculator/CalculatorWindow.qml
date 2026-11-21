@@ -20,6 +20,8 @@ import "CalculatorMath.js" as CalcMath
  * Esc clears; the window closes with Ctrl+W, Ctrl+Q or its close button.
  */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()

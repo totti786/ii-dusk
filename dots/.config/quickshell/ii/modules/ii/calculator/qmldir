@@ -1,0 +1,7 @@
+module qs.modules.ii.calculator
+CalculatorApp 1.0 CalculatorApp.qml
+CalculatorDisplay 1.0 CalculatorDisplay.qml
+CalculatorHistory 1.0 CalculatorHistory.qml
+CalculatorKey 1.0 CalculatorKey.qml
+CalculatorWindow 1.0 CalculatorWindow.qml
+# quickshell-generated qmldir
