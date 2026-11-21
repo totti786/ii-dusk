@@ -12,6 +12,8 @@ Scope {
     id: notificationPopup
 
     PanelWindow {
+        contentItem.LayoutMirroring.enabled: Translation.isRtl
+        contentItem.LayoutMirroring.childrenInherit: true
         id: root
         property bool active: (Notifications.popupList.length > 0) && !Notifications.effectiveSilent
         property bool keepVisible: false

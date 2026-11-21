@@ -1,0 +1,3 @@
+module qs.modules.ii.notificationPopup
+NotificationPopup 1.0 NotificationPopup.qml
+# quickshell-generated qmldir
