@@ -13,6 +13,8 @@ Scope {
     id: root
 
     PanelWindow {
+        contentItem.LayoutMirroring.enabled: Translation.isRtl
+        contentItem.LayoutMirroring.childrenInherit: true
         id: popupWindow
         color: ColorUtils.transparentize(Appearance.m3colors.m3background, 0.35)
         visible: AlarmService.ringingAlarmIndex !== -1 && Config.options.time.alarms.useFullscreenPopup
