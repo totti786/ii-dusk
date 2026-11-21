@@ -1,0 +1,5 @@
+module qs.modules.ii.grit
+GritApp 1.0 GritApp.qml
+GritAppContent 1.0 GritAppContent.qml
+GritAppWindow 1.0 GritAppWindow.qml
+# quickshell-generated qmldir

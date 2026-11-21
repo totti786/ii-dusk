@@ -13,6 +13,8 @@ import qs.modules.ii.grit.components
  * floats and centres. It opens at the same family footprint as the other ii apps.
  */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
