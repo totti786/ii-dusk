@@ -59,6 +59,8 @@ Scope {
             && Config.options.bar.tooltips.enableBluetoothConnectionPopup
 
         component: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: popupWindow
             color: "transparent"
             visible: Config.options.bar.tooltips.enablePopups

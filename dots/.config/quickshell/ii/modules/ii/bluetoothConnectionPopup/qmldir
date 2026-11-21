@@ -1,0 +1,4 @@
+module qs.modules.ii.bluetoothConnectionPopup
+BluetoothConnectionPopup 1.0 BluetoothConnectionPopup.qml
+BluetoothConnectionPopupContent 1.0 BluetoothConnectionPopupContent.qml
+# quickshell-generated qmldir
