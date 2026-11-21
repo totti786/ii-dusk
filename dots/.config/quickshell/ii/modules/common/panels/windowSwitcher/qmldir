@@ -1,0 +1,11 @@
+module qs.modules.common.panels.windowSwitcher
+PeekCountdown 1.0 PeekCountdown.qml
+SwitcherCard 1.0 SwitcherCard.qml
+SwitcherCloseButton 1.0 SwitcherCloseButton.qml
+SwitcherHints 1.0 SwitcherHints.qml
+SwitcherSearchLine 1.0 SwitcherSearchLine.qml
+SwitcherTitleLine 1.0 SwitcherTitleLine.qml
+WindowSwitcherPanel 1.0 WindowSwitcherPanel.qml
+WindowSwitcherPeek 1.0 WindowSwitcherPeek.qml
+WorkspaceChip 1.0 WorkspaceChip.qml
+# quickshell-generated qmldir

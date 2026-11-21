@@ -96,6 +96,8 @@ Scope {
         asynchronous: true
 
         sourceComponent: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: panelWindow
 
             readonly property var targetScreen: Quickshell.screens.find(s => s.name === WindowSwitcher.screenName)

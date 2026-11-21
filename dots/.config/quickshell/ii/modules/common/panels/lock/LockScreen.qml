@@ -269,6 +269,10 @@ Scope {
         function fingerStop(): void {
             lockContext.suspendFingerUnlock();
         }
+        // "true" while the lock screen is showing; hypridle's "screen off once locked" step asks this.
+        function locked(): string {
+            return GlobalStates.screenLocked ? "true" : "false";
+        }
     }
 
     GlobalShortcut {

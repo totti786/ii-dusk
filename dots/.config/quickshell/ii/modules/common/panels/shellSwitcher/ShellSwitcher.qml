@@ -68,6 +68,8 @@ Scope {
         active: root.activeState
 
         sourceComponent: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: switcherWindow
             visible: switcherLoader.active
 

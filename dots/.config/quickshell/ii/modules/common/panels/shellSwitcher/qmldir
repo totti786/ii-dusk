@@ -1,0 +1,4 @@
+module qs.modules.common.panels.shellSwitcher
+ShellFamilyCard 1.0 ShellFamilyCard.qml
+ShellSwitcher 1.0 ShellSwitcher.qml
+# quickshell-generated qmldir
