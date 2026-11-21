@@ -1,0 +1,14 @@
+module qs.modules.ii.regionSelector.annotations
+singleton AnnotationModel 1.0 AnnotationModel.qml
+ArrowAnnotationComponent 1.0 ArrowAnnotationComponent.qml
+CircleAnnotationComponent 1.0 CircleAnnotationComponent.qml
+EditorToolbar 1.0 EditorToolbar.qml
+EllipseAnnotationComponent 1.0 EllipseAnnotationComponent.qml
+LineAnnotationComponent 1.0 LineAnnotationComponent.qml
+NumberBadgeAnnotationComponent 1.0 NumberBadgeAnnotationComponent.qml
+PencilAnnotationComponent 1.0 PencilAnnotationComponent.qml
+RectAnnotationComponent 1.0 RectAnnotationComponent.qml
+RulerAnnotationComponent 1.0 RulerAnnotationComponent.qml
+StarAnnotationComponent 1.0 StarAnnotationComponent.qml
+TextAnnotationComponent 1.0 TextAnnotationComponent.qml
+# quickshell-generated qmldir
