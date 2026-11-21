@@ -1,0 +1,23 @@
+module qs.modules.ii.background.widgets.weather
+ExpressiveWeatherWidget 1.0 ExpressiveWeatherWidget.qml
+NothingWeatherIcon 1.0 NothingWeatherIcon.qml
+NothingWeatherWidget 1.0 NothingWeatherWidget.qml
+WeatherCard1x1Widget 1.0 WeatherCard1x1Widget.qml
+WeatherCircleWidget 1.0 WeatherCircleWidget.qml
+WeatherCollageWidget 1.0 WeatherCollageWidget.qml
+WeatherDaylightWidget 1.0 WeatherDaylightWidget.qml
+WeatherDialWidget 1.0 WeatherDialWidget.qml
+WeatherFamilyColors 1.0 WeatherFamilyColors.qml
+WeatherForecast2x1Widget 1.0 WeatherForecast2x1Widget.qml
+WeatherHourly2x1Widget 1.0 WeatherHourly2x1Widget.qml
+WeatherIconWidget 1.0 WeatherIconWidget.qml
+WeatherMonolithWidget 1.0 WeatherMonolithWidget.qml
+WeatherPatternWidget 1.0 WeatherPatternWidget.qml
+WeatherPillWidget 1.0 WeatherPillWidget.qml
+WeatherRangesWidget 1.0 WeatherRangesWidget.qml
+WeatherRibbonWidget 1.0 WeatherRibbonWidget.qml
+WeatherSilhouetteWidget 1.0 WeatherSilhouetteWidget.qml
+WeatherStripWidget 1.0 WeatherStripWidget.qml
+WeatherTypographyWidget 1.0 WeatherTypographyWidget.qml
+WeatherWidget 1.0 WeatherWidget.qml
+# quickshell-generated qmldir

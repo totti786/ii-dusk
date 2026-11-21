@@ -1,0 +1,3 @@
+module qs.modules.ii.background.parallax
+ParallaxController 1.0 ParallaxController.qml
+# quickshell-generated qmldir

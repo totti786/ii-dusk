@@ -1,0 +1,14 @@
+module qs.modules.ii.background.widgets.productivity
+CountdownWidget 1.0 CountdownWidget.qml
+PomodoroWidget 1.0 PomodoroWidget.qml
+StopwatchWidget 1.0 StopwatchWidget.qml
+TodoAddField 1.0 TodoAddField.qml
+TodoBoardWidget 1.0 TodoBoardWidget.qml
+TodoCheck 1.0 TodoCheck.qml
+TodoColumnWidget 1.0 TodoColumnWidget.qml
+TodoFocusWidget 1.0 TodoFocusWidget.qml
+TodoRow 1.0 TodoRow.qml
+TodoSource 1.0 TodoSource.qml
+TranslatorWidget 1.0 TranslatorWidget.qml
+WaterGlassWidget 1.0 WaterGlassWidget.qml
+# quickshell-generated qmldir

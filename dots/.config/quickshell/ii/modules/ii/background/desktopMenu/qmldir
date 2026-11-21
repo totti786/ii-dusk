@@ -1,0 +1,9 @@
+module qs.modules.ii.background.desktopMenu
+DesktopMenu 1.0 DesktopMenu.qml
+DesktopMenuCard 1.0 DesktopMenuCard.qml
+DesktopMenuColorsPage 1.0 DesktopMenuColorsPage.qml
+DesktopMenuIconsPage 1.0 DesktopMenuIconsPage.qml
+DesktopMenuNewPage 1.0 DesktopMenuNewPage.qml
+DesktopMenuPresetsPage 1.0 DesktopMenuPresetsPage.qml
+DesktopMenuWallpaperStrip 1.0 DesktopMenuWallpaperStrip.qml
+# quickshell-generated qmldir

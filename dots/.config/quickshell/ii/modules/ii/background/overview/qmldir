@@ -1,0 +1,8 @@
+module qs.modules.ii.background.overview
+EdgeFadeMask 1.0 EdgeFadeMask.qml
+OverviewBackgroundController 1.0 OverviewBackgroundController.qml
+OverviewMaterialMask 1.0 OverviewMaterialMask.qml
+OverviewRoundedMask 1.0 OverviewRoundedMask.qml
+OverviewZoomController 1.0 OverviewZoomController.qml
+ProgressiveBlur 1.0 ProgressiveBlur.qml
+# quickshell-generated qmldir

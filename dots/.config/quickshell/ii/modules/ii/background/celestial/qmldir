@@ -1,0 +1,8 @@
+module qs.modules.ii.background.celestial
+BackgroundWidget 1.0 BackgroundWidget.qml
+CelestialWallpaper 1.0 CelestialWallpaper.qml
+CurvedText 1.0 CurvedText.qml
+EarthWidget 1.0 EarthWidget.qml
+OrbitWidget 1.0 OrbitWidget.qml
+PrayerClockWidget 1.0 PrayerClockWidget.qml
+# quickshell-generated qmldir

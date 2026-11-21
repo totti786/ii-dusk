@@ -45,6 +45,8 @@ Scope {
             onWantedChanged: { if (menuLoader.wanted) menuLoader.everOpened = true; }
 
             component: PanelWindow {
+                contentItem.LayoutMirroring.enabled: Translation.isRtl
+                contentItem.LayoutMirroring.childrenInherit: true
                 id: menuWindow
                 screen: menuLoader.modelData
                 color: "transparent"

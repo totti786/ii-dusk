@@ -1,0 +1,7 @@
+module qs.modules.ii.background.widgets.phone
+PhoneDeckWidget 1.0 PhoneDeckWidget.qml
+PhoneKeyWidget 1.0 PhoneKeyWidget.qml
+PhoneSource 1.0 PhoneSource.qml
+PhoneTowerWidget 1.0 PhoneTowerWidget.qml
+SendDropWidget 1.0 SendDropWidget.qml
+# quickshell-generated qmldir
