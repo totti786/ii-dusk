@@ -12,6 +12,8 @@ import qs.modules.ii.clock.components
  * enough for the landscape tuner and metronome layouts.
  */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
