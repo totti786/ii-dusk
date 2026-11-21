@@ -1,0 +1,5 @@
+module qs.modules.ii.cheatsheet.workspaces
+DeferredWorkspaceProfileForm 1.0 DeferredWorkspaceProfileForm.qml
+ProfileCard 1.0 ProfileCard.qml
+WorkspaceProfileForm 1.0 WorkspaceProfileForm.qml
+# quickshell-generated qmldir

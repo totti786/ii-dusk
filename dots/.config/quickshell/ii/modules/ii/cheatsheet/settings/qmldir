@@ -1,0 +1,7 @@
+module qs.modules.ii.cheatsheet.settings
+AminoAcidsSettings 1.0 AminoAcidsSettings.qml
+CommandsSettings 1.0 CommandsSettings.qml
+KeybindsSettings 1.0 KeybindsSettings.qml
+TimetableSettings 1.0 TimetableSettings.qml
+TimetableStatusCard 1.0 TimetableStatusCard.qml
+# quickshell-generated qmldir

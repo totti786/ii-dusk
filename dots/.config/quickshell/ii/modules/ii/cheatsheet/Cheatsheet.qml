@@ -221,6 +221,8 @@ Scope {
         retainFor: 60000
 
         sourceComponent: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: cheatsheetRoot
             visible: root.activeState
             property int selectedTab: 0

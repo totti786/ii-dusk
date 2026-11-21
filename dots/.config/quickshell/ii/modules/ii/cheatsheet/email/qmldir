@@ -1,0 +1,12 @@
+module qs.modules.ii.cheatsheet.email
+EmailAuth 1.0 EmailAuth.qml
+EmailCompose 1.0 EmailCompose.qml
+EmailContent 1.0 EmailContent.qml
+EmailIcon 1.0 EmailIcon.qml
+EmailInbox 1.0 EmailInbox.qml
+EmailNavButton 1.0 EmailNavButton.qml
+EmailSettings 1.0 EmailSettings.qml
+EmailSidebar 1.0 EmailSidebar.qml
+EmailStackedContent 1.0 EmailStackedContent.qml
+SelectableEmailText 1.0 SelectableEmailText.qml
+# quickshell-generated qmldir
