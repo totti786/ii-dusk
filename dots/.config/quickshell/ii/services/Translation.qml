@@ -36,6 +36,15 @@ Singleton {
         return Qt.locale().name;
     }
 
+    // Right-to-left languages. Windows mirror their layouts from this (contentItem.LayoutMirroring).
+    readonly property var rtlLanguages: ["ar", "he", "iw", "fa", "ur", "ps", "yi", "dv", "ckb", "ug", "sd"]
+    readonly property bool isRtl: {
+        const forced = Config?.options.language.direction ?? "auto";
+        if (forced === "rtl") return true;
+        if (forced === "ltr") return false;
+        return root.rtlLanguages.includes(root.languageCode.split(/[_-]/)[0].toLowerCase());
+    }
+
     TranslationScanner {
         id: scanLanguagesProcess
         translationsDir: root.translationsDir

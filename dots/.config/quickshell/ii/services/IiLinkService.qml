@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Services.Pipewire
+import Quickshell.Services.UPower
 import Quickshell.Wayland
 import qs
 import qs.modules.common
@@ -99,6 +100,14 @@ Singleton {
     // The helper turns the phone's players into MPRIS ones itself; it only needs telling.
     onMediaEnabledChanged: root.send({ op: "config", media: root.mediaEnabled })
     readonly property bool pcLiveEnabled: root.opts?.pcLive?.enable ?? true
+    readonly property bool focusEnabled: root.opts?.focus?.enable ?? true
+    readonly property bool voiceEnabled: root.opts?.voice?.enable ?? true
+    onVoiceEnabledChanged: {
+        if (!root.voiceEnabled) {
+            root._voiceDev = "";
+            root._sentKeys["voiceSummary"] = "";
+        }
+    }
     readonly property bool pcMediaEnabled: root.opts?.pcMedia?.enable ?? true
     onPcMediaEnabledChanged: {
         if (!root.pcMediaEnabled)
@@ -128,6 +137,7 @@ Singleton {
     readonly property string stateDir: FileUtils.trimFileProtocol(`${Directories.state}/user/iilink`)
     readonly property string appIconCacheDir: `${FileUtils.trimFileProtocol(Directories.cache)}/iilink/appicons`
     readonly property string clipThumbCacheDir: `${FileUtils.trimFileProtocol(Directories.cache)}/iilink/clipthumbs`
+    readonly property string voiceAvatarCacheDir: `${FileUtils.trimFileProtocol(Directories.cache)}/iilink/voiceavatars`
 
     // ── Helper lifecycle ────────────────────────────────────────────────
     property bool binaryPresent: false
@@ -730,6 +740,8 @@ Singleton {
         .concat(root.phoneDataEnabled ? ["phoneData"] : [])
         .concat(root.dndEnabled ? ["dnd"] : [])
         .concat(root.pcLiveEnabled ? ["pcLive"] : [])
+        .concat(root.focusEnabled ? ["focus"] : [])
+        .concat(root.voiceEnabled ? ["voice"] : [])
         .concat(root.perfEnabled ? ["perf"] : [])
         .concat(root.mediaEnabled ? ["media"] : [])
         .concat(root.pcMediaEnabled ? ["pcMedia", "pcLyrics"] : [])
@@ -742,7 +754,7 @@ Singleton {
         .concat(root.cameraEnabled ? ["camera"] : [])
         .concat(root.micEnabled ? ["mic"] : [])
         .concat(root.usageEnabled ? ["usage"] : [])
-        .concat(["mirrorRadio"])
+        .concat(["mirrorRadio", "quiet", "have", "fileLane"])
 
     /// True while at least one wireless scrcpy session is active on the shell.
     property bool mirrorActive: false
@@ -2401,22 +2413,37 @@ Singleton {
             items.push({ id: "rec", kind: "record", title: Translation.tr("Recording the screen"),
                 start: Date.now() - Number(rec.seconds ?? 0) * 1000, actions: [{ id: "stop", label: Translation.tr("Stop") }] });
         const pomo = Persistent.states?.timer?.pomodoro;
-        if (pomo?.running || (TimerService.pomodoroSecondsLeft < TimerService.pomodoroLapDuration && TimerService.pomodoroSecondsLeft > 0)) {
+        const pomoActive = Boolean(pomo?.running) || Boolean(pomo?.isBreak) || Number(pomo?.cycle ?? 0) > 0
+            || (TimerService.pomodoroSecondsLeft < TimerService.pomodoroLapDuration && TimerService.pomodoroSecondsLeft > 0);
+        if (pomoActive) {
+            const phase = TimerService.pomodoroLongBreak ? "longBreak" : TimerService.pomodoroBreak ? "break" : "focus";
+            const cycle = Number(TimerService.pomodoroCycle ?? 0);
+            const cycles = Math.max(1, Number(TimerService.cyclesBeforeLongBreak ?? 4));
             const title = TimerService.pomodoroLongBreak ? Translation.tr("Long break") : TimerService.pomodoroBreak ? Translation.tr("Break") : Translation.tr("Focus");
             items.push(pomo?.running
-                ? { id: "pomodoro", kind: "timer", title: title, end: (Number(pomo.start) + TimerService.pomodoroLapDuration) * 1000,
+                ? { id: "pomodoro", kind: "timer", title: title, phase: phase, cycle: cycle, cycles: cycles,
+                    end: (Number(pomo.start) + TimerService.pomodoroLapDuration) * 1000,
                     total: TimerService.pomodoroLapDuration, actions: [{ id: "pause", label: Translation.tr("Pause") }] }
-                : { id: "pomodoro", kind: "timer", title: title, paused: true, remaining: TimerService.pomodoroSecondsLeft,
+                : { id: "pomodoro", kind: "timer", title: title, phase: phase, cycle: cycle, cycles: cycles,
+                    paused: true, remaining: TimerService.pomodoroSecondsLeft,
                     total: TimerService.pomodoroLapDuration, actions: [{ id: "resume", label: Translation.tr("Resume") }] });
         }
         const sw = Persistent.states?.timer?.stopwatch;
+        const swLaps = Array.from(TimerService.stopwatchLaps ?? []).map(t => Math.round(Number(t) * 10));
         if (sw?.running) {
             // `start` is in 10 ms units in a 32-bit int, which overflows; the shell's own
             // subtraction wraps back to the right elapsed time, and so does this.
             const elapsed10 = (((Math.floor(Date.now() / 10) - Number(sw.start)) % 4294967296) + 4294967296) % 4294967296;
             // Rounded to the second, so the topic does not change on every evaluation.
             const start = Math.round((Date.now() - elapsed10 * 10) / 1000) * 1000;
-            items.push({ id: "stopwatch", kind: "stopwatch", title: Translation.tr("Stopwatch"), start: start });
+            items.push({ id: "stopwatch", kind: "stopwatch", title: Translation.tr("Stopwatch"), start: start, laps: swLaps,
+                actions: [{ id: "pause", label: Translation.tr("Pause") }] });
+        } else if (TimerService.stopwatchTime > 0 || swLaps.length > 0) {
+            // Only read when paused, so the 10 ms stopwatch tick never triggers `_liveKey`.
+            const elapsedMs = Math.max(0, Math.round(Number(TimerService.stopwatchTime) * 10));
+            items.push({ id: "stopwatch", kind: "stopwatch", title: Translation.tr("Stopwatch"), paused: true,
+                remaining: Math.round(elapsedMs / 1000), elapsedMs: elapsedMs, laps: swLaps,
+                actions: [{ id: "resume", label: Translation.tr("Resume") }] });
         }
         for (const c of Array.from(TimerService.countdowns ?? [])) {
             if (c.notified)
@@ -2455,6 +2482,117 @@ Singleton {
         onTriggered: root._publish("pcLive", root._liveKey)
     }
 
+    function _flushPcLive(): void {
+        if (root.liveDev === "")
+            return;
+        livePush.stop();
+        root._publish("pcLive", root._liveKey);
+    }
+
+    function _timers(): var {
+        const presets = Array.from(Config.options?.time?.timer?.presets ?? [60, 300, 600, 900, 1800, 3600])
+            .map(Number)
+            .filter(n => Number.isFinite(n) && n > 0);
+        return {
+            t: "timers",
+            presets: presets,
+            pomodoro: {
+                focus: Math.max(60, Number(TimerService.focusTime ?? 1500)),
+                breakTime: Math.max(60, Number(TimerService.breakTime ?? 300)),
+                longBreak: Math.max(60, Number(TimerService.longBreakTime ?? 900)),
+                cycles: Math.max(1, Number(TimerService.cyclesBeforeLongBreak ?? 4))
+            }
+        };
+    }
+
+    /// Focus & timers command from the phone: pomodoro, countdowns, stopwatch, ringing alarm.
+    function _runFocus(arg): string {
+        const a = String(arg?.a ?? "");
+        const op = String(arg?.op ?? arg?.action ?? "");
+        switch (a) {
+        case "pomodoro":
+            if (op === "start" || op === "resume") {
+                if (!TimerService.pomodoroRunning)
+                    TimerService.togglePomodoro();
+            } else if (op === "pause") {
+                if (TimerService.pomodoroRunning)
+                    TimerService.togglePomodoro();
+            } else if (op === "toggle") {
+                TimerService.togglePomodoro();
+            } else if (op === "reset") {
+                TimerService.resetPomodoro();
+            } else if (op === "skip") {
+                TimerService.skipPomodoroPhase();
+            } else {
+                return "bad_arg";
+            }
+            break;
+        case "timerStart": {
+            const seconds = Math.round(Number(arg?.seconds ?? 0));
+            if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 604800)
+                return "bad_arg";
+            TimerService.addCountdownSeconds(seconds, String(arg?.label ?? "").trim());
+            break;
+        }
+        case "timer": {
+            const id = String(arg?.id ?? "");
+            if (!TimerService.findCountdown(id))
+                return "not_found";
+            if (op === "pause") {
+                TimerService.pauseCountdown(id);
+            } else if (op === "resume") {
+                TimerService.resumeCountdown(id);
+            } else if (op === "toggle") {
+                TimerService.toggleCountdown(id);
+            } else if (op === "reset") {
+                TimerService.restartCountdown(id);
+                TimerService.pauseCountdown(id);
+            } else if (op === "extend") {
+                const extra = Math.max(1, Math.round(Number(arg?.seconds ?? 60)));
+                TimerService.extendCountdown(id, extra);
+            } else if (op === "remove") {
+                TimerService.removeCountdown(id);
+            } else {
+                return "bad_arg";
+            }
+            break;
+        }
+        case "stopwatch":
+            if (op === "start" || op === "resume") {
+                if (!TimerService.stopwatchRunning)
+                    TimerService.stopwatchResume();
+            } else if (op === "pause") {
+                if (TimerService.stopwatchRunning)
+                    TimerService.stopwatchPause();
+            } else if (op === "toggle") {
+                TimerService.toggleStopwatch();
+            } else if (op === "reset") {
+                TimerService.stopwatchReset();
+            } else if (op === "lap") {
+                if (TimerService.stopwatchRunning)
+                    TimerService.stopwatchRecordLap();
+            } else {
+                return "bad_arg";
+            }
+            break;
+        case "alarm":
+            if (op === "stop" || op === "dismiss") {
+                if (AlarmService.ringingAlarmIndex !== -1)
+                    AlarmService.stopRinging();
+            } else if (op === "snooze") {
+                if (AlarmService.ringingAlarmIndex !== -1)
+                    AlarmService.snooze(Number(arg?.minutes ?? 0) || undefined);
+            } else {
+                return "bad_arg";
+            }
+            break;
+        default:
+            return "bad_arg";
+        }
+        Qt.callLater(root._flushPcLive);
+        return "";
+    }
+
     /// A button on the phone's live update: {id, action}.
     function _runLive(arg): string {
         const id = String(arg?.id ?? "");
@@ -2465,6 +2603,10 @@ Singleton {
         }
         if (id === "pomodoro" && (action === "pause" || action === "resume")) {
             TimerService.togglePomodoro();
+            return "";
+        }
+        if (id === "stopwatch" && (action === "pause" || action === "resume")) {
+            TimerService.toggleStopwatch();
             return "";
         }
         if (id === "alarm") {
@@ -2479,6 +2621,328 @@ Singleton {
             return "";
         }
         return "not_found";
+    }
+
+    // ── Voice & meeting console ─────────────────────────────────────────
+    // Summary (`voiceSummary`) rides on change while connected for the home card without
+    // waking `Privacy` or transferring avatars. Full state (`voice`) and speaking ids
+    // (`voiceSpeak`, coalesced to ~10/s) run only while a phone subscribes (`sub voice`).
+
+    function _voiceSummary(): var {
+        return {
+            t: "voiceSummary",
+            inCall: DiscordVoice.inVoice,
+            channel: String(DiscordVoice.channel?.name ?? ""),
+            mute: DiscordVoice.muted === true,
+            deaf: DiscordVoice.deafened === true
+        };
+    }
+
+    readonly property string _voiceSummaryKey: (root.phoneConnected && root.voiceEnabled)
+        ? JSON.stringify(root._voiceSummary())
+        : ""
+    on_VoiceSummaryKeyChanged: root._publish("voiceSummary", root._voiceSummaryKey)
+
+    property string _voiceDev: ""
+    readonly property bool _voiceLive: root.voiceEnabled && root._voiceDev !== "" && root.connections[root._voiceDev] !== undefined
+    property string _voiceSentKey: ""
+    property string _voiceSpeakSentKey: ""
+    property string _voicePrevChannelId: ""
+    property var _voicePrevUsers: ({})
+    property var _voiceAvatarFiles: ({})
+    property var _voiceAvatarSent: ({})
+    property var _voiceAvatarQueue: []
+
+    function _voiceAvatarKey(u): string {
+        const id = String(u?.id ?? "");
+        const av = String(u?.avatar ?? "");
+        if (id === "" || av === "")
+            return "";
+        return `${id}_${av}`.replace(/[^A-Za-z0-9_-]/g, "");
+    }
+
+    function _voicePrivacy(): var {
+        const seen = {};
+        const out = [];
+        for (const it of (Privacy.activeItems ?? [])) {
+            const kind = String(it?.kind ?? "");
+            if (kind !== "camera" && kind !== "microphone" && kind !== "screen")
+                continue;
+            const app = String(it?.app ?? "");
+            const k = `${kind}\0${app}`;
+            if (seen[k])
+                continue;
+            seen[k] = true;
+            out.push({ kind: kind, app: app });
+        }
+        return out;
+    }
+
+    function _voiceState(): var {
+        const c = DiscordVoice.channel;
+        const inCall = c !== null;
+        const users = inCall ? (DiscordVoice.participants ?? []).map(u => ({
+            id: String(u?.id ?? ""),
+            name: String(u?.nick || u?.username || "Unknown"),
+            avatar: root._voiceAvatarKey(u),
+            mute: u?.mute === true,
+            deaf: u?.deaf === true,
+            volume: Math.round(Number(u?.volume ?? 100)),
+            localMute: u?.localMute === true
+        })) : [];
+        return {
+            t: "voice",
+            channel: inCall ? { id: String(c.id ?? ""), name: String(c.name || "Voice channel") } : null,
+            since: inCall ? Math.round(Number(DiscordVoice.channelSince ?? 0)) : 0,
+            status: String(DiscordVoice.status ?? ""),
+            backend: String(DiscordVoice.backend ?? ""),
+            self: {
+                id: String(DiscordVoice.selfId ?? ""),
+                mute: DiscordVoice.muted === true,
+                deaf: DiscordVoice.deafened === true,
+                mode: String(DiscordVoice.inputMode ?? ""),
+                pttShortcut: String(DiscordVoice.pttShortcut ?? ""),
+                video: false,
+                canMode: DiscordVoice.supportsInputMode === true,
+                canUserVoice: DiscordVoice.supportsUserVoice === true,
+                canVideo: DiscordVoice.supportsVideo === true
+            },
+            users: users,
+            privacy: root._voicePrivacy()
+        };
+    }
+
+    readonly property string _voiceKey: root._voiceLive ? JSON.stringify(root._voiceState()) : ""
+
+    on_VoiceLiveChanged: {
+        Privacy.externalWanted = root._voiceLive;
+        if (!root._voiceLive) {
+            voicePush.stop();
+            voiceSpeakPush.stop();
+            root._voiceSentKey = "";
+            root._voiceSpeakSentKey = "";
+            root._voicePrevChannelId = "";
+            root._voicePrevUsers = ({});
+            root._voiceAvatarSent = ({});
+            root._voiceAvatarQueue = [];
+            return;
+        }
+        root._sendVoiceNow();
+        root._sendVoiceSpeakNow();
+    }
+
+    on_VoiceKeyChanged: {
+        if (!root._voiceLive || root._voiceKey === "") {
+            voicePush.stop();
+            return;
+        }
+        if (!voicePush.running)
+            voicePush.start();
+    }
+
+    Timer {
+        id: voicePush
+        interval: 40
+        onTriggered: root._sendVoiceNow()
+    }
+
+    function _sendVoiceNow(): void {
+        if (!root._voiceLive)
+            return;
+        const key = root._voiceKey;
+        if (key === "" || key === root._voiceSentKey)
+            return;
+        root._voiceSentKey = key;
+        const payload = JSON.parse(key);
+        root._diffVoiceUsers(payload);
+        root._syncVoiceAvatars(DiscordVoice.participants ?? []);
+        root.sendTo(root._voiceDev, payload);
+    }
+
+    function _diffVoiceUsers(payload): void {
+        const cid = String(payload?.channel?.id ?? "");
+        const prevCid = root._voicePrevChannelId;
+        const prev = root._voicePrevUsers;
+        const next = {};
+        for (const u of (payload?.users ?? [])) {
+            if (u?.id)
+                next[u.id] = u.name;
+        }
+        root._voicePrevChannelId = cid;
+        root._voicePrevUsers = next;
+        // Skip the initial roster snapshot on joining a channel.
+        if (cid === "" || cid !== prevCid)
+            return;
+        const selfId = String(payload?.self?.id ?? "");
+        for (const id of Object.keys(next)) {
+            if (id !== selfId && prev[id] === undefined)
+                root.sendTo(root._voiceDev, { t: "voiceEvent", kind: "join", id: id, name: next[id] });
+        }
+        for (const id of Object.keys(prev)) {
+            if (id !== selfId && next[id] === undefined)
+                root.sendTo(root._voiceDev, { t: "voiceEvent", kind: "leave", id: id, name: prev[id] });
+        }
+    }
+
+    readonly property var _voiceSpeakingIds: {
+        if (!root._voiceLive || !DiscordVoice.inVoice)
+            return [];
+        const ids = [];
+        for (const u of (DiscordVoice.participants ?? [])) {
+            if (u?.speaking === true && u?.id)
+                ids.push(String(u.id));
+        }
+        ids.sort();
+        return ids;
+    }
+    readonly property string _voiceSpeakKey: root._voiceLive ? JSON.stringify(root._voiceSpeakingIds) : ""
+    on_VoiceSpeakKeyChanged: {
+        if (!root._voiceLive || root._voiceSpeakKey === "") {
+            root._voiceSpeakSentKey = "";
+            voiceSpeakPush.stop();
+            return;
+        }
+        if (!voiceSpeakPush.running)
+            voiceSpeakPush.start();
+    }
+    Timer {
+        id: voiceSpeakPush
+        interval: 100
+        onTriggered: root._sendVoiceSpeakNow()
+    }
+    function _sendVoiceSpeakNow(): void {
+        if (!root._voiceLive)
+            return;
+        const key = root._voiceSpeakKey;
+        if (key === "" || key === root._voiceSpeakSentKey)
+            return;
+        root._voiceSpeakSentKey = key;
+        root.sendTo(root._voiceDev, { t: "voiceSpeak", ids: JSON.parse(key) });
+    }
+
+    function _syncVoiceAvatars(users): void {
+        if (!root._voiceLive)
+            return;
+        for (const u of users) {
+            const id = String(u?.id ?? "");
+            const av = String(u?.avatar ?? "");
+            const key = root._voiceAvatarKey(u);
+            if (key === "" || root._phoneHas(root._voiceDev, "voiceAvatar", key) || root._voiceAvatarSent[key])
+                continue;
+            const cached = root._voiceAvatarFiles[key];
+            if (cached) {
+                root._voiceAvatarSent[key] = true;
+                root.send({ op: "sendFile", dev: root._voiceDev, id: 750000 + root._fileSerial++, path: cached, name: key, purpose: "voiceAvatar" });
+                continue;
+            }
+            if (!root._voiceAvatarQueue.some(q => q.key === key) && voiceAvatarFetch.pending?.key !== key)
+                root._voiceAvatarQueue.push({ key: key, url: `https://cdn.discordapp.com/avatars/${id}/${av}.png?size=128` });
+        }
+        root._nextVoiceAvatar();
+    }
+
+    function _nextVoiceAvatar(): void {
+        if (voiceAvatarFetch.running || root._voiceAvatarQueue.length === 0)
+            return;
+        const next = root._voiceAvatarQueue.shift();
+        const dest = `${root.voiceAvatarCacheDir}/${next.key}.png`;
+        voiceAvatarFetch.pending = { key: next.key, dest: dest };
+        voiceAvatarFetch.command = [
+            "sh", "-c",
+            'mkdir -p -m 700 -- "$1" && { [ -s "$2" ] || { curl -fsSL --max-time 8 -o "$2.part" -- "$3" && mv -f -- "$2.part" "$2"; }; }',
+            "sh", root.voiceAvatarCacheDir, dest, next.url
+        ];
+        voiceAvatarFetch.running = true;
+    }
+
+    Process {
+        id: voiceAvatarFetch
+        property var pending: null
+        onExited: exitCode => {
+            const p = voiceAvatarFetch.pending;
+            voiceAvatarFetch.pending = null;
+            if (exitCode === 0 && p) {
+                root._voiceAvatarFiles[p.key] = p.dest;
+                if (root._voiceLive && !root._phoneHas(root._voiceDev, "voiceAvatar", p.key) && !root._voiceAvatarSent[p.key]) {
+                    root._voiceAvatarSent[p.key] = true;
+                    root.send({ op: "sendFile", dev: root._voiceDev, id: 750000 + root._fileSerial++, path: p.dest, name: p.key, purpose: "voiceAvatar" });
+                }
+            }
+            Qt.callLater(root._nextVoiceAvatar);
+        }
+    }
+
+    function _runVoice(arg): string {
+        const a = String(arg?.a ?? "");
+        if (a === "connect") {
+            DiscordVoice.connect();
+            return "";
+        }
+        if (a === "authorize") {
+            if (DiscordVoice.status !== "auth_required")
+                return "unavailable";
+            DiscordVoice.authorize();
+            return "";
+        }
+        switch (a) {
+        case "mute": {
+            if (!DiscordVoice.inVoice)
+                return "unavailable";
+            const target = typeof arg?.on === "boolean" ? arg.on : !DiscordVoice.muted;
+            DiscordVoice.setMuted(target);
+            return "";
+        }
+        case "deaf": {
+            if (!DiscordVoice.inVoice)
+                return "unavailable";
+            const target = typeof arg?.on === "boolean" ? arg.on : !DiscordVoice.deafened;
+            DiscordVoice.setDeafened(target);
+            return "";
+        }
+        case "mode": {
+            if (!DiscordVoice.inVoice)
+                return "unavailable";
+            if (!DiscordVoice.supportsInputMode)
+                return "unsupported";
+            const mode = String(arg?.mode ?? "");
+            if (mode === "PUSH_TO_TALK" || mode === "VOICE_ACTIVITY")
+                DiscordVoice.setInputMode(mode);
+            else if (mode === "")
+                DiscordVoice.togglePushToTalk();
+            else
+                return "bad_arg";
+            return "";
+        }
+        case "userVolume": {
+            if (!DiscordVoice.inVoice)
+                return "unavailable";
+            if (!DiscordVoice.supportsUserVoice)
+                return "unsupported";
+            const uid = String(arg?.id ?? "");
+            const vol = Number(arg?.vol);
+            if (uid === "" || uid === DiscordVoice.selfId || !Number.isFinite(vol))
+                return "bad_arg";
+            DiscordVoice.setUserVolume(uid, Math.max(0, Math.min(200, Math.round(vol))));
+            return "";
+        }
+        case "userMute": {
+            if (!DiscordVoice.inVoice)
+                return "unavailable";
+            if (!DiscordVoice.supportsUserVoice)
+                return "unsupported";
+            const uid = String(arg?.id ?? "");
+            if (uid === "" || uid === DiscordVoice.selfId || typeof arg?.mute !== "boolean")
+                return "bad_arg";
+            DiscordVoice.setUserLocalMute(uid, arg.mute);
+            return "";
+        }
+        case "video":
+            // Official Discord RPC has no video toggle; Vesktop companion does not
+            // expose a video feature yet (`canVideo` is false).
+            return "unsupported";
+        default:
+            return "bad_arg";
+        }
     }
 
     // ── The PC's media on the phone ─────────────────────────────────────
@@ -2706,6 +3170,8 @@ Singleton {
         if (root.pcMediaDev === "" || root._pcArt === "" || root._pcArt === root._pcArtSent)
             return;
         root._pcArtSent = root._pcArt;
+        if (root._phoneHas(root.pcMediaDev, "pcMediaArt", root._pcArt))
+            return;
         root.send({ op: "sendFile", dev: root.pcMediaDev, id: 700000 + root._fileSerial++, path: root._pcArtPath,
             name: root._pcArt, purpose: "pcMediaArt" });
     }
@@ -2923,6 +3389,12 @@ Singleton {
     function _makeLook(): void {
         if (root.lookDev === "" || root._lookName === "" || root._lookName === root._lookSent || lookProc.running)
             return;
+        // The phone kept this one from an earlier connection: only the topic.
+        if (root._phoneHas(root.lookDev, "look", root._lookName)) {
+            root._lookSent = root._lookName;
+            root.sendTo(root.lookDev, { t: "look", wall: root._lookName });
+            return;
+        }
         const out = `${root.lookDir}/${root._lookName}.jpg`;
         const video = /\.(mp4|mkv|webm|mov|avi|gif)$/i.test(root._wallPath);
         // Made once per wallpaper and kept; older ones go.
@@ -2981,6 +3453,10 @@ Singleton {
     function _makeWallSync(): void {
         if (root.wallSyncDev === "" || root._lookName === "" || root._lookName === root._wallSyncSent || wallSyncProc.running)
             return;
+        if (root._phoneHas(root.wallSyncDev, "wallSync", root._lookName)) {
+            root._wallSyncSent = root._lookName;
+            return;
+        }
         const out = `${root.wallSyncDir}/${root._lookName}.jpg`;
         wallSyncProc.out = out;
         wallSyncProc.name = root._lookName;
@@ -3441,12 +3917,68 @@ Singleton {
         running: perfSampler.active && perfSampler.ready
         onTriggered: root.sendTo(root._perfDev, {
             t: "perf",
-            cpu: Object.assign({ name: perfSampler.cpuModel }, perfSampler.cpu),
+            // `power` with MangoHud's own reading when sysfs has none, as the HUD shows it
+            cpu: Object.assign({ name: perfSampler.cpuModel }, perfSampler.cpu, { power: perfSampler.cpuPower }),
             ram: perfSampler.ram,
-            gpu: Object.assign({ name: perfSampler.selectedGpu?.name ?? "" }, perfSampler.gpu),
+            gpu: Object.assign({ name: perfSampler.selectedGpu?.name ?? "" }, perfSampler.gpu, { power: perfSampler.gpuPower }),
             fps: perfSampler.fps,
-            gamemode: perfSampler.gamemode !== null && (perfSampler.gamemode?.length ?? 0) > 0
+            net: perfSampler.net,
+            gamemode: perfSampler.gamemode !== null && (perfSampler.gamemode?.length ?? 0) > 0,
+            battery: root._perfBattery(),
+            game: root._perfGame(),
+            hud: root._perfHud
         })
+    }
+
+    // The phone draws the game overlay's HUD (Settings › Game overlay › Performance), so it
+    // gets the HUD's own choices: which rows, the style, the palette and the thresholds.
+    readonly property var _perfHudKeys: ["showFps", "showFpsAverage", "showFpsLow1", "showFpsLow01",
+        "showFrametime", "showFrametimeGraph", "showFpsCap", "showStutter", "showCpu", "showCpuUsage",
+        "showCpuTemp", "showCpuClock", "showCpuPower", "showRam", "showSwap", "showGpu", "showGpuUsage",
+        "showGpuTemp", "showGpuClock", "showGpuMemClock", "showGpuPower", "showGpuFan", "showVram",
+        "showBattery", "showBatteryEnergy", "showBatteryPower", "showBatteryTime", "showNetwork",
+        "showNetDown", "showNetUp", "showNetJitter", "showNetLoss", "showDetails", "showProcess",
+        "showResolution", "showDriver", "showSessionTime", "showPowerProfile", "showGameMode", "showClock"]
+    readonly property var _perfHud: {
+        const c = Config.options.overlay.perfMonitor;
+        const show = {};
+        for (const key of root._perfHudKeys)
+            show[key] = c[key] === true;
+        return {
+            style: c.style, palette: c.palette, title: c.title, uppercase: c.uppercase,
+            icons: c.showIcons, fpsTarget: c.fpsTarget, colorFps: c.colorCodeFps,
+            hotTemp: c.hotTemp, window: c.statsWindow, cpuName: c.cpuName, gpuName: c.gpuName,
+            show: show
+        };
+    }
+    function _perfBattery() {
+        if (!Battery.available)
+            return null;
+        return {
+            percent: Battery.percentage, charging: Battery.isCharging,
+            energy: Battery.device?.energy ?? 0, rate: Battery.energyRate,
+            timeLeft: Battery.isCharging ? Battery.timeToFull : Battery.timeToEmpty
+        };
+    }
+    // The focused game names itself better than MangoHud's process ("java" for Minecraft).
+    function _perfGame() {
+        const w = GameDetector.focusedWindow;
+        let name = GameDetector.gameFocused && w ? String(w.title || w["class"] || "").trim() : "";
+        if (name.length > 32)
+            name = name.slice(0, 31) + "…";
+        let resolution = "";
+        if (w?.size && (perfSampler.fpsActive || GameDetector.gameFocused)) {
+            const scale = HyprlandData.monitors.find(m => m.id === w.monitor)?.scale ?? 1;
+            resolution = `${Math.round(w.size[0] * scale)}×${Math.round(w.size[1] * scale)}`;
+        }
+        const info = perfSampler.selectedGpu;
+        const profile = PowerProfiles.profile === PowerProfile.PowerSaver ? "saver"
+            : PowerProfiles.profile === PowerProfile.Performance ? "performance" : "balanced";
+        return {
+            name: name, resolution: resolution, running: GameDetector.gameRunning,
+            driverVersion: info?.driverVersion ? String(info.driverVersion) : "",
+            driver: info?.driver ?? "", profile: profile
+        };
     }
 
     // ── The phone as a KDE Connect-like device ──────────────────────────
@@ -4042,6 +4574,10 @@ Singleton {
             root.sendTo(dev, root._audio());
         if (root.deckEnabled)
             root.sendTo(dev, root._deck());
+        if (root.pcLiveEnabled && (root.phoneCaps[dev] ?? []).includes("pcLive"))
+            root.sendTo(dev, root._pcLive());
+        if (root.voiceEnabled)
+            root.sendTo(dev, root._voiceSummary());
     }
 
     function _listPresets(): void {
@@ -4269,11 +4805,76 @@ Singleton {
 
     /// Sends `message` to one phone, or to every connected one with dev "*".
     function sendTo(dev, message): void {
+        const d = String(dev);
         // "pc:<fp>" or "pc:*": the linked PCs (the clipboard decode queue serves both).
-        if (String(dev).startsWith("pc:"))
-            root.send({ op: "pcSend", pc: String(dev).slice(3), m: message });
-        else
-            root.send({ op: "send", dev: String(dev), m: message });
+        if (d.startsWith("pc:")) {
+            root.send({ op: "pcSend", pc: d.slice(3), m: message });
+            return;
+        }
+        if (root._holdable(message)) {
+            if (d === "*") {
+                const ids = Object.keys(root.connections);
+                if (ids.some(id => root._quietDevs[id])) {
+                    for (const id of ids) {
+                        if (root._quietDevs[id])
+                            root._hold(id, message);
+                        else
+                            root.send({ op: "send", dev: id, m: message });
+                    }
+                    return;
+                }
+            } else if (root._quietDevs[d]) {
+                root._hold(d, message);
+                return;
+            }
+        }
+        root.send({ op: "send", dev: d, m: message });
+    }
+
+    // ── Quiet phones ────────────────────────────────────────────────────
+    // A phone whose screen is off (`{"t":"quiet","on":true}`) is not woken for what only
+    // its screen shows: the latest of each such topic waits and goes out when it lights
+    // up again. Calls, notifications, live activity, the PC media (the lock screen and AOD
+    // show it), answers and actions still go at once.
+    readonly property var _quietTopics: ["workspaces", "modes", "presets", "audio", "deck", "state", "clip", "look", "display", "focus", "voiceSummary"]
+    /// dev id -> true while that phone's screen is off
+    property var _quietDevs: ({})
+    /// dev id -> { topic: latest message } held for it
+    property var _held: ({})
+
+    function _holdable(message): bool {
+        // An answer to a request (`clipPull`) is never held: the phone is waiting for it.
+        return root._quietTopics.includes(message?.t ?? "") && !(Number(message?.id ?? 0) > 0);
+    }
+
+    function _hold(dev, message): void {
+        const held = root._held[dev] ?? {};
+        delete held[message.t];
+        held[message.t] = message;
+        root._held[dev] = held;
+    }
+
+    function _setQuiet(dev, on): void {
+        if (on) {
+            root._quietDevs[dev] = true;
+            return;
+        }
+        delete root._quietDevs[dev];
+        const held = root._held[dev] ?? {};
+        delete root._held[dev];
+        for (const t of Object.keys(held))
+            root.send({ op: "send", dev: dev, m: held[t] });
+    }
+
+    // ── Files a phone already has ───────────────────────────────────────
+    // A phone lists in `caps.have` the images it keeps ({look, wallSync, pcMediaArt}: names),
+    // so a reconnect does not send them again.
+    /// dev id -> { kind: [names] }
+    property var phoneHave: ({})
+
+    function _phoneHas(dev, kind, name): bool {
+        const list = root.phoneHave[dev]?.[kind];
+        return Array.isArray(list) && list.includes(name);
     }
 
     function send(obj): void {
@@ -4332,6 +4933,10 @@ Singleton {
             let why;
             if (action === "live")
                 why = root.pcLiveEnabled ? root._runLive(m.arg) : "disabled";
+            else if (action === "focus")
+                why = root.focusEnabled ? root._runFocus(m.arg) : "disabled";
+            else if (action === "voice")
+                why = root.voiceEnabled ? root._runVoice(m.arg) : "disabled";
             else if (action === "pcMedia")
                 why = root.pcMediaEnabled ? root._runPcMedia(m.arg) : "disabled";
             else if (action === "pcLyrics")
@@ -4363,6 +4968,9 @@ Singleton {
         case "ping":
             root.sendTo(dev, { t: "pong", id: Number(m.id ?? 0) });
             return;
+        case "quiet":
+            root._setQuiet(dev, m.on === true);
+            return;
         case "sub":
             if (m.what === "perf")
                 root._perfDev = m.on === true ? dev : (root._perfDev === dev ? "" : root._perfDev);
@@ -4370,6 +4978,8 @@ Singleton {
                 root._displayDev = m.on === true ? dev : (root._displayDev === dev ? "" : root._displayDev);
             else if (m.what === "focus")
                 root._focusDev = m.on === true ? dev : (root._focusDev === dev ? "" : root._focusDev);
+            else if (m.what === "voice")
+                root._voiceDev = (m.on === true && root.voiceEnabled) ? dev : (root._voiceDev === dev ? "" : root._voiceDev);
             else if (m.what === "clipHistory") {
                 root._clipHistoryDev = (m.on === true && root.clipHistoryEnabled)
                     ? dev
@@ -4385,6 +4995,8 @@ Singleton {
                 root._displayDev = "";
             else if (m.what === "focus" && root._focusDev === dev)
                 root._focusDev = "";
+            else if (m.what === "voice" && root._voiceDev === dev)
+                root._voiceDev = "";
             else if (m.what === "clipHistory" && root._clipHistoryDev === dev) {
                 root._clipHistoryDev = "";
                 root._clipHistoryDirtyWhileLocked = false;
@@ -4439,9 +5051,16 @@ Singleton {
                 root._savePhoneUsage(dev, m);
             return;
         case "caps": {
+            // Before the caps: assigning them wakes the senders that read it.
+            const have = Object.assign({}, root.phoneHave);
+            have[dev] = (m.have && typeof m.have === "object") ? m.have : {};
+            root.phoneHave = have;
+            const prevCaps = root.phoneCaps[dev] ?? [];
             const next = Object.assign({}, root.phoneCaps);
             next[dev] = Array.isArray(m.caps) ? m.caps.map(String) : [];
             root.phoneCaps = next;
+            if (root.pcLiveEnabled && !prevCaps.includes("pcLive") && next[dev].includes("pcLive") && dev !== root.liveDev)
+                root.sendTo(dev, root._pcLive());
             const takes = next[dev].includes("shots");
             if (Boolean(root._shotsReceivers[dev]) !== takes) {
                 const shots = Object.assign({}, root._shotsReceivers);
@@ -4516,6 +5135,8 @@ Singleton {
                 root._sendWallSave(dev);
             else if (m.what === "modeActions" && root.remoteEnabled)
                 root.sendTo(dev, root._modeCatalog());
+            else if (m.what === "timers" && root.focusEnabled)
+                root.sendTo(dev, root._timers());
             return;
         }
     }
@@ -4589,11 +5210,18 @@ Singleton {
             const next = Object.assign({}, root.connections);
             delete next[ev.dev];
             root.connections = next;
+            delete root._quietDevs[ev.dev];
+            delete root._held[ev.dev];
+            const had = Object.assign({}, root.phoneHave);
+            delete had[ev.dev];
+            root.phoneHave = had;
             const caps = Object.assign({}, root.phoneCaps);
             delete caps[ev.dev];
             root.phoneCaps = caps;
             if (root._perfDev === ev.dev)
                 root._perfDev = "";
+            if (root._voiceDev === ev.dev)
+                root._voiceDev = "";
             if (root._clipHistoryDev === ev.dev) {
                 root._clipHistoryDev = "";
                 root._clipHistoryDirtyWhileLocked = false;
@@ -4723,7 +5351,50 @@ Singleton {
             return root.phonePerfDev === "" ? "no phone reports its load" : `watching ${root.phonePerfDev}: ${root._phonePerfWatchers}`;
         }
 
+        function focusState(): string {
+            return JSON.stringify({
+                caps: root.capabilities,
+                timers: root._timers(),
+                pcLive: root._pcLive()
+            });
+        }
+
+        function focusRun(argJson: string): string {
+            let arg = {};
+            try {
+                arg = JSON.parse(argJson || "{}");
+            } catch (e) {
+                return "bad_json";
+            }
+            const why = root.focusEnabled ? root._runFocus(arg) : "disabled";
+            return why === "" ? "ok" : why;
+        }
+
+        function voiceState(): string {
+            return JSON.stringify({
+                caps: root.capabilities,
+                summary: root._voiceSummary(),
+                voice: root._voiceState(),
+                speaking: root._voiceSpeakingIds,
+                subscribed: root._voiceDev
+            });
+        }
+
+        function voiceRun(argJson: string): string {
+            let arg = {};
+            try {
+                arg = JSON.parse(argJson || "{}");
+            } catch (e) {
+                return "bad_json";
+            }
+            const why = root.voiceEnabled ? root._runVoice(arg) : "disabled";
+            return why === "" ? "ok" : why;
+        }
+
         function status(): string {
+            const held = {};
+            for (const d of Object.keys(root._held))
+                held[d] = Object.keys(root._held[d]);
             return JSON.stringify({
                 enabled: root.enabled,
                 running: root.running,
@@ -4736,6 +5407,10 @@ Singleton {
                 mirrorsNotifications: root.mirrorsNotifications,
                 phoneStatus: root.phoneStatus,
                 phonePerf: { dev: root.phonePerfDev, watchers: root._phonePerfWatchers, last: root.phonePerf },
+                // Phones with the screen off, and the topics held for each until it comes on.
+                quiet: Object.keys(root._quietDevs),
+                held: held,
+                have: root.phoneHave,
                 error: root.lastError
             });
         }

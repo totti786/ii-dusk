@@ -58,6 +58,8 @@ Singleton {
         id: grabLoader
 
         PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: grabWindow
             screen: Quickshell.screens.find(screen => screen.name === Hyprland.focusedMonitor?.name)
                 ?? Quickshell.screens[0]

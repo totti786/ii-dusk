@@ -2,7 +2,9 @@ pragma Singleton
 import qs.modules.common
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
+import qs.services
 
 Singleton {
     id: root
@@ -283,6 +285,8 @@ Singleton {
             id: idleInhibitor
             enabled: root.inhibit && root._surfaceReady
             window: PanelWindow {
+                contentItem.LayoutMirroring.enabled: Translation.isRtl
+                contentItem.LayoutMirroring.childrenInherit: true
                 implicitWidth: 0
                 implicitHeight: 0
                 color: "transparent"
@@ -301,6 +305,80 @@ Singleton {
                 mask: Region {
                     item: null
                 }
+            }
+        }
+    }
+
+    // `qs -c ii ipc call idle status` prints true or false. The lid binds in the Hyprland config
+    // read it, so a closed lid does not suspend while keep-awake is on. Asking the shell, rather
+    // than a flag left on disk, means a crashed shell cannot leave a stale answer behind: the call
+    // fails and the lid suspends.
+    IpcHandler {
+        target: "idle"
+
+        function status(): string {
+            return root.inhibit ? "true" : "false";
+        }
+        function toggle(): void {
+            root.toggleInhibit();
+        }
+        function on(): void {
+            root.toggleInhibit(true);
+        }
+        function off(): void {
+            root.toggleInhibit(false);
+        }
+    }
+
+    // What a closed lid should do right now. Keep-awake turns "suspend" into "blank"; a setting of
+    // "nothing" is respected even then. The Hyprland bind carries the answer out, and treats no
+    // answer (shell not running) as "suspend", so a dead shell cannot leave the lid unhandled.
+    IpcHandler {
+        target: "lid"
+
+        function action(): string {
+            const wanted = Battery.onAc ? Config.options.lid.onAc : Config.options.lid.onBattery;
+            if (wanted === "nothing" || wanted === "blank")
+                return wanted;
+            return root.inhibit ? "blank" : "suspend";
+        }
+    }
+
+    // ── hypridle settings ──────────────────────────────────────────────────────────
+    // Settings > Power & Battery > When idle. hypridle only reads its file at start, so a change
+    // rewrites the file and restarts it. The script does nothing when the text is unchanged,
+    // which is why the settings loading at login (a change from the defaults) costs nothing.
+    function idleSettings() {
+        const o = Config.options.hypridle;
+        const step = x => ({ enable: x.enable, seconds: x.seconds });
+        return {
+            dim: step(o.dim),
+            lowerBrightness: step(o.lowerBrightness),
+            screenOffLocked: step(o.screenOffLocked),
+            lock: step(o.lock),
+            screenOff: step(o.screenOff),
+            suspend: { enable: o.suspend.enable, seconds: o.suspend.seconds, onlyOnBattery: o.suspend.onlyOnBattery }
+        };
+    }
+    readonly property string idleSettingsJson: JSON.stringify(root.idleSettings())
+
+    onIdleSettingsJsonChanged: idleApplyTimer.restart()
+
+    Timer {
+        id: idleApplyTimer
+        interval: 1500
+        onTriggered: {
+            idleApplyProc.command = ["python3", Quickshell.shellPath("scripts/idle/hypridle_apply.py"), root.idleSettingsJson];
+            idleApplyProc.running = true;
+        }
+    }
+
+    Process {
+        id: idleApplyProc
+        stderr: StdioCollector {
+            onStreamFinished: {
+                if (text.trim().length > 0)
+                    console.warn("[Idle] hypridle_apply:", text.trim());
             }
         }
     }

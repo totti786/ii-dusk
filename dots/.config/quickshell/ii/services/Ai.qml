@@ -1697,6 +1697,7 @@ Singleton {
     readonly property AiTimeIntegration timeIntegration: AiTimeIntegration {}
     /** Read-only live system and keybind DTOs; never a shell fallback. */
     readonly property AiSystemIntegration systemIntegration: AiSystemIntegration {}
+    readonly property AiRunningIntegration runningIntegration: AiRunningIntegration {}
     /** Parameterized ESPN reads; never touches the sports widget state. */
     readonly property AiSportsIntegration sportsIntegration: AiSportsIntegration {}
     /** Read-only Gmail metadata/body bridge with correlated helper calls. */
@@ -1929,6 +1930,7 @@ Singleton {
             "song_identify": call => root.toolSongIdentify(call),
             "system_get_status": call => root.toolSystemGetStatus(call),
             "system_health": call => root.toolSystemHealth(call),
+            "running_now": call => root.toolRunningNow(call),
             "keybinds_search": call => root.toolKeybindsSearch(call),
             "sports_search_games": call => root.toolSports(call, false),
             "sports_refresh_games": call => root.toolSports(call, true),
@@ -2778,6 +2780,12 @@ Singleton {
     IpcHandler {
         target: "ai"
 
+        // Same as the sidebar's /tools command: none, safe or all for this chat.
+        function setTools(exposure: string): string {
+            root.setFunctionExposure(exposure, false);
+            return root.functionExposure;
+        }
+
         function sessionStatus(): string {
             return JSON.stringify({current: root.sessions.currentId, restored: root.startupSessionRestored,
                 last: Persistent.states?.ai?.lastSessionId ?? "", saved: root.sessions.index.length});
@@ -2990,6 +2998,14 @@ Singleton {
 
         function health(): string {
             return JSON.stringify(root.systemIntegration.health());
+        }
+
+        function orbContext(): string {
+            return AiCompanionUi.voice.contextText();
+        }
+
+        function running(): string {
+            return JSON.stringify(root.runningIntegration.snapshot());
         }
 
         function windows(): string {
@@ -6476,6 +6492,14 @@ Singleton {
             status: "success",
             summary: Translation.tr("System health read"),
             data: root.systemIntegration.health()
+        };
+    }
+
+    function toolRunningNow(call: var): var {
+        return {
+            status: "success",
+            summary: Translation.tr("Running state read"),
+            data: root.runningIntegration.snapshot()
         };
     }
 

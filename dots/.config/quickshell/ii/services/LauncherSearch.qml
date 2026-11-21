@@ -1298,22 +1298,78 @@ Singleton {
         return root.createToolResult(entry);
     }
 
+    // A row's switch follows the mode/routine it stands for: toggling one from
+    // Search (the overview stays open) or a trigger firing redraws the rows.
+    Connections {
+        target: root.query.length > 0 && Config.options.modes.enable ? Modes : null
+        function onModeStarted() { root._scheduleResultsUpdate(); }
+        function onModeEnded() { root._scheduleResultsUpdate(); }
+        function onRoutineStarted() { root._scheduleResultsUpdate(); }
+        function onRoutineEnded() { root._scheduleResultsUpdate(); }
+    }
+
+    // "mode"/"modo"/"routine"/"rotina" (and plurals) list every entry of that
+    // kind; anything else matches names. Active ones come first.
+    function _modeKeywordHit(query: string, words: var): bool {
+        return words.some(word => word.startsWith(query) || query.startsWith(word));
+    }
+
     function modeMatches(queryText: string): var {
         if (!Config.options.modes.enable)
             return [];
         const query = String(queryText ?? "").trim().toLocaleLowerCase();
         if (query.length < 2)
             return [];
-        return Array.from(Modes.modes ?? []).filter(mode => [mode?.name, mode?.id, mode?.description].join(" ").toLocaleLowerCase().includes(query));
+        const listAll = query.length >= 3 && root._modeKeywordHit(query, ["modes", "modos", "mode", "modo"]);
+        return Array.from(Modes.modes ?? [])
+            .filter(mode => listAll || [mode?.name, mode?.id, mode?.description].join(" ").toLocaleLowerCase().includes(query))
+            .sort((a, b) => (Modes.activeModeId === b?.id) - (Modes.activeModeId === a?.id));
     }
 
     function createModeResult(mode: var): var {
-        const active = Modes.activeModeId === String(mode?.id ?? "");
+        const id = String(mode?.id ?? "");
+        const active = Modes.activeModeId === id;
+        const description = String(mode?.description ?? "");
         return resultComp.createObject(null, {
-            key: "mode:" + String(mode?.id ?? ""), name: String(mode?.name ?? ""), type: Translation.tr("Mode"),
-            verb: active ? Translation.tr("Turn off") : Translation.tr("Activate"), iconName: String(mode?.icon ?? "routine"),
-            iconType: LauncherSearchResult.IconType.Material, comment: String(mode?.description ?? ""), keepOverviewOpen: true,
-            execute: () => Modes.toggle(String(mode?.id ?? ""))
+            key: "mode:" + id, name: String(mode?.name ?? ""),
+            type: active ? Translation.tr("Mode · active") : Translation.tr("Mode"),
+            verb: active ? Translation.tr("Turn off") : Translation.tr("Activate"),
+            iconName: String(mode?.icon ?? "routine"), iconType: LauncherSearchResult.IconType.Material,
+            comment: active
+                ? (description.length > 0 ? Translation.tr("Active · %1").arg(description) : Translation.tr("Active now"))
+                : description,
+            keepOverviewOpen: true, controlKind: "switch", controlValue: active,
+            execute: () => Modes.toggle(id)
+        });
+    }
+
+    function routineMatches(queryText: string): var {
+        if (!Config.options.modes.enable)
+            return [];
+        const query = String(queryText ?? "").trim().toLocaleLowerCase();
+        if (query.length < 2)
+            return [];
+        const listAll = query.length >= 3 && root._modeKeywordHit(query, ["routines", "rotinas", "routine", "rotina"]);
+        return Array.from(Modes.routines ?? [])
+            .filter(routine => listAll || [routine?.name, routine?.id].join(" ").toLocaleLowerCase().includes(query))
+            .sort((a, b) => Modes.isRoutineRunning(b?.id) - Modes.isRoutineRunning(a?.id));
+    }
+
+    function createRoutineResult(routine: var): var {
+        const id = String(routine?.id ?? "");
+        // A `while` routine holds a state until stopped: it gets a switch. A
+        // `once` routine just runs its actions, so it is a plain "Run" row.
+        const holds = routine?.kind !== "once";
+        const running = holds && Modes.isRoutineRunning(id);
+        return resultComp.createObject(null, {
+            key: "routine:" + id, name: String(routine?.name ?? id),
+            type: running ? Translation.tr("Routine · running") : Translation.tr("Routine"),
+            verb: running ? Translation.tr("Stop") : Translation.tr("Run"),
+            iconName: String(routine?.icon ?? "bolt"), iconType: LauncherSearchResult.IconType.Material,
+            comment: running ? Translation.tr("Running now")
+                : (holds ? Translation.tr("Runs until stopped") : Translation.tr("Runs once")),
+            keepOverviewOpen: holds, controlKind: holds ? "switch" : "", controlValue: running,
+            execute: () => holds ? Modes.toggleRoutine(id) : Modes.runRoutine(id, "manual")
         });
     }
 
@@ -1373,6 +1429,81 @@ Singleton {
             iconName: "bluetooth", iconType: LauncherSearchResult.IconType.Material,
             comment: String(device?.address ?? ""), keepOverviewOpen: true,
             execute: () => { if (device?.connected) device.disconnect(); else device.connect(); }
+        });
+    }
+
+    // Phone services are lazy singletons: nothing here touches them until a
+    // query has passed the config gates, so a shell without a phone never
+    // creates them from Search.
+    property bool _phoneAppsWatched: false
+    Connections {
+        target: root._phoneAppsWatched ? PhoneScrcpyService : null
+        function onAppsChanged() {
+            if (root.query.length > 0)
+                root._scheduleResultsUpdate();
+        }
+    }
+    Connections {
+        target: root._phoneAppsWatched ? KdeConnectService : null
+        function onAdbReachableChanged() {
+            if (root.query.length > 0)
+                root._scheduleResultsUpdate();
+        }
+    }
+
+    function phoneAppMatches(queryText: string): var {
+        if (!(Config.options.search.phoneApps?.enable ?? true) || Config.options.policies.phone === 0)
+            return [];
+        const query = String(queryText ?? "").trim().toLocaleLowerCase();
+        if (query.length < 2)
+            return [];
+        root._phoneAppsWatched = true;
+        if (!KdeConnectService.serviceEnabled || !KdeConnectService.adbReachable || !PhoneScrcpyService.appModeSupported)
+            return [];
+        const apps = PhoneScrcpyService.apps ?? [];
+        if (apps.length === 0) {
+            // The list normally arrives when ADB comes up; ask once if it has not.
+            if (!PhoneScrcpyService.appsLoading && PhoneScrcpyService.appsError === "")
+                PhoneScrcpyService.refreshApps();
+            return [];
+        }
+        const ranked = [];
+        for (const app of apps) {
+            const name = String(app?.name ?? "").toLocaleLowerCase();
+            const pkg = String(app?.package ?? "").toLocaleLowerCase();
+            if (!pkg)
+                continue;
+            let rank = -1;
+            if (name.startsWith(query))
+                rank = 0;
+            else if (name.split(/[\s._-]+/).some(word => word.startsWith(query)))
+                rank = 1;
+            else if (name.includes(query))
+                rank = 2;
+            else if (pkg.split(".").pop().startsWith(query))
+                rank = 3;
+            if (rank >= 0)
+                ranked.push({ app, rank });
+        }
+        ranked.sort((a, b) => a.rank - b.rank || String(a.app.name).localeCompare(String(b.app.name)));
+        const limit = Math.max(0, Config.options.search.phoneApps?.maxResults ?? 5);
+        return ranked.slice(0, limit).map(entry => entry.app);
+    }
+
+    function createPhoneAppResult(app: var): var {
+        const pkg = String(app.package);
+        const iconPath = PhoneAppIconService.iconFor(pkg);
+        const device = KdeConnectService.activeDeviceDisplayName;
+        return resultComp.createObject(null, {
+            key: "phoneapp:" + pkg,
+            name: String(app.name || pkg),
+            type: Translation.tr("Phone app"),
+            comment: device ? Translation.tr("Android app on %1").arg(device) : Translation.tr("Android app"),
+            verb: Translation.tr("Open"),
+            iconName: iconPath ? "file://" + iconPath : "android",
+            iconType: iconPath ? LauncherSearchResult.IconType.Image : LauncherSearchResult.IconType.Material,
+            fallbackIconName: "android",
+            execute: () => PhoneScrcpyService.openAppInMirror(pkg)
         });
     }
 
@@ -3453,6 +3584,9 @@ Singleton {
 
         const appQuery = StringUtils.cleanPrefix(root.query, Config.options.search.prefix.app);
         const appResultObjects = root.matchApplications(appQuery).slice(0, 60).map(entry => root.createAppResultObject(entry));
+        const phoneAppResultObjects = queryHasPrefix
+            ? []
+            : root.phoneAppMatches(root.query).map(app => root.createPhoneAppResult(app));
         const browserSiteSearchActive = !queryHasPrefix;
         const browserSiteResultObjects = browserSiteSearchActive
             ? BrowserSites.matchSites(root.query).map(site => root.createBrowserSiteResult(site))
@@ -3649,6 +3783,9 @@ Singleton {
         //////////////// Apps //////////////////
         result = result.concat(appResultObjects);
 
+        //////////////// Phone apps //////////////////
+        result = result.concat(phoneAppResultObjects);
+
         //////////////// Sites //////////////////
         result = result.concat(browserSiteResultObjects);
 
@@ -3801,6 +3938,8 @@ Singleton {
         ////////// Modes & routines ////////////
         for (const mode of root.modeMatches(root.query))
             result.push(root.createModeResult(mode));
+        for (const routine of root.routineMatches(root.query))
+            result.push(root.createRoutineResult(routine));
 
         ////////// Bluetooth devices ///////////
         for (const device of root.bluetoothMatches(root.query))

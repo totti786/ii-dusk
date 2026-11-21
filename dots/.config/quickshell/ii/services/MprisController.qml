@@ -27,7 +27,7 @@ Singleton {
 
 	function updatePlayersList() {
 		allPlayers = Mpris.players.values;
-		players = Mpris.players.values.filter(player => isRealPlayer(player));
+		players = Mpris.players.values.filter(player => player && isRealPlayer(player));
 		localPlayer = allPlayers.find(player => isLocalPlayer(player)) ?? null;
 		applicationPlayers = players.filter(player => !isLocalPlayer(player));
 		if (localPlayerSelected && !localPlayer) {
