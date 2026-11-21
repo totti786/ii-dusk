@@ -1,0 +1,14 @@
+module qs.modules.ii.modes.tabs
+ActivityTab 1.0 ActivityTab.qml
+DefinitionBoard 1.0 DefinitionBoard.qml
+DefinitionEditor 1.0 DefinitionEditor.qml
+DefinitionHero 1.0 DefinitionHero.qml
+DefinitionTile 1.0 DefinitionTile.qml
+ModesConfirmSheet 1.0 ModesConfirmSheet.qml
+ModesSettingsPage 1.0 ModesSettingsPage.qml
+ModesTab 1.0 ModesTab.qml
+RoutinesTab 1.0 RoutinesTab.qml
+TaskRunSheet 1.0 TaskRunSheet.qml
+TemplatePreviewSheet 1.0 TemplatePreviewSheet.qml
+TemplateTile 1.0 TemplateTile.qml
+# quickshell-generated qmldir

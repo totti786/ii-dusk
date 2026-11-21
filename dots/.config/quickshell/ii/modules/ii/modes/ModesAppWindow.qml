@@ -14,6 +14,8 @@ import qs.modules.ii.clock.components
  * the clock and EasyEffects open at, so the whole-app windows read as one family.
  */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
