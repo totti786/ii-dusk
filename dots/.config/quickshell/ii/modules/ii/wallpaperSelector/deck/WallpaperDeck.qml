@@ -21,6 +21,8 @@ import Quickshell.Hyprland
  * light mode, one screen) are the shell's own, shared with the grid picker.
  */
 PanelWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: win
 
     anchors {

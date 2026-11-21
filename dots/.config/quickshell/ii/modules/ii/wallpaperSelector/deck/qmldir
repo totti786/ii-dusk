@@ -1,0 +1,4 @@
+module qs.modules.ii.wallpaperSelector.deck
+DeckCard 1.0 DeckCard.qml
+WallpaperDeck 1.0 WallpaperDeck.qml
+# quickshell-generated qmldir

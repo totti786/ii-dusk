@@ -34,6 +34,8 @@ Scope {
     Component {
         id: gridComponent
         PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
                 id: panelWindow
                 screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
                 readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
