@@ -298,7 +298,7 @@ Item {
                 }
             }
 
-            StyledText {
+            AnimatedStyledText {
                 id: titleText
                 anchors.left: ringSlot.right
                 anchors.right: parent.right

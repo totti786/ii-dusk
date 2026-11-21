@@ -42,6 +42,15 @@ Item {
     property color color: Appearance.colors.colPrimary
     /** Off: the eyes sit still and nothing polls. */
     property bool live: true
+    /** On: the eyes follow `aimX`/`aimY` (a unit-ish vector) instead of the pointer. */
+    property bool manualGaze: false
+    /** Eyes closed (asleep). */
+    property bool shut: false
+    property real aimX: 0
+    property real aimY: 0
+    onManualGazeChanged: root.aim()
+    onAimXChanged: if (manualGaze) root.aim()
+    onAimYChanged: if (manualGaze) root.aim()
 
     readonly property bool still: !Config.options.appearance.reduceMotion
     readonly property string face: root.personality && !root.error ? root.mood : ""
@@ -66,6 +75,11 @@ Item {
     }
 
     function aim() {
+        if (root.manualGaze) {
+            root.gazeX = root.aimX;
+            root.gazeY = root.aimY;
+            return;
+        }
         const mon = root.monitor?.lastIpcObject;
         const c = root.mapToItem(null, root.width / 2, root.height / 2);
         const dx = CursorGaze.x - ((mon?.x ?? 0) + c.x);
@@ -164,7 +178,7 @@ Item {
                         root.face === "delighted" ? 0.22 : root.face === "startled" ? 0.2
                         : root.face === "curious" ? 0.19 : root.squint ? 0.18
                         : root.working || root.listening ? 0.2 : 0.15))
-                    readonly property real eyeH: root.blinking ? 3
+                    readonly property real eyeH: (root.blinking || root.shut) ? 3
                         : root.error ? Math.round(root.diameter * 0.1)
                         : root.face === "startled" ? Math.round(root.diameter * 0.38)
                         : root.face === "delighted" ? Math.round(root.diameter * 0.1)

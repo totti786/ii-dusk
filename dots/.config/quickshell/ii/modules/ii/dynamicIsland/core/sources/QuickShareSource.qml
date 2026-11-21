@@ -16,5 +16,4 @@ ContinuousSource {
     activityId: "quickShare"
 
     condition: QuickShareService.present
-    onConditionChanged: console.log("[QuickShare] island activity", source.condition ? "on" : "off", QuickShareService.visibility)
 }
