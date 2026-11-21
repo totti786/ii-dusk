@@ -1,0 +1,7 @@
+module qs.modules.ii.topLayer.osd
+OsdConnectValueIndicator 1.0 OsdConnectValueIndicator.qml
+OsdDrop 1.0 OsdDrop.qml
+OsdDropPositioner 1.0 OsdDropPositioner.qml
+OsdDropState 1.0 OsdDropState.qml
+OsdProgramSlider 1.0 OsdProgramSlider.qml
+# quickshell-generated qmldir

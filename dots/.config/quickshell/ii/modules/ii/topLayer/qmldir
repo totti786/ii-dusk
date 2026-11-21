@@ -1,0 +1,4 @@
+module qs.modules.ii.topLayer
+TopLayer 1.0 TopLayer.qml
+TopLayerPanel 1.0 TopLayerPanel.qml
+# quickshell-generated qmldir
