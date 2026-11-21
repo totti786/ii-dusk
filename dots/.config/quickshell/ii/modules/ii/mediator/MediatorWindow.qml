@@ -10,6 +10,8 @@ import qs.modules.ii.clock.components
 
 /** The mediator as an ordinary floating window (see hyprland/rules.lua). */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
