@@ -1,0 +1,4 @@
+module qs.modules.ii.sessionScreen
+SessionActionButton 1.0 SessionActionButton.qml
+SessionScreen 1.0 SessionScreen.qml
+# quickshell-generated qmldir

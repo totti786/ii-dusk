@@ -62,6 +62,8 @@ Scope {
         }
 
         sourceComponent: PanelWindow { // Session menu
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: sessionRoot
             visible: sessionLoader.active
             property string subtitle: sessionLock.buttonText
