@@ -14,6 +14,8 @@ import Quickshell.Io
 import Quickshell.Wayland
 
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
     visible: GlobalStates.videoEditorOpen
     

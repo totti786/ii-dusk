@@ -22,6 +22,8 @@ Scope {
         active: GlobalStates.videoEditorPopupOpen
 
         component: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: popupWindow
             color: "transparent"
             visible: Quickshell.screens.length > 0
