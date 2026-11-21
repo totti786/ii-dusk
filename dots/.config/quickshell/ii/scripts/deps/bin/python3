@@ -1,0 +1,38 @@
+#!/bin/sh
+# python3 for the shell's own scripts.
+#
+# The shell keeps every Python dependency in one environment ($ILLOGICAL_IMPULSE_VIRTUAL_ENV, default
+# ~/.local/state/quickshell/.venv) and nothing in the system site-packages. This directory comes first on
+# PATH, so a bare `python3 script.py` or a `#!/usr/bin/env python3` script that lives in the shell's own
+# trees runs in that environment. Anything else (khal, glib-mkenums, your own scripts, `python3 -m pip`)
+# gets the system interpreter exactly as before, so putting this on PATH breaks nothing outside the shell.
+#
+#   a script inside ~/.config/quickshell, ~/.config/hypr, ~/.local/share/quickshell-ii   -> the venv
+#   -c code, or code on stdin (the shell's inline snippets)                              -> the venv
+#   a script anywhere else, or -m module                                                  -> /usr/bin/python3
+venv="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$HOME/.local/state/quickshell/.venv}"
+venv="${venv#\~/}"; case "$venv" in /*) ;; *) venv="$HOME/$venv" ;; esac
+py="$venv/bin/python"
+[ -x "$py" ] || exec /usr/bin/python3 "$@"
+
+target=""
+skip=0
+for arg in "$@"; do
+    if [ "$skip" = 1 ]; then skip=0; continue; fi
+    case "$arg" in
+        -c) exec "$py" "$@" ;;                     # inline code
+        -m) exec /usr/bin/python3 "$@" ;;          # a module run: not ours
+        -W|-X) skip=1 ;;                           # options that take a value
+        -) exec "$py" "$@" ;;                      # code on stdin
+        -*) ;;                                     # other flags (-I, -E, -u, -B, ...)
+        *) target="$arg"; break ;;
+    esac
+done
+[ -z "$target" ] && exec "$py" "$@"                # no script at all: interactive or stdin
+
+resolved=$(readlink -f -- "$target" 2>/dev/null || printf '%s' "$target")
+case "$resolved" in
+    "$HOME"/.config/quickshell/*|"$HOME"/.config/hypr/*|"$HOME"/.local/share/quickshell-ii/*|"$HOME"/.local/state/quickshell/*)
+        exec "$py" "$@" ;;
+esac
+exec /usr/bin/python3 "$@"

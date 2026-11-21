@@ -1,0 +1,2 @@
+# Installed with --no-deps: its only unmet requirement is tflite-runtime, unused with the onnx backend.
+openwakeword==0.6.0
