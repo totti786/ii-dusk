@@ -13,9 +13,9 @@ import sys
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
-# The overlap fix needs fontTools + skia-pathops, which live in this private venv. Without the
+# The overlap fix needs fontTools + skia-pathops, which live in the shell's venv. Without the
 # venv the fonts are kept as quran.com serves them, and the reader shows white blobs on some glyphs.
-VENV_PY = os.path.expanduser("~/.local/state/ii-quran/venv/bin/python3")
+VENV_PY = os.path.join(os.path.expanduser(os.environ.get("ILLOGICAL_IMPULSE_VIRTUAL_ENV") or "~/.local/state/quickshell/.venv"), "bin/python3")
 
 
 def ensure_venv():
