@@ -16,6 +16,8 @@ import qs.modules.ii.clock.components
  * syncing) and "Leave" is the only thing that ends it.
  */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
