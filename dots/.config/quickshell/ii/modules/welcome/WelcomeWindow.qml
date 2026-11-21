@@ -13,6 +13,8 @@ import qs.modules.common.quickToggleDialogs.bluetoothDevices
 import qs.modules.common.quickToggleDialogs.volumeMixer
 
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     // Hidden, not closed, while the guide is stepped aside: the flow, the page
