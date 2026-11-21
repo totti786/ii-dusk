@@ -49,14 +49,16 @@ FocusScope {
         { id: "today", icon: "wb_sunny", label: Translation.tr("Today") },
         { id: "tasks", icon: "checklist", label: Translation.tr("Tasks") },
         { id: "focus", icon: "psychiatry", label: Translation.tr("Focus") },
-        { id: "stats", icon: "monitoring", label: Translation.tr("Stats") }
+        { id: "stats", icon: "monitoring", label: Translation.tr("Stats") },
+        { id: "ranks", icon: "emoji_events", label: Translation.tr("Ranks") }
     ]
     readonly property var tabIds: root.tabs.map(tab => tab.id)
     readonly property var tabComponents: ({
         today: todayComponent,
         tasks: tasksComponent,
         focus: focusComponent,
-        stats: statsComponent
+        stats: statsComponent,
+        ranks: ranksComponent
     })
     readonly property var tabActions: ({
         today: { label: Translation.tr("New habit"), symbol: "add_task" },
@@ -69,7 +71,8 @@ FocusScope {
             ? String(GritService.todayHabitsDone) + "/" + String(GritService.todayHabitsTotal) : "",
         tasks: GritService.openTaskCount > 0 ? String(GritService.openTaskCount) : "",
         focus: GritService.timerRunning ? "•" : "",
-        stats: ""
+        stats: "",
+        ranks: ""
     })
 
     property string currentTab: ""
@@ -78,7 +81,7 @@ FocusScope {
 
     // ── Sync at a glance ────────────────────────────────────────────────
     readonly property string syncIcon: {
-        if (!GritService.syncConfigured)
+        if (!GritService.signedIn)
             return "cloud_off";
         switch (GritService.syncStatus) {
         case "synced": return "cloud_done";
@@ -91,8 +94,8 @@ FocusScope {
         ? GritStyle.colError
         : GritService.syncStatus === "synced" ? GritStyle.colSuccess : GritStyle.colOnSurfaceVariant
     readonly property string syncTooltip: {
-        if (!GritService.syncConfigured)
-            return Translation.tr("Set up sync between devices");
+        if (!GritService.signedIn)
+            return Translation.tr("Sign in to sync between devices");
         if (GritService.syncMessage.length > 0)
             return GritService.syncMessage;
         return Translation.tr("Sync now");
@@ -147,7 +150,7 @@ FocusScope {
     }
 
     function handleSync(): void {
-        if (!GritService.syncConfigured) {
+        if (!GritService.signedIn) {
             root.settingsOpen = true;
             return;
         }
@@ -547,6 +550,17 @@ FocusScope {
             compact: root.compact
             wide: root.wide
             panels: sidePanel
+        }
+    }
+
+    Component {
+        id: ranksComponent
+        GritRanksTab {
+            layoutWidth: root.pageLayoutWidth
+            compact: root.compact
+            wide: root.wide
+            panels: sidePanel
+            onSettingsRequested: root.settingsOpen = true
         }
     }
 }

@@ -254,6 +254,55 @@ Singleton {
         return tag;
     }
 
+    function leaderboardPrefs() {
+        const nameAt = Number(Persistent.states.grit?.displayNameUpdatedAt ?? 0);
+        const tagsAt = Number(Persistent.states.grit?.publicTagsUpdatedAt ?? 0);
+        return {
+            displayName: root.displayName,
+            nameUpdatedAt: nameAt,
+            publicTagIds: root.publicTagIds,
+            tagsUpdatedAt: tagsAt,
+            updatedAt: Math.max(nameAt, tagsAt)
+        };
+    }
+
+    function mergeLeaderboardPrefs(local, remote) {
+        const a = local && typeof local === "object" ? local : root.leaderboardPrefs();
+        const b = remote && typeof remote === "object" ? remote : null;
+        if (!b)
+            return a;
+        const nameWinsRemote = Number(b.nameUpdatedAt ?? 0) > Number(a.nameUpdatedAt ?? 0);
+        const tagsWinRemote = Number(b.tagsUpdatedAt ?? 0) > Number(a.tagsUpdatedAt ?? 0);
+        const nameAt = Math.max(Number(a.nameUpdatedAt ?? 0), Number(b.nameUpdatedAt ?? 0));
+        const tagsAt = Math.max(Number(a.tagsUpdatedAt ?? 0), Number(b.tagsUpdatedAt ?? 0));
+        return {
+            displayName: nameWinsRemote ? String(b.displayName ?? "") : String(a.displayName ?? ""),
+            nameUpdatedAt: nameAt,
+            publicTagIds: tagsWinRemote ? Array.from(b.publicTagIds ?? []).map(String)
+                : Array.from(a.publicTagIds ?? []).map(String),
+            tagsUpdatedAt: tagsAt,
+            updatedAt: Math.max(Number(a.updatedAt ?? 0), Number(b.updatedAt ?? 0), nameAt, tagsAt)
+        };
+    }
+
+    function applyLeaderboardPrefs(prefs) {
+        if (!prefs || typeof prefs !== "object")
+            return;
+        const nameAt = Number(prefs.nameUpdatedAt ?? 0);
+        const tagsAt = Number(prefs.tagsUpdatedAt ?? 0);
+        if (nameAt > Number(Persistent.states.grit.displayNameUpdatedAt ?? 0)) {
+            Persistent.states.grit.displayName = String(prefs.displayName ?? "").trim().slice(0, 40);
+            Persistent.states.grit.displayNameUpdatedAt = nameAt;
+        }
+        if (tagsAt > Number(Persistent.states.grit.publicTagsUpdatedAt ?? 0)) {
+            const activeIds = root.activeTags.map(tag => String(tag.id));
+            Persistent.states.grit.publicTagIds = Array.from(prefs.publicTagIds ?? [])
+                .map(String)
+                .filter(id => activeIds.indexOf(id) >= 0);
+            Persistent.states.grit.publicTagsUpdatedAt = tagsAt;
+        }
+    }
+
     function normalizeStore(raw) {
         const data = raw && typeof raw === "object" ? raw : {};
         return {
@@ -267,6 +316,8 @@ Singleton {
                 ? root.dedupeList(data.tags).map(root.normalizeTag) : root.defaultTags(),
             focusSessions: root.sortSessions(root.dedupeList(data.focusSessions)),
             timer: data.timer && typeof data.timer === "object" ? data.timer : null,
+            leaderboard: data.leaderboard && typeof data.leaderboard === "object"
+                ? root.mergeLeaderboardPrefs(root.leaderboardPrefs(), data.leaderboard) : null,
             updatedAt: Number(data.updatedAt ?? 0) || 0,
             device: String(data.device ?? "")
         };
@@ -281,6 +332,8 @@ Singleton {
         root.tags = store.tags;
         root.focusSessions = store.focusSessions;
         root.timer = store.timer;
+        if (store.leaderboard)
+            root.applyLeaderboardPrefs(store.leaderboard);
         root.loaded = true;
         root.ensureTimer();
         root.revision++;
@@ -297,6 +350,7 @@ Singleton {
             tags: root.tags,
             focusSessions: root.focusSessions,
             timer: root.timer,
+            leaderboard: root.leaderboardPrefs(),
             updatedAt: Date.now(),
             device: root.deviceId
         };
@@ -357,6 +411,25 @@ Singleton {
         onTriggered: storeFile.reload()
     }
 
+    FileView {
+        id: backupFile
+        path: ""
+        atomicWrites: true
+    }
+
+    FileView {
+        id: importFile
+        path: ""
+        onLoaded: {
+            try {
+                root.restoreFromBackup(JSON.parse(importFile.text()));
+            } catch (error) {
+                console.warn("[Grit] Could not restore backup:", error);
+            }
+        }
+        onLoadFailed: error => console.warn("[Grit] Could not read backup:", error)
+    }
+
     Timer {
         id: minuteTimer
         interval: 30000
@@ -373,18 +446,20 @@ Singleton {
     Component.onCompleted: {
         root.deviceId = root.ensureDeviceId();
         root.timerTick++;
-        if (root.hostLocal)
-            Qt.callLater(root.startLocalHost);
-        if (root.autoSync && root.syncConfigured)
-            Qt.callLater(root.syncNow);
+        if (Persistent.states.grit?.autoSync === undefined)
+            Persistent.states.grit.autoSync = true;
+        Qt.callLater(() => {
+            if (root.autoSync && root.signedIn)
+                root.syncNow();
+            if (root.signedIn && root.publicTagIds.length > 0)
+                root.publishLeaderboard();
+        });
     }
 
     Component.onDestruction: {
         root._blockWrites = true;
         if (saveTimer.running)
             root.saveNow();
-        if (hostProcess.running)
-            hostProcess.running = false;
     }
 
     // ── Habit / category access ─────────────────────────────────────────
@@ -1197,7 +1272,7 @@ Singleton {
             ? Translation.tr("%1 · %2").arg(String(tag?.name ?? Translation.tr("Focus"))).arg(Translation.tr("Time for a break"))
             : Translation.tr("Ready for another focus session?");
         if (Config.options?.time?.timer?.notify ?? true) {
-            Quickshell.execDetached(["notify-send", title, body, "-a", "Grit",
+            Quickshell.execDetached(["notify-send", title, body, "-a", "Panadoro",
                 "-i", "local_fire_department", "--hint=boolean:suppress-sound:true"]);
         }
         SoundService.playEvent("timer", "alarm-clock-elapsed");
@@ -1547,205 +1622,1042 @@ Singleton {
         });
     }
 
-    // ── Sync settings ───────────────────────────────────────────────────
-    readonly property string syncUrl: String(Persistent.states.grit?.syncUrl ?? "")
-    readonly property string syncToken: String(Persistent.states.grit?.syncToken ?? "")
+    // ── Firebase account settings ───────────────────────────────────────
+    readonly property string firebaseProjectId: "habit-tracker-bd354"
+    readonly property string firebaseApiKey: "AIzaSyAc97ILytNHNXRbS_EapcllNLd1CcaoLPo"
+    readonly property string firebaseDatabase: "default"
+    readonly property string firebaseCollection: "panadora"
+    readonly property string authEmail: String(Persistent.states.grit?.authEmail ?? "")
+    readonly property string authUid: String(Persistent.states.grit?.authUid ?? "")
+    readonly property string authIdToken: String(Persistent.states.grit?.authIdToken ?? "")
+    readonly property string authRefreshToken: String(Persistent.states.grit?.authRefreshToken ?? "")
+    readonly property double authExpiresAt: Number(Persistent.states.grit?.authExpiresAt ?? 0)
+    readonly property bool signedIn: root.authUid.length > 0 && root.authRefreshToken.length > 0
     readonly property bool autoSync: Persistent.states.grit?.autoSync === true
-    readonly property int syncIntervalSec: Math.max(15, Number(Persistent.states.grit?.syncIntervalSec ?? 120))
-    readonly property int syncPort: Math.max(1024, Math.min(65535, Number(Persistent.states.grit?.syncPort ?? 8765)))
-    readonly property bool hostLocal: Persistent.states.grit?.hostLocal === true
-    readonly property bool syncConfigured: root.syncUrl.length > 0 && root.syncToken.length > 0
     property bool syncApplying: false
     property bool syncInProgress: false
     property int _postAttempt: 0
-    property string syncStatus: root.syncConfigured ? "idle" : "off"
-    property string syncMessage: root.syncConfigured ? "" : Translation.tr("Add a sync URL and key to sync between devices")
-    property string hostStatus: ""
-    property bool hostRunning: false
+    property bool authBusy: false
+    property string authError: ""
+    property string syncStatus: root.signedIn ? "idle" : "off"
+    property string syncMessage: root.signedIn ? "" : Translation.tr("Sign in to sync")
 
-    function setSyncUrl(value) {
-        Persistent.states.grit.syncUrl = String(value ?? "").trim();
-        root.afterSyncSetting();
+    // ── Public leaderboard ──────────────────────────────────────────────
+    // Only the focus tags the user marks public are mirrored here; habits,
+    // tasks, notes and private tags never leave the private sync document.
+    readonly property string leaderboardCollection: "panadora_leaderboard"
+    readonly property string displayName: String(Persistent.states.grit?.displayName ?? "")
+    readonly property var publicTagIds: {
+        const value = Persistent.states.grit?.publicTagIds;
+        return Array.isArray(value) ? value.map(String) : [];
+    }
+    readonly property string effectiveDisplayName: {
+        const custom = root.displayName.trim();
+        if (custom.length > 0)
+            return custom;
+        const local = root.authEmail.split("@")[0].trim();
+        if (local.length === 0)
+            return Translation.tr("Panadoro user");
+        return local.replace(/[._-]+/g, " ")
+            .split(" ")
+            .filter(word => word.length > 0)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ")
+            .slice(0, 40);
+    }
+    property var leaderboardEntries: []
+    property bool leaderboardLoading: false
+    property string leaderboardError: ""
+    property double leaderboardUpdatedAt: 0
+
+    function setDisplayName(value) {
+        const clean = String(value ?? "").trim().slice(0, 40);
+        if (clean === root.displayName)
+            return;
+        Persistent.states.grit.displayName = clean;
+        Persistent.states.grit.displayNameUpdatedAt = Date.now();
+        root.leaderboardSoon();
     }
 
-    function setSyncToken(value) {
-        Persistent.states.grit.syncToken = String(value ?? "").trim();
-        root.afterSyncSetting();
+    function setTagPublic(tagId, isPublic) {
+        const id = String(tagId ?? "");
+        if (id.length === 0)
+            return;
+        if ((root.publicTagIds.indexOf(id) >= 0) === (isPublic === true))
+            return;
+        const next = root.publicTagIds.filter(item => item !== id);
+        if (isPublic === true)
+            next.push(id);
+        Persistent.states.grit.publicTagIds = next;
+        Persistent.states.grit.publicTagsUpdatedAt = Date.now();
+        root.leaderboardSoon();
+    }
+
+    /**
+     * A newer device owns the name or public-tag list. Adopt only the fields
+     * whose timestamp is newer, never both blindly.
+     */
+    function adoptLeaderboardSettings(displayName, nameUpdatedAt, publicTagIds, tagsUpdatedAt) {
+        const nameAt = Number(nameUpdatedAt ?? 0);
+        const tagsAt = Number(tagsUpdatedAt ?? 0);
+        if (nameAt > Number(Persistent.states.grit.displayNameUpdatedAt ?? 0)) {
+            Persistent.states.grit.displayName = String(displayName ?? "").trim().slice(0, 40);
+            Persistent.states.grit.displayNameUpdatedAt = nameAt;
+        }
+        if (tagsAt > Number(Persistent.states.grit.publicTagsUpdatedAt ?? 0)) {
+            const activeIds = root.activeTags.map(tag => String(tag.id));
+            const next = Array.from(publicTagIds ?? [])
+                .map(String)
+                .filter(id => activeIds.indexOf(id) >= 0);
+            Persistent.states.grit.publicTagIds = next;
+            Persistent.states.grit.publicTagsUpdatedAt = tagsAt;
+        }
+    }
+
+    function leaderboardUrl() {
+        return "https://firestore.googleapis.com/v1/projects/"
+            + encodeURIComponent(root.firebaseProjectId)
+            + "/databases/" + encodeURIComponent(root.firebaseDatabase)
+            + "/documents/" + encodeURIComponent(root.leaderboardCollection);
+    }
+
+    function leaderboardEntryUrl(uid) {
+        return root.leaderboardUrl() + "/" + encodeURIComponent(String(uid ?? ""));
+    }
+
+    function firestoreString(fields, name) {
+        return String(fields?.[name]?.stringValue ?? "");
+    }
+
+    function firestoreInt(fields, name) {
+        return Number(fields?.[name]?.integerValue ?? 0) || 0;
+    }
+
+    function leaderboardPublicTags() {
+        const weekDays = root.thisWeekDays();
+        const monthStart = root.todayKey.slice(0, 7) + "-01";
+        const wanted = root.publicTagIds;
+        return root.activeTags
+            .filter(tag => wanted.indexOf(String(tag.id)) >= 0)
+            .map(tag => {
+                let day = 0;
+                let week = 0;
+                let month = 0;
+                for (const session of root.activeSessions) {
+                    if (String(session.phase) !== "focus" || String(session.tagId ?? "") !== String(tag.id))
+                        continue;
+                    const key = root.dateKey(new Date(Number(session.endedAt ?? 0)));
+                    const seconds = Math.max(0, Number(session.durationSec ?? 0));
+                    if (key === root.todayKey)
+                        day += seconds;
+                    if (weekDays.indexOf(key) >= 0)
+                        week += seconds;
+                    if (key >= monthStart && key <= root.todayKey)
+                        month += seconds;
+                }
+                return {
+                    id: String(tag.id),
+                    name: String(tag.name ?? ""),
+                    accent: String(tag.accent ?? "primary"),
+                    color: String(tag.color ?? ""),
+                    shape: String(tag.shape ?? "Cookie7Sided"),
+                    icon: String(tag.icon ?? "local_fire_department"),
+                    updatedAt: Number(tag.updatedAt ?? 0),
+                    day: day,
+                    week: week,
+                    month: month
+                };
+            });
+    }
+
+    function ensureLeaderboardToken(callback) {
+        if (!root.signedIn) {
+            callback(false);
+            return;
+        }
+        if (Date.now() <= root.authExpiresAt - 90000) {
+            callback(true);
+            return;
+        }
+        root.refreshAuthToken(callback);
+    }
+
+    function leaderboardTagValue(tag) {
+        return {
+            mapValue: {
+                fields: {
+                    name: { stringValue: String(tag.name ?? "") },
+                    accent: { stringValue: String(tag.accent ?? "primary") },
+                    color: { stringValue: String(tag.color ?? "") },
+                    shape: { stringValue: String(tag.shape ?? "Cookie7Sided") },
+                    icon: { stringValue: String(tag.icon ?? "local_fire_department") },
+                    updatedAt: { integerValue: String(Number(tag.updatedAt ?? 0)) },
+                    day: { integerValue: String(Number(tag.day ?? 0)) },
+                    week: { integerValue: String(Number(tag.week ?? 0)) },
+                    month: { integerValue: String(Number(tag.month ?? 0)) }
+                }
+            }
+        };
+    }
+
+    function parseBoardTag(id, fields) {
+        return {
+            id: String(id),
+            name: root.firestoreString(fields, "name") || Translation.tr("Focus"),
+            accent: root.firestoreString(fields, "accent") || "primary",
+            color: root.firestoreString(fields, "color"),
+            shape: root.firestoreString(fields, "shape") || "Cookie7Sided",
+            icon: root.firestoreString(fields, "icon") || "local_fire_department",
+            updatedAt: root.firestoreInt(fields, "updatedAt"),
+            day: root.firestoreInt(fields, "day"),
+            week: root.firestoreInt(fields, "week"),
+            month: root.firestoreInt(fields, "month")
+        };
+    }
+
+    function parseBoardDocument(document) {
+        if (!document || typeof document !== "object")
+            return null;
+        const uid = String(document.name ?? "").split("/").pop();
+        if (uid.length === 0)
+            return null;
+        const fields = document.fields ?? {};
+        const tagMap = fields.tags?.mapValue?.fields ?? {};
+        const tags = Object.keys(tagMap).map(id =>
+            root.parseBoardTag(id, tagMap[id]?.mapValue?.fields ?? {}));
+        if (tags.length === 0)
+            return null;
+        return {
+            uid: uid,
+            updateTime: String(document.updateTime ?? ""),
+            displayName: root.firestoreString(fields, "displayName") || Translation.tr("Panadoro user"),
+            nameUpdatedAt: root.firestoreInt(fields, "nameUpdatedAt"),
+            tags: tags,
+            tagsUpdatedAt: root.firestoreInt(fields, "tagsUpdatedAt"),
+            dayKey: root.firestoreString(fields, "dayKey"),
+            weekKey: root.firestoreString(fields, "weekKey"),
+            monthKey: root.firestoreString(fields, "monthKey"),
+            updatedAt: root.firestoreInt(fields, "updatedAt")
+        };
+    }
+
+    function mergeBoardTags(localTags, remote) {
+        if (!remote)
+            return localTags;
+        const localById = {};
+        for (const tag of localTags)
+            localById[String(tag.id)] = tag;
+        const remoteById = {};
+        for (const tag of remote.tags)
+            remoteById[String(tag.id)] = tag;
+        const localAt = Number(Persistent.states.grit.publicTagsUpdatedAt ?? 0);
+        let ids;
+        if (localAt > remote.tagsUpdatedAt)
+            ids = Object.keys(localById);
+        else if (localAt < remote.tagsUpdatedAt)
+            ids = Object.keys(remoteById);
+        else
+            ids = Array.from(new Set(Object.keys(localById).concat(Object.keys(remoteById))));
+        const sameDay = remote.dayKey === root.todayKey;
+        const weekKey = root.thisWeekDays()[0] ?? root.todayKey;
+        const sameWeek = remote.weekKey === weekKey;
+        const monthKey = root.todayKey.slice(0, 7);
+        const sameMonth = remote.monthKey === monthKey;
+        const out = [];
+        for (const id of ids) {
+            const local = localById[id];
+            const remoteTag = remoteById[id];
+            if (!local && !remoteTag)
+                continue;
+            const meta = (!local
+                || (remoteTag && Number(remoteTag.updatedAt ?? 0) > Number(local.updatedAt ?? 0)))
+                ? remoteTag : local;
+            out.push(Object.assign({}, meta, {
+                id: id,
+                day: local
+                    ? (sameDay ? Math.max(Number(local.day ?? 0), Number(remoteTag?.day ?? 0))
+                        : Number(local.day ?? 0))
+                    : (sameDay ? Number(remoteTag?.day ?? 0) : 0),
+                week: local
+                    ? (sameWeek ? Math.max(Number(local.week ?? 0), Number(remoteTag?.week ?? 0))
+                        : Number(local.week ?? 0))
+                    : (sameWeek ? Number(remoteTag?.week ?? 0) : 0),
+                month: local
+                    ? (sameMonth ? Math.max(Number(local.month ?? 0), Number(remoteTag?.month ?? 0))
+                        : Number(local.month ?? 0))
+                    : (sameMonth ? Number(remoteTag?.month ?? 0) : 0)
+            }));
+        }
+        return out;
+    }
+
+    function isBoardConflict(xhr) {
+        if (xhr.status === 409 || xhr.status === 412)
+            return true;
+        if (xhr.status !== 400)
+            return false;
+        try {
+            return String(JSON.parse(xhr.responseText)?.error?.status ?? "") === "FAILED_PRECONDITION";
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function leaderboardSoon() {
+        if (root.signedIn)
+            leaderboardDebounce.restart();
+    }
+
+    function publishLeaderboard() {
+        if (!root.signedIn)
+            return;
+        root.ensureLeaderboardToken(ok => {
+            if (ok)
+                root.tryPublishLeaderboard(0);
+        });
+    }
+
+    function tryPublishLeaderboard(attempt) {
+        if (attempt >= 4) {
+            root.leaderboardError = Translation.tr("The leaderboard kept changing on another device. Try again.");
+            return;
+        }
+        const read = new XMLHttpRequest();
+        read.open("GET", root.leaderboardEntryUrl(root.authUid)
+            + "?key=" + encodeURIComponent(root.firebaseApiKey));
+        read.setRequestHeader("Accept", "application/json");
+        read.setRequestHeader("Authorization", "Bearer " + root.authIdToken);
+        read.timeout = 25000;
+        read.onreadystatechange = function () {
+            if (read.readyState !== XMLHttpRequest.DONE)
+                return;
+            let remote = null;
+            if (read.status !== 404) {
+                if (read.status < 200 || read.status >= 300) {
+                    root.leaderboardError = root.firebaseError(read);
+                    return;
+                }
+                try {
+                    remote = root.parseBoardDocument(JSON.parse(read.responseText || "{}"));
+                } catch (error) {
+                    root.leaderboardError = String(error);
+                    return;
+                }
+            }
+            if (remote) {
+                root.adoptLeaderboardSettings(remote.displayName, remote.nameUpdatedAt,
+                    remote.tags.map(tag => String(tag.id)), remote.tagsUpdatedAt);
+            }
+
+            const tags = root.leaderboardPublicTags();
+            const weekKey = root.thisWeekDays()[0] ?? root.todayKey;
+            const monthKey = root.todayKey.slice(0, 7);
+
+            if (tags.length === 0) {
+                if (!remote) {
+                    root.leaderboardError = "";
+                    root.leaderboardUpdatedAt = Date.now();
+                    return;
+                }
+                root.deleteLeaderboardEntry(root.authUid, root.authIdToken, remote.updateTime, result => {
+                    if (result === "conflict")
+                        root.tryPublishLeaderboard(attempt + 1);
+                    else if (result === true) {
+                        root.leaderboardError = "";
+                        root.leaderboardUpdatedAt = Date.now();
+                    }
+                });
+                return;
+            }
+
+            const mergedTags = root.mergeBoardTags(tags, remote);
+            const fields = {};
+            for (const tag of mergedTags)
+                fields[String(tag.id)] = root.leaderboardTagValue(tag);
+            const body = {
+                fields: {
+                    displayName: { stringValue: root.effectiveDisplayName },
+                    nameUpdatedAt: { integerValue: String(Math.max(
+                        Number(Persistent.states.grit.displayNameUpdatedAt ?? 0),
+                        Number(remote?.nameUpdatedAt ?? 0))) },
+                    tagsUpdatedAt: { integerValue: String(Math.max(
+                        Number(Persistent.states.grit.publicTagsUpdatedAt ?? 0),
+                        Number(remote?.tagsUpdatedAt ?? 0))) },
+                    dayKey: { stringValue: root.todayKey },
+                    weekKey: { stringValue: weekKey },
+                    monthKey: { stringValue: monthKey },
+                    updatedAt: { integerValue: String(Date.now()) },
+                    device: { stringValue: root.deviceId },
+                    tags: { mapValue: { fields: fields } }
+                }
+            };
+            let url = root.leaderboardEntryUrl(root.authUid)
+                + "?key=" + encodeURIComponent(root.firebaseApiKey)
+                + "&updateMask.fieldPaths=displayName"
+                + "&updateMask.fieldPaths=nameUpdatedAt"
+                + "&updateMask.fieldPaths=tagsUpdatedAt"
+                + "&updateMask.fieldPaths=dayKey"
+                + "&updateMask.fieldPaths=weekKey"
+                + "&updateMask.fieldPaths=monthKey"
+                + "&updateMask.fieldPaths=updatedAt"
+                + "&updateMask.fieldPaths=device"
+                + "&updateMask.fieldPaths=tags";
+            url += remote && remote.updateTime.length > 0
+                ? "&currentDocument.updateTime=" + encodeURIComponent(remote.updateTime)
+                : "&currentDocument.exists=false";
+
+            const write = new XMLHttpRequest();
+            write.open("PATCH", url);
+            write.setRequestHeader("Content-Type", "application/json");
+            write.setRequestHeader("Accept", "application/json");
+            write.setRequestHeader("Authorization", "Bearer " + root.authIdToken);
+            write.timeout = 30000;
+            write.onreadystatechange = function () {
+                if (write.readyState !== XMLHttpRequest.DONE)
+                    return;
+                if (write.status >= 200 && write.status < 300) {
+                    root.leaderboardError = "";
+                    root.leaderboardUpdatedAt = Date.now();
+                    return;
+                }
+                if (root.isBoardConflict(write))
+                    root.tryPublishLeaderboard(attempt + 1);
+                else
+                    root.leaderboardError = root.firebaseError(write);
+            };
+            write.ontimeout = function () {
+                root.leaderboardError = Translation.tr("Firebase did not answer in time");
+            };
+            write.onerror = function () {
+                root.leaderboardError = Translation.tr("Could not reach Firebase");
+            };
+            try {
+                write.send(JSON.stringify(body));
+            } catch (error) {
+                root.leaderboardError = String(error);
+            }
+        };
+        read.ontimeout = function () {
+            root.leaderboardError = Translation.tr("Firebase did not answer in time");
+        };
+        read.onerror = function () {
+            root.leaderboardError = Translation.tr("Could not reach Firebase");
+        };
+        try {
+            read.send();
+        } catch (error) {
+            root.leaderboardError = String(error);
+        }
+    }
+
+    function deleteLeaderboardEntry(uid, token, updateTime, callback) {
+        if (String(uid ?? "").length === 0 || String(token ?? "").length === 0) {
+            if (callback)
+                callback(false);
+            return;
+        }
+        let url = root.leaderboardEntryUrl(uid)
+            + "?key=" + encodeURIComponent(root.firebaseApiKey);
+        if (String(updateTime ?? "").length > 0)
+            url += "&currentDocument.updateTime=" + encodeURIComponent(String(updateTime));
+        const xhr = new XMLHttpRequest();
+        xhr.open("DELETE", url);
+        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Authorization", "Bearer " + token);
+        xhr.timeout = 20000;
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState !== XMLHttpRequest.DONE)
+                return;
+            if (xhr.status >= 200 && xhr.status < 300 || xhr.status === 404) {
+                root.leaderboardEntries = root.leaderboardEntries.filter(
+                    item => String(item.uid) !== String(uid));
+                if (callback)
+                    callback(true);
+                return;
+            }
+            if (root.isBoardConflict(xhr)) {
+                if (callback)
+                    callback("conflict");
+                return;
+            }
+            root.leaderboardError = root.firebaseError(xhr);
+            if (callback)
+                callback(false);
+        };
+        xhr.ontimeout = function () {
+            root.leaderboardError = Translation.tr("Firebase did not answer in time");
+            if (callback)
+                callback(false);
+        };
+        xhr.onerror = function () {
+            root.leaderboardError = Translation.tr("Could not reach Firebase");
+            if (callback)
+                callback(false);
+        };
+        try {
+            xhr.send();
+        } catch (error) {
+            if (callback)
+                callback(false);
+        }
+    }
+
+    function parseLeaderboardEntry(document) {
+        if (!document || typeof document !== "object")
+            return null;
+        const uid = String(document.name ?? "").split("/").pop();
+        const fields = document.fields ?? {};
+        const tagMap = fields.tags?.mapValue?.fields ?? {};
+        const tags = Object.keys(tagMap).map(id =>
+            root.parseBoardTag(id, tagMap[id]?.mapValue?.fields ?? {}));
+        if (tags.length === 0 || uid.length === 0)
+            return null;
+        return {
+            uid: uid,
+            displayName: root.firestoreString(fields, "displayName") || Translation.tr("Panadoro user"),
+            nameUpdatedAt: root.firestoreInt(fields, "nameUpdatedAt"),
+            tagsUpdatedAt: root.firestoreInt(fields, "tagsUpdatedAt"),
+            dayKey: root.firestoreString(fields, "dayKey"),
+            weekKey: root.firestoreString(fields, "weekKey"),
+            monthKey: root.firestoreString(fields, "monthKey"),
+            updatedAt: root.firestoreInt(fields, "updatedAt"),
+            tags: tags
+        };
+    }
+
+    function refreshLeaderboard() {
+        if (!root.signedIn) {
+            root.leaderboardEntries = [];
+            root.leaderboardError = Translation.tr("Sign in to join the leaderboard");
+            return;
+        }
+        root.ensureLeaderboardToken(ok => {
+            if (!ok) {
+                root.leaderboardError = Translation.tr("Could not refresh the leaderboard");
+                return;
+            }
+            root.leaderboardLoading = true;
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", root.leaderboardUrl()
+                + "?pageSize=300&key=" + encodeURIComponent(root.firebaseApiKey));
+            xhr.setRequestHeader("Accept", "application/json");
+            xhr.setRequestHeader("Authorization", "Bearer " + root.authIdToken);
+            xhr.timeout = 30000;
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState !== XMLHttpRequest.DONE)
+                    return;
+                root.leaderboardLoading = false;
+                let data = null;
+                try {
+                    data = JSON.parse(xhr.responseText || "{}");
+                } catch (error) {}
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    root.leaderboardError = root.firebaseError(xhr);
+                    return;
+                }
+                const entries = [];
+                for (const document of Array.from(data?.documents ?? [])) {
+                    const entry = root.parseLeaderboardEntry(document);
+                    if (entry)
+                        entries.push(entry);
+                }
+                const own = entries.find(entry => String(entry.uid) === String(root.authUid));
+                if (own) {
+                    root.adoptLeaderboardSettings(own.displayName, own.nameUpdatedAt,
+                        own.tags.map(tag => String(tag.id)), own.tagsUpdatedAt);
+                }
+                root.leaderboardEntries = entries;
+                root.leaderboardError = "";
+                root.leaderboardUpdatedAt = Date.now();
+            };
+            xhr.ontimeout = function () {
+                root.leaderboardLoading = false;
+                root.leaderboardError = Translation.tr("Firebase did not answer in time");
+            };
+            xhr.onerror = function () {
+                root.leaderboardLoading = false;
+                root.leaderboardError = Translation.tr("Could not reach Firebase");
+            };
+            try {
+                xhr.send();
+            } catch (error) {
+                root.leaderboardLoading = false;
+                root.leaderboardError = String(error);
+            }
+        });
+    }
+
+    Timer {
+        id: leaderboardDebounce
+        interval: 8000
+        onTriggered: root.publishLeaderboard()
+    }
+
+    Timer {
+        id: leaderboardAutoTimer
+        interval: 600000
+        repeat: true
+        running: root.signedIn
+        onTriggered: root.publishLeaderboard()
     }
 
     function setAutoSync(value) {
         Persistent.states.grit.autoSync = value === true;
         root.afterSyncSetting();
-        if (value === true && root.syncConfigured)
+        if (value === true && root.signedIn)
             Qt.callLater(root.syncNow);
     }
 
-    function setSyncInterval(value) {
-        Persistent.states.grit.syncIntervalSec = Math.max(15, Number(value ?? 120));
-    }
-
-    function setSyncPort(value) {
-        Persistent.states.grit.syncPort = Math.max(1024, Math.min(65535, Number(value ?? 8765)));
-        if (root.hostRunning) {
-            root.stopLocalHost();
-            Qt.callLater(root.startLocalHost);
-        }
-    }
-
-    function generateToken() {
-        return Qt.md5(String(Date.now()) + ":" + String(Math.random()) + ":grit").slice(0, 32);
-    }
-
-    function ensureToken() {
-        if (String(Persistent.states.grit.syncToken ?? "").length === 0)
-            Persistent.states.grit.syncToken = root.generateToken();
-        return String(Persistent.states.grit.syncToken);
-    }
-
     function afterSyncSetting() {
-        if (root.autoSync && root.syncConfigured) {
+        if (root.autoSync && root.signedIn) {
             syncDebounce.restart();
             syncAutoTimer.restart();
         } else {
             syncAutoTimer.stop();
         }
-        root.syncStatus = root.syncConfigured ? "idle" : "off";
-        root.syncMessage = root.syncConfigured ? "" : Translation.tr("Add a sync URL and key to sync between devices");
+        if (root.signedIn) {
+            root.syncStatus = "idle";
+            root.syncMessage = "";
+        } else if (!root.syncInProgress) {
+            root.syncStatus = "off";
+            root.syncMessage = Translation.tr("Sign in to sync");
+        }
     }
 
     Timer {
         id: syncAutoTimer
-        interval: root.syncIntervalSec * 1000
+        interval: 5000
         repeat: true
-        running: root.autoSync && root.syncConfigured
+        running: root.autoSync && root.signedIn
         onTriggered: root.syncNow()
     }
 
+    // Push shortly after an edit, so a change reaches the other device on the
+    // next pull instead of waiting for the background check.
     Timer {
         id: syncDebounce
-        interval: 5000
+        interval: 500
         onTriggered: {
-            if (root.autoSync && root.syncConfigured && !root.syncInProgress)
+            if (root.autoSync && root.signedIn && !root.syncInProgress)
                 root.syncNow();
         }
     }
 
     function syncSoon() {
-        if (root.autoSync && root.syncConfigured && !root.syncInProgress)
+        if (root.autoSync && root.signedIn && !root.syncInProgress)
             syncDebounce.restart();
+        if (root.signedIn && root.publicTagIds.length > 0)
+            root.leaderboardSoon();
+    }
+
+    // Stable content view of a store: key order and the volatile top-level
+    // fields must not make two identical stores look different, or every poll
+    // would write the document again.
+    function syncSignature(store) {
+        if (!store || typeof store !== "object")
+            return "";
+        const copy = Object.assign({}, store);
+        delete copy.updatedAt;
+        delete copy.device;
+        return root.stableStringify(copy);
+    }
+
+    function stableStringify(value) {
+        if (Array.isArray(value))
+            return "[" + value.map(item => root.stableStringify(item)).join(",") + "]";
+        if (value && typeof value === "object") {
+            const keys = Object.keys(value).sort();
+            return "{" + keys.map(key =>
+                JSON.stringify(key) + ":" + root.stableStringify(value[key])).join(",") + "}";
+        }
+        return JSON.stringify(value);
+    }
+
+    // ── Firebase Authentication ─────────────────────────────────────────
+
+    function authEndpoint(path) {
+        return "https://identitytoolkit.googleapis.com/v1/" + path
+            + "?key=" + encodeURIComponent(root.firebaseApiKey);
+    }
+
+    function authErrorText(code) {
+        switch (String(code)) {
+        case "EMAIL_EXISTS": return Translation.tr("An account with this email already exists");
+        case "EMAIL_NOT_FOUND":
+        case "INVALID_LOGIN_CREDENTIALS":
+        case "INVALID_PASSWORD": return Translation.tr("Wrong email or password");
+        case "INVALID_EMAIL": return Translation.tr("That email address is not valid");
+        case "WEAK_PASSWORD": return Translation.tr("Use at least 6 characters");
+        case "MISSING_PASSWORD": return Translation.tr("Enter a password");
+        case "TOO_MANY_ATTEMPTS_TRY_LATER": return Translation.tr("Too many attempts. Try again later");
+        case "USER_DISABLED": return Translation.tr("This account is disabled");
+        case "OPERATION_NOT_ALLOWED": return Translation.tr("Email sign-in is not enabled in Firebase");
+        default: return String(code);
+        }
+    }
+
+    function authRequest(path, body, callback) {
+        root.authBusy = true;
+        root.authError = "";
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", root.authEndpoint(path));
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.timeout = 25000;
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState !== XMLHttpRequest.DONE)
+                return;
+            root.authBusy = false;
+            let data = null;
+            try {
+                data = JSON.parse(xhr.responseText || "{}");
+            } catch (error) {}
+            if (xhr.status < 200 || xhr.status >= 300) {
+                root.authError = root.authErrorText(data?.error?.message ?? ("HTTP " + String(xhr.status)));
+                callback(null);
+                return;
+            }
+            callback(data ?? {});
+        };
+        xhr.ontimeout = function () {
+            root.authBusy = false;
+            root.authError = Translation.tr("Firebase did not answer in time");
+            callback(null);
+        };
+        xhr.onerror = function () {
+            root.authBusy = false;
+            root.authError = Translation.tr("Could not reach Firebase");
+            callback(null);
+        };
+        try {
+            xhr.send(JSON.stringify(body));
+        } catch (error) {
+            root.authBusy = false;
+            root.authError = String(error);
+            callback(null);
+        }
+    }
+
+    function adoptAuth(data, fallbackEmail) {
+        Persistent.states.grit.authIdToken = String(data.idToken ?? "");
+        Persistent.states.grit.authRefreshToken = String(data.refreshToken ?? "");
+        Persistent.states.grit.authUid = String(data.localId ?? "");
+        Persistent.states.grit.authExpiresAt = Date.now() + Number(data.expiresIn ?? 3600) * 1000;
+        Persistent.states.grit.authEmail = String(data.email ?? fallbackEmail ?? "");
+        root.authError = "";
+        root.syncStatus = "syncing";
+        root.syncMessage = Translation.tr("Signed in");
+        Qt.callLater(root.syncNow);
+        Qt.callLater(root.publishLeaderboard);
+        Qt.callLater(root.refreshLeaderboard);
+    }
+
+    function signIn(email, password) {
+        const clean = String(email ?? "").trim();
+        const pass = String(password ?? "");
+        if (clean.length === 0 || pass.length === 0) {
+            root.authError = Translation.tr("Enter an email and password");
+            return;
+        }
+        root.authRequest("accounts:signInWithPassword", {
+            email: clean,
+            password: pass,
+            returnSecureToken: true
+        }, data => {
+            if (data)
+                root.adoptAuth(data, clean);
+        });
+    }
+
+    function createAccount(email, password) {
+        const clean = String(email ?? "").trim();
+        const pass = String(password ?? "");
+        if (clean.length === 0 || pass.length === 0) {
+            root.authError = Translation.tr("Enter an email and password");
+            return;
+        }
+        root.authRequest("accounts:signUp", {
+            email: clean,
+            password: pass,
+            returnSecureToken: true
+        }, data => {
+            if (data)
+                root.adoptAuth(data, clean);
+        });
+    }
+
+    function signOut() {
+        // Take the public row down while the old token is still valid.
+        root.deleteLeaderboardEntry(root.authUid, root.authIdToken);
+        Persistent.states.grit.authIdToken = "";
+        Persistent.states.grit.authRefreshToken = "";
+        Persistent.states.grit.authUid = "";
+        Persistent.states.grit.authExpiresAt = 0;
+        Persistent.states.grit.authEmail = "";
+        root.authError = "";
+        root.authBusy = false;
+        root.syncInProgress = false;
+        syncWatchdog.stop();
+        root.syncStatus = "off";
+        root.syncMessage = Translation.tr("Sign in to sync");
+        root.leaderboardEntries = [];
+        root.leaderboardError = "";
+        root.leaderboardLoading = false;
+    }
+
+    function refreshAuthToken(callback) {
+        const refresh = root.authRefreshToken;
+        if (refresh.length === 0) {
+            callback(false);
+            return;
+        }
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://securetoken.googleapis.com/v1/token?key="
+            + encodeURIComponent(root.firebaseApiKey));
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.timeout = 25000;
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState !== XMLHttpRequest.DONE)
+                return;
+            let data = null;
+            try {
+                data = JSON.parse(xhr.responseText || "{}");
+            } catch (error) {}
+            if (xhr.status < 200 || xhr.status >= 300) {
+                const reason = String(data?.error?.message ?? "");
+                const ended = reason.indexOf("INVALID_REFRESH_TOKEN") >= 0
+                    || reason.indexOf("TOKEN_EXPIRED") >= 0
+                    || reason.indexOf("INVALID_GRANT") >= 0
+                    || reason.indexOf("USER_DISABLED") >= 0
+                    || reason.indexOf("USER_NOT_FOUND") >= 0;
+                if (ended) {
+                    root.signOut();
+                    root.authError = Translation.tr("Session expired. Sign in again.");
+                }
+                callback(false);
+                return;
+            }
+            Persistent.states.grit.authIdToken = String(data.id_token ?? "");
+            Persistent.states.grit.authRefreshToken = String(data.refresh_token ?? refresh);
+            Persistent.states.grit.authExpiresAt = Date.now() + Number(data.expires_in ?? 3600) * 1000;
+            if (String(data.user_id ?? "").length > 0)
+                Persistent.states.grit.authUid = String(data.user_id);
+            callback(true);
+        };
+        xhr.ontimeout = function () {
+            callback(false);
+        };
+        xhr.onerror = function () {
+            callback(false);
+        };
+        try {
+            xhr.send("grant_type=refresh_token&refresh_token=" + encodeURIComponent(refresh));
+        } catch (error) {
+            callback(false);
+        }
+    }
+
+    function firestoreDocumentUrl() {
+        return "https://firestore.googleapis.com/v1/projects/" + encodeURIComponent(root.firebaseProjectId)
+            + "/databases/" + encodeURIComponent(root.firebaseDatabase)
+            + "/documents/" + encodeURIComponent(root.firebaseCollection)
+            + "/" + encodeURIComponent(root.authUid);
     }
 
     function syncNow() {
-        if (!root.syncConfigured) {
+        if (!root.signedIn) {
             root.syncStatus = "off";
-            root.syncMessage = Translation.tr("Add a sync URL and key first");
+            root.syncMessage = Translation.tr("Sign in to sync");
             return;
         }
         if (root.syncInProgress)
             return;
         root.syncInProgress = true;
         root.syncStatus = "syncing";
-        root.syncMessage = Translation.tr("Contacting the server…");
+        root.syncMessage = Translation.tr("Contacting Firebase…");
         root._postAttempt = 0;
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", root.syncUrl);
-        xhr.setRequestHeader("Authorization", "Bearer " + root.syncToken);
-        xhr.setRequestHeader("Accept", "application/json");
-        xhr.timeout = 20000;
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState !== XMLHttpRequest.DONE)
-                return;
-            if (xhr.status < 200 || xhr.status >= 300) {
-                root.syncFailed(root.httpError(xhr));
-                return;
-            }
-            let remote = null;
-            try {
-                remote = JSON.parse(xhr.responseText || "{}");
-            } catch (error) {
-                root.syncFailed(Translation.tr("The server returned something that is not JSON"));
-                return;
-            }
-            const baseRevision = Number(remote?.revision ?? 0);
-            if (remote?.payload && typeof remote.payload === "object")
-                root.applyRemoteStore(remote.payload);
-            root.pushSync(baseRevision);
-        };
-        xhr.ontimeout = function () {
-            root.syncFailed(Translation.tr("The server did not answer in time"));
-        };
-        xhr.onerror = function () {
-            root.syncFailed(Translation.tr("Could not reach the sync server"));
-        };
+        syncWatchdog.restart();
+        if (Date.now() > root.authExpiresAt - 90000) {
+            root.refreshAuthToken(ok => {
+                if (!ok) {
+                    // A dropped network must not end a saved session; the
+                    // refresh token is still good when the connection returns.
+                    root.syncFailed(Translation.tr("Offline — your session is still signed in"));
+                    return;
+                }
+                root.firestorePull();
+            });
+            return;
+        }
+        root.firestorePull();
+    }
+
+    // A request that hangs without ever reaching DONE (a dropped connection,
+    // for example) would otherwise leave syncInProgress stuck and block every
+    // later sync until the shell restarts.
+    Timer {
+        id: syncWatchdog
+        interval: 75000
+        onTriggered: {
+            if (root.syncInProgress)
+                root.syncFailed(Translation.tr("Sync did not finish in time"));
+        }
+    }
+
+    function firestorePull() {
         try {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", root.firestoreDocumentUrl() + "?key=" + encodeURIComponent(root.firebaseApiKey));
+            xhr.setRequestHeader("Accept", "application/json");
+            xhr.setRequestHeader("Authorization", "Bearer " + root.authIdToken);
+            xhr.timeout = 20000;
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState !== XMLHttpRequest.DONE)
+                    return;
+                if (xhr.status === 404) {
+                    root.firestorePush("", 0);
+                    return;
+                }
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    root.syncFailed(root.firebaseError(xhr));
+                    return;
+                }
+                let document = null;
+                try {
+                    document = JSON.parse(xhr.responseText || "{}");
+                } catch (error) {
+                    root.syncFailed(Translation.tr("Firebase returned something that is not JSON"));
+                    return;
+                }
+                const remoteRevision = Number(document?.fields?.revision?.integerValue ?? 0);
+                const updateTime = String(document?.updateTime ?? "");
+                let remotePayload = null;
+                try {
+                    const raw = document?.fields?.payload?.stringValue;
+                    if (raw)
+                        remotePayload = JSON.parse(raw);
+                } catch (error) {}
+                try {
+                    const hasRemote = remotePayload && typeof remotePayload === "object";
+                    const remoteSignature = hasRemote ? root.syncSignature(remotePayload) : "";
+                    if (hasRemote)
+                        root.applyRemoteStore(remotePayload);
+                    if (hasRemote && remoteSignature === root.syncSignature(root.snapshot())) {
+                        root.syncFinished(remoteRevision);
+                        return;
+                    }
+                    root.firestorePush(updateTime, remoteRevision);
+                } catch (error) {
+                    root.syncFailed(String(error));
+                }
+            };
+            xhr.ontimeout = function () {
+                root.syncFailed(Translation.tr("Firebase did not answer in time"));
+            };
+            xhr.onerror = function () {
+                root.syncFailed(Translation.tr("Could not reach Firebase"));
+            };
             xhr.send();
         } catch (error) {
             root.syncFailed(String(error));
         }
     }
 
-    function httpError(xhr) {
-        if (xhr.status === 401 || xhr.status === 403)
-            return Translation.tr("The sync key was rejected");
-        if (xhr.status === 404)
-            return Translation.tr("The sync endpoint was not found");
-        return Translation.tr("Sync failed (HTTP %1)").arg(String(xhr.status));
-    }
-
-    function pushSync(baseRevision) {
-        const payload = root.snapshot();
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", root.syncUrl);
-        xhr.setRequestHeader("Authorization", "Bearer " + root.syncToken);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.setRequestHeader("Accept", "application/json");
-        xhr.timeout = 20000;
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState !== XMLHttpRequest.DONE)
-                return;
-            if (xhr.status === 409 && root._postAttempt < 2) {
-                root._postAttempt++;
-                let current = null;
-                try {
-                    current = JSON.parse(xhr.responseText || "{}");
-                } catch (error) {}
-                if (current?.payload)
-                    root.applyRemoteStore(current.payload);
-                Qt.callLater(() => root.pushSync(Number(current?.revision ?? baseRevision + 1)));
-                return;
-            }
-            if (xhr.status < 200 || xhr.status >= 300) {
-                root.syncFailed(root.httpError(xhr));
-                return;
-            }
-            let result = null;
-            try {
-                result = JSON.parse(xhr.responseText || "{}");
-            } catch (error) {}
-            root.syncInProgress = false;
-            root.syncStatus = "synced";
-            root.syncMessage = Translation.tr("Synced %1").arg(Qt.formatTime(new Date(), "HH:mm"));
-            root.revision = Number(result?.revision ?? baseRevision + 1);
-            Persistent.states.grit.lastSyncAt = Qt.formatDateTime(new Date(), "yyyy-MM-dd HH:mm:ss");
-            root.saveSoon();
-        };
-        xhr.ontimeout = function () {
-            root.syncFailed(Translation.tr("The server did not answer in time"));
-        };
-        xhr.onerror = function () {
-            root.syncFailed(Translation.tr("Could not reach the sync server"));
-        };
+    function firestorePush(updateTime, baseRevision) {
         try {
-            xhr.send(JSON.stringify({
-                baseRevision: Number(baseRevision ?? 0),
-                payload: payload
-            }));
+            const payload = root.snapshot();
+            const revision = Number(baseRevision ?? 0) + 1;
+            const body = {
+                fields: {
+                    payload: { stringValue: JSON.stringify(payload) },
+                    revision: { integerValue: String(revision) },
+                    updatedAt: { integerValue: String(Date.now()) }
+                }
+            };
+            let url = root.firestoreDocumentUrl()
+                + "?key=" + encodeURIComponent(root.firebaseApiKey)
+                + "&updateMask.fieldPaths=payload"
+                + "&updateMask.fieldPaths=revision"
+                + "&updateMask.fieldPaths=updatedAt";
+            url += updateTime.length > 0
+                ? "&currentDocument.updateTime=" + encodeURIComponent(updateTime)
+                : "&currentDocument.exists=false";
+            const xhr = new XMLHttpRequest();
+            xhr.open("PATCH", url);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.setRequestHeader("Accept", "application/json");
+            xhr.setRequestHeader("Authorization", "Bearer " + root.authIdToken);
+            xhr.timeout = 30000;
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState !== XMLHttpRequest.DONE)
+                    return;
+                if (root.firestoreConflict(xhr) && root._postAttempt < 2) {
+                    root._postAttempt++;
+                    Qt.callLater(() => {
+                        try {
+                            root.firestorePull();
+                        } catch (error) {
+                            root.syncFailed(String(error));
+                        }
+                    });
+                    return;
+                }
+                if (xhr.status < 200 || xhr.status >= 300) {
+                    root.syncFailed(root.firebaseError(xhr));
+                    return;
+                }
+                let result = null;
+                try {
+                    result = JSON.parse(xhr.responseText || "{}");
+                } catch (error) {}
+                root.syncFinished(Number(result?.fields?.revision?.integerValue ?? revision));
+            };
+            xhr.ontimeout = function () {
+                root.syncFailed(Translation.tr("Firebase did not answer in time"));
+            };
+            xhr.onerror = function () {
+                root.syncFailed(Translation.tr("Could not reach Firebase"));
+            };
+            xhr.send(JSON.stringify(body));
         } catch (error) {
             root.syncFailed(String(error));
         }
     }
 
+    function firestoreConflict(xhr) {
+        if (xhr.status === 409 || xhr.status === 412)
+            return true;
+        if (xhr.status !== 400)
+            return false;
+        try {
+            return String(JSON.parse(xhr.responseText)?.error?.status ?? "") === "FAILED_PRECONDITION";
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function firebaseError(xhr) {
+        let message = "";
+        try {
+            message = String(JSON.parse(xhr.responseText)?.error?.message ?? "");
+        } catch (error) {}
+        if (xhr.status === 401 || xhr.status === 403)
+            return Translation.tr("Firebase rejected the request%1").arg(message.length > 0 ? ": " + message : "");
+        return Translation.tr("Firebase sync failed (HTTP %1)%2")
+            .arg(String(xhr.status))
+            .arg(message.length > 0 ? ": " + message : "");
+    }
+
+    function syncFinished(revision) {
+        syncWatchdog.stop();
+        root.syncInProgress = false;
+        root.syncStatus = "synced";
+        root.syncMessage = Translation.tr("Synced %1").arg(Qt.formatTime(new Date(), "HH:mm"));
+        root.revision = Number(revision ?? root.revision);
+        Persistent.states.grit.lastSyncAt = Qt.formatDateTime(new Date(), "yyyy-MM-dd HH:mm:ss");
+    }
+
     function syncFailed(message) {
+        syncWatchdog.stop();
         root.syncInProgress = false;
         root.syncStatus = "error";
         root.syncMessage = String(message ?? Translation.tr("Sync failed"));
@@ -1787,6 +2699,7 @@ Singleton {
             tags: root.mergeRecordLists(a.tags, b.tags),
             focusSessions: root.sortSessions(root.mergeRecordLists(a.focusSessions, b.focusSessions)),
             timer: a.timer,
+            leaderboard: root.mergeLeaderboardPrefs(a.leaderboard, b.leaderboard),
             updatedAt: Date.now(),
             device: root.deviceId
         };
@@ -1810,64 +2723,70 @@ Singleton {
         root.focusSessions = root.sortSessions(root.normalizeList(merged.focusSessions));
         if (merged.timer && typeof merged.timer === "object")
             root.timer = merged.timer;
+        if (merged.leaderboard)
+            root.applyLeaderboardPrefs(merged.leaderboard);
         root.ensureTimer();
         root.revision++;
         root.syncApplying = false;
         root.saveSoon();
     }
 
-    // ── Local sync host ─────────────────────────────────────────────────
-    Process {
-        id: hostProcess
-        running: false
-        command: ["python3", Directories.gritSyncServerPath,
-            "--port", String(root.syncPort),
-            "--token", root.syncToken,
-            "--data", Directories.gritSyncDataPath]
-        onStarted: {
-            root.hostRunning = true;
-            root.hostStatus = Translation.tr("Serving on port %1").arg(String(root.syncPort));
-        }
-        onExited: (code, status) => {
-            root.hostRunning = false;
-            if (root.hostLocal) {
-                root.hostStatus = Translation.tr("The local server stopped (code %1)").arg(String(code));
-                Persistent.states.grit.hostLocal = false;
+    // ── Backup / restore ────────────────────────────────────────────────
+
+    function exportBackup(fileUrl) {
+        const payload = JSON.stringify(root.snapshot(), null, 2);
+        backupFile.path = fileUrl;
+        Qt.callLater(() => {
+            try {
+                backupFile.setText(payload);
+            } catch (error) {
+                console.warn("[Grit] Could not save backup:", error);
             }
-        }
-        stderr: StdioCollector {
-            onStreamFinished: {
-                const text = String(this.text ?? "").trim();
-                if (text.length > 0)
-                    root.hostStatus = text.split("\n").slice(-2).join(" · ");
-            }
-        }
+        });
     }
 
-    function startLocalHost() {
-        if (hostProcess.running)
+    function importBackup(fileUrl) {
+        importFile.path = fileUrl;
+        importFile.reload();
+    }
+
+    function restoreFromBackup(raw) {
+        if (!raw || typeof raw !== "object")
             return;
-        const token = root.ensureToken();
-        Persistent.states.grit.hostLocal = true;
-        root.hostStatus = Translation.tr("Starting the local server…");
-        hostProcess.command = ["python3", Directories.gritSyncServerPath,
-            "--port", String(root.syncPort), "--token", token, "--data", Directories.gritSyncDataPath];
-        hostProcess.running = true;
-        if (root.syncUrl.length === 0)
-            root.setSyncUrl("http://127.0.0.1:" + String(root.syncPort) + "/grit");
-    }
-
-    function stopLocalHost() {
-        Persistent.states.grit.hostLocal = false;
-        root.hostStatus = Translation.tr("Local server stopped");
-        hostProcess.running = false;
-    }
-
-    function toggleLocalHost() {
-        if (root.hostRunning)
-            root.stopLocalHost();
-        else
-            root.startLocalHost();
+        const parsed = root.normalizeStore(raw);
+        const now = Date.now();
+        const dev = root.deviceId;
+        const restore = (imported, current) => {
+            const ids = {};
+            const stamped = Array.from(imported ?? []).map(item => {
+                const copy = Object.assign({}, item, { updatedAt: now, device: dev });
+                ids[String(copy.id ?? "")] = true;
+                return copy;
+            });
+            const tombstones = Array.from(current ?? [])
+                .filter(item => !ids[String(item.id ?? "")])
+                .map(item => Object.assign({}, item, { deleted: true, updatedAt: now, device: dev }));
+            return stamped.concat(tombstones);
+        };
+        root.habits = restore(parsed.habits, root.habits);
+        root.entries = restore(parsed.entries, root.entries);
+        root.tasks = restore(parsed.tasks, root.tasks);
+        root.categories = restore(parsed.categories, root.categories);
+        root.tags = restore(parsed.tags, root.tags);
+        root.focusSessions = root.sortSessions(restore(parsed.focusSessions, root.focusSessions));
+        root.timer = parsed.timer && typeof parsed.timer === "object"
+            ? parsed.timer : root.makeTimer(parsed.tags.find(tag => !tag.deleted)?.id ?? "", "focus", 0, false);
+        if (raw.leaderboard && typeof raw.leaderboard === "object") {
+            Persistent.states.grit.displayName = String(raw.leaderboard.displayName ?? "").trim().slice(0, 40);
+            Persistent.states.grit.displayNameUpdatedAt = now;
+            Persistent.states.grit.publicTagIds = Array.from(raw.leaderboard.publicTagIds ?? []).map(String);
+            Persistent.states.grit.publicTagsUpdatedAt = now;
+        }
+        root.revision++;
+        root.ensureTimer();
+        root.saveNow();
+        root.syncSoon();
+        root.syncNow();
     }
 
     // ── Reset ───────────────────────────────────────────────────────────

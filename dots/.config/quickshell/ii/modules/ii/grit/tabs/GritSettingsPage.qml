@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Dialogs
 import Quickshell
 import qs
 import qs.services
@@ -9,7 +10,7 @@ import qs.modules.common.widgets
 import qs.modules.ii.clock.components
 import qs.modules.ii.grit.components
 
-/** Grit's settings: goals, the week, categories and the sync server. */
+/** Panadoro settings: goals, the week, categories and the account. */
 Rectangle {
     id: root
 
@@ -23,7 +24,8 @@ Rectangle {
     readonly property real padding: root.compact ? GritStyle.pagePadding : GritStyle.pagePaddingWide
     readonly property real contentWidth: Math.min(root.layoutWidth - root.padding * 2, root.wide ? 1120 : 760)
     readonly property var gritState: Persistent.states.grit
-    readonly property bool hostBusy: root.gritState?.hostLocal === true && !GritService.hostRunning
+    property string authEmailInput: ""
+    property string authPasswordInput: ""
 
     function copy(text, message): void {
         Quickshell.clipboardText = String(text ?? "");
@@ -168,11 +170,11 @@ Rectangle {
                 }
             }
 
-            // ── Sync ────────────────────────────────────────────────────
+            // ── Account & sync ──────────────────────────────────────────
             ClockSettingsSection {
                 Layout.fillWidth: true
-                title: Translation.tr("Sync between devices")
-                symbol: "sync"
+                title: Translation.tr("Account & sync")
+                symbol: "account_circle"
 
                 Rectangle {
                     Layout.fillWidth: true
@@ -230,161 +232,113 @@ Rectangle {
                         }
 
                         ClockButton {
-                            visible: GritService.syncConfigured
+                            visible: GritService.signedIn
                             variant: "tonal"
                             symbol: "sync"
                             label: Translation.tr("Sync now")
+                            enabled: !GritService.syncInProgress
                             onClicked: GritService.syncNow()
                         }
                     }
                 }
 
-                ClockFormField {
-                    Layout.fillWidth: true
-                    symbol: "link"
-                    shapeKind: MaterialShape.Shape.Cookie7Sided
-                    caption: Translation.tr("Server URL")
-                    placeholder: "http://192.168.1.20:8765/grit"
-                    text: GritService.syncUrl
-                    onTextChanged: {
-                        if (text !== GritService.syncUrl)
-                            GritService.setSyncUrl(text);
-                    }
-                }
-
-                ClockFormField {
-                    Layout.fillWidth: true
-                    symbol: "key"
-                    shapeKind: MaterialShape.Shape.Cookie4Sided
-                    caption: Translation.tr("Shared key")
-                    placeholder: Translation.tr("A long random string")
-                    text: GritService.syncToken
-                    input.echoMode: TextInput.Password
-                    onTextChanged: {
-                        if (text !== GritService.syncToken)
-                            GritService.setSyncToken(text);
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: GritStyle.gapSmall
+                ClockSettingsRow {
+                    visible: GritService.signedIn
+                    symbol: "person"
+                    title: GritService.authEmail
+                    description: Translation.tr("Signed in")
 
                     ClockButton {
+                        symbol: "logout"
+                        label: Translation.tr("Sign out")
+                        variant: "tonal"
+                        onClicked: GritService.signOut()
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    visible: !GritService.signedIn
+                    spacing: GritStyle.gapSmall
+
+                    ClockFormField {
                         Layout.fillWidth: true
-                        symbol: "casino"
-                        label: Translation.tr("Generate a key")
-                        onClicked: {
-                            root.gritState.syncToken = GritService.generateToken();
-                            GritService.afterSyncSetting();
+                        symbol: "mail"
+                        shapeKind: MaterialShape.Shape.Cookie4Sided
+                        caption: Translation.tr("Email")
+                        placeholder: "you@example.com"
+                        text: root.authEmailInput
+                        input.echoMode: TextInput.Normal
+                        onTextChanged: {
+                            if (text !== root.authEmailInput)
+                                root.authEmailInput = text;
                         }
                     }
 
-                    ClockButton {
+                    ClockFormField {
                         Layout.fillWidth: true
-                        symbol: "content_copy"
-                        label: Translation.tr("Copy key")
-                        onClicked: root.copy(GritService.syncToken, Translation.tr("Sync key copied"))
+                        symbol: "lock"
+                        shapeKind: MaterialShape.Shape.Cookie7Sided
+                        caption: Translation.tr("Password")
+                        placeholder: Translation.tr("At least 6 characters")
+                        text: root.authPasswordInput
+                        input.echoMode: TextInput.Password
+                        onTextChanged: {
+                            if (text !== root.authPasswordInput)
+                                root.authPasswordInput = text;
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: GritStyle.gapSmall
+
+                        ClockButton {
+                            Layout.fillWidth: true
+                            symbol: "login"
+                            variant: "filled"
+                            label: GritService.authBusy
+                                ? Translation.tr("Please wait…") : Translation.tr("Sign in")
+                            enabled: !GritService.authBusy
+                            onClicked: GritService.signIn(root.authEmailInput, root.authPasswordInput)
+                        }
+
+                        ClockButton {
+                            Layout.fillWidth: true
+                            symbol: "person_add"
+                            label: Translation.tr("Create account")
+                            enabled: !GritService.authBusy
+                            onClicked: GritService.createAccount(root.authEmailInput, root.authPasswordInput)
+                        }
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        visible: GritService.authError.length > 0
+                        text: GritService.authError
+                        wrapMode: Text.WordWrap
+                        font.pixelSize: GritStyle.textSmall
+                        color: GritStyle.colError
+                    }
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: Translation.tr("Create an account here, then sign in with the same email on your other devices. Your habits, tasks and focus history stay private to your account.")
+                        wrapMode: Text.WordWrap
+                        font.pixelSize: GritStyle.textSmall
+                        color: GritStyle.colOnSurfaceVariant
                     }
                 }
 
                 ClockSettingsRow {
                     symbol: "sync"
-                    title: Translation.tr("Sync automatically")
-                    description: Translation.tr("Merge in the background and after changes")
+                    title: Translation.tr("Live sync")
+                    description: Translation.tr("Pushes after each edit and checks for changes every 5 seconds")
 
                     StyledSwitch {
                         checked: root.gritState?.autoSync === true
                         checkable: false
                         onClicked: GritService.setAutoSync(!GritService.autoSync)
-                    }
-                }
-
-                ClockSettingsRow {
-                    symbol: "schedule"
-                    title: Translation.tr("Sync interval")
-                    description: Translation.tr("How often the background loop checks the server")
-
-                    ClockStepper {
-                        value: Math.round(GritService.syncIntervalSec / 30) * 30
-                        from: 15
-                        to: 3600
-                        stepSize: 15
-                        format: value => value < 60 ? String(value) + "s" : GritStyle.durationShort(Math.round(value / 60))
-                        onMoved: value => GritService.setSyncInterval(value)
-                    }
-                }
-            }
-
-            // ── Local server ────────────────────────────────────────────
-            ClockSettingsSection {
-                Layout.fillWidth: true
-                title: Translation.tr("Host a server here")
-                symbol: "dns"
-
-                ClockSettingsRow {
-                    first: true
-                    symbol: "power"
-                    title: Translation.tr("Run the sync server")
-                    description: root.hostBusy ? Translation.tr("Starting…")
-                        : GritService.hostStatus.length > 0 ? GritService.hostStatus
-                        : Translation.tr("Serve this device's Grit data on the local network")
-
-                    StyledSwitch {
-                        checked: GritService.hostRunning
-                        checkable: false
-                        onClicked: GritService.toggleLocalHost()
-                    }
-                }
-
-                ClockSettingsRow {
-                    last: true
-                    symbol: "settings_ethernet"
-                    title: Translation.tr("Port")
-                    description: Translation.tr("Open it in your firewall if other devices should reach it")
-
-                    ClockStepper {
-                        value: GritService.syncPort
-                        from: 1024
-                        to: 65535
-                        stepSize: 1
-                        format: value => String(value)
-                        onMoved: value => GritService.setSyncPort(value)
-                    }
-                }
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    implicitHeight: serverHint.implicitHeight + 24
-                    radius: GritStyle.radiusSmall
-                    color: GritStyle.colField
-
-                    ColumnLayout {
-                        id: serverHint
-                        anchors {
-                            fill: parent
-                            margins: 12
-                        }
-                        spacing: 6
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: Translation.tr("To sync another device, run the server on one machine and use its address and key everywhere. The local address only works on this machine; use the machine's LAN address on the others.")
-                            wrapMode: Text.WordWrap
-                            font.pixelSize: GritStyle.textSmall
-                            color: GritStyle.colOnSurfaceVariant
-                        }
-
-                        StyledText {
-                            Layout.fillWidth: true
-                            text: "python3 " + Directories.gritSyncServerPath + " --port "
-                                + String(GritService.syncPort) + " --token <key> --data "
-                                + Directories.gritSyncDataPath
-                            wrapMode: Text.WrapAnywhere
-                            font.family: GritStyle.fontNumbers
-                            font.pixelSize: Appearance.font.pixelSize.smallest
-                            color: GritStyle.colSubtext
-                        }
                     }
                 }
             }
@@ -397,9 +351,35 @@ Rectangle {
 
                 ClockSettingsRow {
                     first: true
+                    symbol: "download"
+                    title: Translation.tr("Backup JSON")
+                    description: Translation.tr("Save a complete snapshot of habits, tasks, focus history and settings.")
+
+                    ClockButton {
+                        variant: "tonal"
+                        symbol: "download"
+                        label: Translation.tr("Backup…")
+                        onClicked: backupDialog.open()
+                    }
+                }
+
+                ClockSettingsRow {
+                    symbol: "upload"
+                    title: Translation.tr("Import backup")
+                    description: Translation.tr("Restore a backup and upload it to every synced device.")
+
+                    ClockButton {
+                        variant: "tonal"
+                        symbol: "upload"
+                        label: Translation.tr("Restore…")
+                        onClicked: importDialog.open()
+                    }
+                }
+
+                ClockSettingsRow {
                     last: true
                     symbol: "delete_forever"
-                    title: Translation.tr("Reset Grit data")
+                    title: Translation.tr("Reset Panadoro data")
                     description: root.resetArmed
                         ? Translation.tr("Press again to erase habits, tasks and focus history. This syncs the deletion.")
                         : Translation.tr("Erase every habit, task and session on every synced device")
@@ -456,7 +436,7 @@ Rectangle {
                             spacing: 0
 
                             StyledText {
-                                text: "Grit × Tomato"
+                                text: "Panadoro"
                                 font.family: GritStyle.fontTitle
                                 font.variableAxes: GritStyle.axesTitle
                                 font.pixelSize: Appearance.font.pixelSize.large
@@ -480,49 +460,39 @@ Rectangle {
                         font.pixelSize: GritStyle.textSmall
                         color: GritStyle.colOnSurfaceVariant
                     }
-                }
-            }
 
-            // ── Credits ─────────────────────────────────────────────────
-            ClockSettingsSection {
-                Layout.fillWidth: true
-                Layout.topMargin: GritStyle.gapSmall
-                title: Translation.tr("Credits")
-                symbol: "favorite"
-
-                ClockSettingsRow {
-                    first: true
-                    clickable: true
-                    symbol: "local_fire_department"
-                    title: "Grit · shub39"
-                    description: "github.com/shub39/Grit"
-                    onClicked: Qt.openUrlExternally("https://github.com/shub39/Grit")
-
-                    MaterialSymbol {
-                        text: "open_in_new"
-                        iconSize: 18
-                        color: GritStyle.colSubtext
-                    }
-                }
-
-                ClockSettingsRow {
-                    last: true
-                    clickable: true
-                    symbol: "timer"
-                    title: "Tomato · nsh07"
-                    description: "github.com/nsh07/Tomato"
-                    onClicked: Qt.openUrlExternally("https://github.com/nsh07/Tomato")
-
-                    MaterialSymbol {
-                        text: "open_in_new"
-                        iconSize: 18
-                        color: GritStyle.colSubtext
+                    ClockButton {
+                        Layout.fillWidth: true
+                        Layout.topMargin: GritStyle.gapSmall
+                        variant: "tonal"
+                        symbol: "open_in_new"
+                        label: Translation.tr("Open project repository")
+                        onClicked: Qt.openUrlExternally("https://github.com/ADH787/panadoro")
                     }
                 }
             }
 
             Item { Layout.preferredHeight: GritStyle.gapHuge }
         }
+    }
+
+    FileDialog {
+        id: backupDialog
+        visible: false
+        title: Translation.tr("Save Panadoro backup")
+        fileMode: FileDialog.SaveFile
+        defaultSuffix: "json"
+        nameFilters: [Translation.tr("JSON files (*.json)")]
+        onAccepted: GritService.exportBackup(selectedFile)
+    }
+
+    FileDialog {
+        id: importDialog
+        visible: false
+        title: Translation.tr("Open Panadoro backup")
+        fileMode: FileDialog.OpenFile
+        nameFilters: [Translation.tr("JSON files (*.json)")]
+        onAccepted: GritService.importBackup(selectedFile)
     }
 
     Timer {

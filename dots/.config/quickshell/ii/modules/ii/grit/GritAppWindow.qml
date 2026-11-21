@@ -25,7 +25,7 @@ FloatingWindow {
     readonly property real familyWidth: Math.min(1500, Math.max(940, root.screenWidth * 0.9)) + 40
     readonly property real familyHeight: Math.min(780, Math.max(500, root.screenHeight * 0.68)) + 100
 
-    title: "ii Grit"
+    title: "Panadoro"
     implicitWidth: Math.round(Math.min(root.familyWidth, root.screenWidth * 0.95))
     implicitHeight: Math.round(Math.min(root.familyHeight, root.screenHeight * 0.88))
     minimumSize: Qt.size(GritStyle.windowMinWidth, GritStyle.windowMinHeight)

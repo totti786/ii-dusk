@@ -26,7 +26,7 @@ Singleton {
             clock: ["clock", "relogio", "relógio", "alarm", "alarme", "despertador", "world clock", "fuso", "timer", "temporizador", "stopwatch", "cronometro", "cronômetro", "pomodoro"],
             soundscapes: ["soundscapes", "ambient", "ambience", "noice", "white noise", "brown noise", "pink noise", "rain sounds", "nature sounds", "relax", "sleep", "focus sounds", "sleep timer", "mixer", "thunder", "campfire", "ocean", "forest", "calm"],
             weather: ["weather", "forecast", "temperature", "rain", "snow", "wind", "humidity", "air quality", "aqi", "pollen", "climate", "meteo", "clima", "tempo", "chuva", "neve", "vento", "umidade", "qualidade do ar", "pólen"],
-            grit: ["grit", "habit", "habits", "habito", "hábito", "habitos", "hábitos", "habit tracker", "tasks", "tarefas", "todo", "focus", "foco", "pomodoro", "tomato", "streak", "ofensiva", "routine", "rotina"],
+            grit: ["grit", "panadoro", "habit", "habits", "habito", "hábito", "habitos", "hábitos", "habit tracker", "tasks", "tarefas", "todo", "focus", "foco", "pomodoro", "tomato", "streak", "ofensiva", "routine", "rotina"],
             qanun: ["qanun", "tuner", "metronome", "maqam", "maqams", "scale", "scales", "sheet music", "music sheet", "flashcards", "note reading", "music theory", "recorder", "tracks", "ear training", "interval", "chord", "قانون", "مقام", "مقامات", "موسيقى"],
             music: ["music", "player", "youtube music", "songs", "lyrics", "spotify", "musica", "música"],
             monitor: ["monitor", "system monitor", "btop", "htop", "top", "task manager", "processes", "cpu", "ram", "memory", "latency", "ping", "network", "internet", "monitor do sistema"],
@@ -66,7 +66,7 @@ Singleton {
     readonly property var extraActions: [
         { id: "notes", name: "Notes", icon: "note_stack", category: "shell", searchable: true, enabled: () => true },
         { id: "clock", name: "Clock", icon: "alarm", category: "shell", searchable: true, enabled: () => Config.options.clockApp?.enable ?? true },
-        { id: "grit", name: "Grit", icon: "local_fire_department", category: "shell", searchable: true, enabled: () => true },
+        { id: "grit", name: "Panadoro", icon: "local_fire_department", category: "shell", searchable: true, enabled: () => true },
         { id: "weather", name: "Weather", icon: "cloud", category: "shell", searchable: true, enabled: () => Config.options.weatherApp?.enable ?? true },
         { id: "soundscapes", name: "Soundscapes", icon: "waves", category: "shell", searchable: true, enabled: () => Config.options.soundscapes?.enable ?? true },
         { id: "qanun", name: "Qanun", icon: "music_note", category: "shell", searchable: true, enabled: () => true },

@@ -18,7 +18,7 @@ import qs.modules.common.widgets
 Scope {
     id: root
 
-    readonly property var tabIds: ["today", "tasks", "focus", "stats"]
+    readonly property var tabIds: ["today", "tasks", "focus", "stats", "ranks"]
 
     function requestOpen(tab = ""): void {
         GlobalStates.openGritApp(root.tabIds.includes(tab) ? tab : "");
@@ -40,29 +40,26 @@ Scope {
         requested: GlobalStates.gritAppOpen
         // A closed Grit stays warm for a quick reopen, then goes entirely.
         retainFor: 30000
-        source: "GritAppWindow.qml"
-
-        Connections {
-            target: windowLoader.item
-            function onCloseRequested() { root.requestClose() }
+        sourceComponent: GritAppWindow {
+            onCloseRequested: root.requestClose()
         }
     }
 
     GlobalShortcut {
         name: "gritToggle"
-        description: "Toggles Grit, the habit tracker and focus timer"
+        description: "Toggles Panadoro, the habit tracker and focus timer"
         onPressed: root.requestToggle()
     }
 
     GlobalShortcut {
         name: "gritOpen"
-        description: "Opens Grit"
+        description: "Opens Panadoro"
         onPressed: root.requestOpen()
     }
 
     GlobalShortcut {
         name: "gritClose"
-        description: "Closes Grit"
+        description: "Closes Panadoro"
         onPressed: root.requestClose()
     }
 }

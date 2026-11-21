@@ -434,13 +434,17 @@ Singleton {
                 property int dailyGoalMinutes: 120
                 property bool weekStartMonday: true
                 property bool showCompleted: true
-                property string syncUrl: ""
-                property string syncToken: ""
-                property bool autoSync: false
-                property int syncIntervalSec: 120
-                property int syncPort: 8765
-                property bool hostLocal: false
+                property bool autoSync: true
+                property string authEmail: ""
+                property string authUid: ""
+                property string authIdToken: ""
+                property string authRefreshToken: ""
+                property real authExpiresAt: 0
                 property string lastSyncAt: ""
+                property string displayName: ""
+                property real displayNameUpdatedAt: 0
+                property list<string> publicTagIds: []
+                property real publicTagsUpdatedAt: 0
             }
             property JsonObject easyEffectsApp: JsonObject {
                 property string tab: "presets"
