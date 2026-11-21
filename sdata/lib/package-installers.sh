@@ -69,8 +69,6 @@ install-uv(){
 install-python-packages(){
   export UV_NO_MODIFY_PATH=1
   export UV_PYTHON_DOWNLOADS=automatic
-  local venv_dir="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/.venv"
-  x mkdir -p "$venv_dir"
 
   if ! command -v uv >/dev/null 2>&1; then
     echo -e "${STY_YELLOW}[$0]: \"uv\" not found. Installing uv...${STY_RST}"
@@ -79,31 +77,13 @@ install-python-packages(){
     export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
   fi
 
-  # Attempt to create virtual environment with Python 3.12 via uv
-  # (UV_PYTHON_DOWNLOADS=automatic downloads managed Python 3.12 if not on host)
-  if ! uv venv --prompt .venv "$venv_dir" -p 3.12 --allow-existing; then
-    echo -e "${STY_YELLOW}[$0]: uv venv with Python 3.12 failed. Attempting uv python install 3.12...${STY_RST}"
-    if uv python install 3.12; then
-      uv venv --prompt .venv "$venv_dir" -p 3.12 --allow-existing
-    else
-      echo -e "${STY_YELLOW}[$0]: Falling back to system python3 for venv...${STY_RST}"
-      uv venv --prompt .venv "$venv_dir" --allow-existing || python3 -m venv "$venv_dir"
-    fi
-  fi
-
-  if [ ! -f "$venv_dir/bin/activate" ]; then
-    echo -e "${STY_RED}[$0]: Virtualenv activate script not found. Forcing python3 -m venv...${STY_RST}"
-    python3 -m venv "$venv_dir"
-  fi
-
-  x source "$venv_dir/bin/activate"
+  # The shell's one Python environment is built from the lock that ships with the shell
+  # (scripts/deps/requirements.lock), by its own bootstrap script, so the installer and
+  # "Settings > About > Dependencies > Rebuild" always produce the same environment.
+  local bootstrap="${REPO_ROOT}/dots/.config/quickshell/ii/scripts/deps/bootstrap.sh"
   if [[ "$INSTALL_VIA_NIX" = true ]]; then
-    x nix-shell "${REPO_ROOT}/sdata/uv/shell.nix" --run "uv pip install -r ${REPO_ROOT}/sdata/uv/requirements.txt || uv pip install -r ${REPO_ROOT}/sdata/uv/requirements.in"
+    x nix-shell "${REPO_ROOT}/sdata/uv/shell.nix" --run "bash '${bootstrap}'"
   else
-    if ! uv pip install -r "${REPO_ROOT}/sdata/uv/requirements.txt"; then
-      echo -e "${STY_YELLOW}[$0]: Exact requirements failed. Trying requirements.in...${STY_RST}"
-      x uv pip install -r "${REPO_ROOT}/sdata/uv/requirements.in"
-    fi
+    x bash "${bootstrap}"
   fi
-  x deactivate
 }
