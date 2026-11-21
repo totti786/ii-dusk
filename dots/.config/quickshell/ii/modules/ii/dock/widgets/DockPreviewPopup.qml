@@ -10,6 +10,7 @@ import qs.modules.common.widgets
 import qs.modules.common.functions
 
 import "../"
+import qs.services
 
 PopupWindow {
     id: previewPopup

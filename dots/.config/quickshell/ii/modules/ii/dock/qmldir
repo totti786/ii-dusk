@@ -1,0 +1,25 @@
+module qs.modules.ii.dock
+Dock 1.0 Dock.qml
+DockActionButton 1.0 DockActionButton.qml
+DockAppButton 1.0 DockAppButton.qml
+DockAppGroupButton 1.0 DockAppGroupButton.qml
+DockContent 1.0 DockContent.qml
+DockContextMenu 1.0 DockContextMenu.qml
+DockEditAddButton 1.0 DockEditAddButton.qml
+DockEditAddSheet 1.0 DockEditAddSheet.qml
+DockEditController 1.0 DockEditController.qml
+DockEditItemLayer 1.0 DockEditItemLayer.qml
+DockEditMenu 1.0 DockEditMenu.qml
+DockFileButton 1.0 DockFileButton.qml
+DockFileContextMenu 1.0 DockFileContextMenu.qml
+DockLivePreviewWidget 1.0 DockLivePreviewWidget.qml
+DockMediaContextMenu 1.0 DockMediaContextMenu.qml
+DockMediaWidget 1.0 DockMediaWidget.qml
+DockPhoneContextMenu 1.0 DockPhoneContextMenu.qml
+DockPhoneWidget 1.0 DockPhoneWidget.qml
+DockSportsWidget 1.0 DockSportsWidget.qml
+DockTasksWidget 1.0 DockTasksWidget.qml
+DockUtilityWidget 1.0 DockUtilityWidget.qml
+DockWeatherWidget 1.0 DockWeatherWidget.qml
+DockWidgetStack 1.0 DockWidgetStack.qml
+# quickshell-generated qmldir

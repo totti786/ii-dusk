@@ -13,6 +13,8 @@ import qs.services
 // item is therefore the only positioning source and every hover can create a
 // fresh, stateless visible surface.
 PopupWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     property Item anchorItem: null

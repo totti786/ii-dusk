@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import qs
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.services
 
 /**
  * The dock's one tooltip. Every item used to own a PopupWindow of its own:

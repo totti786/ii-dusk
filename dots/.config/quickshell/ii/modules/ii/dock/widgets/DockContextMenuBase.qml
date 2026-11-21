@@ -202,6 +202,8 @@ Loader {
     visible: active
 
     sourceComponent: PopupWindow {
+        contentItem.LayoutMirroring.enabled: Translation.isRtl
+        contentItem.LayoutMirroring.childrenInherit: true
         id: popupWindow
         visible: true
         color: "transparent"
