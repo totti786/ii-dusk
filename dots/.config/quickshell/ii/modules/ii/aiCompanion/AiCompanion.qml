@@ -29,6 +29,27 @@ Scope {
     readonly property var satellites: AiCompanionSatellites {}
     readonly property bool satellitesShown: !root.ui.docked && !root.ui.dragging && !dockFade.running
     readonly property var satelliteOffsets: Placement.satelliteOffsets(root.satellites.ids.length, root.centerX, root.centerY, root.bounds, 78)
+    // The kitten pokes the orb: it gives way a little and springs back.
+    property real orbNudgeX: 0
+    property real orbNudgeY: 0
+    function pokeOrb(dx, dy, power) {
+        if (root.ui.reducedMotion) return;
+        nudgeAnim.tx = dx * 13 * power; nudgeAnim.ty = dy * 13 * power;
+        nudgeAnim.restart();
+    }
+    ParallelAnimation {
+        id: nudgeAnim
+        property real tx: 0
+        property real ty: 0
+        SequentialAnimation {
+            NumberAnimation { target: root; property: "orbNudgeX"; to: nudgeAnim.tx; duration: 110; easing.type: Easing.OutQuad }
+            NumberAnimation { target: root; property: "orbNudgeX"; to: 0; duration: 750; easing.type: Easing.OutElastic; easing.amplitude: 1; easing.period: .5 }
+        }
+        SequentialAnimation {
+            NumberAnimation { target: root; property: "orbNudgeY"; to: nudgeAnim.ty; duration: 110; easing.type: Easing.OutQuad }
+            NumberAnimation { target: root; property: "orbNudgeY"; to: 0; duration: 750; easing.type: Easing.OutElastic; easing.amplitude: 1; easing.period: .5 }
+        }
+    }
     readonly property bool expanded: root.controlsOpen && !root.ui.dragging && !root.ui.approvalNeeded
     readonly property var bounds: root.ui.screenBounds(overlay.screen)
     readonly property var storedCenter: Placement.fromRatios(root.saved.xRatio, root.saved.yRatio, root.bounds, 38)
@@ -87,6 +108,7 @@ Scope {
         function deny(): bool { return root.ui.answerApproval(false); }
         function dock(): bool { return root.ui.dock(); }
         function undock(): void { root.ui.undock(); }
+        function kitten(name: string): string { return kitten.play(name); }
         function status(): string {
             return JSON.stringify({visible: root.saved.visible, docked: root.ui.docked, canDock: root.ui.canDock,
                 dragging: root.ui.dragging, nearDock: root.ui.nearDock, dockTarget: root.ui.dockTarget,
@@ -111,6 +133,8 @@ Scope {
         }
     }
     PanelWindow {
+        contentItem.LayoutMirroring.enabled: Translation.isRtl
+        contentItem.LayoutMirroring.childrenInherit: true
         id: overlay
         screen: Quickshell.screens.find(screen => screen.name === (root.ui.dragging ? root.ui.dragMonitor : root.saved.monitor))
             ?? Quickshell.screens.find(screen => screen.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
@@ -151,6 +175,8 @@ Scope {
             Region { x: Math.round(sat2.x); y: Math.round(sat2.y); width: sat2.shown ? sat2.width : 0; height: sat2.shown ? sat2.height : 0 }
             Region { x: Math.round(sat3.x); y: Math.round(sat3.y); width: sat3.shown ? sat3.width : 0; height: sat3.shown ? sat3.height : 0 }
             Region { x: Math.round(sat4.x); y: Math.round(sat4.y); width: sat4.shown ? sat4.width : 0; height: sat4.shown ? sat4.height : 0 }
+            // The kitten can be petted.
+            Region { x: Math.round(kitten.x); y: Math.round(kitten.y); width: kitten.shown ? kitten.width : 0; height: kitten.shown ? kitten.height : 0 }
             // The approval buttons take clicks too while they are up.
             Region {
                 x: denyButton.x; y: denyButton.y
@@ -289,6 +315,43 @@ Scope {
             Slot { id: sat3; slotIndex: 3 }
             Slot { id: sat4; slotIndex: 4 }
         }
+        // The kitten sits beside the orb, on the side with room, and tucks away when the controls fan out.
+        CompanionKitten {
+            id: kitten
+            readonly property bool shown: Config.options.ai.voice.kitten !== false && !root.ui.docked && !root.ui.dragging && !dockFade.running
+            visible: shown
+            side: root.centerX > root.bounds.width - 140 ? -1 : 1
+            hidden: root.ui.approvalNeeded
+            // Steps clear of the buttons while they are fanned out.
+            fan: root.expanded ? root.orbitPositions : []
+            onPoke: (dx, dy, power) => root.pokeOrb(dx, dy, power)
+            downward: root.centerY > root.bounds.height - 140 ? -1 : 1
+            orbX: root.centerX
+            orbY: root.centerY
+            areaWidth: root.bounds.width
+            areaHeight: root.bounds.height
+            // Things it must not stand on, as offsets from the orb: the small orbs, the state label
+            // above it and the approval label and buttons.
+            obstacles: {
+                const out = [];
+                if (root.satellitesShown)
+                    for (let i = 0; i < root.satellites.ids.length; i++) {
+                        const o = root.satelliteOffsets[i];
+                        if (o) out.push({x: o.x - 24, y: o.y - 24, w: 48, h: 48});
+                    }
+                const lift = root.satellitesShown && root.satelliteOffsets.length > 0 ? 58 : 0;
+                if (root.centerY > 92 + lift && (root.expanded || root.voice.active || root.ui.fileHover))
+                    out.push({x: -120, y: -86 - lift, w: 240, h: 28});
+                if (ask.shown) {
+                    out.push({x: askLabel.x - root.centerX, y: askLabel.y - root.centerY, w: askLabel.width, h: askLabel.height});
+                    out.push({x: denyButton.x - root.centerX, y: denyButton.y - root.centerY, w: 54, h: 54});
+                    out.push({x: allowButton.x - root.centerX, y: allowButton.y - root.centerY, w: 54, h: 54});
+                }
+                return out;
+            }
+            // Things it can look at besides the orb and the pointer: the small orbs.
+            interests: [sat0, sat1, sat2, sat3, sat4].filter(o => o.shown).map(o => ({x: o.x + o.width / 2, y: o.y + o.height / 2}))
+        }
         CompanionSurface {
             id: surface
             visible: !root.ui.docked || root.ui.dragging || dockFade.running
@@ -296,8 +359,8 @@ Scope {
             interactionHeld: root.ui.controlPressed || chatAction.down || returnAction.down || voiceAction.down || hideAction.down
             property real displayedCenterX: root.centerX
             property real displayedCenterY: root.centerY
-            x: (dockFade.running ? root.returnStartX : displayedCenterX) - width/2
-            y: (dockFade.running ? root.returnStartY : displayedCenterY) - height/2
+            x: (dockFade.running ? root.returnStartX : displayedCenterX) - width/2 + root.orbNudgeX
+            y: (dockFade.running ? root.returnStartY : displayedCenterY) - height/2 + root.orbNudgeY
             scale: root.ui.reducedMotion ? 1 : 1-root.returnProgress*.55
             Behavior on displayedCenterX {
                 enabled: !root.ui.dragging && !root.ui.reducedMotion && overlay.visible && root.motionReady
@@ -312,6 +375,14 @@ Scope {
                 anchors.centerIn: parent
                 width: 84; height: 84
                 hovered: root.expanded || grip.containsMouse
+                playMood: kitten.withOrb ? kitten.orbMood : ""
+                lookAt: {
+                    if (!kitten.withOrb || !kitten.visible) return null;
+                    const dx = kitten.centerX - root.centerX, dy = kitten.centerY - root.centerY;
+                    const len = Math.max(1, Math.hypot(dx, dy));
+                    const k = Math.min(1, len / 60);
+                    return {x: dx / len * k, y: dy / len * k};
+                }
                 ambientMotion: overlay.visible && !root.ui.docked
             }
             CompanionDragArea {

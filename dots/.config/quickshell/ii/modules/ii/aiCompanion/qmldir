@@ -8,3 +8,4 @@ CompanionPointer 1.0 CompanionPointer.qml
 CompanionSurface 1.0 CompanionSurface.qml
 
 CompanionFileDrop 1.0 CompanionFileDrop.qml
+CompanionKitten 1.0 CompanionKitten.qml

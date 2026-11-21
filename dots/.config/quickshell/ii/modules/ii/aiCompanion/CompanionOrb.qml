@@ -9,6 +9,9 @@ import qs.modules.ii.dynamicIsland.bubble
 Item {
     id: root
     property bool hovered: false
+    /** Playing with the kitten: look at it ({x, y}) and wear this mood. */
+    property var lookAt: null
+    property string playMood: ""
     property bool showSymbol: true
     /** Eyes that follow the pointer in place of the glyph, dots and bars. */
     property bool eyes: true
@@ -27,10 +30,22 @@ Item {
     readonly property string phase: AiCompanionUi.phase
     readonly property bool waveform: !root.fileHover && (phase === "idle" || phase === "listening" || phase === "speaking")
     onPhaseChanged: field.requestPaint()
+    // 0..1 while the microphone is open: the body perks up, ripples with the voice and warms to the tertiary colour.
+    property real listen: root.phase === "listening" ? 1 : 0
+    Behavior on listen { enabled: !AiCompanionUi.reducedMotion; NumberAnimation { duration: 260; easing.type: Easing.OutBack } }
+    onListenChanged: field.requestPaint()
+    // One-shot acknowledgement when the trigger word is heard: a pop and a ripple leaving the body.
+    property real ping: 1
+    onPingChanged: field.requestPaint()
+    NumberAnimation { id: pingAnim; target: root; property: "ping"; from: 0; to: 1; duration: 750; easing.type: Easing.OutCubic }
+    Connections {
+        target: AiCompanionUi.voice
+        function onWakeCountChanged() { if (!AiCompanionUi.reducedMotion) pingAnim.restart(); }
+    }
     onHoveredChanged: field.requestPaint()
     property real amplitude: Math.max(0, Math.min(1, AiCompanionUi.level))
     readonly property bool alert: AiCompanionUi.phase === "attention" || AiCompanionUi.phase === "error"
-    readonly property color tone: root.alert ? Appearance.m3colors.m3error : root.fileHover ? Appearance.colors.colTertiary : Appearance.colors.colPrimary
+    readonly property color tone: root.alert ? Appearance.m3colors.m3error : (root.fileHover || root.phase === "listening") ? Appearance.colors.colTertiary : Appearance.colors.colPrimary
     readonly property color accent: Appearance.colors.colSecondary
     readonly property color highlight: Appearance.colors.colTertiary
     readonly property bool animated: !!(visible && !AiCompanionUi.reducedMotion
@@ -68,7 +83,9 @@ Item {
         onPaint: {
             const ctx = getContext("2d");
             ctx.reset();
-            const cx=width/2, cy=height/2, r=Math.min(width,height)*.43;
+            const L=Math.max(0,Math.min(1.15,root.listen));
+            const cx=width/2, cy=height/2, r=Math.min(width,height)*.43*(1+L*.035+L*root.amplitude*.018)*(1+Math.sin(Math.PI*Math.min(1,root.ping)*.9)*.045*(1-root.ping));
+            const pg=root.ping;
             const t=AiCompanionUi.reducedMotion ? 0 : root.phaseClock;
             const a=AiCompanionUi.reducedMotion ? 0 : root.amplitude;
             const motion=AiCompanionUi.reducedMotion || AiCompanionUi.dragging ? 0 : 1;
@@ -79,7 +96,8 @@ Item {
             for (let i=0; i<=96; i++) {
                 const angle=i/96*Math.PI*2;
                 const wave=Math.sin(angle*6+t*.45)*flow
-                    + motion*.009*Math.sin(angle*3-t*.8);
+                    + motion*.009*Math.sin(angle*3-t*.8)
+                    + L*(.008+a*.045)*Math.sin(angle*3-t*(AiCompanionUi.reducedMotion ? 0 : 1.1));
                 const radius=r*(breath+wave+a*.075*Math.sin(angle*3+t*2));
                 const x=cx+Math.cos(angle)*radius, y=cy+Math.sin(angle)*radius;
                 if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
@@ -99,6 +117,15 @@ Item {
             ctx.lineTo(cx+r*1.4,cy+r*1.4);ctx.lineTo(cx-r*1.4,cy+r*1.4);ctx.closePath();ctx.fill();
             ctx.restore();
             ctx.globalAlpha=1;
+            if (pg < 1) {
+                ctx.beginPath();
+                ctx.arc(cx,cy,r*(1.04+pg*.22),0,Math.PI*2);
+                ctx.lineWidth=Math.max(1.5,width*.035*(1-pg));
+                ctx.strokeStyle=String(Appearance.colors.colTertiary);
+                ctx.globalAlpha=(1-pg)*.9;
+                ctx.stroke();
+                ctx.globalAlpha=1;
+            }
             if (root.showSymbol && !root.showEyes && root.busy && !root.fileHover) {
                 ctx.fillStyle=String(Appearance.colors.colOnPrimary);
                 for(let i=0;i<3;i++) {
@@ -137,7 +164,10 @@ Item {
         error: root.phase === "error"
         level: root.amplitude
         personality: true
-        mood: AiCompanionUi.mood
+        mood: root.playMood !== "" ? root.playMood : AiCompanionUi.mood
+        manualGaze: root.lookAt !== null
+        aimX: root.lookAt?.x ?? 0
+        aimY: root.lookAt?.y ?? 0
     }
     MaterialSymbol {
         anchors.centerIn: parent
