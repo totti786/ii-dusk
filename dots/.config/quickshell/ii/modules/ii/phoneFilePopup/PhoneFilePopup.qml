@@ -26,6 +26,8 @@ Scope {
         active: GlobalStates.phoneFilePopupOpen && IiLinkService.transfer !== null
 
         component: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: popupWindow
             color: "transparent"
             visible: true
