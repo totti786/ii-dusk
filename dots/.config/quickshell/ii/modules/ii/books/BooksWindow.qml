@@ -10,6 +10,8 @@ import qs.modules.ii.clock.components
 
 /** The Books library as an ordinary floating window. */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()

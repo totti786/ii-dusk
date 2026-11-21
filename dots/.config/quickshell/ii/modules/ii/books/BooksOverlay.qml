@@ -20,6 +20,8 @@ import qs.modules.ii.clock.components
  * library; Enter opens the one in the middle.
  */
 PanelWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
