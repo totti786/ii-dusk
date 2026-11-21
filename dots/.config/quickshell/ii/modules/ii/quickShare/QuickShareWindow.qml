@@ -23,6 +23,8 @@ import qs.modules.ii.clock.components
  * files, is the floating button inside the page.
  */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
