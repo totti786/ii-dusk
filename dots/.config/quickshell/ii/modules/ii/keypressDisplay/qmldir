@@ -1,0 +1,3 @@
+module qs.modules.ii.keypressDisplay
+KeypressDisplay 1.0 KeypressDisplay.qml
+# quickshell-generated qmldir
