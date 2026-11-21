@@ -1,0 +1,5 @@
+module qs.modules.ii.health
+HealthApp 1.0 HealthApp.qml
+HealthAppContent 1.0 HealthAppContent.qml
+HealthAppWindow 1.0 HealthAppWindow.qml
+# quickshell-generated qmldir
