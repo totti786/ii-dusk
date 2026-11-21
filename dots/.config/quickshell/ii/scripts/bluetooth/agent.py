@@ -42,6 +42,16 @@ gi.require_version("GLib", "2.0")
 gi.require_version("Gio", "2.0")
 from gi.repository import GLib, Gio  # noqa: E402
 
+
+def _unix_signal_add(signal, callback):
+    """PyGObject 3.52 moved GLib.unix_signal_add to GLibUnix.signal_add."""
+    try:
+        gi.require_version("GLibUnix", "2.0")
+        from gi.repository import GLibUnix
+        return GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, signal, callback)
+    except (ValueError, ImportError, AttributeError):
+        return GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal, callback)
+
 BUS_NAME = "org.bluez"
 AGENT_PATH = "/org/quickshell/ii/btagent"
 AGENT_MANAGER_IFACE = "org.bluez.AgentManager1"
@@ -321,7 +331,7 @@ def main():
 
     loop = GLib.MainLoop()
     for signal in (1, 2, 15):
-        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal, shutdown)
+        _unix_signal_add(signal, shutdown)
     threading.Thread(target=read_stdin, daemon=True).start()
 
     try:
