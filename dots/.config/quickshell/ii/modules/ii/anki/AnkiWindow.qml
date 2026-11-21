@@ -12,6 +12,8 @@ import qs.modules.ii.clock.components
  * The Anki reviewer as an ordinary floating window. Closing it releases the collection.
  */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
