@@ -814,6 +814,16 @@ Item {
             prioritizeOnSearch: true
         }
 
+        // ── Programs, packages, fonts and the one Python environment ──
+        ProgressiveSectionLoader {
+            source: Qt.resolvedUrl("sections/DependenciesSection.qml")
+            active: true
+            estimatedHeight: 900
+            showSkeleton: true
+            sectionTitle: Translation.tr("Dependencies")
+            prioritizeOnSearch: true
+        }
+
         // ── Where the checkout comes from ──
         ContentSection {
             icon: "fork_right"

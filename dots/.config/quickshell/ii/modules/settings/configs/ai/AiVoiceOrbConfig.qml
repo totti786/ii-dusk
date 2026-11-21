@@ -61,9 +61,16 @@ Item {
         {id: "alarms", icon: "alarm", name: Translation.tr("Alarms"), example: Translation.tr("alarm at 7:30 am")},
         {id: "notes", icon: "checklist", name: Translation.tr("Reminders & tasks"), example: Translation.tr("remind me to call mum, add milk to my tasks")},
         {id: "workspace", icon: "workspaces", name: Translation.tr("Workspaces"), example: Translation.tr("workspace 3")},
-        {id: "apps", icon: "apps", name: Translation.tr("Opening apps"), example: Translation.tr("open firefox")}
+        {id: "apps", icon: "apps", name: Translation.tr("Opening apps"), example: Translation.tr("open firefox")},
+        {id: "toggles", icon: "toggle_on", name: Translation.tr("Switches"), example: Translation.tr("turn off wifi, night light on, do not disturb")},
+        {id: "power", icon: "battery_saver", name: Translation.tr("Power profile"), example: Translation.tr("power saver mode, performance mode")},
+        {id: "capture", icon: "screenshot_region", name: Translation.tr("Screenshots & recording"), example: Translation.tr("take a screenshot, start recording, color picker")},
+        {id: "panels", icon: "dashboard", name: Translation.tr("Open shell panels"), example: Translation.tr("open settings, show the cheat sheet, open the clipboard")},
+        {id: "windows", icon: "select_window", name: Translation.tr("Window control"), example: Translation.tr("fullscreen, float this window, switch to firefox")},
+        {id: "info", icon: "help", name: Translation.tr("Quick answers"), example: Translation.tr("what time is it, battery, what's playing")},
+        {id: "system", icon: "lock", name: Translation.tr("Lock, sleep, restart, shut down, close window"), example: Translation.tr("asks you to say yes first")}
     ]
-    readonly property var actionVerbs: ["media", "volume", "brightness", "theme", "open", "timer", "alarm", "remind", "task", "workspace"]
+    readonly property var actionVerbs: ["media", "volume", "brightness", "theme", "open", "timer", "alarm", "remind", "task", "workspace", "toggle", "power", "capture", "panel", "window"]
     readonly property var rulesOff: Array.from(Config.options.ai.voice.rulesOff ?? [])
     readonly property var customRules: Array.from(Config.options.ai.voice.customRules ?? [])
     property string customError: ""
@@ -181,6 +188,50 @@ Item {
         }
 
         ContentSection {
+            icon: "record_voice_over"
+            title: Translation.tr("Trigger word")
+
+            ConfigSwitch {
+                buttonIcon: "hearing"
+                text: Translation.tr("Start listening when I say the trigger word")
+                checked: Config.options.ai.voice.wakeWord
+                onCheckedChanged: Config.options.ai.voice.wakeWord = checked
+            }
+            StyledComboBox {
+                id: wakeWordBox
+                readonly property var words: [
+                    {displayName: Translation.tr("Hey Jarvis"), value: "hey_jarvis"},
+                    {displayName: Translation.tr("Alexa"), value: "alexa"},
+                    {displayName: Translation.tr("Hey Mycroft"), value: "hey_mycroft"},
+                    {displayName: Translation.tr("Hey Rhasspy"), value: "hey_rhasspy"},
+                    {displayName: Translation.tr("Hey Borb (custom, new)"), value: "hey_borb"}
+                ]
+                buttonIcon: "campaign"
+                textRole: "displayName"
+                model: wakeWordBox.words
+                enabled: Config.options.ai.voice.wakeWord
+                currentIndex: Math.max(0, wakeWordBox.words.findIndex(item => item.value === String(Config.options.ai.voice.wakeWordModel)))
+                onActivated: index => Config.options.ai.voice.wakeWordModel = wakeWordBox.words[index].value
+            }
+            StyledText {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                text: Translation.tr("A small detector keeps the microphone open while the orb is idle and starts a voice turn when it hears the word. A word is downloaded the first time you pick it. A custom model can be used by putting the path of its .onnx file in ai.voice.wakeWordModel. It runs on this computer, records nothing, and sends nothing anywhere. It stops while you are talking to the orb, while the orb speaks, and when the screen is locked. It uses about 6% of one core and 190 MB.")
+            }
+            ConfigSpinBox {
+                icon: "tune"
+                text: Translation.tr("Sensitivity threshold (%)")
+                value: Math.round(Config.options.ai.voice.wakeWordThreshold * 100)
+                from: 20
+                to: 95
+                stepSize: 5
+                onValueChanged: Config.options.ai.voice.wakeWordThreshold = value / 100
+            }
+        }
+
+        ContentSection {
             icon: "keyboard"
             title: Translation.tr("Typed messages")
 
@@ -229,6 +280,12 @@ Item {
                 text: Translation.tr("Include the playing track")
                 checked: Config.options.ai.voice.satelliteMedia
                 onCheckedChanged: Config.options.ai.voice.satelliteMedia = checked
+            }
+            ConfigSwitch {
+                buttonIcon: "pets"
+                text: Translation.tr("Show the kitten")
+                checked: Config.options.ai.voice.kitten
+                onCheckedChanged: Config.options.ai.voice.kitten = checked
             }
         }
 

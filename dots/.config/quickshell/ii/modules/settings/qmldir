@@ -1,0 +1,9 @@
+module qs.modules.settings
+BarConfig 1.0 BarConfig.qml
+ConfigHealthBanner 1.0 ConfigHealthBanner.qml
+SearchBar 1.0 SearchBar.qml
+SettingsPageSkeleton 1.0 SettingsPageSkeleton.qml
+Sidebar 1.0 Sidebar.qml
+SidebarNavButton 1.0 SidebarNavButton.qml
+UserHeader 1.0 UserHeader.qml
+# quickshell-generated qmldir

@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import qs.services
 
 /**
  * Fullscreen screenshot viewer on the Settings window's screen. Controlled:
@@ -28,6 +29,8 @@ Loader {
     active: root.shown && root.current.length > 0
 
     sourceComponent: PanelWindow {
+        contentItem.LayoutMirroring.enabled: Translation.isRtl
+        contentItem.LayoutMirroring.childrenInherit: true
         id: lightbox
         screen: (root.QsWindow.window as QsWindow)?.screen ?? null
         color: "transparent"

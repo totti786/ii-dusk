@@ -302,6 +302,16 @@ Item {
                 }
             }
         }
+
+        // ── Install more fonts ────────────────────────────────────────────
+        ProgressiveSectionLoader {
+            source: Qt.resolvedUrl("sections/FontInstallSection.qml")
+            active: true
+            estimatedHeight: 420
+            showSkeleton: true
+            sectionTitle: Translation.tr("Install fonts")
+            prioritizeOnSearch: true
+        }
     }
 
     // Sub-page overlay

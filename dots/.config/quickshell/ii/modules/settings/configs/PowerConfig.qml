@@ -219,6 +219,164 @@ Item {
             }
         }
 
+        // ── laptop lid ──
+        ContentSection {
+            Layout.topMargin: 12
+            visible: Battery.available
+            icon: "laptop_chromebook"
+            title: Translation.tr("Closing the lid")
+            tooltip: Translation.tr("What happens when the lid is shut. Keep system awake turns Suspend into Turn screen off. The screen comes back when the lid opens.")
+
+            ContentSubsection {
+                title: Translation.tr("On a charger")
+                icon: "power"
+                ConfigSelectionArray {
+                    currentValue: Config.options.lid.onAc
+                    onSelected: newValue => Config.options.lid.onAc = String(newValue)
+                    options: [
+                        { displayName: Translation.tr("Turn screen off"), icon: "desktop_access_disabled", value: "blank" },
+                        { displayName: Translation.tr("Suspend"),         icon: "bedtime",                value: "suspend" },
+                        { displayName: Translation.tr("Do nothing"),      icon: "block",                  value: "nothing" }
+                    ]
+                }
+            }
+            ContentSubsection {
+                title: Translation.tr("On battery")
+                icon: "battery_android_5"
+                ConfigSelectionArray {
+                    currentValue: Config.options.lid.onBattery
+                    onSelected: newValue => Config.options.lid.onBattery = String(newValue)
+                    options: [
+                        { displayName: Translation.tr("Suspend"),         icon: "bedtime",                value: "suspend" },
+                        { displayName: Translation.tr("Turn screen off"), icon: "desktop_access_disabled", value: "blank" },
+                        { displayName: Translation.tr("Do nothing"),      icon: "block",                  value: "nothing" }
+                    ]
+                }
+            }
+        }
+
+        // ── when idle ──
+        ContentSection {
+            Layout.topMargin: 12
+            icon: "timer"
+            title: Translation.tr("When idle")
+            tooltip: Translation.tr("What happens as you stop using the computer, each step counted from your last input. Keep system awake stops all of them. Changing a value rewrites the idle daemon's config and restarts it, which takes about a second. Locking before suspend is always on and is not a setting.")
+
+            ContentSubsection {
+                title: Translation.tr("Steps")
+                icon: "hourglass_top"
+
+                ConfigSwitch {
+                    buttonIcon: "brightness_6"
+                    text: Translation.tr("Dim the screen")
+                    checked: Config.options.hypridle.dim.enable
+                    onCheckedChanged: Config.options.hypridle.dim.enable = checked
+                }
+                ConfigSpinBox {
+                    visible: Config.options.hypridle.dim.enable
+                    icon: "timer"
+                    text: Translation.tr("after (seconds)")
+                    value: Config.options.hypridle.dim.seconds
+                    from: 10
+                    to: 7200
+                    stepSize: 10
+                    onValueChanged: Config.options.hypridle.dim.seconds = value
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "brightness_low"
+                    text: Translation.tr("Lower the brightness")
+                    checked: Config.options.hypridle.lowerBrightness.enable
+                    onCheckedChanged: Config.options.hypridle.lowerBrightness.enable = checked
+                }
+                ConfigSpinBox {
+                    visible: Config.options.hypridle.lowerBrightness.enable
+                    icon: "timer"
+                    text: Translation.tr("after (seconds)")
+                    value: Config.options.hypridle.lowerBrightness.seconds
+                    from: 10
+                    to: 7200
+                    stepSize: 10
+                    onValueChanged: Config.options.hypridle.lowerBrightness.seconds = value
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "lock_clock"
+                    text: Translation.tr("Turn the screen off once locked")
+                    checked: Config.options.hypridle.screenOffLocked.enable
+                    onCheckedChanged: Config.options.hypridle.screenOffLocked.enable = checked
+                }
+                ConfigSpinBox {
+                    visible: Config.options.hypridle.screenOffLocked.enable
+                    icon: "timer"
+                    text: Translation.tr("after (seconds)")
+                    value: Config.options.hypridle.screenOffLocked.seconds
+                    from: 10
+                    to: 7200
+                    stepSize: 10
+                    onValueChanged: Config.options.hypridle.screenOffLocked.seconds = value
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "lock"
+                    text: Translation.tr("Lock the session")
+                    checked: Config.options.hypridle.lock.enable
+                    onCheckedChanged: Config.options.hypridle.lock.enable = checked
+                }
+                ConfigSpinBox {
+                    visible: Config.options.hypridle.lock.enable
+                    icon: "timer"
+                    text: Translation.tr("after (seconds)")
+                    value: Config.options.hypridle.lock.seconds
+                    from: 10
+                    to: 7200
+                    stepSize: 10
+                    onValueChanged: Config.options.hypridle.lock.seconds = value
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "desktop_access_disabled"
+                    text: Translation.tr("Turn the screen off")
+                    checked: Config.options.hypridle.screenOff.enable
+                    onCheckedChanged: Config.options.hypridle.screenOff.enable = checked
+                }
+                ConfigSpinBox {
+                    visible: Config.options.hypridle.screenOff.enable
+                    icon: "timer"
+                    text: Translation.tr("after (seconds)")
+                    value: Config.options.hypridle.screenOff.seconds
+                    from: 10
+                    to: 7200
+                    stepSize: 10
+                    onValueChanged: Config.options.hypridle.screenOff.seconds = value
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "bedtime"
+                    text: Translation.tr("Suspend")
+                    checked: Config.options.hypridle.suspend.enable
+                    onCheckedChanged: Config.options.hypridle.suspend.enable = checked
+                }
+                ConfigSpinBox {
+                    visible: Config.options.hypridle.suspend.enable
+                    icon: "timer"
+                    text: Translation.tr("after (seconds)")
+                    value: Config.options.hypridle.suspend.seconds
+                    from: 10
+                    to: 7200
+                    stepSize: 10
+                    onValueChanged: Config.options.hypridle.suspend.seconds = value
+                }
+                ConfigSwitch {
+                    visible: Config.options.hypridle.suspend.enable
+                    buttonIcon: "battery_android_5"
+                    text: Translation.tr("Only on battery")
+                    checked: Config.options.hypridle.suspend.onlyOnBattery
+                    onCheckedChanged: Config.options.hypridle.suspend.onlyOnBattery = checked
+                }
+            }
+        }
+
         // ── related ──
         Flow {
             Layout.fillWidth: true

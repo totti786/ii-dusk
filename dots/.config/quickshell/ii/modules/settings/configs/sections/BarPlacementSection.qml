@@ -141,7 +141,7 @@ ColumnLayout {
                             "value": 0
                         }, {
                             "displayName": Translation.tr("Left"),
-                            "icon": "arrow_back",
+                            "icon": "west", // an absolute screen direction: never flipped for RTL
                             "value": 2,
                             "enabled": !locked
                         }, {
@@ -151,7 +151,7 @@ ColumnLayout {
                             "enabled": !locked
                         }, {
                             "displayName": Translation.tr("Right"),
-                            "icon": "arrow_forward",
+                            "icon": "east",
                             "value": 3,
                             "enabled": !locked
                         }];
