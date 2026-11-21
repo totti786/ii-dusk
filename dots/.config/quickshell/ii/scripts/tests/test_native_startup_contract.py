@@ -11,7 +11,7 @@ APP_STATS = (ROOT / "services/AppStats.qml").read_text(encoding="utf-8")
 class NativeStartupContractTests(unittest.TestCase):
     def test_app_stats_waits_for_config_before_enabling_native_objects(self):
         self.assertIn(
-            "readonly property bool enabled: Config.ready && (root.opts?.enable ?? true)",
+            "readonly property bool enabled: Config.ready && (root.opts?.enable ?? false)",
             APP_STATS,
         )
         idle_monitor = APP_STATS.split("IdleMonitor {", 1)[1].split("}", 1)[0]

@@ -94,16 +94,17 @@ class AnkiAppContractTests(unittest.TestCase):
         backend = self.read("scripts/anki/anki_backend.py")
         installer = self.read("scripts/anki/install_engine.sh")
         service = self.read("services/AnkiService.qml")
-        # The backend runs on the engine venv and never falls back to the system package.
-        self.assertIn("ii-anki-engine", backend)
+        # The backend runs in the shell's one Python environment and never falls back to the system package.
+        self.assertIn("ILLOGICAL_IMPULSE_VIRTUAL_ENV", backend)
         self.assertIn('"anki_missing"', backend)
         self.assertNotIn("import anki.collection", backend)
         # Pinned (never "latest": a newer engine can upgrade the collection past desktop).
         self.assertRegex(installer, r'ANKI_VERSION="\$\{II_ANKI_VERSION:-\d+\.\d+\.\d+\}"')
         self.assertIn('"anki==$ANKI_VERSION"', installer)
         self.assertNotIn("--upgrade", installer)
-        # Its own folder, apart from upstream's ii-anki one that install.sh may upgrade.
+        # The shell's own environment, apart from upstream's ii-anki one that install.sh may upgrade.
         self.assertNotIn("/ii-anki/", installer)
+        self.assertIn("ILLOGICAL_IMPULSE_VIRTUAL_ENV", installer)
         self.assertIn("install_engine.sh", service)
         self.assertIn("function installEngine", service)
 

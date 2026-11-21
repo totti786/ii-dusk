@@ -12,13 +12,10 @@ class CdMediaWidgetContractTests(unittest.TestCase):
     def setUp(self):
         self.source = CD_MEDIA.read_text(encoding="utf-8")
 
-    def test_artwork_refreshes_from_the_derived_path_on_startup(self):
-        self.assertIn("function refreshArt()", self.source)
-        self.assertIn("onArtFilePathChanged: root.refreshArt()", self.source)
-        self.assertIn("Component.onCompleted: root.refreshArt()", self.source)
-        self.assertIn("if (root.isLocalArt)\n            return root.rawArtUrl;", self.source)
-        self.assertIn("return root.downloaded ? Qt.resolvedUrl(root.artFilePath) : \"\";", self.source)
-        self.assertIn("root.downloaded = exitCode === 0;", self.source)
+    def test_artwork_comes_from_the_shared_cover_art_service(self):
+        # CoverArt.source() starts the download itself the first time a binding reads it, so a
+        # track that is already playing when the widget loads is fetched without a local refresh.
+        self.assertIn("CoverArt.source(root.rawArtUrl)", self.source)
 
     def test_artwork_shadow_has_room_to_fade_below_the_viewport(self):
         self.assertIn("id: albumArtShadow", self.source)

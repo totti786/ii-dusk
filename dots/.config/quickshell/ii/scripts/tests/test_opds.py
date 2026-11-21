@@ -126,13 +126,13 @@ class OpdsTest(unittest.TestCase):
 
     def test_builtin_source_is_listed_and_user_sources_round_trip(self):
         names = [s["name"] for s in self.json_of(self.run_opds("sources"))["sources"]]
-        self.assertEqual(names, ["Project Gutenberg", "Z-Library"])
+        self.assertEqual(names, ["Project Gutenberg", "Z-Library", "Library Genesis", "Manga (MangaDex)"])
         added = self.add_source()
         self.assertEqual(added["id"], "test-shelf")
         listed = self.json_of(self.run_opds("sources"))["sources"]
-        self.assertEqual([s["id"] for s in listed], ["gutenberg", "zlib", "test-shelf"])
+        self.assertEqual([s["id"] for s in listed], ["gutenberg", "zlib", "libgen", "manga", "test-shelf"])
         self.assertTrue(self.json_of(self.run_opds("source-remove", "--id", "test-shelf"))["ok"])
-        self.assertEqual(len(self.json_of(self.run_opds("sources"))["sources"]), 2)
+        self.assertEqual(len(self.json_of(self.run_opds("sources"))["sources"]), 4)
 
     def test_builtin_source_cannot_be_removed_and_bad_urls_are_refused(self):
         self.assertFalse(self.json_of(self.run_opds("source-remove", "--id", "gutenberg"))["ok"])

@@ -55,12 +55,12 @@ class BarMediaWidgetContractTest(unittest.TestCase):
             self.assertNotIn("MouseArea {", body, name)
             self.assertNotIn("mediaPopupRect", body, name)
 
-    def test_cover_art_is_refreshed_for_an_already_active_track(self):
+    def test_cover_art_is_fetched_for_an_already_active_track(self):
+        # The shared CoverArt service downloads on first read of source(), so there is nothing
+        # to refresh by hand when the widget loads with a track already playing.
         base = self.widget(BASE)
-        self.assertIn("function refreshArt()", base)
-        self.assertIn("onArtUrlChanged: root.refreshArt()", base)
-        completed = base.split("Component.onCompleted:", 1)[1].split("\n    }", 1)[0]
-        self.assertIn("root.refreshArt()", completed)
+        self.assertIn("readonly property string artUrl: MprisController.artUrl", base)
+        self.assertIn("CoverArt.source(root.artUrl)", base)
 
     def test_lyric_rows_do_not_depend_on_an_id_in_the_caller(self):
         scroller = self.read("modules/common/widgets/LyricScroller.qml")

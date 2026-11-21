@@ -160,8 +160,8 @@ class ZlibSourceTest(unittest.TestCase):
         self.assertEqual(caught.exception.code, "settings")
 
     def test_missing_cli_is_reported(self):
-        with mock.patch.object(zlib_source, "PYTHON", Path("/nonexistent/python")), \
-                mock.patch.object(zlib_source, "SCRIPT", Path("/nonexistent/zlib.py")):
+        # The source now shells out to the books-rs binary (bookscli.RS), not a Python CLI.
+        with mock.patch.object(zlib_source.bookscli, "RS", Path("/nonexistent/books-rs")):
             with self.assertRaises(zlib_source.SourceError) as caught:
                 zlib_source.status()
         self.assertEqual(caught.exception.code, "missing")

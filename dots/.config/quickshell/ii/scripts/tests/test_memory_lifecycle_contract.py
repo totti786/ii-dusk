@@ -15,7 +15,7 @@ class MemoryLifecycleContractTests(unittest.TestCase):
         source = self.read("services/Notifications.qml")
         self.assertIn("property bool _releasing: false", source)
         self.assertIn("function releaseNotificationObject(notifObject)", source)
-        self.assertIn("notifObject.destroy();", source)
+        self.assertIn("notifObject.destroy()", source)  # deferred with Qt.callLater upstream
         self.assertIn("root._pendingNotifications = root._pendingNotifications.filter", source)
         self.assertIn("maximumHistoryEntries: 200", source)
 
@@ -29,8 +29,10 @@ class MemoryLifecycleContractTests(unittest.TestCase):
     def test_todo_only_loads_selected_task_list(self):
         source = self.read("modules/common/dashboardWidgets/todo/TodoWidget.qml")
         swipe = source.split("SwipeView {", 1)[1].split("// + FAB", 1)[0]
-        self.assertEqual(swipe.count("Loader {"), 2)
+        # Two tab loaders plus the open-task view, all lazy.
+        self.assertEqual(swipe.count("Loader {"), 3)
         self.assertEqual(swipe.count("active: root.selectedTab ==="), 2)
+        self.assertEqual(swipe.count("active: root.viewOpen"), 1)
         self.assertNotIn("TaskList {\n                dense:", swipe)
 
     def test_ticktick_has_one_selected_provider_refresh_owner(self):

@@ -1179,7 +1179,8 @@ class SearchRaycastContractTests(unittest.TestCase):
         self.assertIn("function quicklinkFavicon(url)", launcher)
         self.assertIn("fetchFavicons", quicklinks)
         self.assertIn("LauncherSearchResult.IconType.Image", item)
-        self.assertIn('source: visible ? root.iconName : ""', item)
+        # Upstream fix: gate on the icon type, not on `visible` (the parent stays hidden until Ready).
+        self.assertIn('source: root.iconType === LauncherSearchResult.IconType.Image ? root.iconName : ""', item)
     def test_search_now_playing_redesign_contract(self):
         now_playing = source("modules/ii/overview/SearchNowPlaying.qml")
         search_item = source("modules/ii/overview/SearchItem.qml")
