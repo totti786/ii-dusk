@@ -14,6 +14,8 @@ import qs.modules.ii.clock.components
  * floats (see hyprland/rules.lua) and opens at the size Usage and Modes use.
  */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()

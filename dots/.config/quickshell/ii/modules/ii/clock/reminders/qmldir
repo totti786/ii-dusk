@@ -1,0 +1,13 @@
+module qs.modules.ii.clock.reminders
+ReminderCategoriesSheet 1.0 ReminderCategoriesSheet.qml
+ReminderCategorySheet 1.0 ReminderCategorySheet.qml
+ReminderCheck 1.0 ReminderCheck.qml
+ReminderEditorSheet 1.0 ReminderEditorSheet.qml
+ReminderItem 1.0 ReminderItem.qml
+ReminderRepeatEditor 1.0 ReminderRepeatEditor.qml
+RemindersMenu 1.0 RemindersMenu.qml
+RemindersSettingsSection 1.0 RemindersSettingsSection.qml
+singleton RemindersStyle 1.0 RemindersStyle.qml
+RemindersTab 1.0 RemindersTab.qml
+ReminderSyncSettingsSection 1.0 ReminderSyncSettingsSection.qml
+# quickshell-generated qmldir
