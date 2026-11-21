@@ -1,0 +1,4 @@
+module qs.modules.ii.onScreenDisplay.popups
+OsdDeviceOutputItem 1.0 OsdDeviceOutputItem.qml
+OsdDeviceOutputPopup 1.0 OsdDeviceOutputPopup.qml
+# quickshell-generated qmldir

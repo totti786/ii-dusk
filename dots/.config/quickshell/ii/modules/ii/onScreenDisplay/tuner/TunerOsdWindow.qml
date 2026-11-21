@@ -4,6 +4,7 @@ import qs.modules.common.widgets
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import qs.services
 
 /**
  * The Tuner OSD on its own, for when the Dynamic Island isn't there to hold it: the same
