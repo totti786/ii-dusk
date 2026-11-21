@@ -1,0 +1,19 @@
+module qs.modules.ii.easyEffects.components
+BandSlider 1.0 BandSlider.qml
+DeviceChip 1.0 DeviceChip.qml
+DeviceView 1.0 DeviceView.qml
+EasyEffectsBadge 1.0 EasyEffectsBadge.qml
+EasyEffectsButton 1.0 EasyEffectsButton.qml
+EasyEffectsCardAction 1.0 EasyEffectsCardAction.qml
+EasyEffectsFilterChip 1.0 EasyEffectsFilterChip.qml
+EasyEffectsPill 1.0 EasyEffectsPill.qml
+EasyEffectsPromptSheet 1.0 EasyEffectsPromptSheet.qml
+EasyEffectsSegmented 1.0 EasyEffectsSegmented.qml
+EasyEffectsSettingRow 1.0 EasyEffectsSettingRow.qml
+EasyEffectsSheet 1.0 EasyEffectsSheet.qml
+singleton EasyEffectsStyle 1.0 EasyEffectsStyle.qml
+EasyEffectsTopBar 1.0 EasyEffectsTopBar.qml
+PresetLibrary 1.0 PresetLibrary.qml
+ResponseCurve 1.0 ResponseCurve.qml
+TopographyField 1.0 TopographyField.qml
+# quickshell-generated qmldir
