@@ -569,7 +569,7 @@ MouseArea {
                 }
 
                 // Home Team Score (outer side)
-                StyledText {
+                AnimatedStyledText {
                     Layout.alignment: Qt.AlignVCenter
                     Layout.leftMargin: 2
                     Layout.rightMargin: 2
@@ -598,7 +598,7 @@ MouseArea {
                         ColorAnimation { duration: Appearance.dur(200) }
                     }
 
-                    StyledText {
+                    AnimatedStyledText {
                         id: timerText
                         anchors.centerIn: parent
                         text: {
@@ -620,7 +620,7 @@ MouseArea {
                 }
 
                 // Away Team Score (outer side)
-                StyledText {
+                AnimatedStyledText {
                     Layout.alignment: Qt.AlignVCenter
                     Layout.leftMargin: 2
                     Layout.rightMargin: 2
@@ -1655,7 +1655,7 @@ MouseArea {
         Layout.rightMargin: 10
         
 
-        MaterialSymbol {
+        AnimatedMaterialSymbol {
             anchors.verticalCenter: parent.verticalCenter
             fill: 1
             text: parent.icon
