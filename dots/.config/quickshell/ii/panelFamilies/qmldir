@@ -1,0 +1,8 @@
+module qs.panelFamilies
+IllogicalImpulseFamily 1.0 IllogicalImpulseFamily.qml
+IllogicalImpulseFamilyMemoryEachTest 1.0 IllogicalImpulseFamilyMemoryEachTest.qml
+LiteFamily 1.0 LiteFamily.qml
+PanelLoader 1.0 PanelLoader.qml
+PanelUrlLoader 1.0 PanelUrlLoader.qml
+TabletFamily 1.0 TabletFamily.qml
+# quickshell-generated qmldir
