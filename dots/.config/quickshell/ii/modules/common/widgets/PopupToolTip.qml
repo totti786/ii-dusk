@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import qs.services
 
 Item {
     id: root
@@ -55,6 +56,8 @@ Item {
         anchors.fill: parent
         active: Config.options.bar.tooltips.enableTooltips && root.internalVisibleCondition && root.hostWindow !== null && root.parent !== null
         sourceComponent: PopupWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: tooltipWindow
             visible: true
 

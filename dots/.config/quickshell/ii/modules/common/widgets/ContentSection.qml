@@ -160,9 +160,9 @@ ColumnLayout {
         Layout.fillWidth: true
         implicitHeight: cardInnerLayout.implicitHeight + 32
         radius: Appearance.rounding.normal
-        color: root.customBackgroundColor !== undefined ? root.customBackgroundColor : Appearance.colors.colLayer0
-        border.width: root.customBackgroundColor !== undefined ? 0 : 1
-        border.color: Appearance.colors.colLayer0Border
+        // A filled layer, never an outline: a 1px border around a card on the same colour as the page
+        // is what separated it before, and thin borders are not wanted anywhere in the shell.
+        color: root.customBackgroundColor !== undefined ? root.customBackgroundColor : Appearance.colors.colLayer1
 
         Behavior on color {
             ColorAnimation { duration: Appearance.dur(280); easing.type: Easing.InOutQuad }
@@ -212,6 +212,7 @@ ColumnLayout {
                     }
 
                     StyledText {
+                        id: sectionTitleText
                         opacity: 1 - highlightOverlay.opacity
                         text: root.title
                         font.pixelSize: Appearance.font.pixelSize.huge
@@ -230,6 +231,25 @@ ColumnLayout {
 
                         Behavior on color {
                             ColorAnimation { duration: Appearance.dur(150) }
+                        }
+
+                        // The explanation lives on the title itself: hover the words, no icon to hunt for.
+                        // Only as wide as the text, and it takes no clicks, so the header still works.
+                        MouseArea {
+                            id: titleHoverArea
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: Math.min(sectionTitleText.contentWidth, sectionTitleText.width)
+                            enabled: root.tooltip && root.tooltip.length > 0
+                            hoverEnabled: true
+                            acceptedButtons: Qt.NoButton
+                            cursorShape: enabled ? Qt.WhatsThisCursor : Qt.ArrowCursor
+                            StyledToolTip {
+                                extraVisibleCondition: false
+                                alternativeVisibleCondition: titleHoverArea.containsMouse && titleHoverArea.enabled
+                                text: root.tooltip
+                            }
                         }
                     }
 
@@ -278,26 +298,6 @@ ColumnLayout {
                             text: "arrow_forward"
                             iconSize: Appearance.font.pixelSize.normal
                             color: headerMouseArea.containsMouse ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer1
-                        }
-                    }
-
-                    MaterialSymbol {
-                        opacity: 1 - highlightOverlay.opacity
-                        visible: root.tooltip && root.tooltip.length > 0
-                        text: "info"
-                        iconSize: Appearance.font.pixelSize.normal
-                        color: Appearance.colors.colOnLayer1
-
-                        MouseArea {
-                            id: infoMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.WhatsThisCursor
-                            StyledToolTip {
-                                extraVisibleCondition: false
-                                alternativeVisibleCondition: infoMouseArea.containsMouse
-                                text: root.tooltip
-                            }
                         }
                     }
                 }
@@ -357,9 +357,14 @@ ColumnLayout {
             ColorAnimation {
                 target: cardContainer
                 property: "color"
-                to: Appearance.colors.colLayer0
+                to: root.customBackgroundColor !== undefined ? root.customBackgroundColor : Appearance.colors.colLayer1
                 duration: Appearance.dur(500)
                 easing.type: Easing.InOutQuad
+            }
+            // The animation overwrote the colour binding; put it back so a theme change still reaches the card.
+            ScriptAction {
+                script: cardContainer.color = Qt.binding(() => root.customBackgroundColor !== undefined
+                    ? root.customBackgroundColor : Appearance.colors.colLayer1)
             }
         }
     }

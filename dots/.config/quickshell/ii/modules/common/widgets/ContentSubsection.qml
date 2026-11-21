@@ -124,12 +124,31 @@ Rectangle {
             }
 
             ContentSubsectionLabel {
+                id: subsectionTitleText
                 opacity: 1 - highlightOverlay.opacity
                 visible: root.title && root.title.length > 0
                 text: root.title
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
                 color: Appearance.colors.colOnLayer2
+
+                // The explanation lives on the title itself, no icon. Only as wide as the text.
+                MouseArea {
+                    id: titleHoverArea
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: Math.min(subsectionTitleText.contentWidth, subsectionTitleText.width)
+                    enabled: root.tooltip && root.tooltip.length > 0
+                    hoverEnabled: true
+                    acceptedButtons: Qt.NoButton
+                    cursorShape: enabled ? Qt.WhatsThisCursor : Qt.ArrowCursor
+                    StyledToolTip {
+                        extraVisibleCondition: false
+                        alternativeVisibleCondition: titleHoverArea.containsMouse && titleHoverArea.enabled
+                        text: root.tooltip
+                    }
+                }
             }
 
             Loader {
@@ -157,27 +176,6 @@ Rectangle {
                 rotation: root.expanded ? 0 : -90
                 Behavior on rotation {
                     NumberAnimation { duration: Appearance.dur(200); easing.type: Easing.OutCubic }
-                }
-            }
-
-            MaterialSymbol {
-                opacity: 1 - highlightOverlay.opacity
-                visible: root.tooltip && root.tooltip.length > 0
-                text: "info"
-                iconSize: Appearance.font.pixelSize.large
-                Layout.alignment: Qt.AlignVCenter
-
-                color: Appearance.colors.colSubtext
-                MouseArea {
-                    id: infoMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.WhatsThisCursor
-                    StyledToolTip {
-                        extraVisibleCondition: false
-                        alternativeVisibleCondition: infoMouseArea.containsMouse
-                        text: root.tooltip
-                    }
                 }
             }
         }

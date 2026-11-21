@@ -1,0 +1,4 @@
+module qs.modules.common.widgets.cards
+LoadingPlaceholder 1.0 LoadingPlaceholder.qml
+MetricCard 1.0 MetricCard.qml
+# quickshell-generated qmldir

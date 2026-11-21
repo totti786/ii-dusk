@@ -18,6 +18,8 @@ Scope {
         sourceComponent: Variants {
             model: Quickshell.screens
             delegate: PanelWindow {
+                contentItem.LayoutMirroring.enabled: Translation.isRtl
+                contentItem.LayoutMirroring.childrenInherit: true
                 id: panelWindow
                 required property var modelData
                 screen: modelData

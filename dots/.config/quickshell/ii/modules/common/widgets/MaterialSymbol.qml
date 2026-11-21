@@ -1,5 +1,6 @@
 import qs.modules.common
 import QtQuick
+import qs.services
 
 StyledText {
     id: root
@@ -34,6 +35,24 @@ StyledText {
     antialiasing: true
     smooth: true
     horizontalAlignment: Text.AlignHCenter
+
+    // Arrows that mean "back", "next", "undo" and so on point the wrong way in a right-to-left
+    // layout. Layout mirroring moves items but never flips a glyph, so these are flipped here.
+    // Media transport (play, skip), anything that rotates, and the absolute-direction glyphs
+    // (west, east, arrow_upward/downward, arrow_left/right) are deliberately not in the list.
+    readonly property var directionalIcons: ({
+        "arrow_back": 1, "arrow_forward": 1, "arrow_back_ios": 1, "arrow_back_ios_new": 1, "arrow_forward_ios": 1,
+        "chevron_left": 1, "chevron_right": 1,
+        "navigate_before": 1, "navigate_next": 1, "keyboard_arrow_left": 1, "keyboard_arrow_right": 1,
+        "keyboard_double_arrow_left": 1, "keyboard_double_arrow_right": 1, "first_page": 1, "last_page": 1,
+        "undo": 1, "redo": 1, "reply": 1, "subdirectory_arrow_right": 1, "subdirectory_arrow_left": 1,
+        "arrow_circle_left": 1, "arrow_circle_right": 1, "line_start": 1, "line_end": 1
+    })
+    readonly property bool flipForRtl: Translation.isRtl && root.directionalIcons[root.text] === 1
+    transform: Scale {
+        xScale: root.flipForRtl ? -1 : 1
+        origin.x: root.width / 2
+    }
 
     font {
         hintingPreference: Font.PreferNoHinting
