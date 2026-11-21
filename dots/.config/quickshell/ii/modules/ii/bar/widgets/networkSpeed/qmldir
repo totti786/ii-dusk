@@ -1,0 +1,12 @@
+module qs.modules.ii.bar.widgets.networkSpeed
+ExpressiveNetworkSpeed 1.0 ExpressiveNetworkSpeed.qml
+NetworkSpeedCapsule 1.0 NetworkSpeedCapsule.qml
+NetworkSpeedCell 1.0 NetworkSpeedCell.qml
+NetworkSpeedGraph 1.0 NetworkSpeedGraph.qml
+NetworkSpeedPlot 1.0 NetworkSpeedPlot.qml
+NetworkSpeedReadout 1.0 NetworkSpeedReadout.qml
+NetworkSpeedRows 1.0 NetworkSpeedRows.qml
+NetworkSpeedSegment 1.0 NetworkSpeedSegment.qml
+NetworkSpeedSplit 1.0 NetworkSpeedSplit.qml
+NetworkSpeedWidget 1.0 NetworkSpeedWidget.qml
+# quickshell-generated qmldir

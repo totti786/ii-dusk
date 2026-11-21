@@ -1,0 +1,4 @@
+module qs.modules.ii.bar.widgets.activeWindow
+ActiveWindow 1.0 ActiveWindow.qml
+ExpressiveActiveWindow 1.0 ExpressiveActiveWindow.qml
+# quickshell-generated qmldir

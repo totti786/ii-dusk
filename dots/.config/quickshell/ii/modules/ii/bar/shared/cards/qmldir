@@ -1,0 +1,15 @@
+module qs.modules.ii.bar.shared.cards
+AlarmsCard 1.0 AlarmsCard.qml
+ClockHeaderCard 1.0 ClockHeaderCard.qml
+HeroCard 1.0 HeroCard.qml
+HourlyForecast 1.0 HourlyForecast.qml
+InDayForecast 1.0 InDayForecast.qml
+InfoPill 1.0 InfoPill.qml
+LocalSendPill 1.0 LocalSendPill.qml
+LocalSendSendCard 1.0 LocalSendSendCard.qml
+LocalSendTransferCard 1.0 LocalSendTransferCard.qml
+MetricsGrid 1.0 MetricsGrid.qml
+ResourceCard 1.0 ResourceCard.qml
+SectionCard 1.0 SectionCard.qml
+WorldClocksCard 1.0 WorldClocksCard.qml
+# quickshell-generated qmldir

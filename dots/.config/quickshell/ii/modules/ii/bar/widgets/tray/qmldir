@@ -1,0 +1,5 @@
+module qs.modules.ii.bar.widgets.tray
+ExpressiveSystemTray 1.0 ExpressiveSystemTray.qml
+SysTray 1.0 SysTray.qml
+SysTrayItem 1.0 SysTrayItem.qml
+# quickshell-generated qmldir

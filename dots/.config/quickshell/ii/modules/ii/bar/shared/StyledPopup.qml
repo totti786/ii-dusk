@@ -268,6 +268,8 @@ LazyLoader {
     }
 
     component: PanelWindow {
+        contentItem.LayoutMirroring.enabled: Translation.isRtl
+        contentItem.LayoutMirroring.childrenInherit: true
         id: popupWindow
         WlrLayershell.keyboardFocus: root.keyboardFocus
         color: "transparent"

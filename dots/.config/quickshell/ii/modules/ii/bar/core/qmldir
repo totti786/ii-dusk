@@ -1,0 +1,6 @@
+module qs.modules.ii.bar.core
+BarContext 1.0 BarContext.qml
+BarLayout 1.0 BarLayout.qml
+BarStyleLoader 1.0 BarStyleLoader.qml
+BarWindow 1.0 BarWindow.qml
+# quickshell-generated qmldir

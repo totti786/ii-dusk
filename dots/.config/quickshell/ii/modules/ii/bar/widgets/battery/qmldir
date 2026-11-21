@@ -1,0 +1,4 @@
+module qs.modules.ii.bar.widgets.battery
+BatteryIndicator 1.0 BatteryIndicator.qml
+ExpressiveBattery 1.0 ExpressiveBattery.qml
+# quickshell-generated qmldir

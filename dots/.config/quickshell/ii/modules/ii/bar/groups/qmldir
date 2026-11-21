@@ -1,0 +1,4 @@
+module qs.modules.ii.bar.groups
+BarGroup 1.0 BarGroup.qml
+BarGroupTheme 1.0 BarGroupTheme.qml
+# quickshell-generated qmldir

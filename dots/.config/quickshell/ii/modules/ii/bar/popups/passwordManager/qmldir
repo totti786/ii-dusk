@@ -1,0 +1,7 @@
+module qs.modules.ii.bar.popups.passwordManager
+PasswordItemRow 1.0 PasswordItemRow.qml
+PasswordManagerOverlay 1.0 PasswordManagerOverlay.qml
+PasswordManagerPopup 1.0 PasswordManagerPopup.qml
+PasswordManagerPopupContent 1.0 PasswordManagerPopupContent.qml
+PasswordVaultGate 1.0 PasswordVaultGate.qml
+# quickshell-generated qmldir

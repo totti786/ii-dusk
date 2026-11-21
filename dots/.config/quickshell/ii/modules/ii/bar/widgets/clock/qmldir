@@ -1,0 +1,10 @@
+module qs.modules.ii.bar.widgets.clock
+ClockWidget 1.0 ClockWidget.qml
+ExpressiveClockWidget 1.0 ExpressiveClockWidget.qml
+NeuralClockBloom 1.0 NeuralClockBloom.qml
+NeuralClockWidget 1.0 NeuralClockWidget.qml
+ReliefClockOutline 1.0 ReliefClockOutline.qml
+ReliefClockSeam 1.0 ReliefClockSeam.qml
+ReliefClockSplit 1.0 ReliefClockSplit.qml
+ReliefClockWidget 1.0 ReliefClockWidget.qml
+# quickshell-generated qmldir

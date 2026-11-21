@@ -1,0 +1,13 @@
+module qs.modules.ii.bar.widgets.dashboard
+DashboardIconRevealer 1.0 DashboardIconRevealer.qml
+DashboardPanelButton 1.0 DashboardPanelButton.qml
+ExpressiveDashboardPanelButton 1.0 ExpressiveDashboardPanelButton.qml
+ExpressiveIconWrapper 1.0 ExpressiveIconWrapper.qml
+ExpressiveNotificationUnreadCount 1.0 ExpressiveNotificationUnreadCount.qml
+NotificationUnreadCount 1.0 NotificationUnreadCount.qml
+OrbIconWrapper 1.0 OrbIconWrapper.qml
+OrbsDashboardPanelButton 1.0 OrbsDashboardPanelButton.qml
+SculptDashboardPanelButton 1.0 SculptDashboardPanelButton.qml
+SculptIconSlot 1.0 SculptIconSlot.qml
+VerticalDashboardPanelButton 1.0 VerticalDashboardPanelButton.qml
+# quickshell-generated qmldir

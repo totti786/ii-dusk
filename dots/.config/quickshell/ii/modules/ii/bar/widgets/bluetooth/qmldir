@@ -1,0 +1,8 @@
+module qs.modules.ii.bar.widgets.bluetooth
+BluetoothDevicesWidget 1.0 BluetoothDevicesWidget.qml
+ExpressiveBluetoothDevices 1.0 ExpressiveBluetoothDevices.qml
+SculptBluetoothBadge 1.0 SculptBluetoothBadge.qml
+SculptBluetoothCard 1.0 SculptBluetoothCard.qml
+SculptBluetoothDevices 1.0 SculptBluetoothDevices.qml
+SculptBluetoothRing 1.0 SculptBluetoothRing.qml
+# quickshell-generated qmldir

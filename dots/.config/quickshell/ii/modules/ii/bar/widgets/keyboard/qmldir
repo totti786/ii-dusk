@@ -1,0 +1,9 @@
+module qs.modules.ii.bar.widgets.keyboard
+ExpressiveKeyboardLayout 1.0 ExpressiveKeyboardLayout.qml
+HyprlandXkbIndicator 1.0 HyprlandXkbIndicator.qml
+KeyboardLayoutWidget 1.0 KeyboardLayoutWidget.qml
+SculptKeyboardCarousel 1.0 SculptKeyboardCarousel.qml
+SculptKeyboardDial 1.0 SculptKeyboardDial.qml
+SculptKeyboardLayout 1.0 SculptKeyboardLayout.qml
+SculptKeyboardSelector 1.0 SculptKeyboardSelector.qml
+# quickshell-generated qmldir

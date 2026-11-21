@@ -1,0 +1,4 @@
+module qs.modules.ii.bar.styles.island
+IslandModeController 1.0 IslandModeController.qml
+IslandModeState 1.0 IslandModeState.qml
+# quickshell-generated qmldir

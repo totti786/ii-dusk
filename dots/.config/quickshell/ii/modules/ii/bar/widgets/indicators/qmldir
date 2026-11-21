@@ -1,0 +1,14 @@
+module qs.modules.ii.bar.widgets.indicators
+DefaultRecordIndicator 1.0 DefaultRecordIndicator.qml
+DictationIndicator 1.0 DictationIndicator.qml
+EasyEffectsIndicator 1.0 EasyEffectsIndicator.qml
+ExpressiveRecordIndicator 1.0 ExpressiveRecordIndicator.qml
+ModeIndicator 1.0 ModeIndicator.qml
+NeuralRecordIndicator 1.0 NeuralRecordIndicator.qml
+PhoneScrcpyIndicator 1.0 PhoneScrcpyIndicator.qml
+RecordDigitCell 1.0 RecordDigitCell.qml
+RecordIndicator 1.0 RecordIndicator.qml
+RecordTimerText 1.0 RecordTimerText.qml
+ScreenShareIndicator 1.0 ScreenShareIndicator.qml
+ShellUpdateIndicator 1.0 ShellUpdateIndicator.qml
+# quickshell-generated qmldir

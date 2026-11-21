@@ -1,0 +1,7 @@
+module qs.modules.ii.bar.widgets.date
+DateWidget 1.0 DateWidget.qml
+ExpressiveDateStack 1.0 ExpressiveDateStack.qml
+ExpressiveDateWidget 1.0 ExpressiveDateWidget.qml
+NeuralDateInlay 1.0 NeuralDateInlay.qml
+NeuralDateWidget 1.0 NeuralDateWidget.qml
+# quickshell-generated qmldir

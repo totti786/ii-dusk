@@ -1,0 +1,6 @@
+module qs.modules.ii.bar.widgets.sports
+CardNotice 1.0 CardNotice.qml
+ExpressiveSports 1.0 ExpressiveSports.qml
+GoalCelebration 1.0 GoalCelebration.qml
+Sports 1.0 Sports.qml
+# quickshell-generated qmldir

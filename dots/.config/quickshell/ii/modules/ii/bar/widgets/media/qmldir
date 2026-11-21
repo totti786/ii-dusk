@@ -1,0 +1,9 @@
+module qs.modules.ii.bar.widgets.media
+ExpressiveMedia 1.0 ExpressiveMedia.qml
+ExpressiveMediaCard 1.0 ExpressiveMediaCard.qml
+Media 1.0 Media.qml
+MediaWidgetBase 1.0 MediaWidgetBase.qml
+NeuralMedia 1.0 NeuralMedia.qml
+RingMedia 1.0 RingMedia.qml
+TonalMedia 1.0 TonalMedia.qml
+# quickshell-generated qmldir

@@ -1,0 +1,3 @@
+module qs.modules.ii.bar.registry
+BarWidgetRegistry 1.0 BarWidgetRegistry.qml
+# quickshell-generated qmldir

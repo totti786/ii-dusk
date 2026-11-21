@@ -1,0 +1,25 @@
+module qs.modules.ii.bar.widgets.dashboard.icons
+AlarmIcon 1.0 AlarmIcon.qml
+AnimatedIcon 1.0 AnimatedIcon.qml
+BellIcon 1.0 BellIcon.qml
+BellWithBadge 1.0 BellWithBadge.qml
+BluetoothIcon 1.0 BluetoothIcon.qml
+CloudLockIcon 1.0 CloudLockIcon.qml
+CoffeeIcon 1.0 CoffeeIcon.qml
+DashboardIconDriver 1.0 DashboardIconDriver.qml
+EncryptedDnsIcon 1.0 EncryptedDnsIcon.qml
+EqualizerIcon 1.0 EqualizerIcon.qml
+EthernetIcon 1.0 EthernetIcon.qml
+GamepadIcon 1.0 GamepadIcon.qml
+HotspotIcon 1.0 HotspotIcon.qml
+HourglassIcon 1.0 HourglassIcon.qml
+MicIcon 1.0 MicIcon.qml
+MusicRecognitionIcon 1.0 MusicRecognitionIcon.qml
+PowerProfileIcon 1.0 PowerProfileIcon.qml
+StopwatchIcon 1.0 StopwatchIcon.qml
+TailscaleIcon 1.0 TailscaleIcon.qml
+TimerIcon 1.0 TimerIcon.qml
+VolumeIcon 1.0 VolumeIcon.qml
+VpnKeyIcon 1.0 VpnKeyIcon.qml
+WifiIcon 1.0 WifiIcon.qml
+# quickshell-generated qmldir

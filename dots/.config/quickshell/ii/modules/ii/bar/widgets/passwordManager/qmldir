@@ -1,0 +1,4 @@
+module qs.modules.ii.bar.widgets.passwordManager
+ExpressivePasswordManager 1.0 ExpressivePasswordManager.qml
+PasswordManagerWidget 1.0 PasswordManagerWidget.qml
+# quickshell-generated qmldir

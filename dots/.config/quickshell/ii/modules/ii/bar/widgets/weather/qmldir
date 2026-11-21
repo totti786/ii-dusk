@@ -1,0 +1,10 @@
+module qs.modules.ii.bar.widgets.weather
+ExpressiveWeatherBar 1.0 ExpressiveWeatherBar.qml
+HorizonWeatherWidget 1.0 HorizonWeatherWidget.qml
+SculptWeatherDaylight 1.0 SculptWeatherDaylight.qml
+SculptWeatherPoster 1.0 SculptWeatherPoster.qml
+SculptWeatherStamp 1.0 SculptWeatherStamp.qml
+SculptWeatherWidget 1.0 SculptWeatherWidget.qml
+TesseraWeatherWidget 1.0 TesseraWeatherWidget.qml
+WeatherBar 1.0 WeatherBar.qml
+# quickshell-generated qmldir
