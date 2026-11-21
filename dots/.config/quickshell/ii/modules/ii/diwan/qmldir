@@ -1,0 +1,13 @@
+module qs.modules.ii.diwan
+DiwanApp 1.0 DiwanApp.qml
+DiwanButton 1.0 DiwanButton.qml
+DiwanChip 1.0 DiwanChip.qml
+DiwanHalf 1.0 DiwanHalf.qml
+DiwanHome 1.0 DiwanHome.qml
+DiwanList 1.0 DiwanList.qml
+DiwanOrnament 1.0 DiwanOrnament.qml
+DiwanOverlay 1.0 DiwanOverlay.qml
+DiwanPoemView 1.0 DiwanPoemView.qml
+DiwanReader 1.0 DiwanReader.qml
+DiwanWindow 1.0 DiwanWindow.qml
+# quickshell-generated qmldir

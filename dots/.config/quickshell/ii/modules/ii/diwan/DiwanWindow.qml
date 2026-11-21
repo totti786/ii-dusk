@@ -5,9 +5,12 @@ import Quickshell
 
 import qs
 import qs.modules.common
+import qs.services
 
 /// The poetry reader as an ordinary floating window (see hyprland/rules.lua).
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
