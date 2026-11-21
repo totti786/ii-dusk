@@ -87,7 +87,7 @@ If we use Nix to handle dotfiles, then it must be at least better than the curre
 
 **2. Allow choosing targets.**
 
-This is similar to the above. For example user may want to use their own `~/.config/foot` instead of the files under `dots/.config/foot` entirely.
+This is similar to the above. For example user may want to use their own `~/.config/mpv` instead of the files under `dots/.config/mpv` entirely.
 
 **3. Easy developing dotfiles or at least not worse than current state.**
 

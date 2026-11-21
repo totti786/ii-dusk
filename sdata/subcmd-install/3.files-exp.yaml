@@ -90,6 +90,3 @@ patterns:
   - from: "dots/.config/kdeglobals"
     to: "$XDG_CONFIG_HOME/kdeglobals"
     mode: "soft"
-  - from: "dots/.config/starship.toml"
-    to: "$XDG_CONFIG_HOME/starship.toml"
-    mode: "soft"
