@@ -1195,7 +1195,7 @@ Singleton {
     //
     // Bump `currentConfigVersion` and add a matching block to `migrateRaw()`
     // whenever an existing key changes type or meaning.
-    readonly property int currentConfigVersion: 34
+    readonly property int currentConfigVersion: 35
     // Defaults have to be captured before the file lands, because deserializing
     // is what destroys them. FileView loads asynchronously, so at component
     // completion the adapter still holds nothing but the QML defaults.
@@ -1981,6 +1981,25 @@ Singleton {
         if (from < 34 && raw.apps?.editor === "qs -c ii ipc call editor open") {
             raw.apps.editor = "scribe";
             console.log("[Config] Migrated apps.editor ii editor -> Scribe");
+        }
+
+        // v33 -> v34: Android apps of the connected phone became a result group.
+        // A saved order is authoritative, so without this the group would stay
+        // hidden for every upgraded user. It sits between the PC's own apps and
+        // tools and the sites, never above the desktop programs.
+        if (from < 35) {
+            const sectionOrder = raw.search?.sectionOrder;
+            if (Array.isArray(sectionOrder) && sectionOrder.length > 0
+                    && !sectionOrder.some(entry => String(entry?.id ?? entry) === "phoneApps")) {
+                const ids = sectionOrder.map(entry => String(entry?.id ?? entry));
+                const after = Math.max(ids.indexOf("apps"), ids.indexOf("tools"));
+                const sitesIndex = ids.indexOf("sites");
+                const insertAt = after >= 0 ? after + 1 : (sitesIndex >= 0 ? sitesIndex : sectionOrder.length);
+                sectionOrder.splice(insertAt, 0, {
+                    "id": "phoneApps"
+                });
+                console.log("[Config] Added Phone apps search result group");
+            }
         }
 
         raw.configVersion = root.currentConfigVersion;
@@ -3059,6 +3078,14 @@ Singleton {
                 property JsonObject pcLive: JsonObject {
                     property bool enable: true
                 }
+                // Focus and timers: control pomodoro, timers, stopwatch and alarms from the phone.
+                property JsonObject focus: JsonObject {
+                    property bool enable: true
+                }
+                // Voice & meeting console: Discord call controls, speaking roster, and active sensors.
+                property JsonObject voice: JsonObject {
+                    property bool enable: true
+                }
                 // What plays on the PC as a media player on the phone (lock screen,
                 // Quick Settings), controlling the shell's active player.
                 property JsonObject pcMedia: JsonObject {
@@ -3415,6 +3442,12 @@ Singleton {
                     property bool enabled: false
                     // The voice orb's warm Claude session (scripts/ai/voice_agent.py): it
                     // answers chat itself and hands anything bigger to the full agent.
+                    // Say the trigger word to start a voice turn without clicking. A small resident
+                    // detector (scripts/ai/wake_word.py) keeps the microphone open while the orb is
+                    // idle; nothing is recorded or sent anywhere. Off by default.
+                    property bool wakeWord: false
+                    property string wakeWordModel: "hey_jarvis"
+                    property real wakeWordThreshold: 0.5
                     property bool fastPath: true
                     property string fastModel: "haiku"
                     // Instant desktop actions from a closed list (media, volume, timers...),
@@ -3429,8 +3462,11 @@ Singleton {
                     property bool satellites: true
                     property bool satelliteMedia: true
                     property bool satelliteTasks: true
+                    // A small kitten that sits beside the undocked orb.
+                    property bool kitten: true
                     // Instant-command groups switched off ("media", "volume", "brightness", "theme",
-                    // "timers", "alarms", "notes", "workspace", "apps"), and the user's own phrases:
+                    // "timers", "alarms", "notes", "workspace", "apps", "toggles", "power", "capture", "panels",
+                    // "windows", "info", "system"), and the user's own phrases:
                     // {phrase, do, say}, where `do` is e.g. "theme dark; volume set 20".
                     property list<var> rulesOff: []
                     property list<var> customRules: []
@@ -3509,6 +3545,44 @@ Singleton {
                 // anything else stands on its own under "Others" and brings
                 // its own endpoint, dialect and key id.
                 property list<var> customModels: []
+            }
+
+            // What the computer does when you stop using it (hypridle's steps). Settings > Power & Battery > When idle.
+            // The shell writes ~/.config/hypr/hypridle.conf from this (scripts/idle/hypridle_apply.py)
+            // and restarts hypridle; the defaults are what the machine did before it was a setting.
+            property JsonObject hypridle: JsonObject {
+                property JsonObject dim: JsonObject {
+                    property bool enable: false
+                    property int seconds: 120
+                }
+                property JsonObject lowerBrightness: JsonObject {
+                    property bool enable: true
+                    property int seconds: 300
+                }
+                property JsonObject screenOffLocked: JsonObject {
+                    property bool enable: true
+                    property int seconds: 60
+                }
+                property JsonObject lock: JsonObject {
+                    property bool enable: true
+                    property int seconds: 600
+                }
+                property JsonObject screenOff: JsonObject {
+                    property bool enable: true
+                    property int seconds: 602
+                }
+                property JsonObject suspend: JsonObject {
+                    property bool enable: true
+                    property int seconds: 1200
+                    property bool onlyOnBattery: true
+                }
+            }
+
+            // What closing the laptop lid does. The Hyprland lid bind asks `qs -c ii ipc call lid action`
+            // and carries out the answer: "suspend", "blank" (panel off, system keeps running) or "nothing".
+            property JsonObject lid: JsonObject {
+                property string onAc: "blank"
+                property string onBattery: "suspend"
             }
 
             property JsonObject appearance: JsonObject {
@@ -3869,6 +3943,9 @@ Singleton {
                 property bool overlayEnabled: true
                 // Presets are added once; deleting one afterwards sticks.
                 property bool presetsSeeded: false
+                // ModeSchema.PRESETS_REVISION this user last received; presets
+                // added after it are seeded once (1 = the original set).
+                property int presetsRevision: 1
                 // "auto" shows the start/end banner in the island or, without
                 // a notch, as a top-centre popup; "off" shows nothing.
                 property string flash: "auto"
@@ -4552,22 +4629,37 @@ Singleton {
                         property real y: 100
                         property int widgetSize: 100
                         property int widthCells: 3
-                        property bool dualColumnMode: false
-                        property list<string> servicePriority: ["media", "calendar", "sports", "todo", "email", "localsend", "kdeconnect", "fallback"]
-                        property bool enableMedia: true
-                        property bool enableCalendar: true
-                        property bool enableSports: true
-                        property bool enableTodo: true
-                        property bool enableEmail: true
-                        property bool enableLocalSend: true
-                        property bool enableKdeConnect: true
-                        property bool enableWeather: true
-                        property int calendarWindowMinutes: 60
-                        property int sportsWindowHours: 12
-                        property bool showLocation: true
-                        property bool showServiceLabel: false
-                        property bool showSeparators: true
-                        property bool animateContent: true
+                        // Smartspacer model: ordered Targets (pages) and Complications
+                        // (chips), each with settings and All/Any requirements.
+                        property list<var> targets: [
+                            { "id": "t-glance", "type": "glance", "enabled": true, "showOnDesktop": true, "showOnLock": true, "disableSubComplication": false, "requireAll": [], "requireAny": [], "settings": { "hidden": [], "sportsWindowHours": 12 } },
+                            { "id": "t-calendar", "type": "calendar", "enabled": true, "showOnDesktop": true, "showOnLock": true, "disableSubComplication": false, "requireAll": [], "requireAny": [], "settings": { "showAllDay": false, "showLocation": true, "showUnconfirmed": true, "preEventMinutes": 60, "postEventMinutes": -1, "dismissedEvents": [] } },
+                            { "id": "t-music", "type": "music", "enabled": true, "showOnDesktop": true, "showOnLock": true, "disableSubComplication": false, "requireAll": [], "requireAny": [], "settings": { "showAlbumArt": true, "showWhenPaused": false, "dismissedApps": [] } },
+                            { "id": "t-date", "type": "date", "enabled": true, "showOnDesktop": true, "showOnLock": true, "disableSubComplication": false, "requireAll": [], "requireAny": [], "settings": { "dateFormat": "" } }
+                        ]
+                        property list<var> complications: [
+                            { "id": "c-weather", "type": "weather", "enabled": true, "showOnDesktop": true, "showOnLock": true, "requireAll": [], "requireAny": [], "settings": { "showCondition": false } },
+                            { "id": "c-alarm", "type": "alarm", "enabled": true, "showOnDesktop": true, "showOnLock": true, "requireAll": [], "requireAny": [], "settings": { "hoursAhead": 12, "includePhone": true } }
+                        ]
+                        property string layout: "horizontal" // "horizontal" (paged), "vertical" (list)
+                        property bool singlePage: false
+                        property bool showPageControls: true
+                        property string pageControlStyle: "dots" // "dots", "arrows"
+                        property bool invisibleControls: false
+                        property bool animateChanges: true
+                        property bool extraPadding: false
+                        property string tintColour: "automatic" // "automatic", "white", "black"
+                        property bool materialYouStyle: false
+                        property bool textShadow: true
+                        property string complicationOnDate: "always" // "always", "weather", "never"
+                        property string pinMode: "none" // "none", "position", "target"
+                        property int pinPosition: 1
+                        property string pinTargetId: ""
+                        property string whenUnavailable: "date" // "date", "first", "hide"
+                        property string hideSensitive: "none" // "none", "contents", "target"
+                        property bool expandedEnabled: true
+                        property string expandedOpenMode: "expanded" // "never", "expanded", "always"
+                        property bool complicationsFirst: false
                     }
                     property JsonObject weather: JsonObject {
                         property bool enable: false
@@ -5785,6 +5877,10 @@ Singleton {
                     // it waits so the hold is visible. Off: a hover opens it.
                     property bool holdToReveal: false
                     property int holdToRevealMs: 700
+                    // Click to open the dashboard: hovering still opens an activity's
+                    // expanded card, but the dashboard only opens on a left click and
+                    // stays until a click lands outside it. Overrides hold to reveal.
+                    property bool clickToOpenDashboard: false
                     // Keep the dashboard's quick-toggle grid resident. Off: the grid
                     // is built on open and released after the closing fade. On: built
                     // once and kept, so openings are instant at the price of the
@@ -7287,6 +7383,7 @@ Singleton {
             }
 
             property JsonObject language: JsonObject {
+                property string direction: "auto" // Layout direction: "auto" follows the UI language (Arabic, Hebrew, Persian and Urdu are right-to-left), or "ltr" / "rtl" to force it
                 property string ui: "en_US" // UI language. "auto" for system locale, or specific language code like "zh_CN", "en_US"
                 property string aiModel: "gemini-3.8-flash" // Model for "Translate with AI": gemini-* (API key) or claude-* (claude CLI, Claude plan)
                 property JsonObject translator: JsonObject {
@@ -8278,6 +8375,12 @@ Singleton {
                     // on every query, so they also fix a *partly* wrong query.
                     property bool keyboardLayouts: true
                 }
+                // Android apps of the connected phone, opened in a scrcpy app
+                // window. Rows only exist while ADB reaches the phone.
+                property JsonObject phoneApps: JsonObject {
+                    property bool enable: true
+                    property int maxResults: 5
+                }
                 property JsonObject browserSites: JsonObject {
                     property bool enable: true
                     property string profilePath: ""
@@ -8326,6 +8429,9 @@ Singleton {
                     },
                     {
                         "id": "tools"
+                    },
+                    {
+                        "id": "phoneApps"
                     },
                     {
                         "id": "sites"
