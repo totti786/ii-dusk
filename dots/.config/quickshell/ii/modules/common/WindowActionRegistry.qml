@@ -11,8 +11,8 @@ Singleton {
     id: root
 
     readonly property var actions: [
-        { id: "move.left", name: qsTr("Move left"), category: "tiling", icon: "arrow_back", keywords: ["left", "esquerda", "move"], keyHint: ["SUPER", "SHIFT", "←"], expression: target => `hl.dsp.window.move({ direction = "l", window = "address:${target}" })` },
-        { id: "move.right", name: qsTr("Move right"), category: "tiling", icon: "arrow_forward", keywords: ["right", "direita", "move"], keyHint: ["SUPER", "SHIFT", "→"], expression: target => `hl.dsp.window.move({ direction = "r", window = "address:${target}" })` },
+        { id: "move.left", name: qsTr("Move left"), category: "tiling", icon: "west", keywords: ["left", "esquerda", "move"], keyHint: ["SUPER", "SHIFT", "←"], expression: target => `hl.dsp.window.move({ direction = "l", window = "address:${target}" })` },
+        { id: "move.right", name: qsTr("Move right"), category: "tiling", icon: "east", keywords: ["right", "direita", "move"], keyHint: ["SUPER", "SHIFT", "→"], expression: target => `hl.dsp.window.move({ direction = "r", window = "address:${target}" })` },
         { id: "move.up", name: qsTr("Move up"), category: "tiling", icon: "arrow_upward", keywords: ["up", "cima", "move"], keyHint: ["SUPER", "SHIFT", "↑"], expression: target => `hl.dsp.window.move({ direction = "u", window = "address:${target}" })` },
         { id: "move.down", name: qsTr("Move down"), category: "tiling", icon: "arrow_downward", keywords: ["down", "baixo", "move"], keyHint: ["SUPER", "SHIFT", "↓"], expression: target => `hl.dsp.window.move({ direction = "d", window = "address:${target}" })` },
         { id: "maximize", name: qsTr("Toggle maximize"), category: "window", icon: "fullscreen", keywords: ["maximize", "maximizar"], keyHint: ["SUPER", "D"], expression: target => `hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle", window = "address:${target}" })` },
