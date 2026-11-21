@@ -192,6 +192,8 @@ Scope { // Scope
         active: false // TEMP probe
 
         sourceComponent: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: catcherWindow
             screen: Quickshell.screens.find(s => s.name === root.policyMonitorName)
             color: "transparent"
@@ -238,6 +240,8 @@ Scope { // Scope
         onLoaded: root.attachContent()
 
         sourceComponent: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: panelWindow
             // Mapped until the slide out has finished, or there is nothing to animate.
             visible: GlobalStates.sidebarLeftOpen || GlobalStates.policiesSlideProgress > 0
@@ -605,6 +609,8 @@ Scope { // Scope
         onLoaded: root.attachContent()
 
         sourceComponent: FloatingWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: detachedSidebarRoot
             title: "ii Policies"
             property var contentParent: detachedSidebarBackground

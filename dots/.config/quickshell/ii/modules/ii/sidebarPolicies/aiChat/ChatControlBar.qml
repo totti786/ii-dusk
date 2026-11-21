@@ -476,7 +476,7 @@ Item {
                 }
             }
 
-            StyledText {
+            AnimatedStyledText {
                 Layout.alignment: Qt.AlignVCenter
                 Layout.maximumWidth: 150
                 visible: chip.showLabel && chip.label.length > 0
@@ -939,7 +939,7 @@ Item {
                         : Appearance.colors.colOnLayer2
                 }
 
-                StyledText {
+                AnimatedStyledText {
                     id: temperatureLabel
                     Layout.alignment: Qt.AlignVCenter
                     visible: temperatureButton.isExpanded
@@ -1021,7 +1021,7 @@ Item {
                     }
                 }
 
-                StyledText {
+                AnimatedStyledText {
                     Layout.alignment: Qt.AlignVCenter
                     text: tokenIndicator.costMode
                         ? Ai.formatOpenRouterCost(tokenIndicator.sessionCost)

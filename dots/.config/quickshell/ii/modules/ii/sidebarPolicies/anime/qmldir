@@ -1,0 +1,4 @@
+module qs.modules.ii.sidebarPolicies.anime
+BooruImage 1.0 BooruImage.qml
+BooruResponse 1.0 BooruResponse.qml
+# quickshell-generated qmldir

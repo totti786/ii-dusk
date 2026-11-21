@@ -1,0 +1,14 @@
+module qs.modules.ii.sidebarPolicies
+AiChat 1.0 AiChat.qml
+Anime 1.0 Anime.qml
+AnkiStudy 1.0 AnkiStudy.qml
+ApiCommandButton 1.0 ApiCommandButton.qml
+ApiInputBoxIndicator 1.0 ApiInputBoxIndicator.qml
+DescriptionBox 1.0 DescriptionBox.qml
+ScrollToBottomButton 1.0 ScrollToBottomButton.qml
+SidebarPlayerControl 1.0 SidebarPlayerControl.qml
+SidebarPolicies 1.0 SidebarPolicies.qml
+SidebarPoliciesContent 1.0 SidebarPoliciesContent.qml
+Translator 1.0 Translator.qml
+WallpaperBrowserUI 1.0 WallpaperBrowserUI.qml
+# quickshell-generated qmldir

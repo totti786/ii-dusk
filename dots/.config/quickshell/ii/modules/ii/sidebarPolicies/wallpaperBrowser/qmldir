@@ -1,0 +1,5 @@
+module qs.modules.ii.sidebarPolicies.wallpaperBrowser
+WallpaperImage 1.0 WallpaperImage.qml
+WallpaperMessage 1.0 WallpaperMessage.qml
+WallpaperResponse 1.0 WallpaperResponse.qml
+# quickshell-generated qmldir
