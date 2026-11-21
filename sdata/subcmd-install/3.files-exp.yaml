@@ -17,19 +17,6 @@ patterns:
     to: "$XDG_CONFIG_HOME/quickshell"
     mode: "sync"
   # Conditionally install these files
-  - from: "dots/.config/fish"
-    to: "$XDG_CONFIG_HOME/fish"
-    mode: "sync"
-    excludes: ["conf.d"]
-    condition:
-      type: "shell"
-      value: "fish"
-  - from: "dots/.config/zshrc.d"
-    to: "$XDG_CONFIG_HOME/zshrc.d"
-    mode: "sync"
-    condition:
-      type: "shell"
-      value: "zsh"
   - from: "dots/.config/foot"
     to: "$XDG_CONFIG_HOME/foot"
     mode: "sync"

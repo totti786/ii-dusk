@@ -20,11 +20,10 @@ Options for install:
       --skip-backup         Skip backup conflicting files
       --skip-quickshell     Skip installing the config for Quickshell
       --skip-hyprland       Skip installing the config for Hyprland
-      --skip-fish           Skip installing the config for Fish
       --skip-fontconfig     Skip installing the config for fontconfig
       --skip-miscconf       Skip copying the dirs and files to \".configs\" except for
-                            Quickshell, Fish and Hyprland
-      --core                Alias of --skip-{plasmaintg,fish,miscconf,fontconfig}
+                            Quickshell and Hyprland
+      --core                Alias of --skip-{plasmaintg,miscconf,fontconfig}
       --fontset <set>       Use a set of pre-defined font and config (currently only fontconfig).
                             Possible values of <set>: $(ls -A ${REPO_ROOT}/dots-extra/fontsets)
 ${STY_CYAN}
@@ -46,7 +45,7 @@ cleancache(){
 # `man getopt` to see more
 para=$(getopt \
   -o hfFk:cs \
-  -l help,force,firstrun,fontset:,clean,skip-allgreeting,skip-alldeps,skip-allsetups,skip-allfiles,ignore-outdate,skip-sysupdate,skip-plasmaintg,skip-backup,skip-quickshell,skip-fish,skip-hyprland,skip-fontconfig,skip-miscconf,core,exp-files,via-nix \
+  -l help,force,firstrun,fontset:,clean,skip-allgreeting,skip-alldeps,skip-allsetups,skip-allfiles,ignore-outdate,skip-sysupdate,skip-plasmaintg,skip-backup,skip-quickshell,skip-hyprland,skip-fontconfig,skip-miscconf,core,exp-files,via-nix \
   -n "$0" -- "$@")
 [ $? != 0 ] && echo "$0: Error when getopt, please recheck parameters." && exit 1
 #####################################################################################
@@ -81,11 +80,10 @@ while true ; do
     --skip-plasmaintg) SKIP_PLASMAINTG=true;shift;;
     --skip-backup) SKIP_BACKUP=true;shift;;
     --skip-hyprland) SKIP_HYPRLAND=true;shift;;
-    --skip-fish) SKIP_FISH=true;shift;;
     --skip-quickshell) SKIP_QUICKSHELL=true;shift;;
     --skip-fontconfig) SKIP_FONTCONFIG=true;shift;;
     --skip-miscconf) SKIP_MISCCONF=true;shift;;
-    --core) SKIP_PLASMAINTG=true;SKIP_FISH=true;SKIP_FONTCONFIG=true;SKIP_MISCCONF=true;shift;;
+    --core) SKIP_PLASMAINTG=true;SKIP_FONTCONFIG=true;SKIP_MISCCONF=true;shift;;
     --exp-files) EXPERIMENTAL_FILES_SCRIPT=true;shift;;
     --via-nix) INSTALL_VIA_NIX=true;shift;;
     

@@ -4,11 +4,11 @@
 # shellcheck shell=bash
 
 #####################################################################################
-# MISC (For dots/.config/* but not quickshell, not fish, not Hyprland, not fontconfig)
+# MISC (For dots/.config/* but not quickshell, not Hyprland, not fontconfig)
 case "${SKIP_MISCCONF}" in
   true) true;;
   *)
-    for i in $(find dots/.config/ -mindepth 1 -maxdepth 1 ! -name 'quickshell' ! -name 'fish' ! -name 'hypr' ! -name 'fontconfig' -exec basename {} \;); do
+    for i in $(find dots/.config/ -mindepth 1 -maxdepth 1 ! -name 'quickshell' ! -name 'hypr' ! -name 'fontconfig' -exec basename {} \;); do
 #      i="dots/.config/$i"
       echo "[$0]: Found target: dots/.config/$i"
       if [ -d "dots/.config/$i" ];then install_dir__sync "dots/.config/$i" "$XDG_CONFIG_HOME/$i"
@@ -24,13 +24,6 @@ case "${SKIP_QUICKSHELL}" in
   *)
      # Should overwriting the whole directory not only ~/.config/quickshell/ii/ cuz https://github.com/end-4/dots-hyprland/issues/2294#issuecomment-3448671064
     install_dir__sync dots/.config/quickshell "$XDG_CONFIG_HOME"/quickshell
-    ;;
-esac
-
-case "${SKIP_FISH}" in
-  true) true;;
-  *)
-    install_dir__sync_exclude dots/.config/fish "$XDG_CONFIG_HOME"/fish "conf.d"
     ;;
 esac
 
