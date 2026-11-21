@@ -18,6 +18,8 @@ import qs.modules.common.functions
  * finger moves, the way a phone does.
  */
 PanelWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     readonly property real progress: TabletDashboardGestureController.progress

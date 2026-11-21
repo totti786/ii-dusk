@@ -182,6 +182,8 @@ Scope {
                 id: hubWindow
 
                 sourceComponent: PanelWindow {
+                    contentItem.LayoutMirroring.enabled: Translation.isRtl
+                    contentItem.LayoutMirroring.childrenInherit: true
                     id: hub
                     screen: screenScope.modelData
 

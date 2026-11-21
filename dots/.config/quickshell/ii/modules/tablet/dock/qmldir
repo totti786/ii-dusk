@@ -1,0 +1,10 @@
+module qs.modules.tablet.dock
+TabletDock 1.0 TabletDock.qml
+TabletDockButton 1.0 TabletDockButton.qml
+TabletDockContextMenu 1.0 TabletDockContextMenu.qml
+TabletDockOverflowButton 1.0 TabletDockOverflowButton.qml
+TabletDockOverflowMenu 1.0 TabletDockOverflowMenu.qml
+TabletDockSearchBar 1.0 TabletDockSearchBar.qml
+TabletDockWindow 1.0 TabletDockWindow.qml
+TabletNavButton 1.0 TabletNavButton.qml
+# quickshell-generated qmldir

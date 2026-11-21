@@ -144,6 +144,8 @@ Scope {
      * FloatingWindow, like Welcome, and it shades nothing.
      */
     FloatingWindow {
+        contentItem.LayoutMirroring.enabled: Translation.isRtl
+        contentItem.LayoutMirroring.childrenInherit: true
         id: setupWindow
 
         visible: root.shouldShow

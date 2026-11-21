@@ -21,6 +21,8 @@ import qs.modules.common
  * sits on a solid surface colour, which is what that setting means everywhere else.
  */
 PanelWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     required property Component contentComponent

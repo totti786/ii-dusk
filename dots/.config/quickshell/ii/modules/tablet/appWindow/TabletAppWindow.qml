@@ -22,6 +22,8 @@ import qs.modules.tablet.navigation
  * root; this window knows only their ids.
  */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     readonly property string appId: GlobalStates.tabletAppId
