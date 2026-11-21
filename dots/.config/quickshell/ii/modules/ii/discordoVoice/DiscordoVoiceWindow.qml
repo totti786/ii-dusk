@@ -6,9 +6,12 @@ import Quickshell
 import qs
 import qs.modules.common
 import qs.modules.ii.clock.components
+import qs.services
 
 /** Floating shell window; closing it leaves Discordo Voice running. */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
