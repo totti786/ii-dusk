@@ -890,3 +890,10 @@ rebind(mainMod .. " + SHIFT + W", hl.dsp.global("quickshell:wallpaperSelectorTog
 -- Required first line from keybinds.conf: "exec = hyprctl dispatch submap global".
 -- Without it, binds in the global submap may not be active. Check after the first
 -- Lua launch and add it in the hyprland.start callback if needed.
+
+
+-- Laptop lid. logind ignores it (do-not-suspend.conf), so these two binds are the whole policy.
+-- What to do comes from the shell (Settings > Power > Closing the lid), which also knows about
+-- keep-awake and the charger: it answers suspend, blank or nothing. No answer (shell down) means suspend.
+hl.bind("switch:on:Lid Switch", hl.dsp.exec_cmd([[sh -c 'case "$(qs -c ii ipc call lid action 2>/dev/null)" in nothing) ;; blank) hyprctl dispatch "hl.dsp.dpms({ action = \"off\", monitor = \"eDP-1\" })" ;; *) systemctl suspend ;; esac']]), { locked = true })
+hl.bind("switch:off:Lid Switch", hl.dsp.exec_cmd([[hyprctl dispatch 'hl.dsp.dpms({ action = "on", monitor = "eDP-1" })']]), { locked = true })
