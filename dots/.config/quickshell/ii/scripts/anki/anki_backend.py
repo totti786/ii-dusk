@@ -38,16 +38,18 @@ from urllib.parse import urlparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-# The engine is a private venv holding a PINNED `anki` (scripts/anki/install_engine.sh), so
+# The engine is the shell's venv holding a PINNED `anki` (scripts/anki/install_engine.sh), so
 # the app needs neither the system package nor Anki desktop, and the engine never moves
 # ahead of the version that last touched the collection. There is deliberately no fallback
 # to the system package: a second engine of unknown version must not open the real profile.
 # The folder is looked up through the account database, not $HOME/$XDG_DATA_HOME, which
 # tests and sandboxes override.
-ENGINE_DIR = os.environ.get("II_ANKI_ENGINE") or os.path.join(
-    pwd.getpwuid(os.getuid()).pw_dir, ".local", "share", "ii-anki-engine"
-)
-ENGINE_VENV = os.path.join(ENGINE_DIR, "venv")
+# One Python environment for the whole shell: the engine is the pinned `anki` inside it.
+# II_ANKI_ENGINE overrides the folder (its `venv` subfolder), for tests.
+ENGINE_DIR = os.environ.get("II_ANKI_ENGINE")
+ENGINE_VENV = os.path.join(ENGINE_DIR, "venv") if ENGINE_DIR else os.path.expanduser(
+    os.environ.get("ILLOGICAL_IMPULSE_VIRTUAL_ENV") or os.path.join(
+        pwd.getpwuid(os.getuid()).pw_dir, ".local", "state", "quickshell", ".venv"))
 ENGINE_PYTHON = os.path.join(ENGINE_VENV, "bin", "python")
 IN_ENGINE = os.path.realpath(sys.prefix) == os.path.realpath(ENGINE_VENV)
 if not IN_ENGINE and os.path.exists(ENGINE_PYTHON):
