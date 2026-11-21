@@ -297,16 +297,17 @@ Two projects grew out of this shell and live in their own repositories.
 
 ## Patched Quickshell
 
-The installer builds **`quickshell-ii-git`**: upstream Quickshell with two startup patches
-(a faster QML scanner and Qt's QML disk cache). The bar shows in under 2 seconds instead of
-about 5. It is a native package on Arch and Fedora; elsewhere the stock `quickshell-git` is kept.
+The installer uses **[`quickshell-dusk-git`](https://github.com/totti786/quickshell-dusk)** from the AUR: upstream
+Quickshell with a faster QML scanner, Qt's QML disk cache and idle memory trimming. The bar shows in under 2
+seconds instead of about 5. It is built without the X11, i3 and greetd modules, which this shell never imports.
 
 ```bash
-./setup-ii-p3drovfx.sh quickshell           # install only the patched Quickshell
-./setup-ii-p3drovfx.sh quickshell restore   # back to quickshell-git
+yay -S quickshell-dusk-git
 ```
 
-Details: [`scripts/quickshell-build`](../dots/.config/quickshell/ii/scripts/quickshell-build/README.md).
+The older, pinned `quickshell-ii-git` builder is still in
+[`scripts/quickshell-build`](../dots/.config/quickshell/ii/scripts/quickshell-build/README.md) and is only used
+when you ask for it with `./setup-ii-dusk.sh quickshell`.
 
 <br>
 
