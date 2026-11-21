@@ -14,12 +14,12 @@ import pwd
 import sys
 from pathlib import Path
 
-# Runs on the Anki app's own engine (scripts/anki/install_engine.sh), not the system package.
-_ENGINE = os.environ.get("II_ANKI_ENGINE") or os.path.join(
-    pwd.getpwuid(os.getuid()).pw_dir, ".local", "share", "ii-anki-engine"
-)
-_ENGINE_PYTHON = os.path.join(_ENGINE, "venv", "bin", "python")
-if os.path.realpath(sys.prefix) != os.path.realpath(os.path.join(_ENGINE, "venv")) and os.path.exists(_ENGINE_PYTHON):
+# Runs on the shell's venv, where the Anki app's pinned engine lives (scripts/anki/install_engine.sh), not the system package.
+_ENGINE_VENV = os.path.join(os.environ["II_ANKI_ENGINE"], "venv") if os.environ.get("II_ANKI_ENGINE") else os.path.expanduser(
+    os.environ.get("ILLOGICAL_IMPULSE_VIRTUAL_ENV") or os.path.join(
+        pwd.getpwuid(os.getuid()).pw_dir, ".local", "state", "quickshell", ".venv"))
+_ENGINE_PYTHON = os.path.join(_ENGINE_VENV, "bin", "python")
+if os.path.realpath(sys.prefix) != os.path.realpath(_ENGINE_VENV) and os.path.exists(_ENGINE_PYTHON):
     os.execv(_ENGINE_PYTHON, [_ENGINE_PYTHON, "-I", os.path.abspath(__file__), *sys.argv[1:]])
 
 
