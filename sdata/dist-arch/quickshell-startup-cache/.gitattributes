@@ -1,2 +1,0 @@
-# Preserve unified patch context whitespace and its source checksums.
-*.patch -whitespace
