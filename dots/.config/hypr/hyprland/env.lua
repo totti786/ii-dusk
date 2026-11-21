@@ -30,6 +30,10 @@ end
 -- Enforce local binary directory precedence for session
 prepend_unique("PATH", { home_dir .. "/.local/bin" })
 
+-- The shell's scripts run in its one Python environment: this wrapper sends a script that lives in the
+-- shell's own trees there and leaves every other python3 caller on the system interpreter.
+prepend_unique("PATH", { home_dir .. "/.config/quickshell/ii/scripts/deps/bin" })
+
 -- Wayland
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 
