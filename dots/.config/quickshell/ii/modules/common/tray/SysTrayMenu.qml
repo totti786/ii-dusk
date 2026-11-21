@@ -9,6 +9,8 @@ import Quickshell
 import Quickshell.Services.SystemTray
 
 PopupWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
     required property QsMenuHandle trayItemMenuHandle
     // Prefer the item over its id: ids are not unique for Electron/Chrome tray icons.
@@ -445,6 +447,8 @@ PopupWindow {
     Component {
         id: cascadeComponent
         PopupWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: cascadeWindow
             property var handle: null
             property int level: 1

@@ -1,0 +1,4 @@
+module qs.modules.common.tray
+SysTrayMenu 1.0 SysTrayMenu.qml
+SysTrayMenuEntry 1.0 SysTrayMenuEntry.qml
+# quickshell-generated qmldir
