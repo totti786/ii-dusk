@@ -38,6 +38,11 @@ args=("$@")
 # ("Unable to read current working directory"), which the update check
 # reported as "Remote unreachable" for the whole session.
 cd "$HOME" 2>/dev/null || cd /
+
+# The shell's scripts use one Python environment; deps/bin/python3 sends a script that lives in the shell's
+# own trees there and leaves every other python3 caller on the system interpreter. Every process the shell
+# starts inherits this, whichever way Hyprland started the shell.
+export PATH="$dir/../deps/bin:$PATH"
 # The allocator setting every other shell start uses (see hyprland/execs.lua).
 export MALLOC_CONF="${MALLOC_CONF:-narenas:1}"
 
