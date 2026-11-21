@@ -1,0 +1,4 @@
+module qs.modules.common.quickToggleDialogs.vpn
+VpnDialog 1.0 VpnDialog.qml
+VpnDialogContent 1.0 VpnDialogContent.qml
+# quickshell-generated qmldir

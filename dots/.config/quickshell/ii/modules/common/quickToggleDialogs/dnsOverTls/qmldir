@@ -1,0 +1,3 @@
+module qs.modules.common.quickToggleDialogs.dnsOverTls
+DnsOverTlsDialog 1.0 DnsOverTlsDialog.qml
+# quickshell-generated qmldir

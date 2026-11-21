@@ -1,0 +1,7 @@
+module qs.modules.common.quickToggleDialogs.volumeMixer
+AudioDeviceSelectorButton 1.0 AudioDeviceSelectorButton.qml
+VolumeDialog 1.0 VolumeDialog.qml
+VolumeDialogContent 1.0 VolumeDialogContent.qml
+VolumeDialogMedia 1.0 VolumeDialogMedia.qml
+VolumeMixerEntry 1.0 VolumeMixerEntry.qml
+# quickshell-generated qmldir

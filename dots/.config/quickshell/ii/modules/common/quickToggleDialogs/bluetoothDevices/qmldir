@@ -1,0 +1,4 @@
+module qs.modules.common.quickToggleDialogs.bluetoothDevices
+BluetoothDeviceItem 1.0 BluetoothDeviceItem.qml
+BluetoothDialog 1.0 BluetoothDialog.qml
+# quickshell-generated qmldir

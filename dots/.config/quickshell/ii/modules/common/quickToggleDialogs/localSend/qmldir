@@ -1,0 +1,3 @@
+module qs.modules.common.quickToggleDialogs.localSend
+LocalSendDialog 1.0 LocalSendDialog.qml
+# quickshell-generated qmldir

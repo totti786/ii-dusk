@@ -1,0 +1,4 @@
+module qs.modules.common.quickToggleDialogs.kdeConnect
+KdeConnectDialog 1.0 KdeConnectDialog.qml
+KdeConnectDialogContent 1.0 KdeConnectDialogContent.qml
+# quickshell-generated qmldir
