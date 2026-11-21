@@ -76,11 +76,12 @@ After `authOk` every frame is a JSON object with a `t` field:
 | phone → helper | `{"t":"icons","names":["…"]}` → `{"t":"icons","paths":{name:"<svg path>"}}` | Answered by the helper itself, from the Material Symbols Rounded font (fontconfig). Path data in the 0–960 box, y down, like the official SVGs. Up to 64 names; unknown names are left out. |
 | phone → shell | `{"t":"sub","what":"focus","on":true}` → `{"t":"focus","class":"firefox","open":["firefox","kitty"]}` | cap `deckFocus` (with `deck`). Deck profiles: the phone subscribes only while its deck is on screen and has a folder bound to apps (or one is being edited). `class` is the focused window's Wayland app id (`""` when none), `open` the classes of every window; pushed on change, held 120 ms so a focus move does not bounce the deck. The phone matches the class (case-insensitive) against the folders' `match` lists, which live on the phone. |
 | shell → phone | `{"t":"handoff","url":"https://…","title","artist","app","position":ms}` | cap `handoff` (phone) with `pcMedia`. The PC locked while a web page played (`xesam:url`, http/https only); the phone posts a notification that opens the page at `position` (YouTube `t=`, Twitch `t=`, Vimeo `#t=`) and pauses the PC's player with `cmd pcMedia {a:"pause"}`. `pcMedia` also carries `url`, so the phone's media card has a "Continue on phone" button any time. Off with `iiTools.handoff.onLock`. |
-| shell → phone | file, purpose `wallSync` (name = hash of the wallpaper path) | Cap `wallSync` (phone, off by default: "Use the PC's wallpaper"). The desktop wallpaper as a JPEG of at most 3840 px (a video's first frame), made once per image (`<state>/wallsync/`), sent when the wallpaper changes and when such a phone connects. The phone centre-crops it to its screen and sets it as home and lock wallpaper (`SET_WALLPAPER`), skipping a name it already applied. `iiTools.wallSync.enable` turns the sending off. |
+| shell → phone | file, purpose `wallSync` (name = hash of the wallpaper path) | Cap `wallSync` (phone, off by default: "Use the PC's wallpaper"). The desktop wallpaper as a JPEG of at most 3840 px (a video's first frame), made once per image (`<state>/wallsync/`), sent when the wallpaper changes and when such a phone connects. The phone keeps it and hands it to its own wallpaper app (One UI's *Set as wallpaper*, else the launcher's or the system's cropper), whose dialog crops it and sets home, lock or both: at once with the app on screen, else from a notification. It does not ask twice for the same name, and lists the one it keeps in `caps.have.wallSync`, which the shell does not send again. `iiTools.wallSync.enable` turns the sending off. |
 | phone → shell | `media` gains `"url":"https://…"` | Only when the phone's app gives the track a web page (an http(s) `METADATA_KEY_MEDIA_URI`/`MEDIA_ID`, or a Spotify track/episode URI turned into its open.spotify.com page). The helper publishes it as `xesam:url` on the phone's MPRIS player; the phone tab's media card then shows *Continue on PC*, which opens the page at the playing position (`IiLinkService.continueOnPc`) and pauses the phone. |
 | phone → shell | `{"t":"get","what":"wallpaper"}` → file, purpose `wallSave` | Cap `wallSave` (shell, with `iiTools.wallSync.enable`). The app's *Save the PC's wallpaper* button: the same 3840 px JPEG as `wallSync`, uncropped, filed by the phone in Pictures/ii tools so the user can crop or move it. `{"t":"err","code":"unavailable"}` when it cannot be made. |
 | shell → phone | `{"t":"display","monitor","brightness":0–1\|-1,"floor","night":bool,"temp":K,"auto":bool}` | cap `display` (with `remote`). The focused monitor's brightness (`Brightness`: backlight or DDC/CI; -1 when it cannot be read; `floor` is the lowest the shell allows) and the night light. Pushed whole on change (≤ 16/s) only after `sub display`, which the phone sends while the remote screen is open. Commands: `cmd brightness` (arg 0–1), `cmd night` (arg bool, a manual toggle like the quick toggle), `cmd nightTemp` (arg 1200–6500 K, writes `light.night.colorTemperature`). |
-| phone → shell | `{"t":"caps","caps":["calls"]}` | What this phone does for the PC. Sent on connect and when it changes. |
+| phone → shell | `{"t":"caps","caps":["calls"],"have":{"look":["<md5>"],"wallSync":["<md5>"],"pcMediaArt":["<md5>"],"voiceAvatar":["<id>_<hash>"]}}` | What this phone does for the PC. Sent on connect and when it changes. `have` (shell cap `have`) lists the images the phone kept from earlier connections: the shell sends only the topic for those, not the file again (a reconnect used to cost the 3840 px wallpaper each time). Older phones send no `have` and get every file. |
+| phone → shell | `{"t":"quiet","on":bool}` | Shell cap `quiet`. The phone's screen went off (`true`) or on (`false`); also sent right after `hello` when it connects with the screen off. While quiet, the shell holds `workspaces`, `modes`, `presets`, `audio`, `deck`, `state`, `clip`, `look`, `display`, `focus` and `voiceSummary` (an answer with an `id` excepted), keeps only the latest of each, and sends them when the screen comes on. Everything else (calls, notifications, `pcLive`, `pcMedia`, `act`, answers, files) goes at once. Cleared when the phone disconnects. |
 | phone → shell | `{"t":"call","state":"idle"\|"ringing"\|"talking","name":"…"}` | The phone's call state; `name` is the caller as the dialer's notification shows it. The app opens the link itself when a call rings, even in the background, and keeps it until 10 s after the call. |
 | shell → phone | `{"t":"phone","a":"answer"\|"end"\|"silence"\|"dial","arg":"<number>"}` | cap `calls` on both sides. No reply: the next `call` is the answer. |
 | shell → phone | `{"t":"clip","text":"…"}` / `{"t":"clip","mime":"image/png","data":"<base64>"}` | cap `clip` on both sides. What was just copied on the PC (images up to 5 MiB), and the latest copy when a phone connects. |
@@ -209,15 +210,42 @@ The shell stores each day in `<state>/phone_usage/<date>.json`, keeps 60 days, a
 | Direction | Message | |
 | --- | --- | --- |
 | both | `{"t":"dnd","on":bool}` | caps `dnd`. The phone reports its own changes (not those the PC asked for) and its state on connect; the shell tells the phone only when what it should be changes (the shell's DND, or a mode chosen in Settings), never again, so turning the phone's off by hand sticks. |
-| shell → phone | `{"t":"pcLive","items":[item]}` | caps `pcLive`. Pushed whole on change, at most twice a second. `item` is `{id, kind: "record"\|"timer"\|"stopwatch"\|"alarm"\|"progress", title, text?, start?, end?, paused?, remaining?, total?, progress?, actions?: [{id, label}]}`; times are epoch ms, so the phone counts by itself. |
-| phone → shell | `cmd` `live` with `{id, action}` | A button: `rec` `stop`, `pomodoro` `pause`/`resume`, a countdown's id `pause`/`resume`, `alarm` `snooze`/`stop`. |
+| shell → phone | `{"t":"pcLive","items":[item]}` | caps `pcLive`. Pushed whole on change, at most twice a second. `item` is `{id, kind: "record"\|"timer"\|"stopwatch"\|"alarm"\|"progress", title, text?, start?, end?, paused?, remaining?, total?, progress?, phase?, cycle?, cycles?, elapsedMs?, laps?, actions?: [{id, label}]}`; times are epoch ms, so the phone counts by itself. Pomodoro (`id: "pomodoro"`) adds `phase` (`"focus"\|"break"\|"longBreak"`), `cycle` (0-based) and `cycles`; stopwatch adds `laps` (cumulative ms) and, while paused, `elapsedMs`. |
+| phone → shell | `cmd` `live` with `{id, action}` | A button: `rec` `stop`, `pomodoro` `pause`/`resume`, `stopwatch` `pause`/`resume`, a countdown's id `pause`/`resume`, `alarm` `snooze`/`stop`. |
+
+## Focus and timers
+
+Needs `focus` in the shell's `caps` (Settings → ii tools → Focus & timers, `iiTools.focus.enable`). Live state rides on `pcLive`; presets and pomodoro settings are requested only while the phone screen is open.
+
+| Direction | Message | |
+| --- | --- | --- |
+| phone → shell | `{"t":"get","what":"timers"}` → `{"t":"timers","presets":[seconds,…],"pomodoro":{"focus":s,"breakTime":s,"longBreak":s,"cycles":N}}` | Saved timer presets and pomodoro durations from the clock app, requested when the Focus screen opens. |
+| phone → shell | `cmd` `focus`, arg `{"a":"pomodoro","op":"start"\|"pause"\|"resume"\|"toggle"\|"reset"\|"skip"}` | Controls `TimerService` pomodoro directly and flushes `pcLive`. |
+| phone → shell | `cmd` `focus`, arg `{"a":"timerStart","seconds":N,"label"?:str}` | Starts a new countdown timer (1–604800 s). |
+| phone → shell | `cmd` `focus`, arg `{"a":"timer","id":"<id>","op":"pause"\|"resume"\|"toggle"\|"reset"\|"extend"\|"remove","seconds"?:N}` | Controls one countdown (`extend` defaults to 60 s). `not_found` if gone. |
+| phone → shell | `cmd` `focus`, arg `{"a":"stopwatch","op":"start"\|"pause"\|"resume"\|"toggle"\|"reset"\|"lap"}` | Controls the stopwatch and records laps. |
+| phone → shell | `cmd` `focus`, arg `{"a":"alarm","op":"stop"\|"dismiss"\|"snooze","minutes"?:N}` | Stops or snoozes `AlarmService.ringingAlarm`. |
+
+## Voice and meeting console
+
+Needs `voice` in the shell's `caps` (Settings → ii tools → Voice console, `iiTools.voice.enable`). A tiny `voiceSummary` rides while connected for the home card; the full roster, `Privacy` sensor list, avatars, join/leave events, and speaking updates are active only while the phone subscribes (`sub voice`).
+
+| Direction | Message | |
+| --- | --- | --- |
+| shell → phone | `{"t":"voiceSummary","inCall":bool,"channel":"…","mute":bool,"deaf":bool}` | Pushed on change while connected (`quiet`-holdable), for the home card without waking `Privacy` or fetching avatars. |
+| phone → shell | `{"t":"sub","what":"voice","on":bool}` / `{"t":"unsub","what":"voice"}` | On while the Voice screen is visible; enables `Privacy.externalWanted` and pushes `voice`, `voiceSpeak` and missing avatars. |
+| shell → phone | `{"t":"voice","channel":{"id","name"}\|null,"since":ms,"status","backend","self":{"id","mute","deaf","mode","pttShortcut","video","canMode","canUserVoice","canVideo"},"users":[{"id","name","avatar","mute","deaf","volume","localMute"}],"privacy":[{"kind","app"}]}` | Pushed whole only on change (40 ms coalesced; omits `speaking` so speaking bursts do not resend the roster). `canVideo` is `false` when the backend cannot toggle video (official Discord RPC has no video control; Vesktop companion does not advertise `"video"`). |
+| shell → phone | `{"t":"voiceSpeak","ids":["<userId>",…]}` | Currently speaking user ids, coalesced to ~10/s while subscribed and in a call. |
+| shell → phone | `{"t":"voiceEvent","kind":"join"\|"leave","id","name"}` | Transient join/leave notice for the current channel (initial room snapshot excluded). |
+| shell → phone | `sendFile` purpose `voiceAvatar`, name `<id>_<hash>` | Discord avatar PNG (`128px`), cached in `~/.cache/quickshell/iilink/voiceavatars/` and sent once per image unless listed in `caps.have.voiceAvatar`. |
+| phone → shell | `cmd` `voice`, arg `{"a":"mute"\|"deaf"\|"mode"\|"userVolume"\|"userMute"\|"video"\|"connect"\|"authorize",…}` | `mute`/`deaf`: optional `on` bool (toggles if omitted); `mode`: `"VOICE_ACTIVITY"`\|`"PUSH_TO_TALK"` (toggles if omitted); `userVolume`: `{id, vol}` (0–200); `userMute`: `{id, mute}`; `video`: returns `unsupported` while `canVideo` is `false`. |
 
 ## Performance panel
 
 | Direction | Message | |
 | --- | --- | --- |
 | phone → shell | `{"t":"sub","what":"perf","on":bool}` | caps `perf`. On while the phone's panel is on screen (sent again after a reconnect); a sampler runs only then. |
-| shell → phone | `{"t":"perf","cpu":{name,usage,temp,clock,…},"gpu":{name,usage,temp,power,state,vramUsed,vramTotal,…},"ram":{used,total,…},"fps":{active,fps,frametime,…},"gamemode":bool}` | Once a second: the performance HUD's sampler (`perf_monitor.py`), frame rate from MangoHud. |
+| shell → phone | `{"t":"perf","cpu":{name,usage,temp,clock,power,…},"gpu":{name,usage,temp,clock,memClock,power,fan,state,vramUsed,vramTotal,…},"ram":{used,total,swapUsed,swapTotal},"fps":{active,fps,frametime,frametimes,avg,low1,low01,stutters,stutterWorst,cap,elapsed,process,driver,…},"net":{online,target,toGateway,down,up,ping,jitter,loss}\|null,"battery":{percent,charging,energy,rate,timeLeft}\|null,"game":{name,resolution,running,driver,driverVersion,profile},"hud":{style,palette,title,uppercase,icons,fpsTarget,colorFps,hotTemp,window,cpuName,gpuName,show:{showFps:bool,…}},"gamemode":bool}` | Once a second: the game overlay HUD's sampler (`PerfSampler`, `perf_monitor.py`), frame statistics from MangoHud (`frametimes` the latest ~150 log rows, in ms). `power` falls back to MangoHud's reading when sysfs has none. `net` only while the HUD shows the network. `battery` only on a laptop. `game`: the focused game's window title and size, the GPU driver, and the power profile (`saver`/`balanced`/`performance`). `hud` is the HUD's settings (`Config.options.overlay.perfMonitor`): the phone draws the same rows (`show` carries every `show*` key), style (`bars`/`graph`/`text`), palette (`accent`/`container`/`mono`) and thresholds. |
 
 ## Phone performance
 
@@ -273,7 +301,7 @@ phone; the app's own switch). The phone's own players (`iitools_` buses) are nev
 | Direction | Message | |
 | --- | --- | --- |
 | shell → phone | `{"t":"pcMedia","on":true,"id":"<bus>","app","title","artist","album","playing","position":ms,"length":ms,"rate","canPlay","canPause","canNext","canPrevious","canSeek","art":"<md5>","track":"<md5>"}` | On change (coalesced 150 ms) and on connect; `{"t":"pcMedia","on":false}` when nothing plays. The position is only re-sent when it jumps (a seek): the phone runs the clock from `position`, `playing` and `rate`. |
-| shell → phone | `sendFile` purpose `pcMediaArt`, name `<md5>` | The cover, once per image per connection; `art` names it. |
+| shell → phone | `sendFile` purpose `pcMediaArt`, name `<md5>` | The cover, once per image per connection, unless the phone lists it in `caps.have.pcMediaArt`; `art` names it. |
 | phone → shell | `cmd` `pcMedia`, arg `{"a":"play"\|"pause"\|"toggle"\|"next"\|"previous"\|"seek","value"?:ms}` | The phone's buttons. `unsupported` for a seek the player cannot do. |
 
 ### The PC's lyrics
@@ -295,7 +323,7 @@ The desktop wallpaper behind the phone's PC card. Needs `look` in the phone's ca
 
 | Direction | Message | |
 | --- | --- | --- |
-| shell → phone | `sendFile` purpose `look`, name `<md5>` | A JPEG of the wallpaper at most 1080 px wide (a video's first frame), made once per wallpaper (`<stateDir>/look`), sent once per image per connection, before the topic. |
+| shell → phone | `sendFile` purpose `look`, name `<md5>` | A JPEG of the wallpaper at most 1080 px wide (a video's first frame), made once per wallpaper (`<stateDir>/look`), sent once per image per connection, before the topic; not at all when the phone lists it in `caps.have.look`. |
 | shell → phone | `{"t":"look","wall":"<md5>"}` | After the file, and again when the wallpaper changes. The phone keeps the last image for when the PC is away. |
 
 ## Drawing pad
@@ -559,6 +587,34 @@ itself refuses with `err`: `bad_arg` (no size, or an invalid gallery name), `too
 (over 64 MiB), `write` (more bytes than announced, disk error). A new header drops an
 unfinished file, and so does the connection closing. One file at a time per phone (the
 phone serializes uploads).
+
+### Fast lane
+
+The phone's *Faster* transfers (cap `fileLane` on both sides; the shell always has it, the
+phone while the setting is on): a file of at least 1 MiB moves on a TLS socket of its own
+instead of the WebSocket, at the network's speed and up to 16 GiB (lane.rs, FileLane.kt).
+
+- The lane connects to the link's TCP port and writes `IIL1` in the clear (a TLS
+  ClientHello starts with `0x16`, so the helper tells the two apart by the first byte), then
+  TLS under the same pinned certificate, then the 32-byte token. After that the bytes of
+  the file as they are, in order, nothing else; TCP resends what is lost. A token is good
+  once, for 15 s. No byte for 20 s ends the lane.
+- A file from the phone ends with one byte back once it is on disk (`0` landed, `1`
+  failed; the outcome itself comes over the WebSocket). The phone closes only after it:
+  closing with the server's TLS session ticket unread makes its kernel reset the socket,
+  and the reset discards whatever the helper had not read yet.
+- **Phone → PC:** the header carries `"lane":true`. The helper starts the file as usual
+  (`fileStart`, the 16 GiB limit instead of 64 MiB; never for `galleryThumb`) and answers
+  `{"t":"lane","id":N,"token":"<64 hex>"}`; the phone sends the bytes down the lane, and
+  everything else (`fileProgress`, `file`, the shell's `ok`/`err`) is as above. A phone
+  that cannot reach the lane sends the header again without `lane` (up to 64 MiB), which
+  withdraws the offer. An offer not taken in 15 s is dropped with `err` `timeout`.
+- **PC → phone:** for a phone with `fileLane` in its `caps`, `sendFile` of a file of at
+  least 1 MiB sends the header with `"lane":"<token>"` and no binary frames; the phone pulls
+  the bytes over the lane, and `fileSent` follows once they are written. A phone that
+  cannot reach it answers `{"t":"lane","id":N,"err":"connect"}` and gets the file over the
+  WebSocket (up to 64 MiB), else `fileSendFailed`. The phone answers `ok`/`err` as before,
+  `too_large` too when its storage cannot hold the file.
 
 | `purpose` | Needs | The shell |
 | --- | --- | --- |
