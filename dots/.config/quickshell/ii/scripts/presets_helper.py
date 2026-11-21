@@ -98,6 +98,10 @@ MONITOR_BINDING_PATHS = (
 # Identity and paired hardware. Removed outright: there is no neutral value
 # worth shipping, and these travel no better than they anonymize.
 PERSONAL_PATHS = (
+    # Syncplay: the server address and the person's own display name and room.
+    "syncplay.host",
+    "syncplay.name",
+    "syncplay.room",
     "userProfile.customName",
     "userProfile.customBio",
     "userProfile.customGreeting",
