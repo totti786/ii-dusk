@@ -76,15 +76,113 @@ class FallsThrough(unittest.TestCase):
 
     def test_none(self):
         for text in (
-            "", "hello", "what's the weather like", "what's playing", "play some jazz", "play bohemian rhapsody",
+            "", "hello", "what's the weather like", "play some jazz", "play bohemian rhapsody",
             "I'd like to pause and think about this for a while before we continue with the plan",
             "remind me to call mum tomorrow", "remind me in 10 minutes to stretch", "remind me at 5 to leave",
-            "open the sidebar", "open my downloads folder", "open a new tab", "open settings",
+            "open my downloads folder", "open a new tab", "open the sidebar settings for bluetooth devices",
             "set a timer", "volume", "turn it", "set the brightness", "dark", "alarm", "set an alarm for later",
             "tell me a joke", "stop talking about that", "next week I travel to Cairo",
             "workspace", "go back to what we were saying about the budget", "can you explain dark mode",
+            # the new commands must not swallow ordinary talk
+            "I am locked out of my account", "take a break", "turn off the light", "turn on the music",
+            "what is the battery of my phone", "the wifi at the cafe was terrible", "bluetooth is a standard",
+            "close", "close the door", "sleep well", "I need to sleep", "restart", "lock the door", "shut down the server",
+            "switch to a different topic", "go to the next one", "record a podcast about wifi",
+            "performance", "balanced", "move this to the left", "pin it to the wall", "do not disturb me for ten minutes",
+            "take a screenshot of the error and email it to me", "stop recording the meeting notes for later",
         ):
             self.assertIsNone(vr.match(text), text)
+
+
+class Extended(unittest.TestCase):
+    CASES = [
+        ("turn off wifi", [("toggle", ["wifi", "off"])]),
+        ("wi-fi on", [("toggle", ["wifi", "on"])]),
+        ("turn on bluetooth", [("toggle", ["bluetooth", "on"])]),
+        ("enable do not disturb", [("toggle", ["dnd", "on"])]),
+        ("DND off", [("toggle", ["dnd", "off"])]),
+        ("turn on night light", [("toggle", ["nightlight", "on"])]),
+        ("toggle the night light", [("toggle", ["nightlight", "toggle"])]),
+        ("keep the screen awake", [("toggle", ["awake", "on"])]),
+        ("let the screen sleep", [("toggle", ["awake", "off"])]),
+        ("mute the mic", [("toggle", ["mic", "off"])]),
+        ("unmute the microphone", [("toggle", ["mic", "on"])]),
+        ("turn on game mode", [("toggle", ["gamemode", "on"])]),
+        ("power saver mode", [("power", ["saver"])]),
+        ("switch to performance mode", [("power", ["performance"])]),
+        ("balanced mode", [("power", ["balanced"])]),
+        ("take a screenshot", [("capture", ["shot"])]),
+        ("screenshot of an area", [("capture", ["area"])]),
+        ("start recording", [("capture", ["record"])]),
+        ("record a region", [("capture", ["region"])]),
+        ("stop recording", [("capture", ["stop"])]),
+        ("color picker", [("capture", ["color"])]),
+        ("open settings", [("panel", ["settings", "open"])]),
+        ("open the sidebar", [("panel", ["sidebar", "open"])]),
+        ("show the cheat sheet", [("panel", ["cheatsheet", "open"])]),
+        ("open the clipboard history", [("panel", ["clipboard", "open"])]),
+        ("close the sidebar", [("panel", ["sidebar", "close"])]),
+        ("open the power menu", [("panel", ["power", "open"])]),
+        ("fullscreen", [("window", ["fullscreen"])]),
+        ("make this window float", [("window", ["float"])]),
+        ("pin this window", [("window", ["pin"])]),
+        ("move this window to workspace 4", [("window", ["move", "4"])]),
+        ("switch to firefox", [("window", ["focus", "firefox"])]),
+        ("focus the terminal", [("window", ["focus", "terminal"])]),
+        ("switch to dark mode", [("theme", ["dark"])]),
+        ("go to workspace 3", [("workspace", ["3"])]),
+        ("open firefox", [("open", ["firefox"])]),
+    ]
+
+    def test_table(self):
+        for text, expected in self.CASES:
+            got = actions(text)
+            self.assertEqual(None if got is None else [(v, a) for v, a in got], expected, text)
+
+    def test_risky_commands_ask_first(self):
+        for text, verb in (("lock the screen", "lock"), ("lock", "lock"), ("go to sleep", "suspend"), ("suspend the computer", "suspend"),
+                           ("restart the computer", "reboot"), ("reboot my laptop", "reboot"), ("shut down", "shutdown"),
+                           ("shut down the computer", "shutdown"), ("close this window", "close"), ("close the window", "close")):
+            hit = vr.match(text)
+            self.assertIsNotNone(hit, text)
+            self.assertTrue(hit.get("confirm"), text)
+            self.assertEqual(hit["actions"][0][0], verb, text)
+            self.assertIn("yes", hit["say"].lower(), text)
+
+    def test_risky_verbs_are_not_in_custom_phrases(self):
+        for verb in vr.CONFIRMED_VERBS:
+            self.assertIsNone(vr.parse_do(verb), verb)
+            self.assertIsNone(vr.match("do it", custom=[{"phrase": "do it", "do": verb}]), verb)
+
+    def test_questions_are_info_not_actions(self):
+        for text, kind in (("what time is it", "time"), ("what's the date", "date"), ("battery", "battery"),
+                           ("how much battery do I have", "battery"), ("what's playing", "playing"),
+                           ("what song is this", "playing"), ("what's the volume", "volume"),
+                           ("when's my next alarm", "alarm"), ("any notifications", "notifications"),
+                           ("what window is this", "focused")):
+            hit = vr.match(text)
+            self.assertIsNotNone(hit, text)
+            self.assertEqual(hit.get("info"), kind, text)
+            self.assertEqual(hit["actions"], [], text)
+
+    def test_info_answers_come_from_the_context(self):
+        context = ("time: Thu 19 Nov 2026, 23:40\nfocused: kitty — \"vim\" (workspace 2)\nplaying: Song — Artist (playing)\n"
+                   "volume: 60%\nbattery: 81% discharging\nunread notifications: 3")
+        self.assertEqual(vr.answer_info("time", context), "It's 11:40 PM.")
+        self.assertEqual(vr.answer_info("battery", context), "81 percent, discharging.")
+        self.assertEqual(vr.answer_info("playing", context), "Song, by Artist.")
+        self.assertEqual(vr.answer_info("volume", context), "Volume is 60 percent.")
+        self.assertEqual(vr.answer_info("notifications", context), "You have 3 unread.")
+        self.assertEqual(vr.answer_info("playing", "playing: nothing"), "Nothing is playing.")
+        self.assertIsNone(vr.answer_info("battery", "time: x"))
+        self.assertIsNone(vr.answer_info("time", ""))
+
+    def test_new_groups_can_be_switched_off(self):
+        for text, group in (("turn off wifi", "toggles"), ("power saver mode", "power"), ("take a screenshot", "capture"),
+                            ("open settings", "panels"), ("fullscreen", "windows"), ("what time is it", "info"),
+                            ("lock the screen", "system")):
+            self.assertIsNotNone(vr.match(text), text)
+            self.assertIsNone(vr.match(text, off=[group]), text)
 
 
 class Settings(unittest.TestCase):

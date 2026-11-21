@@ -40,8 +40,9 @@ class NotificationPerExchangeTests(unittest.TestCase):
         # turn from `AiToolBroker.finish()`, sync or async, so it is not
         # the end of the exchange the user is waiting to hear about.
         guarded = body.split("root.notifyResponseFinished(message)", 1)[0]
-        self.assertIn("toolCalls", guarded.splitlines()[-3:][0] + "".join(guarded.splitlines()[-3:]))
-        self.assertIn("=== 0", guarded[-200:])
+        # The orb nests its own "spoken aloud" check inside the tool-call guard, so look for the
+        # guard anywhere before the call rather than in the last few lines.
+        self.assertIn("(message.toolCalls?.length ?? 0) === 0", guarded)
 
     def test_usage_and_persistence_still_happen_for_every_message(self):
         # Only the notification is gated — accounting, autosave and the

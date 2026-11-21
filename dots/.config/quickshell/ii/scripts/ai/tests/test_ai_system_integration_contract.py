@@ -69,7 +69,8 @@ class AiSystemIntegrationContractTests(unittest.TestCase):
                 self.assertIn(token, AI)
 
     def test_media_service_tolerates_a_transient_null_player(self):
-        self.assertIn("applicationPlayers.find(player => player && player.isPlaying)", MPRIS)
+        # A null entry must never reach the policy code that reads player properties.
+        self.assertIn("filter(player => player && isRealPlayer(player))", MPRIS)
 
 
 if __name__ == "__main__":

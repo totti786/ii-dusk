@@ -21,6 +21,8 @@ import sys
 import tempfile
 import threading
 import time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # sibling modules, also when loaded by path
+import aec  # noqa: E402
 
 
 def schema(properties=None, required=None):
@@ -218,7 +220,7 @@ def desktop_input(arguments):
             raise ValueError("Unknown mouse button.")
         env["YDOTOOL_SOCKET"] = str(Path(env.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")) / "ii-companion-input.sock")
         if not Path(env["YDOTOOL_SOCKET"]).exists():
-            raise RuntimeError("Private input service is stopped. Run systemctl --user start ii-companion-input.")
+            raise RuntimeError("Private input service is stopped. The input helper is not running; the shell restarts it within a minute (scripts/ai/ensure_daemons.sh).")
     if action in ("move", "click", "drag", "scroll") and "x" in arguments:
         run(["hyprctl", "dispatch", f"hl.dsp.cursor.move({{ x = {x}, y = {y} }})"], env=env)
     if action == "click":
@@ -282,7 +284,7 @@ def speak_edge(arguments, progress=None):
     rate = int(arguments.get("rate", 175))
     if not 80 <= rate <= 350:
         raise ValueError("Speech rate must be between 80 and 350.")
-    edge = str(Path.home() / ".local/share/quickshell-ii/edge-tts-venv/bin/edge-tts")
+    edge = str(Path(os.environ.get("ILLOGICAL_IMPULSE_VIRTUAL_ENV") or Path.home() / ".local/state/quickshell/.venv") / "bin/edge-tts")
     if not Path(edge).is_file():
         edge = shutil.which("edge-tts")
     if not edge:
@@ -293,7 +295,7 @@ def speak_edge(arguments, progress=None):
         percent = round((rate / 175 - 1) * 100)
         run([edge, "--file", "-", "--voice", voice, f"--rate={percent:+d}%", "--write-media", path], data=text.encode(), timeout=60)
         if progress is None:
-            run(["mpv", "--no-config", "--no-video", "--really-quiet", path], timeout=360)
+            run(["mpv", "--no-config", "--no-video", "--really-quiet", *aec.mpv_args(), path], timeout=360)
         else:
             pcm = run(["ffmpeg", "-v", "error", "-i", path, "-f", "s16le", "-ac", "1", "-ar", "16000", "-"], timeout=15)
             levels = []
@@ -302,7 +304,7 @@ def speak_edge(arguments, progress=None):
                 if sys.byteorder != "little": samples.byteswap()
                 rms = math.sqrt(sum(v*v for v in samples) / max(1, len(samples))) / 32768
                 levels.append(min(1, rms * 7))
-            player = subprocess.Popen(["mpv", "--no-config", "--no-video", "--really-quiet", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            player = subprocess.Popen(["mpv", "--no-config", "--no-video", "--really-quiet", *aec.mpv_args(), path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             progress({"event": "phase", "phase": "speaking"})
             started = time.monotonic()
             try:
@@ -399,7 +401,7 @@ def speak_stream(emit):
             try:
                 client.connect(sock_path)
             except OSError as error:
-                raise RuntimeError("Local voice is unavailable. Start ii-companion-voice.service or choose the Edge backend.") from error
+                raise RuntimeError("Local voice is unavailable. The shell restarts it within a minute (scripts/ai/ensure_daemons.sh), or choose the Edge backend.") from error
             client.settimeout(None)
             client.sendall(json.dumps(request).encode() + b"\n")
             reader = threading.Thread(target=listen, args=(client.makefile("r"),), daemon=True)
@@ -458,7 +460,7 @@ def speak(arguments, progress=None):
         try:
             client.connect(sock_path)
         except OSError as error:
-            raise RuntimeError("Local voice is unavailable. Start ii-companion-voice.service or choose the Edge backend.") from error
+            raise RuntimeError("Local voice is unavailable. The shell restarts it within a minute (scripts/ai/ensure_daemons.sh), or choose the Edge backend.") from error
         client.sendall(json.dumps(request).encode() + b"\n")
         with client.makefile("r") as stream:
             for line in stream:
@@ -480,7 +482,7 @@ def call_tool(name, arguments):
         settings = speech_settings()
         backend = settings.get("backend", "edge")
         local_socket = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")) / "ii-companion-voice.sock"
-        edge_available = Path.home().joinpath(".local/share/quickshell-ii/edge-tts-venv/bin/edge-tts").is_file() or bool(shutil.which("edge-tts"))
+        edge_available = Path(os.environ.get("ILLOGICAL_IMPULSE_VIRTUAL_ENV") or Path.home() / ".local/state/quickshell/.venv").joinpath("bin/edge-tts").is_file() or bool(shutil.which("edge-tts"))
         status["speech"] = {"backend": backend, "voice": settings.get("voice", "af_heart"),
                             "available": local_socket.exists() if backend == "kokoro" else edge_available,
                             "online": backend == "edge", "multilingualFallback": "edge"}

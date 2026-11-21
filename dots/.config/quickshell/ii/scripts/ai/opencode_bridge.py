@@ -56,14 +56,14 @@ INSTRUCTIONS_KEY = "ii-shell"
 # The shell's tools as OpenCode sees them: an MCP server named ii-shell, whose tools are asked for one call at a time.
 SHELL_TOOL_SERVER = "ii-shell"
 SHELL_TOOLS = (
-    "memory_search", "skill_search", "conversation_search", "desktop_context", "wallpaper_search", "get_environment", "system_get_status", "system_health", "windows_list", "keybinds_search", "settings_search",
+    "memory_search", "skill_search", "conversation_search", "desktop_context", "wallpaper_search", "get_environment", "system_get_status", "system_health", "running_now", "windows_list", "keybinds_search", "settings_search",
     "settings_get", "settings_set", "read_file", "list_directory", "read_logs", "list_changes", "write_file",
     "remember_fact", "skill_save", "memory_forget", "undo_change", "brightness_set", "wallpaper_set", "run_shell_command", "run_privileged_command",
     "companion_status", "browser_tools", "browser_call", "desktop_capture", "desktop_input", "speak_text",
 )
 # Never wait for the user: they only read, or (settings_set) change the shell's own journaled config.
 READ_TOOLS = frozenset({
-    "memory_search", "skill_search", "conversation_search", "desktop_context", "wallpaper_search", "get_environment", "system_get_status", "system_health", "windows_list", "keybinds_search", "settings_search",
+    "memory_search", "skill_search", "conversation_search", "desktop_context", "wallpaper_search", "get_environment", "system_get_status", "system_health", "running_now", "windows_list", "keybinds_search", "settings_search",
     "settings_get", "read_file", "list_directory", "read_logs", "list_changes",
     "companion_status", "browser_tools",
 })

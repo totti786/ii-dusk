@@ -45,11 +45,9 @@ not a security sandbox; confirmation of irreversible actions in auto mode is a
 model instruction, not a technical transaction barrier. Tool permissions can
 disable individual capabilities. Screen/page content is marked untrusted.
 
-Pointer input, shortcuts and fallback typing use `ii-companion-input.service`, a user ydotoold with a
+Pointer input, shortcuts and fallback typing use a private user ydotoold (started by the shell via `scripts/ai/ensure_daemons.sh`, no systemd unit) with a
 0600 socket at `$XDG_RUNTIME_DIR/ii-companion-input.sock`. It uses this machine's
-existing /dev/uinput ACL, with no sudo or new root service. Stop it with:
-
-    systemctl --user disable --now ii-companion-input.service
+existing /dev/uinput ACL, with no sudo or new root service. Stop it with `pkill -f ii-companion-input.sock`; the shell starts it again within a minute.
 
 Text entry prefers `wtype` through the compositor's virtual keyboard protocol,
 verified with mixed Arabic and English text in a native GTK app. `ydotool` handles
@@ -95,7 +93,7 @@ selection and approval cards stay in the sidebar.
   the synthesized reply's audio envelope.
 - Replies play through local Kokoro for English. After playback, it listens for the next turn.
 - Click while speaking to interrupt and talk again. Click Stop to end the voice
-  session. Eight seconds without speech also ends it. There is no wake word.
+  session. Eight seconds without speech also ends it. An optional wake word ("hey jarvis", Settings > AI Assistant > Trigger word, off by default; `wake_word.py`, openWakeWord ONNX in the voice venv, ~6% of one core) starts a session; it holds the mic only while the orb is idle.
 - Right-click or use the chat icon to open the sidebar transcript and approvals.
 - Hover the island bubble for voice controls. Drag the bubble or its expanded header out to float it.
 - Grab the floating orb to move it. Hover reveals four separate controls around it: conversation, return, voice and hide. The orb and all four controls share one hover area; holding a control keeps it open. It follows the pointer directly while held and snaps near a screen edge on release.
@@ -127,11 +125,11 @@ English now uses **Kokoro Heart (`af_heart`)** through ONNX Runtime on CPU.
 The full precision 326 MB model and 28 MB voice bundle are checked against the
 upstream release SHA-256 digests. No Torch or GPU service is required.
 
-`ii-companion-voice.service` keeps the model warm behind a private 0600 Unix
+The warm voice daemon (`local_voice.py`, started by the shell via `scripts/ai/ensure_daemons.sh`, no systemd unit) keeps the model warm behind a private 0600 Unix
 socket. Text is split into short sentences/clauses, with a bounded synthesis
 queue. Playback starts with the first chunk, and subsequent synthesis overlaps
 playback. Disconnecting the client stops audio immediately and cancels remaining
-chunks. The service uses roughly 470–580 MiB resident memory here, with a 900 MiB cap.
+chunks. The service uses roughly 470–580 MiB resident memory here, (no memory cap now that it is not a systemd unit).
 
 Configuration: `~/.config/illogical-impulse/companion-voice.json`:
 
@@ -334,3 +332,26 @@ quota calls stop. The instant rules, local speech and local models keep working;
 `quick:false` so the rules run, and anything else is handed straight back. Trap: `policies.ai` is also kept in
 `~/.config/illogical-impulse/local-preferences.json` and the shell rewrites config.json from memory, so do not toggle it by
 editing files (replacing config.json atomically also breaks its file watcher): use the IPC or the settings page.
+
+## More instant commands (2026-11-20)
+
+`voice_rules.py` now also understands, with no model call:
+
+- **toggles** (`toggle <wifi|bluetooth|nightlight|dnd|awake|gamemode|mic> <on|off|toggle>`), **power** profile, **capture** (screenshot, area, record, region, stop, color picker), **panels** (settings, sidebar, cheat sheet, app drawer, power menu, clipboard, mixer), **windows** (fullscreen, float, pin, move to workspace N, focus an app by name; resolved against the real window list).
+- **info** questions (time, date, battery, playing, volume, next alarm, notifications, focused window) answered by `answer_info()` from the `<desktop-context>` lines; if the data is missing the model gets the turn.
+- **confirmed verbs**: lock, suspend, reboot, shutdown, close window. The rule only asks "say yes to confirm". `voice_agent.ask_rules` keeps one pending command for 12 s; only a plain yes emits the action with `confirmed: true`, and `AiCompanionActions.run()` refuses these verbs otherwise (model `[[DO]]` markers and custom phrases can never reach them).
+
+Settings groups: toggles, power, capture, panels, windows, info, system. Tests: `tests/test_voice_rules.py`, `tests/test_voice_confirm.py`.
+Verified live: night light, DND, power profile, panels, screenshot, float, focus, fullscreen, close-with-yes, lock-then-no. NOT verified: wifi/bluetooth/mic toggles, lock/suspend/reboot/shutdown actually firing, screen recording (record.sh did not start a recording even when run directly, a separate problem).
+
+
+## What the assistant can see running
+
+`running_now` (MCP tool + `qs ipc call aitools running`) reports what is running right now, names and counts only:
+the shell's media, timers, soundscapes, recording, downloads, VPN, game mode, sleep inhibit, notifications, the AI and the
+orb (`services/ai/integrations/AiRunningIntegration.qml`), the cached weather and prayer times, water/bedtime/screen-time
+state, Bluetooth/Tailscale/Docker, which sensors are in use and pending updates, plus (in `shell_tools_mcp.py`) the machine's
+running user services, apps playing or recording sound, the biggest process names by memory and the orb's helper programs.
+The orb's quick-answer context also carries the weather and next prayer (`glance()`) and a one-line "running:" summary (`brief()`).
+Settings are found and changed by the full assistant through `settings_search` / `settings_get` / `settings_set`
+(the index covers every config key; protected keys stay user-only); the quick path hands settings requests over on purpose.

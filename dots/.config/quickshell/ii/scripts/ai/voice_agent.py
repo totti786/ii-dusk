@@ -47,6 +47,9 @@ import voice_rules  # noqa: E402
 MODEL = os.environ.get("II_VOICE_MODEL", "haiku")
 IDLE_EXIT = float(os.environ.get("II_VOICE_IDLE", "900"))
 MARKER = "[[ESCALATE]]"
+CONFIRM_SECONDS = 12.0
+YES_RE = re.compile(r"(?:yes|yeah|yep|yup|sure|ok|okay|confirm|confirmed|do it|go ahead|please do|affirmative|proceed|yes please|sure do|yes do it)")
+NO_RE = re.compile(r"(?:no|nope|nah|cancel|stop|never ?mind|don't|do not|abort|negative|no thanks|no thank you|wait)")
 STATE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "quickshell/user/ai/voice-agent"
 
 ACTIONS = (
@@ -60,6 +63,11 @@ ACTIONS = (
     "  [[DO remind call the bank]]  (adds a reminder)\n"
     "  [[DO task buy milk]]  (adds a to-do)\n"
     "  [[DO workspace 3]]\n"
+    "  [[DO toggle wifi off]]  (wifi, bluetooth, nightlight, dnd, awake, gamemode, mic; then on, off or toggle)\n"
+    "  [[DO power saver]]  (or balanced, performance)\n"
+    "  [[DO capture shot]]  (also area, record, region, stop, color)\n"
+    "  [[DO panel settings open]]  (settings, sidebar, cheatsheet, apps, power, clipboard, mixer; then open or close)\n"
+    "  [[DO window fullscreen]]  (also float, pin, move 3, focus firefox)\n"
 )
 SCREEN = os.environ.get("II_VOICE_SCREEN", "1") != "0"
 RULES = os.environ.get("II_VOICE_RULES", "1") != "0"
@@ -168,6 +176,7 @@ class Model:
     """One warm claude process and the conversation it holds."""
 
     def __init__(self):
+        self.pending = None   # a command waiting for the user's spoken yes: {actions, until}
         self.process = None
         self.lines = queue.Queue()
         self.turns = 0
@@ -223,14 +232,42 @@ class Model:
         self.process.stdin.write(json.dumps({"type": "user", "message": {"role": "user", "content": content}}) + "\n")
         self.process.stdin.flush()
 
-    def ask_rules(self, ident, text):
+    def ask_rules(self, ident, text, context=""):
         """The commonest commands never reach the model. True when one was answered."""
         if not RULES:
             return False
         began = time.monotonic()
+        pending, self.pending = self.pending, None
+        if pending and time.monotonic() < pending["until"]:
+            # The user was just asked to confirm something risky. Only a plain yes runs it, and only
+            # `confirmed` events do: the shell refuses those verbs from anywhere else.
+            reply = voice_rules.normalise(text)
+            if YES_RE.fullmatch(reply):
+                for verb, args in pending["actions"]:
+                    emit({"event": "action", "id": ident, "verb": verb, "args": args, "confirmed": True})
+                emit({"event": "done", "id": ident, "text": pending["done"], "firstTokenMs": 0, "rule": True,
+                      "totalMs": int((time.monotonic() - began) * 1000)})
+                return True
+            if NO_RE.fullmatch(reply):
+                emit({"event": "done", "id": ident, "text": "Okay, cancelled.", "firstTokenMs": 0, "rule": True,
+                      "totalMs": int((time.monotonic() - began) * 1000)})
+                return True
         hit = voice_rules.match(text, RULES_OFF, RULES_CUSTOM)
         if hit is None:
             return False
+        if hit.get("info"):
+            answer = voice_rules.answer_info(hit["info"], context)
+            if not answer:
+                return False
+            emit({"event": "done", "id": ident, "text": answer, "firstTokenMs": 0, "rule": True,
+                  "totalMs": int((time.monotonic() - began) * 1000)})
+            return True
+        if hit.get("confirm"):
+            self.pending = {"actions": hit["actions"], "until": time.monotonic() + CONFIRM_SECONDS,
+                            "done": voice_rules.CONFIRMED_DONE.get(hit["actions"][0][0], "Done.")}
+            emit({"event": "done", "id": ident, "text": hit["say"], "firstTokenMs": 0, "rule": True, "confirm": True,
+                  "totalMs": int((time.monotonic() - began) * 1000)})
+            return True
         for verb, args in hit["actions"]:
             emit({"event": "action", "id": ident, "verb": verb, "args": args})
         # No delta: the shell chimes or speaks `text` itself once the actions ran.
@@ -239,7 +276,7 @@ class Model:
         return True
 
     def ask(self, ident, text, cancelled, context="", screen=False, quick=True, via=""):
-        if self.ask_rules(ident, text):
+        if self.ask_rules(ident, text, context):
             return
         if not quick:
             # No remote model may be used (AI set to local only or off, or Claude unavailable):

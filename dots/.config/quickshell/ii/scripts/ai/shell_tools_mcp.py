@@ -134,6 +134,16 @@ TOOLS = [
         "inputSchema": _schema({}),
     },
     {
+        "name": "running_now",
+        "description": (
+            "Read what is running right now: the shell's media, timers, soundscapes, recording, downloads, VPN, "
+            "game mode, the AI and the voice orb, plus the machine's running user services, which apps are "
+            "playing or recording sound (who has the microphone), the biggest process names by memory, and the "
+            "orb's helper programs. Use it for 'what is running', 'is X on', 'what is using the mic', and before "
+            "changing a setting that depends on current state. Names and counts only. Read-only."),
+        "inputSchema": _schema({}),
+    },
+    {
         "name": "keybinds_search",
         "description": "Search the Hyprland keybindings the shell knows, by action, key or description.",
         "inputSchema": _schema({"query": {"type": "string"}, "limit": {"type": "integer"}}, ["query"]),
@@ -314,6 +324,64 @@ def shell_ipc(function: str, *args: str) -> dict:
     if isinstance(parsed, dict) and parsed.get("error"):
         return fail(text)
     return ok(text)
+
+
+# ── What is running ──────────────────────────────────────────────────────────
+
+def _lines(command, seconds=5):
+    try:
+        done = subprocess.run(command, capture_output=True, text=True, errors="replace", timeout=seconds,
+                              stdin=subprocess.DEVNULL)
+    except (OSError, subprocess.TimeoutExpired):
+        return []
+    return done.stdout.splitlines() if done.returncode == 0 else []
+
+
+def _audio_apps(kind):
+    """Application names of the open sound streams ('sink-inputs' play, 'source-outputs' record)."""
+    names = []
+    for line in _lines(["pactl", "list", kind]):
+        line = line.strip()
+        if line.startswith("application.name = "):
+            name = line.split("=", 1)[1].strip().strip('"')[:40]
+            if name and name not in names and "peak detect" not in name.lower():
+                names.append(name)
+    return names[:15]
+
+
+def tool_running_now():
+    """The shell's own state (over IPC) plus the machine's: names and counts, never command lines."""
+    shell = shell_ipc("running")
+    try:
+        shell_state = json.loads(shell["text"]) if not shell["isError"] else {"unavailable": shell["text"][:200]}
+    except (ValueError, KeyError):
+        shell_state = {"unavailable": "unreadable"}
+    services = []
+    for line in _lines(["systemctl", "--user", "list-units", "--type=service", "--state=running", "--no-legend", "--plain"]):
+        unit = line.split(None, 1)[0] if line.strip() else ""
+        if unit.endswith(".service"):
+            services.append(unit[:-8][:60])
+    memory = {}
+    for line in _lines(["ps", "-eo", "comm=,rss="]):
+        parts = line.rsplit(None, 1)
+        if len(parts) == 2 and parts[1].isdigit():
+            entry = memory.setdefault(parts[0].strip()[:40], [0, 0])
+            entry[0] += 1
+            entry[1] += int(parts[1])
+    biggest = [{"name": name, "processes": count, "memoryMiB": round(kib / 1024)}
+               for name, (count, kib) in sorted(memory.items(), key=lambda item: -item[1][1])[:12]]
+    helpers = {label: bool(_lines(["pgrep", "-f", pattern])) for label, pattern in (
+        ("triggerWordDetector", "[w]ake_word.py"), ("warmVoice", "[l]ocal_voice.py"),
+        ("inputHelper", "[y]dotoold"), ("speechToText", "[s]tt_daemon.py"), ("voiceAgent", "[v]oice_agent.py"))}
+    return ok(json.dumps({
+        "shell": shell_state,
+        "system": {
+            "userServicesRunning": sorted(services)[:40],
+            "appsPlayingSound": _audio_apps("sink-inputs"),
+            "appsUsingTheMicrophone": _audio_apps("source-outputs"),
+            "biggestProcessesByMemory": biggest,
+            "orbHelpers": helpers,
+        }}, ensure_ascii=False))
 
 
 # ── Paths ────────────────────────────────────────────────────────────────────
@@ -880,6 +948,8 @@ def call_tool(name: str, arguments: dict) -> dict:
         return shell_ipc("health")
     if name == "windows_list":
         return shell_ipc("windows")
+    if name == "running_now":
+        return tool_running_now()
     if name == "keybinds_search":
         return shell_ipc("keybinds", str(arguments.get("query", "")), str(int(arguments.get("limit") or 12)))
     if name == "settings_search":

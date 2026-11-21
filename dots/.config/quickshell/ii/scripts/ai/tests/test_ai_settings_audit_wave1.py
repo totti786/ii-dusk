@@ -26,8 +26,8 @@ class SubPageEntryButtonTests(unittest.TestCase):
         # One entry per subject, each a compact ConfigSubpageRow that opens a
         # route under ai/. The settings regroup replaced SubPageEntryButton on
         # this page and split every section into its own sub-page.
-        self.assertEqual(source.count("ConfigSubpageRow {"), 11)
-        self.assertEqual(source.count('Qt.resolvedUrl("ai/'), 11)
+        self.assertEqual(source.count("ConfigSubpageRow {"), 12)  # includes the Voice orb page
+        self.assertEqual(source.count('Qt.resolvedUrl("ai/'), 12)
         self.assertNotIn("SubPageEntryButton {", source)
         self.assertNotIn("component ConfigSubpageRow:", source)
         self.assertNotIn("component SubPageEntryButton:", source)

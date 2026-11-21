@@ -61,8 +61,18 @@ def normalise(text):
     return words_to_digits(text)
 
 
-def hit(actions, say):
-    return {"actions": [(verb, list(args)) for verb, args in actions], "say": say}
+def hit(actions, say, **extra):
+    return {"actions": [(verb, list(args)) for verb, args in actions], "say": say, **extra}
+
+
+def confirm(actions, ask, group="system"):
+    """A command that must be confirmed out loud first: nothing runs until the user says yes."""
+    return hit(actions, ask, confirm=True, group=group)
+
+
+def info(kind):
+    """A question answered from the desktop context, with no action."""
+    return hit([], "", info=kind, group="info")
 
 
 def next_clock(hour, minute, meridiem):
@@ -93,7 +103,13 @@ WHAT_TIME = r"(\d{1,2})(?::(\d{2}))?(?: ?(am|pm))?"
 
 # Which settings group a verb belongs to, so a group can be switched off as a whole.
 GROUPS = {"media": "media", "volume": "volume", "brightness": "brightness", "theme": "theme", "timer": "timers",
-          "alarm": "alarms", "remind": "notes", "task": "notes", "workspace": "workspace", "open": "apps"}
+          "alarm": "alarms", "remind": "notes", "task": "notes", "workspace": "workspace", "open": "apps",
+          "toggle": "toggles", "power": "power", "capture": "capture", "panel": "panels", "window": "windows"}
+# Verbs that need a spoken yes first. They are not in GROUPS, so a custom phrase can never run them
+# without the confirmation, and the shell refuses them unless the confirmation really happened.
+CONFIRMED_VERBS = ("lock", "suspend", "reboot", "shutdown", "close")
+CONFIRMED_DONE = {"lock": "Locking.", "suspend": "Going to sleep.", "reboot": "Restarting.", "shutdown": "Shutting down.",
+                  "close": "Closed."}
 
 
 def parse_do(text):
@@ -137,14 +153,156 @@ def match(text, off=(), custom=()):
     result = custom_match(t, custom) or builtin(t)
     if result is None:
         return None
-    if any(GROUPS.get(verb) in set(off) for verb, _ in result["actions"]):
+    groups = {GROUPS.get(verb) for verb, _ in result["actions"]} | {result.get("group")}
+    if groups & set(off):
         return None
     return result
+
+# ── toggles, power, capture, panels, windows, questions and the confirmed system commands ─────────
+TOGGLE_NAMES = (
+    ("wifi", r"wi ?-?fi|wireless|internet"),
+    ("bluetooth", r"blue ?tooth"),
+    ("nightlight", r"night ?light|night mode|blue light(?: filter)?|warm screen|eye comfort"),
+    ("dnd", r"do not disturb|don't disturb|dnd|silent mode|notifications? (?:silent|silence|quiet)"),
+    ("awake", r"(?:keep(?:ing)? (?:the )?(?:screen |computer |laptop |it )?awake)|caffeine|stay awake|no sleep"),
+    ("gamemode", r"game ?mode|gaming mode"),
+    ("mic", r"(?:the |my )?(?:mic|microphone)"),
+)
+
+
+def toggle_rule(t):
+    """'turn off wifi', 'bluetooth on', 'enable dnd', 'toggle night light', 'mute the mic'."""
+    m = re.fullmatch(r"(?:un)?mute " + STOP + r"(?:mic|microphone)", t)
+    if m:
+        return hit([("toggle", ["mic", "on" if t.startswith("unmute") else "off"])],
+                   "Mic on." if t.startswith("unmute") else "Mic muted.")
+    for name, words in TOGGLE_NAMES:
+        if name == "mic":
+            continue
+        word = r"(?:the |my )?(?:" + words + r")"
+        state = None
+        found = (re.fullmatch(r"(?:turn|switch|set|put)(?: it)? (on|off) " + word, t)
+                 or re.fullmatch(r"(?:turn|switch|set|put) " + word + r" (on|off)", t)
+                 or re.fullmatch(word + r" (on|off)", t))
+        if found:
+            state = found.group(1)
+        else:
+            found = re.fullmatch(r"(enable|disable|activate|deactivate|start|stop) " + word, t)
+            if found:
+                state = "on" if found.group(1) in ("enable", "activate", "start") else "off"
+        if state is None and re.fullmatch(r"(?:toggle|flip) " + word, t):
+            state = "toggle"
+        if state is not None:
+            label = {"wifi": "Wi-Fi", "bluetooth": "Bluetooth", "nightlight": "Night light", "dnd": "Do not disturb",
+                     "awake": "Keep awake", "gamemode": "Game mode"}[name]
+            return hit([("toggle", [name, state])], f"{label} {'toggled' if state == 'toggle' else state}.")
+    return None
+
+
+POWER_WORDS = {"power saver": "saver", "power saving": "saver", "battery saver": "saver", "saver": "saver",
+               "performance": "performance", "balanced": "balanced", "normal power": "balanced"}
+
+
+def extended(t):
+    if re.fullmatch(r"(?:keep|stay|stop (?:the )?(?:screen|it|computer|laptop) from sleeping|don't let (?:the )?(?:screen|it|computer|laptop) sleep)(?: the| my)?(?: screen| computer| laptop| it)?(?: awake| on)?", t) \
+            and ("awake" in t or "sleeping" in t or "sleep" in t):
+        return hit([("toggle", ["awake", "on"])], "Staying awake.")
+    if re.fullmatch(r"(?:let|allow) (?:the |my )?(?:screen|computer|laptop|it) (?:sleep|turn off)|stop keeping (?:it |the screen |the computer )?awake", t):
+        return hit([("toggle", ["awake", "off"])], "Normal sleep.")
+    # toggles first: "turn on night light" must not reach the theme rule's "light".
+    found = toggle_rule(t)
+    if found:
+        return found
+
+    m = re.fullmatch(r"(?:(?:set|switch|go|change|turn on|enable|use|put it) ?(?:to |on |into )?)?(?:the )?(power saver|power saving|battery saver|performance|balanced|normal power)(?: mode| profile)?(?: on)?", t)
+    if m and (len(t.split()) > 1):
+        return hit([("power", [POWER_WORDS[m.group(1)]])], f"{m.group(1).capitalize()}.")
+
+    # capture
+    if re.fullmatch(r"(?:take |grab |capture )?(?:a |the )?(?:screenshot|screen shot|screen capture)(?: of (?:the |my )?(?:whole |full |entire )?(?:screen|desktop|display))?|(?:take|grab|capture) (?:the |my )?screen|full screenshot", t):
+        return hit([("capture", ["shot"])], "Screenshot.")
+    if re.fullmatch(r"(?:take |grab |capture )?(?:a )?(?:screenshot|screen shot) of (?:an |the |a )?(?:area|region|selection|part|section)|(?:screenshot|snip|crop)(?: an?)? (?:area|region|selection)|(?:snip|crop)(?: the screen)?|select (?:an? )?area", t):
+        return hit([("capture", ["area"])], "Select an area.")
+    if re.fullmatch(r"(?:start |begin )?(?:a )?(?:screen )?recording|(?:start |begin )?recording(?: the)?(?: screen)?|record(?: the| my)? screen|screen record(?:ing)?|start screen record(?:ing)?", t) \
+            and not re.search(r"stop|end", t):
+        return hit([("capture", ["record"])], "Recording.")
+    if re.fullmatch(r"(?:start |begin )?record(?:ing)?(?: a| the)? (?:region|area|selection|part of the screen)", t):
+        return hit([("capture", ["region"])], "Select an area to record.")
+    if re.fullmatch(r"(?:stop|end|finish|save) (?:the |my )?(?:screen )?record(?:ing)?", t):
+        return hit([("capture", ["stop"])], "Stopped recording.")
+    if re.fullmatch(r"(?:open |launch |use |start )?(?:the |a )?colou?r pick(?:er)?|pick (?:a )?colou?r|what colou?r is this", t):
+        return hit([("capture", ["color"])], "Pick a color.")
+
+    # shell panels, before the generic "open <app>"
+    PANELS = (("settings", r"settings|preferences|the settings app"), ("sidebar", r"sidebar|side bar|quick settings|control panel|right sidebar"),
+              ("cheatsheet", r"cheat ?sheet|keyboard shortcuts|shortcuts|key ?binds?|hotkeys"), ("apps", r"app drawer|all apps|apps list|app list"),
+              ("power", r"power menu|session menu|shutdown menu|logout menu"), ("clipboard", r"clipboard(?: history| manager)?"),
+              ("mixer", r"(?:volume |audio |sound )?mixer"))
+    for name, words in PANELS:
+        found = re.fullmatch(r"(?:open|show|launch|bring up|pull up|display|toggle) (?:me )?(?:the |my )?(?:" + words + r")", t)
+        if found:
+            return hit([("panel", [name, "toggle" if t.startswith("toggle") else "open"])], f"Opening {name}.")
+        found = re.fullmatch(r"(?:close|hide|dismiss) (?:the |my )?(?:" + words + r")", t)
+        if found:
+            return hit([("panel", [name, "close"])], f"Closing {name}.")
+
+    # windows
+    if re.fullmatch(r"(?:make |put |toggle |go )?(?:this |the |my )?(?:window |it |app )?(?:full ?screen|maximi[sz]e)(?: this| the)?(?: window)?|full ?screen(?: this| the)?(?: window)?|exit full ?screen|leave full ?screen", t):
+        return hit([("window", ["fullscreen"])], "Fullscreen.")
+    if re.fullmatch(r"(?:make |toggle |set )?(?:this |the |my )?(?:window |it |app )?(?:float(?:ing)?|tiled?)(?: this| the)?(?: window)?|float(?:ing)? (?:this|the) window|(?:toggle|switch) (?:floating|tiling)|tile (?:this|the) window", t):
+        return hit([("window", ["float"])], "Done.")
+    if re.fullmatch(r"(?:pin|unpin)(?: this| the| my)?(?: window| app)?|(?:keep|put) (?:this|the) window on top", t):
+        return hit([("window", ["pin"])], "Done.")
+    m = re.fullmatch(r"(?:move|send|put|throw|take) (?:this|the|my|that)(?: current)?(?: window| app)?(?: over)? to (?:the )?(?:workspace|desktop|space) (\d{1,2})", t)
+    if m and 1 <= int(m.group(1)) <= 20:
+        return hit([("window", ["move", m.group(1)])], f"Moved to {m.group(1)}.")
+    m = re.fullmatch(r"(?:switch|go|jump|take me) to (?:the )?(.+?)(?: window| app)?|focus (?:the )?(.+?)(?: window| app)?|show me (?:the )?(.+?)(?: window| app)", t)
+    if m:
+        name = next((g for g in m.groups() if g), "").strip()
+        banned = r"\b(?:workspace|desktop|space|mode|theme|dark|light|next|previous|last|back|home|top|bottom|left|right|sleep|settings|sidebar|overview|tab|page|song|track|video|my|new|a|an|different|another|topic|something|anything|else|other|one|it|that|this|\d+)\b"
+        if 1 <= len(name.split()) <= 3 and not re.search(banned, name):
+            return hit([("window", ["focus"] + name.split())], f"{name.capitalize()}.")
+
+    # questions answered from the desktop context
+    if re.fullmatch(r"(?:what(?:'s| is) the time|what time is it|what time(?: is it)? (?:now|right now)|time|the time|tell me the time|current time)", t):
+        return info("time")
+    if re.fullmatch(r"(?:what(?:'s| is) (?:the )?(?:date|day)(?: today| is it)?|what day is it(?: today)?|(?:today's|todays) date|the date|what(?:'s| is) today)", t):
+        return info("date")
+    if re.fullmatch(r"(?:how much |what(?:'s| is) (?:my |the )?)?battery(?: level| percentage| percent| left| life| status)?(?: (?:do i have|is left|left|remaining))?|how(?:'s| is) (?:my |the )?battery|(?:battery) status", t):
+        return info("battery")
+    if re.fullmatch(r"(?:what(?:'s| is) (?:this )?(?:song|track|music|playing|that song)(?: playing)?(?: now)?|what(?:'s| is) playing(?: now| right now)?|what song is (?:this|that|playing)|what(?:'s| is) this (?:song|track)|who(?:'s| is) (?:this|singing)|which song is this)", t):
+        return info("playing")
+    if re.fullmatch(r"(?:what(?:'s| is) (?:the |my )?(?:current )?volume(?: level)?|how loud(?: is it)?|volume level|what(?:'s| is) (?:the )?sound (?:level|at))", t):
+        return info("volume")
+    if re.fullmatch(r"(?:when(?:'s| is) (?:my )?next alarm|(?:what(?:'s| is) )?(?:my )?next alarm|do i have an alarm(?: set)?|any alarms?)", t):
+        return info("alarm")
+    if re.fullmatch(r"(?:do i have|any|are there(?: any)?|how many) (?:new |unread )?notifications?(?: do i have)?|(?:unread )?notifications?(?: count)?", t):
+        return info("notifications")
+    if re.fullmatch(r"(?:what(?:'s| is) (?:this |the )?(?:window|app|focused|active)(?: window)?(?: focused| open)?|what (?:window|app) is (?:this|that|focused|active|open)|which (?:window|app) is (?:this|focused|active|open)|what am i (?:looking at|using))", t):
+        return info("focused")
+
+    # these must be confirmed out loud before anything happens
+    if re.fullmatch(r"(?:lock|secure) (?:the |my |this )?(?:screen|computer|laptop|pc|machine|session|desktop)|lock(?: it| up)?|lock screen", t):
+        return confirm([("lock", [])], "Lock the screen? Say yes to confirm.")
+    if re.fullmatch(r"(?:suspend|sleep|put (?:the |my |this )?(?:computer|laptop|pc|machine) (?:to sleep|in sleep mode|on standby)|go to sleep|hibernate)(?: the)?(?: computer| laptop| pc| machine)?|suspend (?:the )?(?:computer|laptop|pc|machine)", t) \
+            and not re.search(r"\b(?:dim|screen|display|monitor)\b", t):
+        return confirm([("suspend", [])], "Put the computer to sleep? Say yes to confirm.")
+    if re.fullmatch(r"(?:restart|reboot)(?: the| my| this)?(?: computer| laptop| pc| machine| system)?", t) and t not in ("restart",):
+        return confirm([("reboot", [])], "Restart the computer? Say yes to confirm.")
+    if re.fullmatch(r"(?:shut ?down|power off|turn off|switch off|power down)(?: the| my| this)?(?: computer| laptop| pc| machine| system)|shut ?down|power off", t):
+        return confirm([("shutdown", [])], "Shut down the computer? Say yes to confirm.")
+    if re.fullmatch(r"(?:close|kill|quit|exit) (?:this|the|my|that|the current|the active|the focused)(?: current| active| focused)?(?: window| app| application| program)?|close it|close window|close the window", t):
+        return confirm([("close", [])], "Close this window? Say yes to confirm.")
+    return None
+
 
 
 def builtin(t):
     if not t or len(t.split()) > 14:
         return None
+    found = extended(t)
+    if found:
+        return found
 
     # ── media ────────────────────────────────────────────────────────────────
     if re.fullmatch(r"(?:pause|stop|hold)" + MEDIA_NOUN, t):
@@ -263,3 +421,46 @@ if __name__ == "__main__":
         custom = []
     result = match(phrase, off, custom)
     print(json.dumps(None if result is None else {"actions": [[v, a] for v, a in result["actions"]], "say": result["say"]}))
+
+
+def answer_info(kind, context):
+    """The spoken answer to an info rule, read from the <desktop-context> lines the shell sent along.
+    None when the context lacks it (the model, which sees the same lines, then takes the turn)."""
+    lines = {}
+    for line in str(context or "").splitlines():
+        key, sep, value = line.partition(":")
+        if sep:
+            lines[key.strip().lower()] = value.strip()
+    if kind == "time":
+        m = re.search(r"(\d{1,2}):(\d{2})\s*$", lines.get("time", ""))
+        if not m:
+            return None
+        hour, minute = int(m.group(1)), int(m.group(2))
+        return f"It's {(hour % 12) or 12}:{minute:02d} {'PM' if hour >= 12 else 'AM'}."
+    if kind == "date":
+        value = lines.get("time", "")
+        m = re.match(r"(\w+) (\d{1,2}) (\w+) (\d{4})", value)
+        return f"It's {m.group(1)}, {m.group(2)} {m.group(3)} {m.group(4)}." if m else None
+    if kind == "battery":
+        m = re.match(r"(\d{1,3})% (charging|discharging)", lines.get("battery", ""))
+        return f"{m.group(1)} percent, {m.group(2)}." if m else None
+    if kind == "playing":
+        value = lines.get("playing", "")
+        if not value:
+            return None
+        if value.startswith("nothing"):
+            return "Nothing is playing."
+        return re.sub(r"\s*\((?:playing|paused)\)\s*$", "", value).replace(" — ", ", by ") + "."
+    if kind == "volume":
+        value = lines.get("volume", "")
+        return ("Volume is " + value.replace("%", " percent").replace("(muted)", "and muted") + ".") if value else None
+    if kind == "alarm":
+        value = lines.get("next alarm", "")
+        return f"Your next alarm is at {value}." if value else "You have no alarms set."
+    if kind == "notifications":
+        value = lines.get("unread notifications", "")
+        return f"You have {value} unread." if value else "No unread notifications."
+    if kind == "focused":
+        value = lines.get("focused", "")
+        return (re.sub(r"\s*\(workspace \d+\)\s*$", "", value).replace(" — ", ", ") + ".") if value else None
+    return None

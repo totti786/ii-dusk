@@ -12,6 +12,8 @@ import sys
 import threading
 import time
 import wave
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # sibling modules, also when loaded by path
+import aec  # noqa: E402
 
 
 def emit(event):
@@ -239,7 +241,7 @@ def capture(path):
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     start_resident_stt()
-    process = subprocess.Popen(["pw-record", "--raw", "--format", "s16", "--rate", "16000", "--channels", "1", "-"],
+    process = subprocess.Popen(["pw-record", *aec.source_args(), "--raw", "--format", "s16", "--rate", "16000", "--channels", "1", "-"],
                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     selector = selectors.DefaultSelector()
     selector.register(process.stdout, selectors.EVENT_READ)
@@ -328,7 +330,7 @@ def capture(path):
 
 
 STT_SOCKET = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")) / "ii-orb-stt.sock"
-STT_PYTHON = Path.home() / ".local/share/quickshell-ii/voice-venv/bin/python"
+STT_PYTHON = Path(os.environ.get("ILLOGICAL_IMPULSE_VIRTUAL_ENV") or Path.home() / ".local/state/quickshell/.venv") / "bin/python"
 STT_DAEMON = Path(__file__).resolve().parent / "stt_daemon.py"
 
 

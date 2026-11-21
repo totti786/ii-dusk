@@ -78,7 +78,7 @@ class AiTimeIntegrationContractTests(unittest.TestCase):
     def test_future_reminders_keep_their_local_date(self):
         self.assertIn('function addAlarm(time, label, days, date = "")', ALARMS)
         self.assertIn('date: date || ""', ALARMS)
-        self.assertIn('String(alarm.date) === dateString', ALARMS)
+        self.assertIn('String(alarm.date ?? "") === date', ALARMS)
 
     def test_reminder_has_a_preview_and_journalled_side_effect(self):
         for token in (

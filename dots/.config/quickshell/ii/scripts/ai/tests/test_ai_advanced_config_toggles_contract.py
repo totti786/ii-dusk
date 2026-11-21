@@ -98,7 +98,10 @@ class VoiceSectionTests(unittest.TestCase):
         # button that can only ever land on "error" until the person
         # follows this very page's install guide and turns it on
         # themselves. See the comment right above this property.
-        voice_block = body_between(CONFIG_QML, "property JsonObject voice: JsonObject {", "}")
+        # The AI voice block follows the vision block; other settings groups (the ii tools voice
+        # console) have their own `voice` object earlier in the file.
+        ai_part = CONFIG_QML.split("property JsonObject vision: JsonObject {", 1)[1]
+        voice_block = body_between(ai_part, "property JsonObject voice: JsonObject {", "}")
         self.assertIn("property bool enabled: false", voice_block)
 
     def test_status_row_reflects_the_shared_service_not_a_local_guess(self):

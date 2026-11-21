@@ -11,6 +11,9 @@ import socketserver
 import subprocess
 import threading
 import time
+import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # sibling modules, also when loaded by path
+import aec  # noqa: E402
 
 
 ROOT = Path.home() / ".local/share/quickshell-ii/kokoro"
@@ -159,7 +162,7 @@ class Engine:
                     if request.get("dryRun"):
                         send({"event": "phase", "phase": "speaking", "firstAudioMs": round((time.monotonic()-started)*1000), "backend": "kokoro"})
                     else:
-                        player = subprocess.Popen(["pw-play", "--raw", "--format", "f32", "--rate", str(rate), "--channels", "1", "--latency", "40ms", "-"],
+                        player = subprocess.Popen(["pw-play", *aec.sink_args(), "--raw", "--format", "f32", "--rate", str(rate), "--channels", "1", "--latency", "40ms", "-"],
                                                   stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, bufsize=0)
                         send({"event": "phase", "phase": "speaking", "firstAudioMs": round((time.monotonic()-started)*1000), "backend": "kokoro"})
                     first = False
@@ -250,6 +253,7 @@ class Server(socketserver.ThreadingUnixStreamServer):
 
 
 if __name__ == "__main__":
+    aec.ensure()
     engine = Engine()
     print("Kokoro ready", flush=True)
     with Server(engine) as server:
