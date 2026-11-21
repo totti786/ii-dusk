@@ -1,0 +1,9 @@
+module qs.modules.common.quickToggles.androidStyle.resources
+AndroidCpuResourceToggle 1.0 AndroidCpuResourceToggle.qml
+AndroidDiskResourceToggle 1.0 AndroidDiskResourceToggle.qml
+AndroidGpuResourceToggle 1.0 AndroidGpuResourceToggle.qml
+AndroidRamResourceToggle 1.0 AndroidRamResourceToggle.qml
+AndroidSystemResourcesToggle 1.0 AndroidSystemResourcesToggle.qml
+ResourceFillCard 1.0 ResourceFillCard.qml
+ResourceMetricRequests 1.0 ResourceMetricRequests.qml
+# quickshell-generated qmldir
