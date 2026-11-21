@@ -1,0 +1,5 @@
+#!/bin/sh
+# Plays an audio file in the ii shell's player; falls back to mpv if the shell is not running.
+[ -n "$1" ] || { qs -c ii ipc call audioPlayer open "" >/dev/null 2>&1; exit 0; }
+case "$1" in file://*) set -- "$(printf '%s' "$1" | sed 's|^file://||')";; esac
+qs -c ii ipc call audioPlayer open "$1" >/dev/null 2>&1 || exec mpv --force-window=yes "$1"

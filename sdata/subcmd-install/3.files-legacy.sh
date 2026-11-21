@@ -52,3 +52,10 @@ case "${SKIP_HYPRLAND}" in
 esac
 
 install_file "dots/.local/share/icons/illogical-impulse.svg" "${XDG_DATA_HOME}"/icons/illogical-impulse.svg
+
+# Launchers that open files in the shell's own apps (and fall back to a normal app when the shell is down)
+for i in ii-files ii-audio-player ii-image-viewer; do
+  install_file "dots/.local/bin/$i" "${XDG_BIN_HOME:-$HOME/.local/bin}/$i"
+  v chmod +x "${XDG_BIN_HOME:-$HOME/.local/bin}/$i"
+  install_file "dots/.local/share/applications/$i.desktop" "${XDG_DATA_HOME}/applications/$i.desktop"
+done

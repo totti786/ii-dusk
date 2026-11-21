@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Files (ii)
+Comment=Browse files in the ii shell
+Exec=ii-files %u
+Icon=system-file-manager
+Terminal=false
+Categories=System;FileTools;FileManager;
+MimeType=inode/directory;

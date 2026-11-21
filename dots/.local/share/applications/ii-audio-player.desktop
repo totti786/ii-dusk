@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Audio Player (ii)
+Comment=Play music in the ii shell
+Exec=ii-audio-player %f
+Icon=multimedia-audio-player
+Terminal=false
+Categories=Audio;AudioVideo;Player;
+MimeType=audio/AMR;audio/AMR-WB;audio/aac;audio/ac3;audio/annodex;audio/basic;audio/flac;audio/matroska;audio/midi;audio/mobile-xmf;audio/mp2;audio/mp4;audio/mpeg;audio/ogg;audio/prs.sid;audio/usac;audio/vnd.audible.aax;audio/vnd.audible.aaxc;audio/vnd.dts;audio/vnd.dts.hd;audio/vnd.rn-realaudio;audio/vnd.wave;audio/webm;audio/x-669;audio/x-adpcm;audio/x-aifc;audio/x-aiff;audio/x-amzxml;audio/x-ape;audio/x-dff;audio/x-dsf;audio/x-dsp;audio/x-flac+ogg;audio/x-gsm;audio/x-iriver-pla;audio/x-it;audio/x-m4b;audio/x-m4r;audio/x-med;audio/x-minipsf;audio/x-mo3;audio/x-mod;audio/x-mpegurl;audio/x-ms-asx;audio/x-ms-wma;audio/x-mtm;audio/x-musepack;audio/x-opus+ogg;audio/x-pn-audibleaudio;audio/x-psf;audio/x-psflib;audio/x-riff;audio/x-s3m;audio/x-scpls;audio/x-speex;audio/x-speex+ogg;audio/x-stm;audio/x-tak;audio/x-tta;audio/x-ult;audio/x-voc;audio/x-vorbis+ogg;audio/x-wavpack;audio/x-wavpack-correction;audio/x-xi;audio/x-xm;audio/x-xmf;audio/x.sf3;

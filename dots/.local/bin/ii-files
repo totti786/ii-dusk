@@ -1,0 +1,8 @@
+#!/bin/sh
+# Opens a folder (or the folder holding a file) in the ii shell's Files app; falls back to Thunar if the shell is not running.
+arg="$1"
+case "$arg" in
+  file://*) arg="$(printf '%s' "$arg" | sed 's|^file://||; s|%20| |g')";;
+  *://*) exec thunar "$@";;   # smb://, trash://, mtp:// … stay with a full file manager
+esac
+qs -c ii ipc call fileManager open "$arg" >/dev/null 2>&1 || exec thunar "$@"
