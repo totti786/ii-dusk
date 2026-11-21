@@ -99,6 +99,8 @@ Scope {
         active: root.shouldShowOverlay
         
         sourceComponent: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: overlayWindow
             screen: {
                 if (!HyprlandData.monitors) return null;
