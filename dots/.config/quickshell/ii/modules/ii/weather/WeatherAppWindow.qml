@@ -12,6 +12,8 @@ import qs.modules.common
  * and floats (see hyprland/rules.lua), sized like the shell's other windowed apps.
  */
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
