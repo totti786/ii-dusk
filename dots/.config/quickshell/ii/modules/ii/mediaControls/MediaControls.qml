@@ -168,6 +168,8 @@ Scope {
         }
 
         sourceComponent: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: panelWindow
             visible: true
             exclusionMode: ExclusionMode.Ignore
