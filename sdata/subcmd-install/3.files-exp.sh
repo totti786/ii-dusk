@@ -141,13 +141,6 @@ for pattern in "${patterns[@]}"; do
   mode=$(echo "$pattern" | yq '.mode' - | envsubst)
   condition=$(echo "$pattern" | yq '.condition // "true"')
 
-  # Handle fontconfig fontset override
-  # If FONTSET_DIR_NAME is set and this is the fontconfig pattern, use the fontset instead
-  if [[ "$from" == "dots/.config/fontconfig" ]] && [[ -n "${FONTSET_DIR_NAME:-}" ]]; then
-    from="dots-extra/fontsets/${FONTSET_DIR_NAME}"
-    echo "Using fontset \"${FONTSET_DIR_NAME}\" for fontconfig"
-  fi
-
   # Check if pattern should be processed
   if ! should_process_pattern "$pattern"; then
     # Format condition message nicely

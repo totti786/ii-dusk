@@ -24,8 +24,6 @@ Options for install:
       --skip-miscconf       Skip copying the dirs and files to \".configs\" except for
                             Quickshell and Hyprland
       --core                Alias of --skip-{plasmaintg,miscconf,fontconfig}
-      --fontset <set>       Use a set of pre-defined font and config (currently only fontconfig).
-                            Possible values of <set>: $(ls -A ${REPO_ROOT}/dots-extra/fontsets)
 ${STY_CYAN}
 New features (experimental):
       --exp-files             Use yaml-based config for the third step copying files.
@@ -45,7 +43,7 @@ cleancache(){
 # `man getopt` to see more
 para=$(getopt \
   -o hfFk:cs \
-  -l help,force,firstrun,fontset:,clean,skip-allgreeting,skip-alldeps,skip-allsetups,skip-allfiles,ignore-outdate,skip-sysupdate,skip-plasmaintg,skip-backup,skip-quickshell,skip-hyprland,skip-fontconfig,skip-miscconf,core,exp-files,via-nix \
+  -l help,force,firstrun,clean,skip-allgreeting,skip-alldeps,skip-allsetups,skip-allfiles,ignore-outdate,skip-sysupdate,skip-plasmaintg,skip-backup,skip-quickshell,skip-hyprland,skip-fontconfig,skip-miscconf,core,exp-files,via-nix \
   -n "$0" -- "$@")
 [ $? != 0 ] && echo "$0: Error when getopt, please recheck parameters." && exit 1
 #####################################################################################
@@ -87,13 +85,6 @@ while true ; do
     --exp-files) EXPERIMENTAL_FILES_SCRIPT=true;shift;;
     --via-nix) INSTALL_VIA_NIX=true;shift;;
     
-    ## Ones with parameter
-    --fontset)
-    if [[ -d "${REPO_ROOT}/dots-extra/fontsets/$2" ]];
-      then echo "Using fontset \"$2\".";FONTSET_DIR_NAME="$2";shift 2
-      else echo "Wrong argument for $1.";exit 1
-    fi;;
-
     ## Ending
     --) shift;break ;;
     *) echo -e "$0: Wrong parameters.";exit 1;;

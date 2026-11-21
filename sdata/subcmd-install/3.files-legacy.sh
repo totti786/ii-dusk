@@ -29,10 +29,8 @@ esac
 case "${SKIP_FONTCONFIG}" in
   true) true;;
   *)
-    case "$FONTSET_DIR_NAME" in
-      "") install_dir__sync dots/.config/fontconfig "$XDG_CONFIG_HOME"/fontconfig ;;
-      *) install_dir__sync dots-extra/fontsets/$FONTSET_DIR_NAME "$XDG_CONFIG_HOME"/fontconfig ;;
-    esac;;
+    install_dir__sync dots/.config/fontconfig "$XDG_CONFIG_HOME"/fontconfig
+    ;;
 esac
 
 # For Hyprland
