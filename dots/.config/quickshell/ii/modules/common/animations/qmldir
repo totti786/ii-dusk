@@ -1,0 +1,5 @@
+module qs.modules.common.animations
+DashboardEntranceProgress 1.0 DashboardEntranceProgress.qml
+DeferredAnimationStarter 1.0 DeferredAnimationStarter.qml
+SidebarGroupAnimation 1.0 SidebarGroupAnimation.qml
+# quickshell-generated qmldir
