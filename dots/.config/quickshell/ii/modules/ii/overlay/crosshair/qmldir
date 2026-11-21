@@ -1,0 +1,4 @@
+module qs.modules.ii.overlay.crosshair
+Crosshair 1.0 Crosshair.qml
+CrosshairContent 1.0 CrosshairContent.qml
+# quickshell-generated qmldir

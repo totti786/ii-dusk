@@ -1,0 +1,11 @@
+module qs.modules.ii.overlay.discordVoice
+BarWidget 1.0 BarWidget.qml
+DiscordGlyph 1.0 DiscordGlyph.qml
+DiscordVoiceOverlay 1.0 DiscordVoiceOverlay.qml
+DiscordVoicePopup 1.0 DiscordVoicePopup.qml
+ParticipantAvatar 1.0 ParticipantAvatar.qml
+ParticipantVolumeCard 1.0 ParticipantVolumeCard.qml
+TaskbarGlyph 1.0 TaskbarGlyph.qml
+VoiceNotice 1.0 VoiceNotice.qml
+Widget 1.0 Widget.qml
+# quickshell-generated qmldir

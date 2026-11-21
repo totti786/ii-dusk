@@ -22,6 +22,8 @@ Scope {
         // Pinned widgets stay up all day, but not over the lock screen
         active: (GlobalStates.overlayOpen || OverlayContext.hasPinnedWidgets) && !GlobalStates.screenLocked
         sourceComponent: PanelWindow {
+            contentItem.LayoutMirroring.enabled: Translation.isRtl
+            contentItem.LayoutMirroring.childrenInherit: true
             id: overlayWindow
             exclusionMode: ExclusionMode.Ignore
             WlrLayershell.namespace: "quickshell:overlay"
