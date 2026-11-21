@@ -9,6 +9,8 @@ import qs.modules.common
 import qs.modules.ii.clock.components
 
 FloatingWindow {
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()
