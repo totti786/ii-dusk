@@ -716,7 +716,6 @@ fi
 
 GSR_ACTIVE_PID=$(gsr_pid)
 if [[ -n "$GSR_ACTIVE_PID" ]]; then
-    notify-send "Recording Stopped" "Stopped" -a 'Recorder' &
     updatestate false
     # SIGINT is GSR's "stop and save": it flushes the container and exits. Wait
     # for that before returning so a restart does not race the finalizer.
@@ -732,7 +731,6 @@ if [[ -n "$GSR_ACTIVE_PID" ]]; then
 fi
 
 if rec_pid=$(rec_pid); then
-    notify-send "Recording Stopped" "Stopped" -a 'Recorder' &
     updatestate false
     # A paused recorder is SIGSTOPped: it cannot run its shutdown handler (and would
     # never flush the file) until it is resumed, so always continue it before killing.
