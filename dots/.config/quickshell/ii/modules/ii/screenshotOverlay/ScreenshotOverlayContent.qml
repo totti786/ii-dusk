@@ -432,7 +432,6 @@ Item {
                         cmd += " && cp '" + esc(srcPath) + "' '" + esc(fullPath) + "'";
                     }
 
-                    cmd += " && notify-send -i camera-photo -t 4000 'Screenshot saved' 'Saved to: " + esc(fullPath) + "'";
                     Quickshell.execDetached(["bash", "-c", cmd]);
                     root._startClose();
                 }
