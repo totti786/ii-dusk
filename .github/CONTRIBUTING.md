@@ -53,7 +53,7 @@ _Most stuff in the shell will work but not everything._
 - Hint for VSCode: Get the official "Qt Qml" extension, go to its settings and change custom exe path to `/usr/bin/qmlls6`.
 
 ## Python
-If your changes involves using python package or script, please use the virtual environment created by uv as described in `sdata/uv/README.md`.
+If your changes involves using python package or script, please use the virtual environment created by uv as described in `dots/.config/quickshell/ii/scripts/deps/DEPENDENCIES.md`.
 
 # Running
 

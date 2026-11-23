@@ -1021,7 +1021,7 @@ PACKAGE_NAMES = {
 
 def distro_install_command(package="mangohud"):
     """How to install `package`, grouped the way the ii setup groups distros
-    (sdata/lib/dist-determine.sh): Arch, Gentoo, Fedora, openSUSE, Debian,
+    Arch, Gentoo, Fedora, openSUSE, Debian,
     and everything else through Nix."""
     names = PACKAGE_NAMES[package]
     distro, like = os_release()

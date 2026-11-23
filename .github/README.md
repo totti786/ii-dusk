@@ -112,9 +112,9 @@ Use this if you don't have illogical-impulse installed yet. It sets up the base
 dotfiles and everything they need, then puts my config on top.
 
 ```bash
-git clone --recurse-submodules https://github.com/P3DROVFX/ii-p3drovfx.git
-cd ii-p3drovfx
-./setup-ii-p3drovfx.sh install
+git clone --recurse-submodules https://github.com/totti786/ii-dusk.git
+cd ii-dusk
+./setup-ii-dusk.sh install
 ```
 
 ### Minimal installation (Quickshell config only)
@@ -123,9 +123,9 @@ Use this if illogical-impulse already works and you only want my Quickshell conf
 Nothing else is touched, and your current config is moved to a backup instead of deleted.
 
 ```bash
-git clone --recurse-submodules https://github.com/P3DROVFX/ii-p3drovfx.git
-cd ii-p3drovfx
-./setup-ii-p3drovfx.sh
+git clone --recurse-submodules https://github.com/totti786/ii-dusk.git
+cd ii-dusk
+./setup-ii-dusk.sh
 ```
 
 > [!NOTE]
@@ -184,7 +184,7 @@ Qt 6.11.1 -> Qt 6.11.2
 Rebuild it against the newly installed Qt libraries. With the patched package (the default):
 
 ```bash
-./setup-ii-p3drovfx.sh quickshell rebuild
+./setup-ii-dusk.sh quickshell rebuild
 ```
 
 With the AUR package:
