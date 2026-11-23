@@ -1138,6 +1138,33 @@ reload_gtk() {
     gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme"
 }
 
+# For matugen's post-hook. matugen runs its hooks while it is still rendering the other
+# templates, so a flip made here can reach apps before the new colours are on disk. The flip
+# is handed to a detached job that waits for matugen to exit (its templates are all written
+# by then), and does not hold the hook up.
+reload_gtk_after_matugen() {
+    local pid=$$ comm
+    local mpid=""
+    while [[ "$pid" -gt 1 ]]; do
+        comm=$(cat "/proc/$pid/comm" 2>/dev/null) || break
+        [[ "$comm" == matugen ]] && { mpid=$pid; break; }
+        pid=$(awk '/^PPid:/ {print $2}' "/proc/$pid/status" 2>/dev/null) || break
+        [[ -n "$pid" ]] || break
+    done
+    if [[ -z "$mpid" ]]; then
+        reload_gtk
+        return 0
+    fi
+    (
+        for _ in $(seq 1 100); do
+            [[ -d "/proc/$mpid" ]] || break
+            sleep 0.1
+        done
+        reload_gtk
+    ) >/dev/null 2>&1 &
+    disown 2>/dev/null || true
+}
+
 reload_all() {
     apply_palette
     reload_gtk
@@ -1416,7 +1443,7 @@ main() {
 }
 
 case "${1:-}" in
-    --matugen)          recolor_icons_if_themed; refine_wal_palette; apply_palette; reload_gtk; refresh_tools ;;
+    --matugen)          recolor_icons_if_themed; refine_wal_palette; apply_palette; reload_gtk_after_matugen; refresh_tools ;;
     --apply)            apply_palette ;;
     --reload|--restart) reload_all ;;
     --restore)          restore ;;
