@@ -64,7 +64,7 @@ Singleton {
         const annotationCommand = `${Config.options.regionSelector.annotation.useSatty ? "satty" : "swappy"} -f -`;
         switch (action) {
         case ScreenshotAction.Action.Copy:
-            const copyNotify = (Config.options.regionSelector.copyNotification ?? false)
+            const copyNotify = (!(Config.options.regionSelector.enableOverlay ?? true) && (Config.options.regionSelector.copyNotification ?? false))
                 ? " && notify-send -i camera-photo -t 4000 'Screenshot copied' 'Copied to clipboard'"
                 : "";
             // The preview card that follows a capture already shows it was saved.

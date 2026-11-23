@@ -537,7 +537,7 @@ PanelWindow {
                 Quickshell.execDetached(["bash", "-c", "mkdir -p '" + esc(saveDir) + "' && mv '" + esc(tempPath) + "' '" + esc(fullPath) + "'" + (overlayEnabled ? "" : " && notify-send -i camera-photo -t 4000 --hint=boolean:suppress-sound:true 'Screenshot saved' 'Saved to: " + esc(fullPath) + "'")]);
             } else {
                 var cleanCmd = overlayEnabled ? ":" : "rm '" + esc(tempPath) + "'";
-                var copyNotifyCmd = (Config.options.regionSelector.copyNotification ?? false)
+                var copyNotifyCmd = (!overlayEnabled && (Config.options.regionSelector.copyNotification ?? false))
                     ? " && notify-send -i camera-photo -t 4000 --hint=boolean:suppress-sound:true 'Screenshot copied' 'Copied to clipboard'"
                     : "";
                 Quickshell.execDetached(["bash", "-c", "wl-copy < '" + esc(tempPath) + "' && " + cleanCmd + copyNotifyCmd]);
