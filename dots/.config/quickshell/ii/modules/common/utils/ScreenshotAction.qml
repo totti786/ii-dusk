@@ -57,6 +57,8 @@ Singleton {
         const recordY = Math.round(recordGeometry ? recordGeometry.y : y);
         const recordWidth = Math.round(recordGeometry ? recordGeometry.width : width);
         const recordHeight = Math.round(recordGeometry ? recordGeometry.height : height);
+        // The toolbar's microphone toggle applies to a region recording too.
+        const micArg = (Config.options.screenRecord.recordMic ?? false) ? " --mic" : "";
         const slurpRegion = `${recordX},${recordY} ${recordWidth}x${recordHeight}`;
         const uploadAndGetUrl = filePath => {
             return `curl -sF files[]=@'${StringUtils.shellSingleQuoteEscape(filePath)}' ${root.fileUploadApiEndpoint} | jq -r '.files[0].url'`;
@@ -106,10 +108,10 @@ Singleton {
             return ["bash", "-c", `${cropInPlace} && tesseract '${StringUtils.shellSingleQuoteEscape(screenshotPath)}' stdout -l $(tesseract --list-langs | awk 'NR>1{print $1}' | tr '\\n' '+' | sed 's/\\+$/\\n/') | wl-copy && ${cleanup}`];
             break;
         case ScreenshotAction.Action.Record:
-            return ["bash", "-c", `${Directories.recordScriptPath} --force-record --region '${slurpRegion}'`];
+            return ["bash", "-c", `${Directories.recordScriptPath} --force-record --region '${slurpRegion}'${micArg}`];
             break;
         case ScreenshotAction.Action.RecordWithSound:
-            return ["bash", "-c", `${Directories.recordScriptPath} --force-record --region '${slurpRegion}' --sound`];
+            return ["bash", "-c", `${Directories.recordScriptPath} --force-record --region '${slurpRegion}' --sound${micArg}`];
             break;
         default:
             console.warn("[Region Selector] Unknown snip action, skipping snip.");

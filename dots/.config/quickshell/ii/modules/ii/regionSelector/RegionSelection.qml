@@ -979,7 +979,12 @@ PanelWindow {
         , screenshotDir //
         , aiPath
         , recordGeometry);
-        Quickshell.execDetached(command);
+        if (isRecording && GlobalStates.recordFromToolbar) {
+            GlobalStates.recordFromToolbar = false;
+            GlobalStates.recordCommandRequested(command);
+        } else {
+            Quickshell.execDetached(command);
+        }
         ScreenshotAction.playShutterSound(screenshotAction);
         if (askingAi) {
             Ai.attachSnip(aiPath);

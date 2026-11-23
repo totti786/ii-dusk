@@ -17,6 +17,18 @@ Scope {
         id: countdownOverlay
     }
 
+    // A region recording picks its region first (the shell's selector), then counts down.
+    Connections {
+        target: GlobalStates
+        function onRecordCommandRequested(command) {
+            const countdown = Config.options.screenRecord.countdown ?? 0;
+            if (countdown > 0)
+                countdownOverlay.start(countdown, () => Quickshell.execDetached(command));
+            else
+                Quickshell.execDetached(command);
+        }
+    }
+
     PanelWindow {
         id: root
         visible: GlobalStates.recordingToolbarOpen
@@ -134,6 +146,13 @@ Scope {
             const countdown = Config.options.screenRecord.countdown ?? 0;
             GlobalStates.closeRecordingToolbar();
 
+            // The shell's selector instead of slurp, and the region before the countdown.
+            if ((toolbarContent.selectedMode || Config.options.screenRecord.mode) === "region") {
+                GlobalStates.recordFromToolbar = true;
+                GlobalStates.startRegionRecording(Config.options.screenRecord.recordAudio ?? false);
+                return;
+            }
+
             if (countdown > 0) {
                 countdownOverlay.start(countdown, () => {
                     root.executeRecording();
@@ -145,21 +164,12 @@ Scope {
 
         function executeRecording() {
             const mode = toolbarContent.selectedMode || Config.options.screenRecord.mode || "fullscreen";
-            const soundFlag = (Config.options.screenRecord.recordAudio || Config.options.screenRecord.recordMic);
-
-            if (mode === "fullscreen") {
-                const args = [Directories.recordScriptPath, "--force-record", "--fullscreen"];
-                if (soundFlag) args.push("--sound");
-                Quickshell.execDetached(args);
-            } else if (mode === "region") {
-                const args = [Directories.recordScriptPath, "--force-record", "--region"];
-                if (soundFlag) args.push("--sound");
-                Quickshell.execDetached(args);
-            } else if (mode === "window") {
-                const args = [Directories.recordScriptPath, "--force-record", "--window"];
-                if (soundFlag) args.push("--sound");
-                Quickshell.execDetached(args);
-            }
+            if (mode !== "fullscreen" && mode !== "region" && mode !== "window")
+                return;
+            const args = [Directories.recordScriptPath, "--force-record", `--${mode}`];
+            if (Config.options.screenRecord.recordAudio) args.push("--sound");
+            if (Config.options.screenRecord.recordMic) args.push("--mic");
+            Quickshell.execDetached(args);
         }
     }
 }

@@ -201,6 +201,11 @@ Scope {
         function onSnipForAiRequested() {
             root.askAi();
         }
+        // Cancelling the selection drops a pending toolbar recording.
+        function onRegionSelectorOpenChanged() {
+            if (!GlobalStates.regionSelectorOpen)
+                GlobalStates.recordFromToolbar = false;
+        }
         function onRecordRegionRequested(sound) {
             if (sound) {
                 root.recordWithSoundDirect();
