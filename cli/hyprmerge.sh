@@ -23,7 +23,7 @@ done
 set -- "${TEMP_ARGS[@]}"
 
 REPO_CONFIG="${1:-}"
-LOCAL_CONFIG="${2:-$XDG_DATA_HOME/ii-p3drovfx/hyprland.conf}"
+LOCAL_CONFIG="${2:-$XDG_DATA_HOME/ii-dusk/hyprland.conf}"
 VERBOSE="$IS_VERBOSE"
 
 if [[ -z "$REPO_CONFIG" || ! -f "$REPO_CONFIG" ]]; then
@@ -41,11 +41,11 @@ hyprset() {
     local cmd=""
     if [[ -f "$SCRIPT_DIR/hyprset.sh" ]]; then
         cmd="$SCRIPT_DIR/hyprset.sh"
-    elif command -v ii-p3drovfx >/dev/null 2>&1; then
-        HYPRSET_CONFIG="$LOCAL_CONFIG" ii-p3drovfx hyprset "$@"
+    elif command -v ii-dusk >/dev/null 2>&1; then
+        HYPRSET_CONFIG="$LOCAL_CONFIG" ii-dusk hyprset "$@"
         return $?
-    elif [[ -f "$XDG_DATA_HOME/ii-p3drovfx/sdata/cli/lib/hyprset.sh" ]]; then
-        cmd="$XDG_DATA_HOME/ii-p3drovfx/sdata/cli/lib/hyprset.sh"
+    elif [[ -f "$XDG_DATA_HOME/ii-dusk/cli/hyprset.sh" ]]; then
+        cmd="$XDG_DATA_HOME/ii-dusk/cli/hyprset.sh"
     else
         echo -e "\e[1;31m[ERROR]\e[0m hyprset script not found" >&2
         return 1

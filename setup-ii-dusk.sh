@@ -2734,7 +2734,7 @@ mirror_scripts() {
     ui_step "Mirroring"
     mkdir -p "$MIRROR_DIR"
     local copied=0 f
-    for f in "$SCRIPT_SELF" setup update-fork.sh; do
+    for f in "$SCRIPT_SELF" update-fork.sh; do
         if [[ -e "$from/$f" ]]; then
             cp -a "$from/$f" "$MIRROR_DIR/$f"
             chmod +x "$MIRROR_DIR/$f" 2>/dev/null || true
@@ -2748,17 +2748,19 @@ mirror_scripts() {
         chmod +x "$MIRROR_DIR/$SCRIPT_SELF"
         copied=$((copied + 1))
     fi
-    if [[ -d "$from/sdata" ]]; then
-        rm -rf "$MIRROR_DIR/sdata"
-        cp -a "$from/sdata" "$MIRROR_DIR/sdata"
-        find "$MIRROR_DIR/sdata" -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
+    if [[ -d "$from/cli" ]]; then
+        rm -rf "$MIRROR_DIR/cli"
+        cp -a "$from/cli" "$MIRROR_DIR/cli"
+        find "$MIRROR_DIR/cli" -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
         copied=$((copied + 1))
     fi
     # Scripts that used to live here and no longer ship.
     local obsolete
-    for obsolete in setup-ii-vynx.sh update-with-customs.sh; do
+    for obsolete in setup-ii-vynx.sh update-with-customs.sh setup; do
         rm -f "${MIRROR_DIR:?}/$obsolete"
     done
+    # The old installer tree; only cli/ is shipped now.
+    rm -rf "${MIRROR_DIR:?}/sdata"
     install_cli
     ui_ok "Mirrored" "$copied items $G_ARROW $(tilde "$MIRROR_DIR")"
 }
@@ -3750,12 +3752,12 @@ cmd_hypr() {
     local path=""
     local d
     for d in "$SCRIPT_DIR" "$MIRROR_DIR"; do
-        [[ -f "$d/sdata/cli/lib/$lib.sh" ]] && {
-            path="$d/sdata/cli/lib/$lib.sh"
+        [[ -f "$d/cli/$lib.sh" ]] && {
+            path="$d/cli/$lib.sh"
             break
         }
     done
-    [[ -n "$path" ]] || ui_die "Missing helper" "sdata/cli/lib/$lib.sh not found"
+    [[ -n "$path" ]] || ui_die "Missing helper" "cli/$lib.sh not found"
     exec bash "$path" "$@"
 }
 

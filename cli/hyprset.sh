@@ -5,7 +5,7 @@
 #   hyprset.sh key  <section:field|field> <value>
 #   hyprset.sh anim <name>                <params>
 #
-# Reached as `setup-ii-p3drovfx.sh hyprset ...`, as `ii-p3drovfx hyprset ...`,
+# Reached as `setup-ii-dusk.sh hyprset ...`, as `ii-dusk hyprset ...`,
 # or run directly by HyprlandSettings.qml. Always executed, never sourced.
 
 set -euo pipefail
@@ -14,7 +14,7 @@ XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 
 # HYPRSET_CONFIG wins; otherwise the current data dir, falling back to the
 # pre-rename location so a half-migrated install still writes somewhere sane.
-CONFIG_PATH="${HYPRSET_CONFIG:-$XDG_DATA_HOME/ii-p3drovfx/hyprland.conf}"
+CONFIG_PATH="${HYPRSET_CONFIG:-$XDG_DATA_HOME/ii-dusk/hyprland.conf}"
 if [[ ! -f "$CONFIG_PATH" && -f "$XDG_DATA_HOME/ii-vynx/hyprland.conf" ]]; then
     CONFIG_PATH="$XDG_DATA_HOME/ii-vynx/hyprland.conf"
 fi
