@@ -112,10 +112,12 @@ Scope {
         if (name === "")
             return
         const q = StringUtils.shellSingleQuoteEscape
+        // The preview card that follows already shows it was saved.
+        const overlayOn = Config.options.regionSelector.enableOverlay ?? true
         const saveDir = (Config.options.screenSnip.savePath !== "" ? Config.options.screenSnip.savePath : (Directories.home + "/Pictures/Screenshots")).toString().replace(/^file:\/\//, "")
         root.fullShotMonitor = name
         ShellRegions.freeze()
-        fullShotProc.command = ["bash", "-c", `mkdir -p '${q(Directories.screenshotTemp)}' '${q(saveDir)}' && grim -t png -o '${q(name)}' '${q(root.fullShotPath)}' && f='${q(saveDir)}'/Screenshot_$(date +%Y-%m-%d-%H-%M-%S).png && cp '${q(root.fullShotPath)}' "$f" && wl-copy < "$f" && notify-send -i camera-photo -t 4000 --hint=boolean:suppress-sound:true 'Screenshot saved' "Saved to: $f"`]
+        fullShotProc.command = ["bash", "-c", `mkdir -p '${q(Directories.screenshotTemp)}' '${q(saveDir)}' && grim -t png -o '${q(name)}' '${q(root.fullShotPath)}' && f='${q(saveDir)}'/Screenshot_$(date +%Y-%m-%d-%H-%M-%S).png && cp '${q(root.fullShotPath)}' "$f" && wl-copy < "$f"${overlayOn ? "" : ` && notify-send -i camera-photo -t 4000 --hint=boolean:suppress-sound:true 'Screenshot saved' "Saved to: $f"`}`]
         fullShotProc.running = true
     }
 
