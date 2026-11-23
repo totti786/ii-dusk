@@ -1,60 +1,51 @@
 [config]
 version_check = false
 
-# Harmonized accent hues (blended toward the wallpaper source) for app themes
-# that need more than the three M3 accents, e.g. syntax highlighting.
+# Hues KDE needs for positive and neutral text, blended toward the wallpaper like the M3 accents.
 [config.custom_colors]
-code_red = "#E53935"
-code_orange = "#FB8C00"
-code_yellow = "#FDD835"
-code_green = "#43A047"
-code_cyan = "#00ACC1"
-code_blue = "#1E88E5"
-code_magenta = "#AB47BC"
+kde_positive = "#43A047"
+kde_neutral = "#FB8C00"
 
 [templates.m3colors]
 input_path = '~/.config/matugen/templates/colors.json'
 output_path = '~/.local/state/quickshell/user/generated/colors.json'
 
-[templates.hyprland]
-input_path = '~/.config/matugen/templates/hyprland/colors.conf'
-output_path = '~/.config/hypr/hyprland/colors.conf'
+[templates.pywal]
+input_path = '~/.config/matugen/templates/pywal.json'
+output_path = '~/.cache/wal/colors.json'
+post_hook = '$HOME/.config/quickshell/ii/scripts/colors/switchwall.sh --matugen'
 
-[templates.hyprlock]
-input_path = '~/.config/matugen/templates/hyprland/hyprlock-colors.conf'
-output_path = '~/.config/hypr/hyprlock/colors.conf'
+[templates.kde]
+input_path = '~/.config/matugen/templates/kde/kdeglobals'
+output_path = '~/.local/state/quickshell/user/generated/kdeglobals'
+post_hook = 'python3 $HOME/.config/quickshell/ii/scripts/colors/kde_colors.py'
 
-[templates.gtk3]
-input_path = '~/.config/matugen/templates/gtk-3.0/gtk.css'
-output_path = '~/.config/gtk-3.0/gtk.css'
+[templates.zathura]
+input_path = '~/.config/matugen/templates/zathura/zathurarc'
+output_path = '~/.config/zathura/zathurarc'
 
-[templates.gtk4]
-input_path = '~/.config/matugen/templates/gtk-4.0/gtk.css'
-output_path = '~/.config/gtk-4.0/gtk.css'
-
-[templates.kde_colors]
-input_path = '~/.config/matugen/templates/kde/color.txt'
-output_path = '~/.local/state/quickshell/user/generated/color.txt'
+[templates.sioyek]
+input_path = '~/.config/matugen/templates/sioyek/prefs_user.config'
+output_path = '~/.config/sioyek/prefs_user.config'
+post_hook = 'python3 $HOME/.config/quickshell/ii/scripts/colors/hex_to_floats.py ~/.config/sioyek/prefs_user.config'
 
 [templates.wallpaper]
 input_path = '~/.config/matugen/templates/wallpaper.txt'
 output_path = '~/.local/state/quickshell/user/generated/wallpaper/path.txt'
 
-[templates.vscode]
-input_path = '~/.config/matugen/templates/vscode/ii-material-you.json'
-output_path = '~/.local/state/quickshell/user/generated/vscode/theme.json'
+[templates.gtk4]
+input_path = '~/.config/matugen/templates/gtk-4.0/gtk.css'
+output_path = '~/.config/gtk-4.0/gtk.css'
 
-[templates.vesktop]
-input_path = '~/.config/matugen/templates/vesktop/Material-Discord.theme.css'
-output_path = '~/.config/vesktop/themes/Material-Discord.theme.css'
+# FlatColor, the GTK3/GTK2 theme. Written straight into the theme folder.
+[templates.flatcolor_gtk3]
+input_path = '~/.config/matugen/templates/flatcolor/gtk-3.0.css'
+output_path = '~/.local/share/themes/FlatColor/gtk-3.0/gtk.css'
 
-# Kvantum theme for Qt apps (Dolphin); rebuild the templates with
-# quickshell/ii/scripts/kvantum/build_m3e_theme.py. Running apps keep the old
-# colours until restarted.
-[templates.kvantum_svg]
-input_path = '~/.config/matugen/templates/kvantum/MaterialYouExpressive.svg'
-output_path = '~/.config/Kvantum/MaterialYouExpressive/MaterialYouExpressive.svg'
+[templates.flatcolor_gtk320]
+input_path = '~/.config/matugen/templates/flatcolor/gtk-3.20.css'
+output_path = '~/.local/share/themes/FlatColor/gtk-3.20/gtk.css'
 
-[templates.kvantum_kvconfig]
-input_path = '~/.config/matugen/templates/kvantum/MaterialYouExpressive.kvconfig'
-output_path = '~/.config/Kvantum/MaterialYouExpressive/MaterialYouExpressive.kvconfig'
+[templates.flatcolor_gtk2]
+input_path = '~/.config/matugen/templates/flatcolor/gtk-2.0rc'
+output_path = '~/.local/share/themes/FlatColor/gtk-2.0/gtkrc'

@@ -17,21 +17,21 @@
     /* Base surfaces */
     @define-color window_bg_color {{colors.background.light.hex}};
     @define-color window_fg_color {{colors.on_background.light.hex}};
-    @define-color headerbar_bg_color {{colors.surface_container.light.hex}};
-    @define-color headerbar_backdrop_color {{colors.surface_container.light.hex}};
+    @define-color headerbar_bg_color {{colors.background.light.hex | lighten: -2.0}};
+    @define-color headerbar_backdrop_color {{colors.background.light.hex | lighten: -2.0}};
     @define-color headerbar_fg_color {{colors.on_surface.light.hex}};
-    @define-color card_bg_color {{colors.surface_container.light.hex}};
+    @define-color card_bg_color {{colors.background.light.hex | lighten: -4.0}};
     @define-color card_fg_color {{colors.on_surface.light.hex}};
-    @define-color sidebar_bg_color {{colors.surface_container.light.hex}};
+    @define-color sidebar_bg_color {{colors.background.light.hex | lighten: -2.0}};
     @define-color sidebar_fg_color {{colors.on_surface.light.hex}};
-    @define-color secondary_sidebar_bg_color {{colors.surface_container_low.light.hex}};
-    @define-color secondary_sidebar_backdrop_color {{colors.surface_container_low.light.hex}};
+    @define-color secondary_sidebar_bg_color {{colors.background.light.hex | lighten: -2.0}};
+    @define-color secondary_sidebar_backdrop_color {{colors.background.light.hex | lighten: -2.0}};
     @define-color secondary_sidebar_fg_color {{colors.on_surface.light.hex}};
-    @define-color sidebar_border_color @sidebar_bg_color;
+    @define-color sidebar_border_color transparent;
     @define-color sidebar_backdrop_color @sidebar_bg_color;
-    @define-color view_bg_color {{colors.surface_container_lowest.light.hex}};
+    @define-color view_bg_color {{colors.background.light.hex}};
     @define-color view_fg_color {{colors.on_surface.light.hex}};
-    @define-color overview_bg_color {{colors.surface_container_lowest.light.hex}};
+    @define-color overview_bg_color {{colors.background.light.hex}};
     @define-color overview_fg_color {{colors.on_surface.light.hex}};
     /* Popups */
     @define-color popover_bg_color {{colors.surface_container_highest.light.hex}};
@@ -57,21 +57,21 @@
     /* Base surfaces */
     @define-color window_bg_color {{colors.background.dark.hex}};
     @define-color window_fg_color {{colors.on_background.dark.hex}};
-    @define-color headerbar_bg_color {{colors.surface_container.dark.hex}};
-    @define-color headerbar_backdrop_color {{colors.surface_container.dark.hex}};
+    @define-color headerbar_bg_color {{colors.background.dark.hex | lighten: 2.5}};
+    @define-color headerbar_backdrop_color {{colors.background.dark.hex | lighten: 2.5}};
     @define-color headerbar_fg_color {{colors.on_surface.dark.hex}};
-    @define-color card_bg_color {{colors.surface_container.dark.hex}};
+    @define-color card_bg_color {{colors.background.dark.hex | lighten: 4.5}};
     @define-color card_fg_color {{colors.on_surface.dark.hex}};
-    @define-color sidebar_bg_color {{colors.surface_container.dark.hex}};
+    @define-color sidebar_bg_color {{colors.background.dark.hex | lighten: 2.5}};
     @define-color sidebar_fg_color {{colors.on_surface.dark.hex}};
-    @define-color secondary_sidebar_bg_color {{colors.surface_container_low.dark.hex}};
-    @define-color secondary_sidebar_backdrop_color {{colors.surface_container_low.dark.hex}};
+    @define-color secondary_sidebar_bg_color {{colors.background.dark.hex | lighten: 2.5}};
+    @define-color secondary_sidebar_backdrop_color {{colors.background.dark.hex | lighten: 2.5}};
     @define-color secondary_sidebar_fg_color {{colors.on_surface.dark.hex}};
-    @define-color sidebar_border_color @sidebar_bg_color;
+    @define-color sidebar_border_color transparent;
     @define-color sidebar_backdrop_color @sidebar_bg_color;
-    @define-color view_bg_color {{colors.surface_container_lowest.dark.hex}};
+    @define-color view_bg_color {{colors.background.dark.hex}};
     @define-color view_fg_color {{colors.on_surface.dark.hex}};
-    @define-color overview_bg_color {{colors.surface_container_lowest.dark.hex}};
+    @define-color overview_bg_color {{colors.background.dark.hex}};
     @define-color overview_fg_color {{colors.on_surface.dark.hex}};
     /* Popups */
     @define-color popover_bg_color {{colors.surface_container_highest.dark.hex}};
