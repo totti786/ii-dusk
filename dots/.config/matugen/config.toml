@@ -10,11 +10,6 @@ kde_neutral = "#FB8C00"
 input_path = '~/.config/matugen/templates/colors.json'
 output_path = '~/.local/state/quickshell/user/generated/colors.json'
 
-[templates.pywal]
-input_path = '~/.config/matugen/templates/pywal.json'
-output_path = '~/.cache/wal/colors.json'
-post_hook = '$HOME/.config/quickshell/ii/scripts/colors/switchwall.sh --matugen'
-
 [templates.kde]
 input_path = '~/.config/matugen/templates/kde/kdeglobals'
 output_path = '~/.local/state/quickshell/user/generated/kdeglobals'
@@ -41,3 +36,10 @@ output_path = '~/.config/gtk-4.0/gtk.css'
 [templates.gtk3]
 input_path = '~/.config/matugen/templates/gtk-3.0/gtk.css'
 output_path = '~/.config/gtk-3.0/gtk.css'
+
+# Last on purpose: its post-hook flips the GTK theme so running apps reload, which
+# only helps once every other template (the GTK css above all) has been written.
+[templates.pywal]
+input_path = '~/.config/matugen/templates/pywal.json'
+output_path = '~/.cache/wal/colors.json'
+post_hook = '$HOME/.config/quickshell/ii/scripts/colors/switchwall.sh --matugen'
