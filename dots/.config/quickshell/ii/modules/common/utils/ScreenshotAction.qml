@@ -67,6 +67,10 @@ Singleton {
             const copyNotify = (Config.options.regionSelector.copyNotification ?? false)
                 ? " && notify-send -i camera-photo -t 4000 'Screenshot copied' 'Copied to clipboard'"
                 : "";
+            // The preview card that follows a capture already shows it was saved.
+            const savedNotify = (Config.options.regionSelector.enableOverlay ?? true)
+                ? ""
+                : `notify-send -i camera-photo -t 4000 'Screenshot saved' "Saved to: $savePath" && `;
             if (saveDir === "") {
                 return ["bash", "-c", `${cropToStdout} | wl-copy${copyNotify} && ${cleanup}`];
             } else {
@@ -75,7 +79,7 @@ Singleton {
                         saveFileName="Screenshot_$(date '+%Y-%m-%d-%H-%M-%S').png" && \
                         savePath="${targetSaveDir}/$saveFileName" && \
                         ${cropToStdout} | tee >(wl-copy) > "$savePath" && \
-                        notify-send -i camera-photo -t 4000 'Screenshot saved' "Saved to: $savePath" && \
+                        ${savedNotify} \
                         ${cleanup}`];
             }
             break;
