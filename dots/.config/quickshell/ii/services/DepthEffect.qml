@@ -360,11 +360,17 @@ Singleton {
     function notifyFinished(key, title, detail) {
         if (!root.notificationsOn || key === "" || key !== root.notifiedKey)
             return;
+        // Not `notify-send -r`: a replacement keeps the first card's 2 minute timeout, so the
+        // result sat there until it was clicked. The start card is closed and the result
+        // is a notification of its own.
         const args = ["notify-send", "-a", Translation.tr("Depth effect"), "-t", "5000",
-            "--hint=boolean:suppress-sound:true"];
-        if (root.notificationId > 0)
-            args.push("-r", String(root.notificationId));
-        Quickshell.execDetached(args.concat([title, root.describe(key) + "\n" + detail]));
+            "--hint=boolean:suppress-sound:true", title, root.describe(key) + "\n" + detail];
+        if (root.notificationId > 0) {
+            Quickshell.execDetached(["busctl", "--user", "call", "org.freedesktop.Notifications",
+                "/org/freedesktop/Notifications", "org.freedesktop.Notifications",
+                "CloseNotification", "u", String(root.notificationId)]);
+        }
+        Quickshell.execDetached(args);
         root.notifiedKey = "";
     }
     Process {
