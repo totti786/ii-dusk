@@ -789,13 +789,13 @@ recolor_icons_in_background() {
 
 pre_process() {
     local mode_flag="$1"
-    # Set GNOME color-scheme if mode_flag is dark or light. The GTK theme is FlatColor in both.
+    # Set GNOME color-scheme if mode_flag is dark or light, and the matching adw-gtk3 variant.
     if [[ "$mode_flag" == "dark" ]]; then
         gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-        gsettings set org.gnome.desktop.interface gtk-theme 'FlatColor'
+        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
     elif [[ "$mode_flag" == "light" ]]; then
         gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-        gsettings set org.gnome.desktop.interface gtk-theme 'FlatColor'
+        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3'
     fi
 
     if [ ! -d "$CACHE_DIR"/user/generated ]; then
@@ -1062,11 +1062,25 @@ detect_scheme_type_from_image() {
 # ── Palette and desktop ──────────────────────────────────────────────────────
 # Settings from ~/.theme, which the bar and the GTK setup read too. Defaults cover a missing file.
 load_theme() {
-    gtk_theme=FlatColor icon_theme=Papirus-Dark
+    icon_theme=Papirus-Dark
     cursor_theme=Fluent-dark-cursors font_name="Noto Sans 9"
     # shellcheck source=/dev/null
     [[ -f "$THEME_FILE" ]] && source "$THEME_FILE"
+    # The GTK theme follows the colour scheme (adw-gtk3 draws its colours from the
+    # gtk.css matugen writes), so a gtk_theme in ~/.theme no longer applies.
+    gtk_theme=$(gtk_theme_for_scheme)
     return 0
+}
+
+# adw-gtk3-dark for a dark colour scheme, adw-gtk3 otherwise.
+gtk_theme_for_scheme() {
+    local scheme
+    scheme=$(gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null | tr -d "'")
+    if [[ "$scheme" == "prefer-light" ]]; then
+        printf 'adw-gtk3\n'
+    else
+        printf 'adw-gtk3-dark\n'
+    fi
 }
 
 # The wallpaper the shell shows: its own setting, else the image the palette came from.
@@ -1086,6 +1100,7 @@ refresh_tools() {
 # Flips the GTK theme so running GTK apps reload their colours. Wayland only.
 reload_gtk() {
     have gsettings || return 0
+    gtk_theme=$(gtk_theme_for_scheme)
     gsettings set org.gnome.desktop.interface gtk-theme "Dummy"
     gsettings set org.gnome.desktop.interface gtk-theme "$gtk_theme"
 }

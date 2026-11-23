@@ -3040,7 +3040,7 @@ PY
 #
 # The colour pipeline renders through ~/.config/matugen: config.toml says which
 # templates run and which hooks follow (palette files, KDE colours, readers,
-# FlatColor). The base installer's own config knows none of them, so without
+# the GTK theme). The base installer's own config knows none of them, so without
 # this the shell would recolour itself and nothing else.
 #   - no config yet: the fork's is copied as it is
 #   - a config exists: only the sections it lacks are appended

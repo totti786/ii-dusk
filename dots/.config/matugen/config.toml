@@ -37,15 +37,7 @@ output_path = '~/.local/state/quickshell/user/generated/wallpaper/path.txt'
 input_path = '~/.config/matugen/templates/gtk-4.0/gtk.css'
 output_path = '~/.config/gtk-4.0/gtk.css'
 
-# FlatColor, the GTK3/GTK2 theme. Written straight into the theme folder.
-[templates.flatcolor_gtk3]
-input_path = '~/.config/matugen/templates/flatcolor/gtk-3.0.css'
-output_path = '~/.local/share/themes/FlatColor/gtk-3.0/gtk.css'
-
-[templates.flatcolor_gtk320]
-input_path = '~/.config/matugen/templates/flatcolor/gtk-3.20.css'
-output_path = '~/.local/share/themes/FlatColor/gtk-3.20/gtk.css'
-
-[templates.flatcolor_gtk2]
-input_path = '~/.config/matugen/templates/flatcolor/gtk-2.0rc'
-output_path = '~/.local/share/themes/FlatColor/gtk-2.0/gtkrc'
+# adw-gtk3 reads its colours from this file, the GTK3 twin of the gtk-4.0 one above.
+[templates.gtk3]
+input_path = '~/.config/matugen/templates/gtk-3.0/gtk.css'
+output_path = '~/.config/gtk-3.0/gtk.css'

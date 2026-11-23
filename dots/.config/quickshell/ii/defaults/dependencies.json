@@ -117,9 +117,10 @@
             "id": "theming",
             "tier": "required",
             "label": "Wallpaper colours",
-            "description": "matugen turns the wallpaper into the shell's colours; uv builds the shell's Python environment.",
+            "description": "matugen turns the wallpaper into the shell's colours, adw-gtk3 is the GTK theme those colours are applied to, and uv builds the shell's Python environment.",
             "packages": [
                 { "name": "matugen", "fedora": null, "bin": "matugen" },
+                { "arch": "adw-gtk-theme", "fedora": "adw-gtk3-theme" },
                 { "name": "uv", "bin": "uv" }
             ]
         },

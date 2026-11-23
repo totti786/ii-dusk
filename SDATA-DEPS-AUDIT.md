@@ -83,7 +83,7 @@ Legend: `inst` is installed on this machine. `dep.json` means already in `defaul
 ### illogical-impulse-fonts-themes
 | Package | inst | Evidence | Verdict |
 |---|---|---|---|
-| adw-gtk-theme-git | no | 0 hits (GTK colours come from matugen's FlatColor) | DROP |
+| adw-gtk-theme-git | no | **Reversed 2026-11-23:** adw-gtk3 is the GTK theme now (matugen writes its `gtk.css`); the repo package `adw-gtk-theme` is in dependencies.json | CORE |
 | breeze | no | `kdeglobals` names `Theme=breeze-dark`, only as a fallback icon theme | DROP |
 | breeze-plus | no | 0 hits (Papirus is the base icon pack) | DROP |
 | darkly-bin | no | 0 hits | DROP |
