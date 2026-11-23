@@ -181,8 +181,8 @@ These are for end-4's GTK4 Python tools. `bootstrap.sh` makes its own venv with 
 | Package | inst | Evidence | Verdict |
 |---|---|---|---|
 | hyprshot | yes | 0 hits (grim + slurp used) | DROP |
-| python-evdev | no | 23 files say `evdev`, no `import evdev` | DROP unless a script imports it (recheck) |
-| python-xkbcommon | no | 23 files; no import found | DROP unless a script imports it (recheck) |
+| python-evdev | no | imported by two scripts, but from the shell's venv (`requirements.lock`) | DROP (system package) |
+| python-xkbcommon | no | used by `keypress_monitor.py`, from the venv | DROP (system package) |
 | slurp | yes | 4 files | CORE |
 | swappy | yes | 5 files | FEATURE |
 | tesseract + tesseract-data-eng | yes | OCR, 25 files | FEATURE |
@@ -249,7 +249,10 @@ machine. It is documentation, not an install list.
    kitty installed.
 3. **Fedora, Gentoo, Nix: not supported for now.** The lists went with `sdata/`. `deps.py` still understands `arch` and
    `fedora` names; required packages only have to resolve on Arch.
-4. **Still open:** `python-evdev` and `python-xkbcommon` (mentioned in 23 files each, imported by none).
+4. **python-evdev and python-xkbcommon: system packages dropped.** They are used (`scripts/videos/keypress_monitor.py`
+   and `scripts/tablet/tablet_scroll.py` import evdev, the key monitor also uses xkbcommon; the imports sit inside `try:`
+   blocks, which is why the first scan missed them), but the shell's own venv installs both from
+   `scripts/deps/requirements.lock` (`evdev==2.0.0`, `xkbcommon==1.5.1`). The Rust helpers use the `evdev` crate.
 
 ## 5. What was done
 
