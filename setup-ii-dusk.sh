@@ -226,8 +226,8 @@ PROTECTED_PATTERNS=(
 # live, so the fork never writes there.
 HYPR_EXCLUDE_DIRS=("custom")
 
-# Matugen rewrites both of these on every wallpaper change — see the
-# [templates.hyprland] and [templates.hyprlock] blocks in matugen's config.toml.
+# The colour pipeline (scripts/colors/palette16.sh) rewrites both of these on
+# every wallpaper change.
 # The repo's copies are a snapshot of whatever wallpaper was set at commit time,
 # so they are seeded when missing and never overwritten afterwards.
 HYPR_SEED_ONLY=("hyprland/colors.lua" "hyprlock/colors.conf")
@@ -2936,6 +2936,206 @@ install_hypr_config() {
     return 0
 }
 
+# matugen_merge_config <fork config.toml> <user config.toml>
+#
+# Brings the user's config up to what the fork's pipeline needs, and nothing
+# else of theirs moves:
+#   - [section] blocks the fork ships and the user lacks are appended, with the
+#     comments written above them
+#   - keys missing from [config.custom_colors] are added to the user's block
+#     (the KDE template needs kde_positive and kde_neutral there)
+#   - [templates.kde_colors] is dropped when the fork's [templates.kde] is
+#     present: both write KDE colours and would overwrite each other
+# Prints what it did, one line each: add|key|drop <name>.
+matugen_merge_config() {
+    python3 - "$1" "$2" <<'PY'
+import re, sys
+
+HEADER = re.compile(r"\s*\[([^\]]+)\]\s*$")
+SUPERSEDED = {"templates.kde": "templates.kde_colors"}
+
+def blocks(text):
+    out, pending, cur = [], [], None
+    for line in text.splitlines():
+        m = HEADER.match(line)
+        if m:
+            cur = {"name": m.group(1).strip(), "pre": pending, "body": [line]}
+            out.append(cur)
+            pending = []
+        elif cur is None:
+            pending.append(line)
+        elif line.strip() == "" or line.lstrip().startswith("#"):
+            pending.append(line)
+        else:
+            cur["body"].extend(pending)
+            cur["body"].append(line)
+            pending = []
+    return out
+
+def keys(block):
+    found = {}
+    for l in block["body"][1:]:
+        m = re.match(r"\s*([A-Za-z0-9_\-]+)\s*=", l)
+        if m:
+            found[m.group(1)] = l
+    return found
+
+ours = blocks(open(sys.argv[1]).read())
+theirs_text = open(sys.argv[2]).read()
+theirs = blocks(theirs_text)
+have = {b["name"] for b in theirs}
+log = []
+lines = theirs_text.splitlines()
+
+# 1. keys missing from [config.custom_colors]
+mine = next((b for b in ours if b["name"] == "config.custom_colors"), None)
+user = next((b for b in theirs if b["name"] == "config.custom_colors"), None)
+if mine and user:
+    missing = [(k, l) for k, l in keys(mine).items() if k not in keys(user)]
+    if missing:
+        idx = next(i for i, l in enumerate(lines) if HEADER.match(l) and HEADER.match(l).group(1).strip() == "config.custom_colors")
+        end = idx + 1
+        for i in range(idx + 1, len(lines)):
+            if HEADER.match(lines[i]):
+                break
+            if lines[i].strip() and not lines[i].lstrip().startswith("#"):
+                end = i + 1
+        for k, l in reversed(missing):
+            lines.insert(end, l)
+        log += ["key config.custom_colors." + k for k, _ in missing]
+
+# 2. drop what the fork supersedes
+for new, old in SUPERSEDED.items():
+    if (new in have or any(b["name"] == new for b in ours)) and old in have:
+        out, skipping = [], False
+        for l in lines:
+            m = HEADER.match(l)
+            if m:
+                skipping = m.group(1).strip() == old
+            if not skipping:
+                out.append(l)
+        lines = out
+        have.discard(old)
+        log.append("drop " + old)
+
+# 3. append the blocks the user lacks
+chunk = ""
+for b in ours:
+    if b["name"] in have:
+        continue
+    pre = list(b["pre"])
+    while pre and pre[0].strip() == "":
+        pre.pop(0)
+    chunk += "\n" + "\n".join(pre + b["body"]) + "\n"
+    log.append("add " + b["name"])
+
+if log:
+    with open(sys.argv[2], "w") as f:
+        f.write("\n".join(lines).rstrip("\n") + "\n" + chunk)
+    print("\n".join(log))
+PY
+}
+
+# install_matugen_config <repo_root>
+#
+# The colour pipeline renders through ~/.config/matugen: config.toml says which
+# templates run and which hooks follow (palette files, KDE colours, readers,
+# FlatColor). The base installer's own config knows none of them, so without
+# this the shell would recolour itself and nothing else.
+#   - no config yet: the fork's is copied as it is
+#   - a config exists: only the sections it lacks are appended
+#   - template files the fork ships replace the old ones; the old ones go to
+#     a matugen_ snapshot first unless --no-backup
+install_matugen_config() {
+    local repo_root="${1:-}"
+    local src="$repo_root/dots/.config/matugen"
+    local dest="$XDG_CONFIG_HOME/matugen"
+    [[ -n "$repo_root" && -f "$src/config.toml" ]] || return 0
+
+    ui_step "Matugen"
+    local f rel replaced=0 added=0 same=0 backup_dir=""
+    local -a writes=()
+    while IFS= read -r -d '' f; do
+        rel="${f#"$src"/}"
+        [[ "$rel" == config.toml ]] && continue
+        if [[ ! -e "$dest/$rel" ]]; then
+            added=$((added + 1))
+        elif cmp -s "$f" "$dest/$rel"; then
+            same=$((same + 1))
+            continue
+        else
+            replaced=$((replaced + 1))
+        fi
+        writes+=("$rel")
+    done < <(find "$src" -mindepth 1 -type f -print0 2>/dev/null | sort -z)
+
+    if ((replaced > 0)) && [[ "$OPT_BACKUP" == true ]]; then
+        backup_dir="$(next_backup_dir "matugen_")"
+        mkdir -p "$backup_dir" || {
+            ui_warn "Could not create the matugen backup directory: $(tilde "$backup_dir")"
+            return 1
+        }
+        for rel in "${writes[@]}"; do
+            if [[ -e "$dest/$rel" ]]; then
+                mkdir -p "$backup_dir/$(dirname "$rel")"
+                cp -a "$dest/$rel" "$backup_dir/$rel" || {
+                    ui_warn "Could not back up $rel"
+                    return 1
+                }
+            fi
+        done
+        prune_backups "matugen_"
+    fi
+
+    for rel in "${writes[@]}"; do
+        mkdir -p "$dest/$(dirname "$rel")"
+        cp -a "$src/$rel" "$dest/$rel"
+    done
+
+    local cfg="new config"
+    if [[ ! -e "$dest/config.toml" ]]; then
+        mkdir -p "$dest"
+        cp -a "$src/config.toml" "$dest/config.toml"
+    else
+        # Merge into a copy first: the live file is only touched, and only
+        # backed up, when the merge actually changes something.
+        local names tmp
+        tmp="$(mktemp "${TMPDIR:-/tmp}/matugen-config-XXXXXX")" || return 1
+        cp -a "$dest/config.toml" "$tmp"
+        if names="$(matugen_merge_config "$src/config.toml" "$tmp" 2>>"$LOG_FILE")"; then
+            if [[ -n "$names" ]]; then
+                if [[ "$OPT_BACKUP" == true ]]; then
+                    [[ -n "$backup_dir" ]] || backup_dir="$(next_backup_dir "matugen_")"
+                    mkdir -p "$backup_dir" && cp -a "$dest/config.toml" "$backup_dir/config.toml"
+                    prune_backups "matugen_"
+                fi
+                cp "$tmp" "$dest/config.toml"
+                cfg="config: $(printf '%s\n' "$names" | wc -l) changes"
+                ui_verbose "config.toml: $(printf '%s' "$names" | tr '\n' ';')"
+            else
+                cfg="config unchanged"
+            fi
+        else
+            ui_warn "Could not merge $(tilde "$dest/config.toml") — the colour hooks may be missing."
+            cfg="merge failed"
+        fi
+        rm -f "$tmp"
+    fi
+
+    ui_ok "Matugen" "$cfg $G_SEP $added new, $replaced replaced, $same unchanged"
+    [[ -n "$backup_dir" ]] && ui_note "backup $G_ARROW $(basename "$backup_dir")"
+
+    # The portal config is seeded only: the base installer owns it, and this
+    # one differs from the fork's by nothing but the file chooser backend.
+    local portal="$repo_root/dots/.config/xdg-desktop-portal/hyprland-portals.conf"
+    if [[ -f "$portal" && ! -e "$XDG_CONFIG_HOME/xdg-desktop-portal/hyprland-portals.conf" ]]; then
+        mkdir -p "$XDG_CONFIG_HOME/xdg-desktop-portal"
+        cp -a "$portal" "$XDG_CONFIG_HOME/xdg-desktop-portal/hyprland-portals.conf"
+        ui_verbose "seeded hyprland-portals.conf"
+    fi
+    return 0
+}
+
 # apply_config <url> <branch> <fork_id> <verb>
 #
 # Prints the banner itself unless the caller already did (install does, before
@@ -3119,6 +3319,7 @@ apply_config() {
     # After the swap: a swap that failed leaves ~/.config/hypr untouched too,
     # so a half-applied pair of configs is not a state you can end up in.
     install_hypr_config "$repo_root"
+    install_matugen_config "$repo_root"
 
     if [[ -n "$CLONE_DIR" ]]; then
         rm -rf "$CLONE_DIR"
