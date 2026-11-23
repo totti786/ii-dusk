@@ -58,7 +58,9 @@ class ManifestShape(unittest.TestCase):
             if f["tier"] == "required":
                 for pkg in f["packages"]:
                     self.assertFalse(pkg.get("aur"), f["id"])
-                    self.assertTrue(deps.package_name(pkg, "fedora"), f["id"])
+                    # Fedora is best effort: a package it lacks is reported as
+                    # unavailable there, never installed from somewhere else.
+                    self.assertTrue(deps.package_name(pkg, "arch"), f["id"])
 
 
 class Evaluate(unittest.TestCase):

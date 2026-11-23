@@ -127,3 +127,11 @@ library from the environment.
 1. **Google Sans Flex** is not installed and not bundled; bundle it in `assets/fonts`.
 2. Delete `~/.dots-backup/venvs-20261121` once you are happy.
 3. Run `scripts/deps/check.sh` after every upstream merge.
+
+## 4. Where the lists live
+
+Since the old `sdata/` installer tree was removed (2026-11-23), `defaults/dependencies.json` is the only package list the
+fork owns. `required` features (shell tools, desktop tools, media tools, wallpaper colours, audio, session, Qt modules)
+are offered by `install` and `update`; `optional` ones (fonts, visualizer, OCR, phone, ...) only through `deps`.
+`install` still takes the base system from end-4's own `./setup install`, which brings its own broader package set.
+The audit that decided what to keep is `SDATA-DEPS-AUDIT.md` in the repository root.

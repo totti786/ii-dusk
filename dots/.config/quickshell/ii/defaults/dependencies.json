@@ -72,6 +72,98 @@
         },
 
         {
+            "id": "shell-tools",
+            "tier": "required",
+            "label": "Shell tools",
+            "description": "Scripts across the shell lean on jq, rg, bc, curl and the XDG user directories.",
+            "packages": [
+                { "name": "jq", "bin": "jq" },
+                { "name": "ripgrep", "bin": "rg" },
+                { "name": "bc", "bin": "bc" },
+                { "name": "curl", "bin": "curl" },
+                { "name": "xdg-user-dirs", "bin": "xdg-user-dir" }
+            ]
+        },
+        {
+            "id": "desktop-tools",
+            "tier": "required",
+            "label": "Desktop tools",
+            "description": "Clipboard history, notifications, screenshots, key injection, brightness, media keys and battery state.",
+            "packages": [
+                { "name": "wl-clipboard", "bin": "wl-copy" },
+                { "name": "cliphist", "fedora": null, "bin": "cliphist" },
+                { "name": "libnotify", "bin": "notify-send" },
+                { "name": "grim", "bin": "grim" },
+                { "name": "slurp", "bin": "slurp" },
+                { "name": "wtype", "bin": "wtype" },
+                { "name": "ydotool", "bin": "ydotool" },
+                { "name": "brightnessctl", "bin": "brightnessctl" },
+                { "name": "playerctl", "bin": "playerctl" },
+                { "name": "upower", "bin": "upower" }
+            ]
+        },
+        {
+            "id": "media-tools",
+            "tier": "required",
+            "label": "Media tools",
+            "description": "Image conversion, downloads and video work.",
+            "packages": [
+                { "name": "imagemagick", "fedora": "ImageMagick", "bin": "magick" },
+                { "name": "yt-dlp", "bin": "yt-dlp" },
+                { "name": "ffmpeg", "fedora": "ffmpeg-free", "bin": "ffmpeg" }
+            ]
+        },
+        {
+            "id": "theming",
+            "tier": "required",
+            "label": "Wallpaper colours",
+            "description": "matugen turns the wallpaper into the shell's colours; uv builds the shell's Python environment.",
+            "packages": [
+                { "name": "matugen", "fedora": null, "bin": "matugen" },
+                { "name": "uv", "bin": "uv" }
+            ]
+        },
+        {
+            "id": "audio",
+            "tier": "required",
+            "label": "Audio",
+            "description": "wpctl and pactl drive volume, devices and the mixer.",
+            "packages": [
+                { "name": "wireplumber", "bin": "wpctl" },
+                { "name": "libpulse", "fedora": "pulseaudio-utils", "bin": "pactl" }
+            ]
+        },
+        {
+            "id": "session",
+            "tier": "required",
+            "label": "Session",
+            "description": "Idle, lock, colour picker, portals, the secrets keyring and NetworkManager.",
+            "packages": [
+                { "name": "hypridle", "fedora": null, "bin": "hypridle" },
+                { "name": "hyprlock", "fedora": null, "bin": "hyprlock" },
+                { "name": "hyprpicker", "fedora": null, "bin": "hyprpicker" },
+                { "name": "xdg-desktop-portal" },
+                { "name": "xdg-desktop-portal-gtk" },
+                { "name": "xdg-desktop-portal-hyprland", "fedora": null },
+                { "name": "gnome-keyring", "bin": "gnome-keyring-daemon" },
+                { "name": "networkmanager", "fedora": "NetworkManager", "bin": "nmcli" }
+            ]
+        },
+        {
+            "id": "qt-modules",
+            "tier": "required",
+            "label": "Qt modules",
+            "description": "QML modules the shell imports: Qt5Compat effects, multimedia, positioning, image formats, Wayland and Kirigami.",
+            "packages": [
+                { "name": "qt6-5compat", "fedora": null },
+                { "name": "qt6-multimedia", "fedora": null },
+                { "name": "qt6-positioning", "fedora": null },
+                { "name": "qt6-imageformats", "fedora": null },
+                { "name": "qt6-wayland", "fedora": null },
+                { "name": "kirigami", "fedora": null }
+            ]
+        },
+        {
             "id": "calendar",
             "tier": "optional",
             "label": "Calendar sync",
@@ -112,6 +204,7 @@
                 { "arch": "droidcam", "aur": true, "fedora": null, "bin": "droidcam-cli" },
                 { "arch": "v4l2loopback-dkms", "fedora": null },
                 { "arch": "v4l2loopback-utils", "fedora": null, "bin": "v4l2loopback-ctl" },
+                { "name": "v4l-utils", "bin": "v4l2-ctl" },
                 { "name": "mpv", "bin": "mpv" }
             ]
         },
@@ -346,6 +439,146 @@
             "label": "Books library",
             "description": "The Books app opens your PDFs and EPUBs in zathura or sioyek and makes covers with poppler and the GNOME thumbnailers.",
             "packages": [{ "name": "zathura", "bin": "zathura" }, { "name": "poppler", "bin": "pdfinfo" }, { "name": "papers", "bin": "papers-thumbnailer" }, { "name": "gnome-epub-thumbnailer", "bin": "gnome-epub-thumbnailer" }]
+        },
+        {
+            "id": "fonts",
+            "tier": "optional",
+            "label": "Shell fonts",
+            "description": "Readex Pro, Space Grotesk, JetBrains Mono Nerd and Material Symbols, the fonts the shell draws with.",
+            "packages": [
+                { "name": "ttf-readex-pro", "aur": true, "fedora": null },
+                { "name": "otf-space-grotesk", "aur": true, "fedora": null },
+                { "name": "ttf-jetbrains-mono-nerd", "fedora": null },
+                { "name": "ttf-material-symbols-variable-git", "aur": true, "fedora": null }
+            ]
+        },
+        {
+            "id": "audio-visualizer",
+            "tier": "optional",
+            "label": "Audio visualizer",
+            "description": "cava feeds the bar and widget visualizers.",
+            "packages": [
+                { "name": "cava", "bin": "cava" }
+            ]
+        },
+        {
+            "id": "external-monitors",
+            "tier": "optional",
+            "label": "External monitor brightness",
+            "description": "ddcutil sets brightness on monitors over DDC.",
+            "packages": [
+                { "name": "ddcutil", "bin": "ddcutil" }
+            ]
+        },
+        {
+            "id": "night-light",
+            "tier": "optional",
+            "label": "Night light",
+            "description": "hyprsunset warms the screen at night.",
+            "packages": [
+                { "name": "hyprsunset", "fedora": null, "bin": "hyprsunset" }
+            ]
+        },
+        {
+            "id": "location",
+            "tier": "optional",
+            "label": "Location for weather",
+            "description": "The geoclue agent lets weather find the city without asking.",
+            "packages": [
+                { "name": "geoclue" }
+            ]
+        },
+        {
+            "id": "screen-ocr",
+            "tier": "optional",
+            "label": "Screenshot tools",
+            "description": "OCR with tesseract and annotation with swappy.",
+            "packages": [
+                { "name": "tesseract", "bin": "tesseract" },
+                { "name": "tesseract-data-eng", "fedora": "tesseract-langpack-eng" },
+                { "name": "swappy", "bin": "swappy" }
+            ]
+        },
+        {
+            "id": "song-id",
+            "tier": "optional",
+            "label": "Song recognition",
+            "description": "songrec names the song that is playing.",
+            "packages": [
+                { "name": "songrec", "fedora": null, "bin": "songrec" }
+            ]
+        },
+        {
+            "id": "translate",
+            "tier": "optional",
+            "label": "Translate",
+            "description": "translate-shell backs the launcher's translate results.",
+            "packages": [
+                { "name": "translate-shell", "bin": "trans" }
+            ]
+        },
+        {
+            "id": "calculator-qalc",
+            "tier": "optional",
+            "label": "Calculator results",
+            "description": "qalc answers unit and currency maths in the launcher.",
+            "packages": [
+                { "name": "libqalculate", "fedora": "libqalculate", "bin": "qalc" }
+            ]
+        },
+        {
+            "id": "emoji-picker",
+            "tier": "optional",
+            "label": "Emoji picker",
+            "description": "The emoji bind opens fuzzel.",
+            "packages": [
+                { "name": "fuzzel", "bin": "fuzzel" }
+            ]
+        },
+        {
+            "id": "buds",
+            "tier": "optional",
+            "label": "Earbuds",
+            "description": "BudsLink talks to earbuds through gjs.",
+            "packages": [
+                { "name": "gjs", "bin": "gjs" }
+            ]
+        },
+        {
+            "id": "code-highlight",
+            "tier": "optional",
+            "label": "Code highlighting",
+            "description": "Syntax colours in AI chat code blocks.",
+            "packages": [
+                { "name": "syntax-highlighting", "fedora": null }
+            ]
+        },
+        {
+            "id": "avif",
+            "tier": "optional",
+            "label": "AVIF images",
+            "description": "Qt cannot decode AVIF wallpapers and covers without this plugin.",
+            "packages": [
+                { "name": "qt6-avif-image-plugin", "aur": true, "fedora": null }
+            ]
+        },
+        {
+            "id": "file-dialogs",
+            "tier": "optional",
+            "label": "KDE file dialogs",
+            "description": "Import dialogs use kdialog when it is installed.",
+            "packages": [
+                { "name": "kdialog", "bin": "kdialog" }
+            ]
+        },
+        {
+            "id": "downloads",
+            "tier": "optional",
+            "label": "Downloader",
+            "description": "aria2 speeds up the Downloads app.",
+            "packages": [
+                { "name": "aria2", "bin": "aria2c" }
+            ]
         }
     ]
 }
