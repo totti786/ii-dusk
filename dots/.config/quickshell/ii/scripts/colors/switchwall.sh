@@ -789,13 +789,14 @@ recolor_icons_in_background() {
 
 pre_process() {
     local mode_flag="$1"
-    # Set GNOME color-scheme if mode_flag is dark or light, and the matching adw-gtk3 variant.
+    ensure_gtk_theme
+    # Set GNOME color-scheme if mode_flag is dark or light, and the matching GTK theme.
     if [[ "$mode_flag" == "dark" ]]; then
         gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
+        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-matugen-dark'
     elif [[ "$mode_flag" == "light" ]]; then
         gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3'
+        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-matugen'
     fi
 
     if [ ! -d "$CACHE_DIR"/user/generated ]; then
@@ -1066,20 +1067,52 @@ load_theme() {
     cursor_theme=Fluent-dark-cursors font_name="Noto Sans 9"
     # shellcheck source=/dev/null
     [[ -f "$THEME_FILE" ]] && source "$THEME_FILE"
-    # The GTK theme follows the colour scheme (adw-gtk3 draws its colours from the
-    # gtk.css matugen writes), so a gtk_theme in ~/.theme no longer applies.
+    # The GTK theme follows the colour scheme (see ensure_gtk_theme), so a gtk_theme in
+    # ~/.theme no longer applies.
     gtk_theme=$(gtk_theme_for_scheme)
     return 0
 }
 
-# adw-gtk3-dark for a dark colour scheme, adw-gtk3 otherwise.
+# The GTK3 theme follows the colour scheme: adw-gtk3-matugen-dark or adw-gtk3-matugen.
 gtk_theme_for_scheme() {
     local scheme
     scheme=$(gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null | tr -d "'")
     if [[ "$scheme" == "prefer-light" ]]; then
-        printf 'adw-gtk3\n'
+        printf 'adw-gtk3-matugen\n'
     else
-        printf 'adw-gtk3-dark\n'
+        printf 'adw-gtk3-matugen-dark\n'
+    fi
+}
+
+# GTK3 reads ~/.config/gtk-3.0/gtk.css once, when an app starts, and never again, so colours
+# kept there cannot reach a running app. A theme is reloaded when the theme name changes, and
+# so is what it imports. These two themes are adw-gtk3 / adw-gtk3-dark plus matugen's colours
+# (colors.css, written by the gtk3_theme template), and reload_gtk flips between them.
+ensure_gtk_theme() {
+    local data="${XDG_DATA_HOME:-$HOME/.local/share}/themes" variant system
+    local colors="$data/adw-gtk3-matugen/gtk-3.0/colors.css"
+    [[ -d /usr/share/themes/adw-gtk3/gtk-3.0 ]] || return 0
+    for variant in adw-gtk3-matugen adw-gtk3-matugen-dark; do
+        system=adw-gtk3
+        [[ "$variant" == *-dark ]] && system=adw-gtk3-dark
+        mkdir -p "$data/$variant/gtk-3.0"
+        if [[ ! -f "$data/$variant/index.theme" ]]; then
+            printf '[Desktop Entry]\nType=X-GNOME-Metatheme\nName=%s\nComment=%s with matugen colours\n\n[X-GNOME-Metatheme]\nGtkTheme=%s\n' \
+                "$variant" "$system" "$variant" > "$data/$variant/index.theme"
+        fi
+        local css
+        css=$(printf '@import url("file:///usr/share/themes/%s/gtk-3.0/gtk.css");\n@import url("file://%s");\n' "$system" "$colors")
+        if [[ "$(cat "$data/$variant/gtk-3.0/gtk.css" 2>/dev/null)" != "$css" ]]; then
+            printf '%s\n' "$css" > "$data/$variant/gtk-3.0/gtk.css"
+        fi
+        [[ -e "$data/$variant/gtk-3.0/assets" ]] || ln -s "/usr/share/themes/$system/gtk-3.0/assets" "$data/$variant/gtk-3.0/assets" 2>/dev/null
+    done
+    [[ -f "$colors" ]] || : > "$colors"
+    # Colours left in the user file would load after the theme and win over it, frozen at the
+    # palette of the day an app started.
+    local user="${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0/gtk.css"
+    if grep -q "generated with Matugen" "$user" 2>/dev/null; then
+        printf '/* GTK3 colours live in the adw-gtk3-matugen themes, see switchwall.sh. */\n' > "$user"
     fi
 }
 
@@ -1112,6 +1145,7 @@ reload_all() {
 
 # At login. The shell restores its own wallpaper, so only the GTK and cursor settings are set.
 restore() {
+    ensure_gtk_theme
     load_theme
     if have gsettings; then
         # Themed icons (recolor_icons.py) live in DynamicTheme. Set the pack back to

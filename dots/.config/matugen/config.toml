@@ -32,10 +32,11 @@ output_path = '~/.local/state/quickshell/user/generated/wallpaper/path.txt'
 input_path = '~/.config/matugen/templates/gtk-4.0/gtk.css'
 output_path = '~/.config/gtk-4.0/gtk.css'
 
-# adw-gtk3 reads its colours from this file, the GTK3 twin of the gtk-4.0 one above.
-[templates.gtk3]
+# The GTK3 colours, inside the adw-gtk3-matugen themes that switchwall.sh creates. A theme is
+# reloaded by running apps when the theme name flips; ~/.config/gtk-3.0/gtk.css never is.
+[templates.gtk3_theme]
 input_path = '~/.config/matugen/templates/gtk-3.0/gtk.css'
-output_path = '~/.config/gtk-3.0/gtk.css'
+output_path = '~/.local/share/themes/adw-gtk3-matugen/gtk-3.0/colors.css'
 
 # Last on purpose: its post-hook flips the GTK theme so running apps reload, which
 # only helps once every other template (the GTK css above all) has been written.

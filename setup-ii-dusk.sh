@@ -2945,14 +2945,16 @@ install_hypr_config() {
 #   - keys missing from [config.custom_colors] are added to the user's block
 #     (the KDE template needs kde_positive and kde_neutral there)
 #   - [templates.kde_colors] is dropped when the fork's [templates.kde] is
-#     present: both write KDE colours and would overwrite each other
+#     present: both write KDE colours and would overwrite each other. Likewise
+#     [templates.gtk3], which writes ~/.config/gtk-3.0/gtk.css (read once per
+#     app, so colours there never reach a running one), for [templates.gtk3_theme]
 # Prints what it did, one line each: add|key|drop <name>.
 matugen_merge_config() {
     python3 - "$1" "$2" <<'PY'
 import re, sys
 
 HEADER = re.compile(r"\s*\[([^\]]+)\]\s*$")
-SUPERSEDED = {"templates.kde": "templates.kde_colors"}
+SUPERSEDED = {"templates.kde": "templates.kde_colors", "templates.gtk3_theme": "templates.gtk3"}
 
 def blocks(text):
     out, pending, cur = [], [], None
