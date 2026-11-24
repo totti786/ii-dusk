@@ -11,6 +11,7 @@ import qs.services.ai
 import qs.modules.ii.aiCompanion
 import qs.modules.common
 import qs.modules.common.functions
+import "../../../common/functions/WorkspaceNumerals.js" as Numerals
 import qs.modules.common.widgets
 import qs.modules.ii.bar.widgets.media
 import qs.modules.ii.bar.widgets.indicators
@@ -470,7 +471,7 @@ Item {
 
                 StyledText {
                     anchors.centerIn: parent
-                    text: String(parent.parent.numberMap[parent.parent.workspaceId - 1] || parent.parent.workspaceId)
+                    text: Numerals.label(parent.parent.workspaceId, parent.parent.numberMap)
                     font.pixelSize: Math.max(10, Math.round(parent.height * 0.5))
                     font.weight: Font.Bold
                     font.family: Appearance.font.family.numbers
