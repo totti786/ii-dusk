@@ -34,7 +34,7 @@ Item {
                 HelperLinkBox {
                     Layout.fillWidth: true
                     title: Translation.tr("Codex, Claude Code & OpenCode")
-                    text: Translation.tr("Use your existing agent sign-ins. Select an agent in the chat model picker; no API keys are needed in QuickShell.")
+                    text: Translation.tr("Use your existing agent sign-ins, or add an API key for a provider. Choose the model in the chat model picker.")
                     isFirst: true
                 }
 
@@ -133,7 +133,7 @@ Item {
         ContentSection {
             icon: "tune"
             title: Translation.tr("Models & execution")
-            tooltip: Translation.tr("Signed-in agents, shared tools and automation.")
+            tooltip: Translation.tr("Models, keys, shared tools and automation.")
 
             ColumnLayout {
                 Layout.fillWidth: true
@@ -151,8 +151,8 @@ Item {
 
                 ConfigSubpageRow {
                     buttonIcon: "key"
-                    title: Translation.tr("Agents & Sign-in")
-                    description: Translation.tr("Check installed agents and their account sign-ins")
+                    title: Translation.tr("Models & Keys")
+                    description: Translation.tr("Check agent sign-ins and manage the API keys for each provider")
                     onClicked: aiRoot.activeSubPage = Qt.resolvedUrl("ai/AiModelsKeysConfig.qml")
                 }
 

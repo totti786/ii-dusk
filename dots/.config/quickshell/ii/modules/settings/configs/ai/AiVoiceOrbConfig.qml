@@ -9,10 +9,8 @@ import qs.services
  * Which model does what when you talk to the orb. Three stages, tried in order:
  *
  *   1. Instant commands   pattern rules, no model ("volume 30", "next song")
- *   2. Quick answers      a warm Claude Code session: chat, questions about the desktop context
+ *   2. Quick answers      one model for chat and short questions; a Claude model runs as a warm session
  *   3. Desktop tasks      anything that needs tools, the browser, settings or files
- *
- * Only stage 3 can use any model; stage 2 is a resident `claude -p` process, so it is Claude only.
  */
 Item {
     id: root
@@ -23,10 +21,14 @@ Item {
     readonly property var catalog: Ai.catalog
     readonly property string sidebarModelName: root.catalog.models[Ai.currentModelId]?.name ?? Ai.currentModelId
 
-    // Stage 2: Claude aliases only, as the Claude Code catalog lists them.
+    // Stage 2: any model. A Claude model is stored as its alias (the warm session takes it), any other as its catalog id.
     readonly property var quickOptions: {
-        const models = root.catalog.providers.claude?.models ?? [];
-        const options = models.map(model => ({displayName: model.title, value: model.value}));
+        const options = [];
+        for (const providerId of root.catalog.providerIds) {
+            const provider = root.catalog.providers[providerId];
+            for (const model of provider.models)
+                options.push({displayName: provider.name + " \u00b7 " + model.title, value: providerId === "claude" ? model.value : model.id});
+        }
         const current = String(Config.options.ai.voice.fastModel);
         if (!options.some(item => item.value === current)) options.unshift({displayName: current, value: current});
         return options;
@@ -73,6 +75,7 @@ Item {
     readonly property var actionVerbs: ["media", "volume", "brightness", "theme", "open", "timer", "alarm", "remind", "task", "workspace", "toggle", "power", "capture", "panel", "window"]
     readonly property var rulesOff: Array.from(Config.options.ai.voice.rulesOff ?? [])
     readonly property var customRules: Array.from(Config.options.ai.voice.customRules ?? [])
+    readonly property var learnedRules: Array.from(Config.options.ai.voice.learnedRules ?? [])
     property string customError: ""
     property string tryResult: ""
 
@@ -92,6 +95,18 @@ Item {
         Config.options.ai.voice.customRules = root.customRules.concat([{phrase: String(phrase).trim(), do: String(action).trim(), say: ""}]);
         return true;
     }
+    function forgetLearned(index) {
+        const next = root.learnedRules.slice();
+        next.splice(index, 1);
+        Config.options.ai.voice.learnedRules = next;
+    }
+    /** Moves a learned phrase to the user's own commands, which are tried first and can override a built-in. */
+    function keepLearned(index) {
+        const rule = root.learnedRules[index];
+        if (!rule) return;
+        Config.options.ai.voice.customRules = root.customRules.concat([{phrase: rule.phrase, do: rule.do, say: rule.say ?? ""}]);
+        root.forgetLearned(index);
+    }
     function removeCustom(index) {
         const next = root.customRules.slice();
         next.splice(index, 1);
@@ -100,7 +115,7 @@ Item {
     function tryPhrase(text) {
         if (String(text).trim().length === 0) { root.tryResult = ""; return; }
         tryProcess.command = ["python3", Directories.scriptPath + "/ai/voice_rules.py", String(text),
-            root.rulesOff.join(","), JSON.stringify(root.customRules)];
+            root.rulesOff.join(","), JSON.stringify(root.customRules), JSON.stringify(root.learnedRules)];
         tryProcess.running = true;
     }
     Process {
@@ -418,6 +433,79 @@ Item {
 
             ContentSubsection {
                 Layout.fillWidth: true
+                title: Translation.tr("Learned phrases")
+                icon: "school"
+
+                ConfigSwitch {
+                    Layout.fillWidth: true
+                    buttonIcon: "psychology"
+                    text: Translation.tr("Learn phrases from what the quick model does")
+                    checked: Config.options.ai.voice.learn
+                    onCheckedChanged: Config.options.ai.voice.learn = checked
+                }
+                StyledText {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    color: Appearance.colors.colSubtext
+                    font.pixelSize: Appearance.font.pixelSize.smaller
+                    text: Translation.tr("When a sentence no rule knew becomes the same action twice, it turns into an instant command. Only plain settings are learned, never sentences that depend on context, and never lock, restart or close. Built-in commands always win over these.")
+                }
+                StyledText {
+                    Layout.fillWidth: true
+                    visible: root.learnedRules.length === 0
+                    color: Appearance.colors.colSubtext
+                    text: Translation.tr("Nothing learned yet.")
+                }
+                Repeater {
+                    model: root.learnedRules
+                    delegate: RowLayout {
+                        id: learnedRow
+                        required property var modelData
+                        required property int index
+                        Layout.fillWidth: true
+                        spacing: Appearance.sizes.elevationMargin
+                        StyledText {
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                            color: Appearance.colors.colOnLayer1
+                            text: "\u201c" + learnedRow.modelData.phrase + "\u201d  \u2192  " + learnedRow.modelData.do
+                        }
+                        RippleButton {
+                            implicitWidth: Appearance.sizes.elevationMargin * 4
+                            implicitHeight: implicitWidth
+                            buttonRadius: Appearance.rounding.full
+                            colBackground: Appearance.colors.colSecondaryContainer
+                            colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+                            onClicked: root.keepLearned(learnedRow.index)
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: "bookmark_add"
+                                iconSize: Appearance.font.pixelSize.normal
+                                color: Appearance.colors.colOnSecondaryContainer
+                            }
+                            StyledToolTip { text: Translation.tr("Keep as one of my own commands") }
+                        }
+                        RippleButton {
+                            implicitWidth: Appearance.sizes.elevationMargin * 4
+                            implicitHeight: implicitWidth
+                            buttonRadius: Appearance.rounding.full
+                            colBackground: Appearance.colors.colSecondaryContainer
+                            colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+                            onClicked: root.forgetLearned(learnedRow.index)
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: "close"
+                                iconSize: Appearance.font.pixelSize.normal
+                                color: Appearance.colors.colOnSecondaryContainer
+                            }
+                            StyledToolTip { text: Translation.tr("Forget this phrase") }
+                        }
+                    }
+                }
+            }
+
+            ContentSubsection {
+                Layout.fillWidth: true
                 title: Translation.tr("Try a sentence")
                 icon: "science"
 
@@ -487,8 +575,7 @@ Item {
             }
             ConfigSwitch {
                 buttonIcon: "speed"
-                enabled: Ai.companionVoice.claudeState === "ready" || Ai.companionVoice.claudeState === "checking"
-                text: Translation.tr("Use a warm Claude session for chat and simple questions")
+                text: Translation.tr("Answer chat and simple questions with a quick model")
                 checked: Config.options.ai.voice.fastPath
                 onCheckedChanged: Config.options.ai.voice.fastPath = checked
             }
@@ -505,7 +592,9 @@ Item {
                 wrapMode: Text.WordWrap
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
-                text: Translation.tr("Claude models only: this stage is a resident Claude Code process. Haiku answers in about a second. It also sees what is playing, the focused window, battery, timers and tasks, and can run the instant actions itself. If it is off, everything goes to the desktop-tasks model.")
+                text: Ai.companionVoice.quickIsClaude
+                    ? Translation.tr("A Claude model runs as a warm session and answers in about a second. It also sees what is playing, the focused window, battery, timers and tasks, and can run the instant actions itself. If Claude Code is missing or signed out, the desktop-tasks model answers instead.")
+                    : Translation.tr("Plain questions go to this model with a short-answer prompt, usually 2 to 5 s. Anything that sounds like desktop work, and anything it cannot answer, goes to the desktop-tasks model.")
             }
             ConfigSwitch {
                 buttonIcon: "screenshot_monitor"
@@ -636,6 +725,116 @@ Item {
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 text: Translation.tr("A turn ends after this much quiet; a short phrase gets a little longer and a sentence that looks finished a little less. The voice model hears speech instead of loudness, so a fan or keyboard no longer holds the turn open. English only uses the English builds of the speech models, always answers in English and never sends speech to the cloud voice; turn it off to detect the spoken language. Speech-to-text runs on this machine; model and language changes apply from the next spoken turn.")
+            }
+        }
+
+        ContentSection {
+            id: engines
+            icon: "settings_voice"
+            title: Translation.tr("Speech engines")
+            Component.onCompleted: Ai.voiceService.recheckSetup()
+
+            readonly property var setup: Ai.voiceService.setup
+            readonly property var downloading: setup.downloading ?? ({})
+            function percent(kind) {
+                const d = downloading[kind];
+                return d ? Math.min(99, Math.round(d.bytes * 100 / Math.max(1, d.total))) : -1;
+            }
+
+            StyledText {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                text: Translation.tr("What the orb needs to hear you and answer aloud. It is using %1 to listen. Anything missing can be fetched here.")
+                    .arg(Ai.voiceService.sttEngine === "hex" ? Translation.tr("Hex (the dictation engine)") : Translation.tr("Whisper"))
+            }
+            StyledComboBox {
+                buttonIcon: "hearing"
+                textRole: "displayName"
+                readonly property var options: [
+                    {displayName: Translation.tr("Follow dictation (Hex when it is the dictation engine)"), value: "auto"},
+                    {displayName: Translation.tr("Always Hex"), value: "hex"},
+                    {displayName: Translation.tr("Always Whisper"), value: "whisper"}
+                ]
+                model: options
+                currentIndex: Math.max(0, options.findIndex(item => item.value === String(Config.options.ai.voice.sttEngine ?? "auto")))
+                onActivated: index => Config.options.ai.voice.sttEngine = options[index].value
+            }
+
+            // Hex
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                MaterialSymbol {
+                    text: engines.setup.hexTranscribe ? "check_circle" : "warning"
+                    iconSize: 20
+                    color: engines.setup.hexTranscribe ? Appearance.colors.colPrimary : Appearance.colors.colError
+                }
+                StyledText {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    text: !engines.setup.hex ? Translation.tr("Hex is not installed. It is the fastest and most accurate option here (install the hex-bin package, then switch dictation to Hex).")
+                        : engines.setup.hexTranscribe ? Translation.tr("Hex is ready: the orb reads your speech with the same model as the dictation keys.")
+                        : Translation.tr("Hex is installed, but its \u201cTranscribe files\u201d lab is off, so the orb cannot use it yet.")
+                }
+                RippleButton {
+                    visible: engines.setup.hex === true && engines.setup.hexTranscribe !== true
+                    buttonText: Translation.tr("Turn on")
+                    onClicked: Ai.voiceService.enableHexTranscribe()
+                }
+            }
+            // Whisper
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                readonly property int pct: engines.percent("whisper")
+                MaterialSymbol {
+                    text: engines.setup.whisperEnglish ? "check_circle" : "warning"
+                    iconSize: 20
+                    color: engines.setup.whisperEnglish ? Appearance.colors.colPrimary : Appearance.colors.colError
+                }
+                StyledText {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    text: parent.pct >= 0 ? Translation.tr("Downloading the Whisper English model\u2026 %1%").arg(parent.pct)
+                        : engines.setup.whisperEnglish ? Translation.tr("Whisper is ready (%1).").arg((engines.setup.whisperModels ?? []).map(n => n.replace("ggml-", "").replace(".bin", "")).join(", "))
+                        : (engines.setup.whisperModels ?? []).length > 0 ? Translation.tr("Whisper has only the multilingual model (%1); the English model is faster and more accurate.").arg((engines.setup.whisperModels ?? []).map(n => n.replace("ggml-", "").replace(".bin", "")).join(", "))
+                        : Translation.tr("No Whisper model is installed, so without Hex the orb cannot hear you.")
+                }
+                RippleButton {
+                    visible: engines.setup.whisperEnglish !== true && parent.pct < 0
+                    buttonText: Translation.tr("Download (148 MB)")
+                    onClicked: Ai.voiceService.downloadSpeech("whisper")
+                }
+            }
+            // Kokoro
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                readonly property int pct: engines.percent("kokoro")
+                MaterialSymbol {
+                    text: engines.setup.kokoro ? "check_circle" : "warning"
+                    iconSize: 20
+                    color: engines.setup.kokoro ? Appearance.colors.colPrimary : Appearance.colors.colError
+                }
+                StyledText {
+                    Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    text: parent.pct >= 0 ? Translation.tr("Downloading the Kokoro voice\u2026 %1%").arg(parent.pct)
+                        : engines.setup.kokoro ? Translation.tr("The Kokoro voice is installed: replies are spoken on this machine.")
+                        : engines.setup.edgeTts && Ai.onlineAllowed ? Translation.tr("The Kokoro voice is not installed. Replies use the Edge cloud voice meanwhile, which sends the reply text to Microsoft.")
+                        : Translation.tr("The Kokoro voice is not installed, so replies are not spoken.")
+                }
+                RippleButton {
+                    visible: engines.setup.kokoro !== true && parent.pct < 0
+                    buttonText: Translation.tr("Download (354 MB)")
+                    onClicked: Ai.voiceService.downloadSpeech("kokoro")
+                }
+            }
+            RippleButton {
+                buttonText: Translation.tr("Check again")
+                onClicked: { Ai.voiceService.recheckSetup(); Ai.voiceService.redetect(); }
             }
         }
     }

@@ -236,7 +236,7 @@ ContentPage {
         StyledText {
             Layout.fillWidth: true
             text: DictationService.useHex
-                ? Translation.tr("Hex transcribes while you are still talking with a small English model on the graphics card, so the text lands about a second after you let go. English only. The Whisper settings below do not apply to it.")
+                ? Translation.tr("Hex transcribes while you are still talking with a small English model, so the text lands about a second after you let go. English only. The Voxtype model, language and output settings are hidden while it is selected.")
                 : DictationService.engine === "hex"
                     ? Translation.tr("Hex was not found (expected at ~/hex), so Voxtype is being used.")
                     : Translation.tr("Voxtype runs OpenAI's Whisper locally. It knows many languages and can translate to English, but it waits until you stop before transcribing, which takes longer on this machine.")
@@ -246,7 +246,43 @@ ContentPage {
         }
     }
 
-    // ── Engine ───────────────────────────────────────────────────────────────
+    // ── Hex: on-demand, idle-quit, one engine at a time ─────────────────────
+    ContentSection {
+        visible: DictationService.useHex
+        icon: "bolt"
+        title: Translation.tr("Hex")
+
+        ConfigSpinBox {
+            icon: "timer"
+            text: Translation.tr("Quit Hex after (minutes idle, 0 keeps it running)")
+            value: Config.options.dictation.hexIdleMinutes
+            from: 0
+            to: 120
+            stepSize: 5
+            onValueChanged: {
+                Config.options.dictation.hexIdleMinutes = value;
+            }
+            StyledToolTip {
+                text: Translation.tr("Hex is started on demand. After this quiet spell the shell quits it, so nothing stays resident between dictations. The next key press starts it again, which takes a few seconds while its model loads.")
+            }
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            text: Translation.tr("Only one dictation engine runs at a time: with Voxtype selected, Hex is quit, and Voxtype's daemon stops when Hex is selected. The microphone is released between dictations.")
+            wrapMode: Text.Wrap
+            font.pixelSize: Appearance.font.pixelSize.smaller
+            color: Appearance.colors.colSubtext
+        }
+
+        RippleButtonWithIcon {
+            Layout.fillWidth: true
+            materialIcon: "open_in_new"
+            mainText: Translation.tr("Open Hex settings")
+            onClicked: Quickshell.execDetached([DictationService.hexBin, "app"])
+        }
+    }
+
     ContentSection {
         visible: page.installed && !DictationService.useHex
         icon: "graphic_eq"
@@ -403,7 +439,7 @@ ContentPage {
 
     // ── Speed ────────────────────────────────────────────────────────────────
     ContentSection {
-        visible: page.installed
+        visible: page.installed && !DictationService.useHex
         icon: "speed"
         title: Translation.tr("Speed")
 
@@ -473,7 +509,7 @@ ContentPage {
 
     // ── Language ─────────────────────────────────────────────────────────────
     ContentSection {
-        visible: page.installed
+        visible: page.installed && !DictationService.useHex
         icon: "translate"
         title: Translation.tr("Language")
 
@@ -572,11 +608,12 @@ ContentPage {
 
     // ── Behaviour ────────────────────────────────────────────────────────────
     ContentSection {
-        visible: page.installed
+        visible: page.installed || DictationService.useHex
         icon: "settings_voice"
         title: Translation.tr("While dictating")
 
         ContentSubsection {
+            visible: !DictationService.useHex
             title: Translation.tr("Where the text goes")
             icon: "keyboard"
             Layout.fillWidth: true
@@ -643,6 +680,7 @@ ContentPage {
             from: 0
             to: 50
             stepSize: 1
+            visible: !DictationService.useHex
             enabled: Config.options.dictation.outputMode !== "clipboard"
             onValueChanged: {
                 Config.options.dictation.typeDelayMs = value;
@@ -685,13 +723,14 @@ ContentPage {
 
     // ── Where it shows ───────────────────────────────────────────────────────
     ContentSection {
-        visible: page.installed
+        visible: page.installed || DictationService.useHex
         icon: "visibility"
         title: Translation.tr("Showing it")
 
         ConfigSwitch {
             buttonIcon: "notifications"
             text: Translation.tr("Show the transcribed text in a notification")
+            visible: !DictationService.useHex
             checked: Config.options.dictation.notifyOnTranscription
             onCheckedChanged: {
                 Config.options.dictation.notifyOnTranscription = checked;

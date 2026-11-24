@@ -39,7 +39,7 @@ Item {
             }
 
             StyledText {
-                text: Translation.tr("Agents & Sign-in")
+                text: Translation.tr("Models & Keys")
                 font.pixelSize: Appearance.font.pixelSize.large
                 font.family: Appearance.font.family.title
                 color: Appearance.colors.colOnLayer0
@@ -47,8 +47,8 @@ Item {
         }
 
         ContentSection {
-            icon: "account_circle"
-            title: Translation.tr("Signed-in agents")
+            icon: "key"
+            title: Translation.tr("Accounts and API keys")
 
             AiApiKeyManager {
                 Layout.fillWidth: true
