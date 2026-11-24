@@ -2119,6 +2119,7 @@ Singleton {
             "phone.webcam.connection": ["wifi", "usb"],
             "phone.scrcpy.wireless.codec": ["auto", "h265", "h264"],
             "appearance.fakeScreenRounding": [0, 1, 2, 3, 4],
+            "appearance.qrStyle": ["pixel", "blob", "classic"],
             "background.zoomOutStyle": [0, 1, 2],
             "background.overviewBackgroundStyle": ["", "gnome", "real-gnome", "soft-focus", "camera-push", "depth", "card-lift", "desaturate", "directional", "material-shape"],
             "background.mediaMode.visualizerMode": [0, 1, 2, 3, 4, 5],
@@ -2925,6 +2926,10 @@ Singleton {
                     // TCP port that survives those restarts, until the phone reboots. Off by default:
                     // it reconfigures the phone's debugging daemon, which is the user's call to make.
                     property bool pinAdbPort: false
+                    // Off when an external keeper (such as adbkeeper) owns the wireless adb link. Two keepers
+                    // fight over it and leave two transports for one phone, and plain `adb` then fails with
+                    // "more than one device". Off, the shell only reads `adb devices`.
+                    property bool manageAdbConnection: true
                     // adbd comes back a few seconds after each restart, but whatever was
                     // mirroring died with it — reopen the same window once the phone answers.
                     property bool autoResume: true
@@ -3724,6 +3729,8 @@ Singleton {
                 property bool scrollFadeMask: false
                 property bool settingsPerformanceMode: true
                 property int settingsUnloadDelay: 0 // Seconds Settings stays loaded after closing; 0 = unload at once, -1 = never
+                property string qrStyle: "pixel" // Allowed: pixel, blob, classic
+                property bool qrDecoration: true
                 property JsonObject appLaunchAnimation: JsonObject {
                     property bool enable: true
                     property string style: "scale" // Allowed: scale, slide
@@ -9010,6 +9017,9 @@ Singleton {
                 // or the control center, a floating card that drops from the bar next to the
                 // dashboard button (header + quick toggles only). Connect mode ignores it.
                 property string dashboardStyle: "sidebar" // "sidebar" | "controlCenter"
+                // Off: the dashboard (sidebar and control center) is never loaded and its
+                // keybinds, IPC and buttons open nothing. Saves its whole RAM.
+                property bool dashboardEnabled: true
                 property JsonObject tabletShade: JsonObject {
                     // Height of the strip at the very top that starts the pull-down. It sits
                     // above the bar on the Overlay layer, so whatever it covers stops being
