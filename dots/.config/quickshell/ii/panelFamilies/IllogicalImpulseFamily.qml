@@ -242,9 +242,6 @@ Scope {
         priority: 1
     }
     PanelUrlLoader {
-        panelUrl: Qt.resolvedUrl("../modules/ii/lock/Lock.qml")
-    }
-    PanelUrlLoader {
         panelUrl: Qt.resolvedUrl("../modules/ii/mediaControls/MediaControls.qml")
     }
     PanelUrlLoader {
@@ -399,6 +396,11 @@ Scope {
     PanelUrlLoader {
         extraCondition: !GlobalStates.connectModeActive || GlobalStates.connectSidebarsSeparate
         panelUrl: Qt.resolvedUrl("../modules/ii/sidebarDashboard/SidebarDashboard.qml")
+    }
+    // The dashboard as a floating card by the bar's dashboard button (Default mode only).
+    PanelUrlLoader {
+        extraCondition: GlobalStates.controlCenterActive
+        panelUrl: Qt.resolvedUrl("../modules/ii/sidebarDashboard/ControlCenter.qml")
     }
     PanelUrlLoader {
         panelUrl: Qt.resolvedUrl("../modules/ii/wallpaperSelector/WallpaperSelector.qml")

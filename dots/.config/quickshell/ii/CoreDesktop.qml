@@ -4,6 +4,7 @@ import qs
 import qs.services
 import qs.modules.common
 import qs.modules.ii.dynamicIsland.core
+import qs.modules.ii.lock
 import "panelFamilies"
 
 // Owns the actual ii wallpaper and bars for the entire engine generation.
@@ -60,6 +61,13 @@ Scope {
 
     BarPopupService {}
 
+    // The lock screen is part of the first paint, not the "remaining panels" stage: with
+    // launchOnStartup it has to cover the session before the bar and island show. It is
+    // family-independent, so it lives here and the families no longer load it.
+    PanelUrlLoader {
+        panelUrl: Qt.resolvedUrl("modules/ii/lock/Lock.qml")
+        priority: 6
+    }
     PanelUrlLoader {
         extraCondition: root.activeFamily && Config.options.background.enable
         panelUrl: Qt.resolvedUrl("modules/ii/background/Background.qml")

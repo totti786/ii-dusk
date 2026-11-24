@@ -100,10 +100,6 @@ Scope {
     }
 
     PanelUrlLoader {
-        panelUrl: Qt.resolvedUrl("../modules/ii/lock/Lock.qml")
-    }
-
-    PanelUrlLoader {
         panelUrl: Qt.resolvedUrl("../modules/ii/sessionScreen/SessionScreen.qml")
     }
 
