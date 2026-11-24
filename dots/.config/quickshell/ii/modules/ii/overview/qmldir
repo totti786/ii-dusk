@@ -43,6 +43,7 @@ SearchWidget 1.0 SearchWidget.qml
 SettingsTogglesPanel 1.0 SettingsTogglesPanel.qml
 SpeedTestPanel 1.0 SpeedTestPanel.qml
 SportsPanel 1.0 SportsPanel.qml
+SymbolsPanel 1.0 SymbolsPanel.qml
 TasksPanel 1.0 TasksPanel.qml
 TimersPanel 1.0 TimersPanel.qml
 ToolsPanel 1.0 ToolsPanel.qml

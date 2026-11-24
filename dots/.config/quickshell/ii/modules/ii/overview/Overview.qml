@@ -200,6 +200,7 @@ Scope {
                         }
                         function evaluateOverviewShouldShow() {
                             return !ScrollOverviewPlugin.hosting
+                                && !GlobalStates.scrollingLayoutActive
                                 && !root.evaluateSearchSurfaceOwned()
                                 && !GlobalStates.searchOnlyMode
                                 && !GlobalStates.searchCenterMode

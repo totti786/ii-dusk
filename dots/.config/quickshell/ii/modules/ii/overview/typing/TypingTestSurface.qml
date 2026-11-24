@@ -457,7 +457,7 @@ Item {
                         font.family: Appearance.font.family.monospace
                         font.pixelSize: root.options.fontSize
                         font.weight: Font.Medium
-                        color: engine.inputText.length > 0 ? Appearance.colors.colOnSurface : Appearance.colors.colSubtext
+                        color: engine.inputText.length > 0 ? Appearance.colors.colOnSurface : viewport.untypedColor
                     }
 
                     ColumnLayout {
@@ -511,6 +511,8 @@ Item {
                 // No fixed floor: a floor taller than what is left pushed the
                 // restart control out of a short Search panel.
                 maxHeight: root.keyboardHeightBudget
+                layoutId: TypingKeyboardLayouts.effectiveLayout(root.options.keyboard.layout,
+                    engine.languagePack?.script ?? "")
                 nextChar: engine.nextExpectedChar.toLowerCase()
                 onRequestInputFocus: root.focusInput()
                 opacity: engine.isRunning && !keyboard.fingerGuide ? 0.85 : 1
