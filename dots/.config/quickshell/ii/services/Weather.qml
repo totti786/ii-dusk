@@ -331,8 +331,20 @@ Singleton {
                 fallbackTimer.restart();
             }
         } else if (root.city !== "") {
-            // If manual city is set and GPS is off, use geocoding
-            fetchCoordinates(root.city);
+            // A manual city is geocoded once; the place is kept until the setting changes.
+            if (!Persistent.ready) {
+                // The cache is not readable yet. Wait for it, but never longer than a few
+                // seconds: a Persistent that cannot load must not leave the weather blank.
+                persistentWait.restart();
+                return;
+            }
+            const hit = root.cachedCoords(root.city);
+            if (hit) {
+                root.applyCoords(hit.lat, hit.lon, hit.name);
+                fetchWeather(hit.lat, hit.lon, hit.name);
+            } else {
+                fetchCoordinates(root.city);
+            }
         } else {
             // Fallback to IP location
             fetchIpLocation();
@@ -451,6 +463,55 @@ Singleton {
         xhr.send();
     }
 
+    function _cityKey(name) { return String(name).trim().toLowerCase(); }
+
+    // The saved place for this city setting, or null (other city, or never resolved).
+    function cachedCoords(cityName) {
+        try {
+            const c = JSON.parse(Persistent.states.weather.coordsJson || "{}");
+            if (c.city === root._cityKey(cityName) && isFinite(c.lat) && isFinite(c.lon)
+                    && !(c.lat === 0 && c.lon === 0))
+                return { lat: Number(c.lat), lon: Number(c.lon), name: c.name || cityName };
+        } catch (e) {
+            console.warn("[WeatherService] Ignoring unreadable coordinates cache: " + e);
+        }
+        return null;
+    }
+
+    function saveCoords(cityName, lat, lon, name) {
+        if (!Persistent.ready) return;
+        Persistent.states.weather.coordsJson = JSON.stringify({
+            city: root._cityKey(cityName), name: name, lat: lat, lon: lon
+        });
+    }
+
+    function applyCoords(lat, lon, name) {
+        root.location.lat = lat;
+        root.location.lon = lon;
+        root.location.long = lon;
+        root.location.city = name;
+        root.location.valid = true;
+    }
+
+    Timer {
+        id: persistentWait
+        interval: 3000
+        repeat: false
+        onTriggered: {
+            console.warn("[WeatherService] Persistent not ready; geocoding without the cache.");
+            root.fetchCoordinates(root.city);
+        }
+    }
+
+    Connections {
+        target: Persistent
+        function onReadyChanged() {
+            if (!Persistent.ready || !persistentWait.running) return;
+            persistentWait.stop();
+            root.getData(true);
+        }
+    }
+
     function fetchCoordinates(cityName) {
         const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`;
         const xhr = new XMLHttpRequest();
@@ -466,6 +527,7 @@ Singleton {
                             root.location.long = loc.longitude;
                             root.location.city = loc.name;
                             root.location.valid = true;
+                            root.saveCoords(cityName, loc.latitude, loc.longitude, loc.name);
                             fetchWeather(loc.latitude, loc.longitude, loc.name);
                         } else {
                             console.error("[WeatherService] Geocoding failed for:", cityName);

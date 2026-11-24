@@ -896,6 +896,11 @@ Singleton {
                 // { "<y-m-d>": glasses } for the last two weeks (the dock card's week).
                 property string historyJson: "{}"
             }
+            property JsonObject weather: JsonObject {
+                // The manual city's geocoded place, so a restart does not look it up again:
+                // { "city": "<setting as typed>", "name": "<resolved>", "lat": 0, "lon": 0 }.
+                property string coordsJson: "{}"
+            }
             property JsonObject prayer: JsonObject {
                 // { "<city>|<country>|<method>|<y>-<m>": [{ d, t, h }] } for the current and next month.
                 property string cacheJson: "{}"
