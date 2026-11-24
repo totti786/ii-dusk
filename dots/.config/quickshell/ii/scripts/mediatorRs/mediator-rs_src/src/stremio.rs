@@ -4,7 +4,7 @@
 use crate::config::Streaming;
 use crate::errors::{describe_http, StreamError};
 use crate::http::{HttpError, Request};
-use crate::{fileio, native_progress, vaplayer, vidsrc};
+use crate::{fileio, native_progress, vidsrc};
 use serde_json::{json, Map, Value};
 use std::net::{SocketAddr, TcpStream};
 use std::path::PathBuf;
@@ -26,13 +26,12 @@ pub struct Endpoints {
     pub cinemeta: String,
     pub server: String,
     pub addons: Option<Vec<String>>, // None: read ~/.config/ii/stremio.json, else Torrentio
-    pub vaplayer: vaplayer::Endpoints,
     pub vidsrc: vidsrc::Endpoints,
 }
 
 impl Default for Endpoints {
     fn default() -> Self {
-        Endpoints { cinemeta: "https://v3-cinemeta.strem.io".into(), server: "http://127.0.0.1:11470".into(), addons: None, vaplayer: Default::default(), vidsrc: Default::default() }
+        Endpoints { cinemeta: "https://v3-cinemeta.strem.io".into(), server: "http://127.0.0.1:11470".into(), addons: None, vidsrc: Default::default() }
     }
 }
 
@@ -429,7 +428,7 @@ pub fn stream_url(ep: &Endpoints, stream: &Value) -> Result<String, StreamError>
 }
 
 /// A direct HLS stream for the episode. Providers are tried in order
-/// (vidsrc, then vaplayer when MEDIATOR_VAPLAYER=1) and the first success wins.
+/// (vidsrc only) and the first success wins.
 pub fn hls_stream(ep: &Endpoints, show_id: &str, episode_id: &str, check: bool) -> Result<Value, StreamError> {
     let (kind, imdb) = split_show(show_id)?;
     let media = if kind == "movie" { "movie" } else { "tv" };
@@ -443,14 +442,6 @@ pub fn hls_stream(ep: &Endpoints, show_id: &str, episode_id: &str, check: bool) 
     match vidsrc::streams(&ep.vidsrc, media, &imdb, season, episode, check) {
         Ok(found) => return Ok(found[0].clone()),
         Err(e) => problems.push(format!("vidsrc: {}", e.0)),
-    }
-    // vaplayer mints a token from a captcha-gated player on every call, never answered here, and
-    // hammering it gets the IP banned: only on request (MEDIATOR_VAPLAYER=1).
-    if std::env::var("MEDIATOR_VAPLAYER").map(|v| v == "1").unwrap_or(false) {
-        match vaplayer::streams(&ep.vaplayer, media, &imdb, season, episode, check) {
-            Ok(found) => return Ok(found[0].clone()),
-            Err(e) => problems.push(format!("vaplayer: {}", e.0)),
-        }
     }
     Err(err(problems.join(" | ")))
 }

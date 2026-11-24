@@ -1,5 +1,5 @@
 //! Direct HLS streams from vidsrc.buzz, looked up by IMDb id.
-//! Unlike the old vaplayer path there is no token mint and no captcha: the embed page
+//! There is no token mint and no captcha: the embed page
 //! carries a `var Q = {...}` config with signed per-server refs (~1h), and each ref is
 //! traded at `/pl/api.php?a=play` for a `/_stream` HLS master. Failing fast matters:
 //! callers fall back to other providers/torrents, so a dead source costs seconds.
