@@ -129,7 +129,12 @@ The warm voice daemon (`local_voice.py`, started by the shell via `scripts/ai/en
 socket. Text is split into short sentences/clauses, with a bounded synthesis
 queue. Playback starts with the first chunk, and subsequent synthesis overlaps
 playback. Disconnecting the client stops audio immediately and cancels remaining
-chunks. The service uses roughly 470–580 MiB resident memory here, (no memory cap now that it is not a systemd unit).
+chunks. It costs roughly 440 MiB of resident and swapped memory, so the daemon
+only lives while it can be heard: the shell starts it as soon as the orb is
+visible and runs `ensure_daemons.sh stop-voice` 90 s after it is hidden (never
+mid-sentence). An explicit speech request while it is stopped — sidebar
+"Read aloud", the settings test, IPC — starts it on demand and waits ~2.5 s for
+the model, so a hidden orb does not pay for it all day.
 
 Configuration: `~/.config/illogical-impulse/companion-voice.json`:
 
@@ -274,7 +279,7 @@ no-fallback run looped "next song" 60 times). The rules now also accept `brightn
 
 **Choosing models (2026-11-18).** Settings > AI Assistant > Models & execution > *Voice orb models* sets what
 handles each stage of a spoken request: instant commands (rules, no model), quick answers (a warm Claude
-Code session; Claude models only, `ai.voice.fastModel`) and desktop tasks (`ai.voice.escalationModel`: empty =
+Code session when `ai.voice.fastModel` is a Claude alias, otherwise a short-answer turn on that catalog model; there is no separate fallback setting) and desktop tasks (`ai.voice.escalationModel`: empty =
 the sidebar's model, otherwise any tool-capable catalog id such as `claude:haiku`,
 `opencode-server:opencode-go/glm-5.3-flash` or a Codex model). It changes spoken requests only. Check the
 current choice with `qs -c ii ipc call companion models`; `voice-timings.jsonl` records the serving model per
@@ -355,3 +360,11 @@ running user services, apps playing or recording sound, the biggest process name
 The orb's quick-answer context also carries the weather and next prayer (`glance()`) and a one-line "running:" summary (`brief()`).
 Settings are found and changed by the full assistant through `settings_search` / `settings_get` / `settings_set`
 (the index covers every config key; protected keys stay user-only); the quick path hands settings requests over on purpose.
+
+**Command table and recent actions (2026-11-24).** The `[[DO ...]]` list in the model prompt is generated from
+`voice_rules.ACTION_HELP` (`action_prompt()`), and `tests/test_voice_rules.py` checks it against `GROUPS` and the
+shell's table in `AiCompanionActions.qml`, so a verb cannot be added in one place only. The context block gains a
+`recent actions:` line (the last three actions that ran, within ten minutes), so a follow-up like "turn it back up"
+works after an instant command that no model saw. Natural phrasings ("it's too loud", "the third workspace",
+"wake me up at seven thirty", "don't let anything disturb me") are matched whole-sentence only; `NaturalPhrasing` in
+the rules tests keeps a list of casual sentences that must stay unmatched.

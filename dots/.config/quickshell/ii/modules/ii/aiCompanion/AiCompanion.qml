@@ -118,7 +118,8 @@ Scope {
                 x: surface.x, y: surface.y, width: surface.width, height: surface.height,
                 mapped: overlay.visible, opacity: surface.opacity, returning: dockFade.running,
                 centerX: root.centerX, centerY: root.centerY, monitor: overlay.screen?.name ?? "",
-                backend: Ai.voiceService.backendName, voiceAvailable: Ai.voiceService.available});
+                backend: Ai.voiceService.backendName, engine: Ai.voiceService.sttEngine,
+                voiceAvailable: Ai.voiceService.available});
         }
     }
     ParallelAnimation {

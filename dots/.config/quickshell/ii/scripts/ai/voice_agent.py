@@ -6,7 +6,9 @@ turn costs about a second instead of a cold CLI start, and streams the reply as
 text deltas so speech can begin on the first sentence.
 
 Protocol (JSON lines):
-  stdin   {"op":"config","rulesOff":["media"],"custom":[{"phrase":"..","do":"..","say":".."}]}   rule settings
+  stdin   {"op":"config","rulesOff":["media"],"custom":[{"phrase":"..","do":"..","say":".."}],"learned":[...],"learn":true}   rule settings
+          {"op":"learn","text":"..","actions":[["volume",["down"]]]}   the model's actions for this sentence all ran;
+                                                remembered as a rule once the same result has happened twice
           {"op":"ask","id":"..","text":"..","context":"..","screen":true}   one spoken turn;
                                                 context is the desktop snapshot for this turn
           {"op":"warm"}                         start the model process ahead of the first turn
@@ -52,27 +54,15 @@ YES_RE = re.compile(r"(?:yes|yeah|yep|yup|sure|ok|okay|confirm|confirmed|do it|g
 NO_RE = re.compile(r"(?:no|nope|nah|cancel|stop|never ?mind|don't|do not|abort|negative|no thanks|no thank you|wait)")
 STATE = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / "quickshell/user/ai/voice-agent"
 
-ACTIONS = (
-    "  [[DO media play]]  (also pause, toggle, next, previous)\n"
-    "  [[DO volume set 30]]  (0 to 100; also up, down, mute, unmute)\n"
-    "  [[DO brightness set 60]]  (5 to 100; also up, down)\n"
-    "  [[DO theme dark]]  (or light)\n"
-    "  [[DO open firefox]]  (an application's name)\n"
-    "  [[DO timer 10 pasta]]  (minutes, then an optional label)\n"
-    "  [[DO alarm 07:30 wake up]]  (24-hour time, then an optional label)\n"
-    "  [[DO remind call the bank]]  (adds a reminder)\n"
-    "  [[DO task buy milk]]  (adds a to-do)\n"
-    "  [[DO workspace 3]]\n"
-    "  [[DO toggle wifi off]]  (wifi, bluetooth, nightlight, dnd, awake, gamemode, mic; then on, off or toggle)\n"
-    "  [[DO power saver]]  (or balanced, performance)\n"
-    "  [[DO capture shot]]  (also area, record, region, stop, color)\n"
-    "  [[DO panel settings open]]  (settings, sidebar, cheatsheet, apps, power, clipboard, mixer; then open or close)\n"
-    "  [[DO window fullscreen]]  (also float, pin, move 3, focus firefox)\n"
-)
+ACTIONS = voice_rules.action_prompt()
 SCREEN = os.environ.get("II_VOICE_SCREEN", "1") != "0"
 RULES = os.environ.get("II_VOICE_RULES", "1") != "0"
 RULES_OFF = []      # groups the user switched off (set by the "config" op)
 RULES_CUSTOM = []   # the user's own phrases
+RULES_LEARNED = []  # phrases the orb picked up itself (kept in the shell's config, shown in Settings)
+LEARN = {"on": True}   # may it pick up new phrases at all (set by the "config" op)
+LEARN_FILE = os.path.join(os.environ.get("XDG_STATE_HOME") or os.path.join(os.path.expanduser("~"), ".local", "state"),
+                          "quickshell", "user", "ai", "voice-learning.json")
 SYSTEM = (
     "You are the voice of a desktop assistant, speaking aloud through a small orb. "
     "Answer the way a person talks: one to three short sentences, plain words, no markdown, "
@@ -252,7 +242,7 @@ class Model:
                 emit({"event": "done", "id": ident, "text": "Okay, cancelled.", "firstTokenMs": 0, "rule": True,
                       "totalMs": int((time.monotonic() - began) * 1000)})
                 return True
-        hit = voice_rules.match(text, RULES_OFF, RULES_CUSTOM)
+        hit = voice_rules.match(text, RULES_OFF, RULES_CUSTOM, RULES_LEARNED)
         if hit is None:
             return False
         if hit.get("info"):
@@ -325,7 +315,7 @@ class Model:
                 elif name == "LOOK":
                     looking = True
                 elif name == "DO" and args:
-                    emit({"event": "action", "id": ident, "verb": args[0].lower(), "args": args[1:]})
+                    emit({"event": "action", "id": ident, "verb": args[0].lower(), "args": args[1:], "source": "model"})
             if rest and not escalating and not looking:
                 spoken += 1
                 emit({"event": "delta", "id": ident, "text": clean(rest)})
@@ -385,6 +375,38 @@ class Model:
                 return None
 
 
+
+def learn_from(text, actions):
+    """A turn the model answered with actions that all ran: remember the sentence once it has come out the same
+    twice, unless a rule already covers it. Emits {"event": "learned", "rule": {...}} for the shell to keep."""
+    if not LEARN["on"]:
+        return
+    chosen = [(str(item[0]), [str(a) for a in item[1]]) for item in actions
+              if isinstance(item, (list, tuple)) and len(item) == 2 and isinstance(item[1], (list, tuple))]
+    if voice_rules.match(text, (), RULES_CUSTOM, RULES_LEARNED) is not None:
+        return
+    found = voice_rules.learnable(text, chosen)
+    if found is None:
+        return
+    phrase, do = found
+    try:
+        with open(LEARN_FILE, encoding="utf-8") as handle:
+            candidates = json.load(handle)
+        if not isinstance(candidates, dict):
+            candidates = {}
+    except (OSError, ValueError):
+        candidates = {}
+    ready = voice_rules.tally(candidates, phrase, do, time.time())
+    try:
+        os.makedirs(os.path.dirname(LEARN_FILE), exist_ok=True)
+        with open(LEARN_FILE + ".tmp", "w", encoding="utf-8") as handle:
+            json.dump(candidates, handle)
+        os.replace(LEARN_FILE + ".tmp", LEARN_FILE)
+    except OSError:
+        pass
+    if ready:
+        emit({"event": "learned", "rule": {"phrase": phrase, "do": do, "say": "", "learnedAt": int(time.time())}})
+
 def main():
     model = Model()
     commands = queue.Queue()
@@ -423,6 +445,10 @@ def main():
                 if op == "config":
                     RULES_OFF[:] = [str(item) for item in command.get("rulesOff", []) if isinstance(item, str)]
                     RULES_CUSTOM[:] = [item for item in command.get("custom", []) if isinstance(item, dict)]
+                    RULES_LEARNED[:] = [item for item in command.get("learned", []) if isinstance(item, dict)]
+                    LEARN["on"] = command.get("learn", True) is not False
+                elif op == "learn":
+                    learn_from(str(command.get("text", "")), command.get("actions", []))
                 elif op == "warm":
                     model.start()
                 elif op == "reset":

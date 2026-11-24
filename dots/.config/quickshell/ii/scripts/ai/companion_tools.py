@@ -272,6 +272,43 @@ def desktop_input(arguments):
     return {"text": f"Desktop {action} completed. Verify the screen before the next action.", "isError": False}
 
 
+def edge_usable():
+    """Whether the cloud voice may stand in for a missing local one: remote AI allowed and edge-tts present."""
+    if os.environ.get("II_LOCAL_ONLY") == "1":
+        return False
+    return (Path(os.environ.get("ILLOGICAL_IMPULSE_VIRTUAL_ENV") or Path.home() / ".local/state/quickshell/.venv") / "bin/edge-tts").is_file() \
+        or bool(shutil.which("edge-tts"))
+
+
+LOCAL_VOICE_MISSING = ("Local voice is unavailable (the Kokoro model may not be installed). Download it in Settings > AI > "
+                       "Voice orb > Speech engines; the shell restarts the voice within a minute once it is there.")
+
+HERE = Path(__file__).resolve().parent
+
+
+def connect_voice(sock_path, wait=15.0):
+    """Connect to the warm local voice. The shell keeps it stopped while the orb is hidden to save the
+    model's ~440 MiB, so an explicit speech request (read aloud, the settings test, IPC) starts it
+    through the daemon script and waits while the model loads. Raises OSError when it stays away."""
+    deadline = time.monotonic() + wait
+    started = False
+    while True:
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        client.settimeout(30)
+        try:
+            client.connect(sock_path)
+            return client
+        except OSError:
+            client.close()
+            if not started:
+                subprocess.Popen(["bash", str(HERE / "ensure_daemons.sh")], stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.DEVNULL, start_new_session=True)
+                started = True
+            elif time.monotonic() >= deadline:
+                raise
+            time.sleep(.25)
+
+
 def speak_edge(arguments, progress=None):
     if os.environ.get("II_LOCAL_ONLY") == "1":
         raise RuntimeError("Remote AI is off, so text is not sent to Edge TTS. This script can't be spoken locally.")
@@ -396,12 +433,14 @@ def speak_stream(emit):
                 lines.append(text)          # collected: the cloud voice wants the whole reply
                 continue
             sock_path = str(Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")) / "ii-companion-voice.sock")
-            client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            client.settimeout(30)
             try:
-                client.connect(sock_path)
+                client = connect_voice(sock_path)
             except OSError as error:
-                raise RuntimeError("Local voice is unavailable. The shell restarts it within a minute (scripts/ai/ensure_daemons.sh), or choose the Edge backend.") from error
+                if edge_usable():
+                    client = None
+                    lines.append(text)      # no local voice: the cloud voice reads the reply instead
+                    continue
+                raise RuntimeError(LOCAL_VOICE_MISSING) from error
             client.settimeout(None)
             client.sendall(json.dumps(request).encode() + b"\n")
             reader = threading.Thread(target=listen, args=(client.makefile("r"),), daemon=True)
@@ -455,12 +494,15 @@ def speak(arguments, progress=None):
     if arguments.get("gapMs") is not None:
         request["gapMs"] = arguments["gapMs"]
     done = None
-    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
-        client.settimeout(30)
-        try:
-            client.connect(sock_path)
-        except OSError as error:
-            raise RuntimeError("Local voice is unavailable. The shell restarts it within a minute (scripts/ai/ensure_daemons.sh), or choose the Edge backend.") from error
+    try:
+        client = connect_voice(sock_path)
+    except OSError as error:
+        if edge_usable():
+            edge_args = dict(arguments)
+            edge_args["voice"] = settings.get("edgeVoice", "en-US-EmmaMultilingualNeural")
+            return speak_edge(edge_args, progress)
+        raise RuntimeError(LOCAL_VOICE_MISSING) from error
+    with client:
         client.sendall(json.dumps(request).encode() + b"\n")
         with client.makefile("r") as stream:
             for line in stream:

@@ -5,6 +5,7 @@ Returns a single JSON document combining:
 
   - signed-in Codex and Claude model choices (cached CLI discovery)
   - models of a running local OpenCode server (never started here)
+  - models installed in a running local Ollama (never started here)
   - default prompt file names (.md/.txt) under the repo's defaults/ai/prompts
   - user prompt file names (.md/.txt) under the user's ai/prompts
 
@@ -54,6 +55,32 @@ def list_opencode_models() -> list[dict]:
         return []
 
 
+def list_ollama_models() -> list[dict]:
+    """Installed Ollama models with their capabilities. Only asks a server that is already running."""
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:11434/api/tags", timeout=1.5) as reply:
+            names = [m.get("name") for m in json.load(reply).get("models", []) if m.get("name")]
+    except Exception:
+        return []
+    models = []
+    for name in names:
+        capabilities: list = []
+        try:
+            request = urllib.request.Request(
+                "http://127.0.0.1:11434/api/show",
+                json.dumps({"model": name}).encode(),
+                {"Content-Type": "application/json"},
+            )
+            with urllib.request.urlopen(request, timeout=3) as reply:
+                capabilities = json.load(reply).get("capabilities", []) or []
+        except Exception:
+            pass
+        models.append({"name": name, "capabilities": capabilities})
+    return models
+
+
 def main() -> int:
     argv = sys.argv[1:]
 
@@ -63,6 +90,7 @@ def main() -> int:
                 {
                     "agent_models": {},
                     "opencode_models": [],
+                    "ollama_models": [],
                     "default_prompts": [],
                     "user_prompts": [],
                 }
@@ -75,6 +103,7 @@ def main() -> int:
         "agents": __import__("agent_bridge").status(),
         "agent_models": __import__("agent_models").list_models(),
         "opencode_models": list_opencode_models(),
+        "ollama_models": list_ollama_models(),
         "default_prompts": list_files(default_dir, (".md", ".txt")),
         "user_prompts": list_files(user_dir, (".md", ".txt")),
     }

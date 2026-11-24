@@ -14,6 +14,7 @@ orb starts it again when it next listens. Must run in the voice venv (pywhisperc
 """
 import json
 import os
+import re
 import socket
 import sys
 import threading
@@ -26,14 +27,43 @@ SOCKET = RUNTIME / "ii-orb-stt.sock"
 MODELS = Path.home() / ".local/share/voxtype/models"
 # Best first. "auto" takes the first installed; a name from the settings picks that one.
 PREFERRED = ("small", "base")
-IDLE_EXIT = 1500.0
+# Leave the fallback resident only briefly: it is a fallback, not a second engine.
+IDLE_EXIT = 180.0
 # Whisper hears "brightness set fifty" as "brightest at 50" and "alarm at seven thirty" as nonsense
 # without a hint. A prompt of the commands the orb understands biases the decoder towards them. Used
 # only for English or auto-detected speech; the language is chosen from the audio before it is read.
 PROMPT = ("Voice commands for a desktop assistant: volume 30, brightness 50 percent, next song, pause, play, "
           "mute, set a timer for 10 minutes, alarm at 7:30 am, dark mode, light mode, workspace 3, "
           "open Firefox, remind me to call mum.")
-NOISE = {"[BLANK_AUDIO]", "[ Silence ]", "(silence)", "[MUSIC]", "[Music]"}
+# Whisper describes noise instead of staying quiet: "(music)", "[BLANK_AUDIO]", "(inaudible)",
+# "(speaking in foreign language)", "*sighs*". None of it is speech, so every bracketed, parenthesised or
+# starred annotation is cut out, and a clip left with nothing is "no speech".
+ANNOTATION = re.compile(r"\[[^\]]*\]|\([^)]*\)|\*[^*]+\*|\u266a[^\u266a]*\u266a?|\u266a")
+# Phrases it produces from silence and noise because they end so many of its training videos.
+HALLUCINATIONS = re.compile(
+    r"^(?:thank(?:s| you)(?: so much)?(?: for (?:watching|listening)(?: this video)?)?|thanks for watching"
+    r"|please subscribe(?: to (?:my|the) channel)?|subtitles? by .*|you|bye|\.+)[.!\s]*$", re.I)
+NOISE_PEAK = 0.004     # a clip whose loudest sample is below this has nothing to read
+
+
+def clean(text):
+    """The transcript without noise annotations, or "" when nothing said remains."""
+    text = re.sub(r"\s+", " ", ANNOTATION.sub(" ", text or "")).strip()
+    return "" if HALLUCINATIONS.match(text) else text
+
+
+def prepared(path):
+    """The clip as float32 samples, or None to let whisper read the file itself. An empty array means the
+    clip is too quiet to hold speech (a muted or unplugged microphone): Whisper writes sentences for
+    that, so it is not asked. Raising a quiet clip was tried and made no difference to the words."""
+    import numpy as np
+    with wave.open(path, "rb") as audio:
+        if audio.getsampwidth() != 2 or audio.getframerate() != 16000 or audio.getnchannels() != 1:
+            return None
+        samples = np.frombuffer(audio.readframes(audio.getnframes()), dtype=np.int16).astype(np.float32) / 32768.0
+    if samples.size == 0 or float(np.abs(samples).max()) < NOISE_PEAK:
+        return np.zeros(0, dtype=np.float32)
+    return samples
 
 
 def duration(path):
@@ -103,12 +133,16 @@ class Transcriber:
             raise RuntimeError("No whisper model is installed.")
         with self.lock:
             model = self.load(file)
-            params = {"audio_ctx": context, "language": lang}
+            # Segments Whisper itself doubts are dropped instead of being filled with a guess.
+            params = {"audio_ctx": context, "language": lang, "no_speech_thold": 0.6, "suppress_nst": True,
+                      "entropy_thold": 2.4, "logprob_thold": -1.0}
             if lang in ("", "en"):
                 params["initial_prompt"] = PROMPT
-            segments = model.transcribe(path, **params)
-        text = " ".join(s.text.strip() for s in segments).strip()
-        return "" if text in NOISE else text
+            audio = prepared(path)
+            if audio is not None and audio.size == 0:
+                return ""
+            segments = model.transcribe(path if audio is None else audio, **params)
+        return clean(" ".join(s.text.strip() for s in segments))
 
 
 def main():

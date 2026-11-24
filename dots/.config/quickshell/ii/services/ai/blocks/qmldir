@@ -1,4 +1,5 @@
 module qs.services.ai.blocks
+AiAgentConnections 1.0 AiAgentConnections.qml
 AiAnnotationSourceButton 1.0 AiAnnotationSourceButton.qml
 AiApiKeyManager 1.0 AiApiKeyManager.qml
 AiAttachmentTray 1.0 AiAttachmentTray.qml

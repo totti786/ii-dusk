@@ -48,6 +48,9 @@ QtObject {
         }
         return best ? root.clip(best.time + (best.label ? " " + best.label : ""), 50) : "";
     }
+    /** The last few actions that ran, newest last: {text, at}. Kept in memory only. */
+    property var recent: []
+
     function snapshot() {
         const now = new Date();
         const lines = [];
@@ -84,6 +87,11 @@ QtObject {
         if (glance.length > 0) lines.push(glance);
         const running = Ai.runningIntegration.brief();
         if (running.length > 0) lines.push(running);
+        // What the shell just did on request, so "turn it back up" has something to refer to even when an
+        // instant command handled the turn and no model saw it.
+        const lately = root.recent.filter(item => Date.now() - item.at < 10 * 60 * 1000);
+        if (lately.length > 0)
+            lines.push("recent actions: " + lately.map(item => item.text + " (" + Math.max(1, Math.round((Date.now() - item.at) / 60000)) + " min ago)").join("; "));
         lines.push(root.pipelineLine());
         return lines.join("\n");
     }
@@ -358,6 +366,8 @@ QtObject {
         try {
             const result = root.table[name](Array.from(args ?? []).map(item => String(item)));
             console.log("[voice] action", name, Array.from(args ?? []).join(" "), "->", result.ok ? "ok" : "refused", result.note);
+            if (result.ok)
+                root.recent = root.recent.concat([{text: root.clip(result.note, 60), at: Date.now()}]).slice(-3);
             return result;
         } catch (error) {
             console.log("[voice] action", name, "failed:", String(error));

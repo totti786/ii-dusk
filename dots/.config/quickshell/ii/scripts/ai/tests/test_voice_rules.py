@@ -1,3 +1,4 @@
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -183,6 +184,125 @@ class Extended(unittest.TestCase):
                             ("lock the screen", "system")):
             self.assertIsNotNone(vr.match(text), text)
             self.assertIsNone(vr.match(text, off=[group]), text)
+
+
+class NaturalPhrasing(unittest.TestCase):
+    """Sentences people really say, which the plain command forms used to miss. Every positive has a
+    negative beside it: a rule that fires on a casual sentence costs more than one that misses."""
+    CASES = [
+        ("it's too loud", [("volume", ["down"])]),
+        ("it is way too quiet", [("volume", ["up"])]),
+        ("it's too bright in here", [("brightness", ["down"])]),
+        ("the screen is too dark", [("brightness", ["up"])]),
+        ("stop the music for a second", [("media", ["pause"])]),
+        ("pause for a moment", [("media", ["pause"])]),
+        ("switch to the light theme please", [("theme", ["light"])]),
+        ("put on a dark look", [("theme", ["dark"])]),
+        ("wake me at 7 30 am", [("alarm", ["07:30"])]),
+        ("add milk to my shopping list", [("task", ["milk"])]),
+        ("don't let anything disturb me", [("toggle", ["dnd", "on"])]),
+        ("go to the third workspace", [("workspace", ["3"])]),
+        ("mute myself", [("toggle", ["mic", "off"])]),
+        ("unmute myself", [("toggle", ["mic", "on"])]),
+        ("give me a ten minute timer for the pasta", [("timer", ["10", "pasta"])]),
+    ]
+    NOT_COMMANDS = [
+        "it's too loud outside", "it's too loud for me to think", "it's too dark in here", "I like quiet music",
+        "what is the volume of a sphere", "can you explain how timers work", "do I have any alarms", "tell me a joke",
+        "what is the capital of France", "how much battery do I have", "thanks that was great", "what's two plus two",
+        "I can't hear anything", "I can't see the screen", "why is it too loud", "the third workspace is empty",
+        "the second song was better", "don't stop the music", "close all my browser windows",
+        "search the web for the weather",
+    ]
+
+    def test_table(self):
+        for text, want in self.CASES:
+            with self.subTest(text):
+                self.assertEqual(actions(text), want)
+
+    def test_casual_sentences_stay_unmatched(self):
+        for text in self.NOT_COMMANDS:
+            with self.subTest(text):
+                hit = vr.match(text)
+                self.assertTrue(hit is None or not hit["actions"], hit)
+
+
+class ActionTable(unittest.TestCase):
+    QML = Path(__file__).resolve().parents[3] / "services" / "ai" / "AiCompanionActions.qml"
+
+    def qml_verbs(self):
+        text = self.QML.read_text()
+        body = text.split("readonly property var table: ({", 1)[1]
+        return set(re.findall(r"^        (\w+): args =>", body, re.M))
+
+    def test_every_verb_the_models_are_told_about_exists_in_the_shell(self):
+        told = {usage.split()[0] for usage, _ in vr.ACTION_HELP}
+        self.assertEqual(told, set(vr.GROUPS))
+        self.assertLessEqual(told | set(vr.CONFIRMED_VERBS), self.qml_verbs())
+
+    def test_the_prompt_lists_each_verb_once(self):
+        lines = vr.action_prompt().splitlines()
+        self.assertEqual(len(lines), len(vr.ACTION_HELP))
+        self.assertTrue(all(line.startswith("  [[DO ") for line in lines))
+
+
+class Learning(unittest.TestCase):
+    """The orb remembers a sentence the model turned into actions, but only a plain, context-free one."""
+
+    def test_a_plain_setting_is_learnable(self):
+        self.assertEqual(vr.learnable("movie mode please", [("theme", ["dark"]), ("brightness", ["set", "30"])]),
+                         ("movie mode", "theme dark; brightness set 30"))
+        self.assertEqual(vr.learnable("crank the sound to fifty", [("volume", ["set", "50"])]),
+                         ("crank the sound to {n}", "volume set {n}"))
+
+    def test_learned_phrase_gives_back_the_same_actions(self):
+        phrase, do = vr.learnable("crank the sound to fifty", [("volume", ["set", "50"])])
+        rule = {"phrase": phrase, "do": do, "say": ""}
+        self.assertEqual(vr.match("crank the sound to 70", learned=[rule])["actions"], [("volume", ["set", "70"])])
+
+    def test_context_dependent_and_risky_sentences_are_not_learned(self):
+        refused = [
+            ("turn it back up", [("volume", ["up"])]),
+            ("do that again", [("media", ["next"])]),
+            ("a bit more", [("volume", ["up"])]),
+            ("don't mute anything", [("volume", ["mute"])]),
+            ("what is the volume", [("volume", ["up"])]),
+            ("lock the screen", [("lock", [])]),
+            ("close this window", [("close", [])]),
+            ("remind me about the thing", [("remind", ["the", "thing"])]),
+            ("open the browser", [("open", ["firefox"])]),
+            ("set an alarm for the morning", [("alarm", ["07:30"])]),
+            ("goodnight", [("theme", ["dark"])]),   # one word: too easy to mishear
+            ("one two three four five six seven eight nine", [("theme", ["dark"])]),
+            ("set it to 40 and 50", [("volume", ["set", "40"])]),
+            ("make it 40", [("volume", ["set", "30"])]),   # the number said is not the one used
+        ]
+        for text, chosen in refused:
+            with self.subTest(text):
+                self.assertIsNone(vr.learnable(text, chosen))
+
+    def test_a_learned_phrase_never_overrides_a_builtin(self):
+        rule = {"phrase": "pause the music", "do": "volume mute", "say": ""}
+        self.assertEqual(vr.match("pause the music", learned=[rule])["actions"], [("media", ["pause"])])
+
+    def test_it_takes_two_identical_results(self):
+        seen = {}
+        self.assertFalse(vr.tally(seen, "movie mode", "theme dark", 1))
+        self.assertTrue(vr.tally(seen, "movie mode", "theme dark", 2))
+        self.assertNotIn("movie mode", seen)
+
+    def test_a_different_result_starts_the_count_again(self):
+        seen = {}
+        vr.tally(seen, "cosy", "theme dark", 1)
+        self.assertFalse(vr.tally(seen, "cosy", "brightness down", 2))
+        self.assertFalse(vr.tally(seen, "cosy", "theme dark", 3))
+        self.assertTrue(vr.tally(seen, "cosy", "theme dark", 4))
+
+    def test_candidates_are_bounded(self):
+        seen = {}
+        for number in range(vr.LEARN_KEEP + 50):
+            vr.tally(seen, f"phrase {number}", "theme dark", number)
+        self.assertLessEqual(len(seen), vr.LEARN_KEEP)
 
 
 class Settings(unittest.TestCase):

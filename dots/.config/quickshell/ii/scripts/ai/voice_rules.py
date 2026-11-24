@@ -16,6 +16,8 @@ UNITS = {"zero": 0, "oh": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 
          "fifteen": 15, "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19}
 TENS = {"twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90}
 NUMBER_WORD = "|".join(sorted([*UNITS, *TENS, "hundred", "half", "quarter"], key=len, reverse=True))
+ORDINALS = {"first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5, "sixth": 6, "seventh": 7, "eighth": 8,
+            "ninth": 9, "tenth": 10}
 FILLER = re.compile(
     r"^(?:(?:hey|ok|okay|please|so|just|now|well|um|uh|orb|assistant|can you|could you|would you|will you|"
     r"i want you to|i would like you to|i'd like you to|go ahead and|let's|lets|you can)\s+)+")
@@ -58,6 +60,9 @@ def normalise(text):
     text = re.sub(r"\b(?:an|one) hour and a half\b", "90 minutes", text)
     text = re.sub(r"\ban hour\b", "60 minutes", text)
     text = re.sub(r"\bquarter of an hour\b", "15 minutes", text)
+    # "the third workspace" -> "the workspace 3"
+    text = re.sub(r"\b(" + "|".join(ORDINALS) + r") (workspace|desktop|space)\b",
+                  lambda m: f"{m.group(2)} {ORDINALS[m.group(1)]}", text)
     return words_to_digits(text)
 
 
@@ -112,6 +117,32 @@ CONFIRMED_DONE = {"lock": "Locking.", "suspend": "Going to sleep.", "reboot": "R
                   "close": "Closed."}
 
 
+# What a model is told it may do: one line per verb, "usage" then what else the verb accepts. The prompt text
+# is generated from this, so it cannot drift from GROUPS, and a test checks it against the shell's action table.
+ACTION_HELP = (
+    ("media play", "also pause, toggle, next, previous"),
+    ("volume set 30", "0 to 100; also up, down, mute, unmute"),
+    ("brightness set 60", "5 to 100; also up, down"),
+    ("theme dark", "or light"),
+    ("open firefox", "an application's name"),
+    ("timer 10 pasta", "minutes, then an optional label"),
+    ("alarm 07:30 wake up", "24-hour time, then an optional label"),
+    ("remind call the bank", "adds a reminder"),
+    ("task buy milk", "adds a to-do"),
+    ("workspace 3", ""),
+    ("toggle wifi off", "wifi, bluetooth, nightlight, dnd, awake, gamemode, mic; then on, off or toggle"),
+    ("power saver", "or balanced, performance"),
+    ("capture shot", "also area, record, region, stop, color"),
+    ("panel settings open", "settings, sidebar, cheatsheet, apps, power, clipboard, mixer; then open or close"),
+    ("window fullscreen", "also float, pin, move 3, focus firefox"),
+)
+
+
+def action_prompt():
+    """The [[DO ...]] lines of the model prompt, from ACTION_HELP."""
+    return "".join(f"  [[DO {usage}]]" + (f"  ({extra})" if extra else "") + "\n" for usage, extra in ACTION_HELP)
+
+
 def parse_do(text):
     """'volume set 20; theme dark' -> [("volume", ["set", "20"]), ("theme", ["dark"])], or None if any verb is unknown."""
     actions = []
@@ -144,13 +175,14 @@ def custom_match(t, custom):
     return None
 
 
-def match(text, off=(), custom=()):
+def match(text, off=(), custom=(), learned=()):
     """The command in `text`, or None. `off` names switched-off groups; `custom` is the user's phrases,
-    tried first so they can override a built-in."""
+    tried first so they can override a built-in; `learned` are phrases the orb picked up itself, tried last
+    so they can never override a built-in."""
     t = normalise(text)
     if not t:
         return None
-    result = custom_match(t, custom) or builtin(t)
+    result = custom_match(t, custom) or builtin(t) or custom_match(t, learned)
     if result is None:
         return None
     groups = {GROUPS.get(verb) for verb, _ in result["actions"]} | {result.get("group")}
@@ -172,10 +204,13 @@ TOGGLE_NAMES = (
 
 def toggle_rule(t):
     """'turn off wifi', 'bluetooth on', 'enable dnd', 'toggle night light', 'mute the mic'."""
-    m = re.fullmatch(r"(?:un)?mute " + STOP + r"(?:mic|microphone)", t)
+    m = re.fullmatch(r"(?:un)?mute " + STOP + r"(?:mic|microphone)|(?:un)?mute myself", t)
     if m:
         return hit([("toggle", ["mic", "on" if t.startswith("unmute") else "off"])],
                    "Mic on." if t.startswith("unmute") else "Mic muted.")
+    if re.fullmatch(r"(?:don't|do not) (?:let (?:anything|anyone|anybody|people|notifications?) )?(?:disturb|bother|interrupt) me"
+                    r"|i (?:don't|do not) want to be (?:disturbed|bothered|interrupted)", t):
+        return hit([("toggle", ["dnd", "on"])], "Do not disturb on.")
     for name, words in TOGGLE_NAMES:
         if name == "mic":
             continue
@@ -305,7 +340,7 @@ def builtin(t):
         return found
 
     # ── media ────────────────────────────────────────────────────────────────
-    if re.fullmatch(r"(?:pause|stop|hold)" + MEDIA_NOUN, t):
+    if re.fullmatch(r"(?:pause|stop|hold)" + MEDIA_NOUN + r"(?: for (?:a )?(?:second|sec|moment|minute|bit|while))?", t):
         return hit([("media", ["pause"])], "Paused.")
     if re.fullmatch(r"(?:play|resume|continue|unpause|start)" + MEDIA_NOUN, t) and t not in ("start",):
         return hit([("media", ["play"])], "Playing.")
@@ -317,6 +352,11 @@ def builtin(t):
         return hit([("media", ["previous"])], "Previous.")
 
     # ── volume ───────────────────────────────────────────────────────────────
+    # A plain complaint about the sound, said as the whole sentence ("it's too loud"), is a request.
+    m = re.fullmatch(r"(?:it'?s|it is|that'?s|that is|this is|its)? ?(?:a (?:bit|little) |way |much |far |really |so |just )*too (loud|noisy|quiet|soft)", t)
+    if m:
+        loud = m.group(1) in ("loud", "noisy")
+        return hit([("volume", ["down" if loud else "up"])], "Quieter." if loud else "Louder.")
     m = re.fullmatch(r"(?:set |change |put |make )?" + STOP + r"(?:volume|sound)(?: level)?(?: set)?(?: to| at)? (\d{1,3})(?: percent)?", t) \
         or re.fullmatch(r"(?:set |make |turn )" + STOP + r"(?:volume|sound) (\d{1,3})(?: percent)?", t) \
         or re.fullmatch(r"(?:set|put|turn) (?:the )?(?:volume|sound) (?:to |at )?(\d{1,3})(?: percent)?", t) \
@@ -343,6 +383,11 @@ def builtin(t):
             return hit([("volume", [direction])] * steps, "Louder." if direction == "up" else "Quieter.")
 
     # ── brightness ───────────────────────────────────────────────────────────
+    m = re.fullmatch(r"(?:it'?s|it is|that'?s|this is|its)? ?(?:a (?:bit|little) |way |much |far |really |so )*too bright(?: in here)?"
+                     r"|(?:the )?screen (?:is|looks|seems)? ?(?:a (?:bit|little) |way |much |far |really |so )*too (bright|dim|dark)", t)
+    if m:
+        dim = (m.group(1) or "") in ("dim", "dark")
+        return hit([("brightness", ["up" if dim else "down"])], "Brighter." if dim else "Dimmer.")
     m = re.fullmatch(r"(?:set |change |put |make )?" + STOP + r"(?:screen )?brightness(?: level)?(?: set)?(?: to| at)? (\d{1,3})(?: percent)?", t) \
         or re.fullmatch(r"(\d{1,3}) percent brightness", t)
     if m and 0 <= int(m.group(1)) <= 100:
@@ -356,23 +401,25 @@ def builtin(t):
         return hit([("brightness", [direction])], "Brighter." if direction == "up" else "Dimmer.")
 
     # ── theme ────────────────────────────────────────────────────────────────
-    m = re.fullmatch(r"(?:(?:switch|go|change|turn|set|use|enable|activate)(?: it)?(?: on| to)? )?(dark|light)(?: mode| theme)?(?: on)?", t)
+    m = re.fullmatch(r"(?:(?:switch|go|change|turn|set|use|enable|activate|put on)(?: it)?(?: on| to)? )?(?:the |a )?(dark|light)(?: mode| theme| look| style| appearance)?(?: on)?", t)
     if m and (len(t.split()) > 1):
         return hit([("theme", [m.group(1)])], f"{m.group(1).capitalize()} mode.")
 
     # ── timers ───────────────────────────────────────────────────────────────
     m = re.fullmatch(r"(?:set |start |make |create |begin )?(?:a |an |the )?(?:timer|countdown)(?: for| of)? (\d{1,3}) ?(minutes?|mins?|hours?|hrs?)(?: (?:called|for|named|labelled|labeled) (.+))?", t) \
-        or re.fullmatch(r"(?:set |start |make |create )?(?:a |an )?(\d{1,3}) ?(minutes?|mins?|hours?|hrs?)(?: |-)?(?:timer|countdown)(?: (?:called|for|named) (.+))?", t) \
+        or re.fullmatch(r"(?:set |start |make |create |give me )?(?:a |an )?(\d{1,3}) ?(minutes?|mins?|hours?|hrs?)(?: |-)?(?:timer|countdown)(?: (?:called|for|named) (.+))?", t) \
 
     if m:
         amount = int(m.group(1)) * (60 if m.group(2).startswith("h") else 1)
-        label = (m.group(3) or "").strip()
+        label = re.sub(r"^(?:the|a|my) ", "", (m.group(3) or "").strip())
         if 1 <= amount <= 600:
             args = [str(amount)] + (label.split() if label else [])
             spoken = f"{amount} minute" + ("" if amount == 1 else "s")
             return hit([("timer", args)], f"Timer set for {spoken}.")
 
     # ── alarms ───────────────────────────────────────────────────────────────
+    # "wake me up at seven thirty" reaches here as "at 7 30"
+    t = re.sub(r"\b(at|for|by|alarm) (\d{1,2}) ([0-5]\d)\b", r"\1 \2:\3", t)
     m = re.fullmatch(r"(?:set |make |create |add )?(?:an |the |my )?alarm(?: for| at)? " + WHAT_TIME + r"(?: (?:called|named|for|labelled) (.+))?", t) \
         or re.fullmatch(r"wake me(?: up)?(?: at| by)? " + WHAT_TIME + r"()", t)
     if m:
@@ -386,7 +433,7 @@ def builtin(t):
     m = re.fullmatch(r"remind me (?:to|about|that) (.+)", t)
     if m and not re.search(r"\b(?:in \d+|at \d|tomorrow|tonight|tomorrow|later|on (?:mon|tue|wed|thu|fri|sat|sun)\w*|next (?:week|month)|every)\b", m.group(1)):
         return hit([("remind", m.group(1).split())], "Reminder added.")
-    m = re.fullmatch(r"(?:add|put) (.+?) (?:to|on) (?:my |the )?(?:to ?do|task|tasks|to-do|todo)(?: list)?", t) \
+    m = re.fullmatch(r"(?:add|put) (.+?) (?:to|on) (?:my |the )?(?:to ?do|task|tasks|to-do|todo|shopping|grocery|groceries)(?: list)?", t) \
         or re.fullmatch(r"(?:add|create|new|make) (?:a )?(?:new )?(?:task|to ?do|to-do)(?: to| called| for| that)? (.+)", t)
     if m:
         return hit([("task", m.group(1).split())], "Task added.")
@@ -419,7 +466,11 @@ if __name__ == "__main__":
         custom = json.loads(sys.argv[3]) if len(sys.argv) > 3 else []
     except ValueError:
         custom = []
-    result = match(phrase, off, custom)
+    try:
+        learned = json.loads(sys.argv[4]) if len(sys.argv) > 4 else []
+    except ValueError:
+        learned = []
+    result = match(phrase, off, custom, learned)
     print(json.dumps(None if result is None else {"actions": [[v, a] for v, a in result["actions"]], "say": result["say"]}))
 
 
@@ -464,3 +515,70 @@ def answer_info(kind, context):
         value = lines.get("focused", "")
         return (re.sub(r"\s*\(workspace \d+\)\s*$", "", value).replace(" — ", ", ") + ".") if value else None
     return None
+
+
+# ── Learning: a sentence no rule matched, which the model turned into an action ──────────────────
+# Only plain settings are learned. Anything that depends on what was said before or on what is on screen
+# ("turn it back up", "do that again"), anything negated or asked as a question, and the verbs that carry
+# free text (remind, task, open, timer, alarm) is left to the model every time.
+LEARNABLE = {"media", "volume", "brightness", "theme", "workspace", "toggle", "power", "capture", "panel", "window"}
+CONTEXTUAL = re.compile(r"\b(?:it|that|this|those|them|there|again|back|more|less|same|another|other|undo|also|already|"
+                        r"earlier|before|last|next|previous)\b")
+NEGATED = re.compile(r"\b(?:not|never|without|no|don't|dont|doesn't|stop|cancel)\b")
+QUESTION = re.compile(r"^(?:what|whats|what's|why|how|who|when|where|which|can|could|would|should|do|does|did|is|are|am|"
+                      r"was|will|tell|show|explain|give|read|search|find)\b")
+LEARN_AFTER = 2          # identical results before a phrase becomes a rule
+LEARN_KEEP = 200         # candidates remembered at most
+
+
+def learnable(text, actions):
+    """(phrase, do) a rule could be made of, or None. `actions` is [(verb, [args])] the model chose."""
+    t = normalise(text)
+    words = t.split()
+    if not 2 <= len(words) <= 8 or not actions or len(actions) > 3:
+        return None
+    if CONTEXTUAL.search(t) or NEGATED.search(t) or QUESTION.match(t):
+        return None
+    numbers = re.findall(r"\b\d{1,4}\b", t)
+    if len(numbers) > 1:
+        return None
+    parts, used = [], False
+    for verb, args in actions:
+        if verb not in LEARNABLE:
+            return None
+        shown = []
+        for arg in args:
+            if numbers and str(arg) == numbers[0]:
+                shown.append("{n}")
+                used = True
+            else:
+                shown.append(str(arg))
+        parts.append(" ".join([verb, *shown]))
+    if numbers and not used:
+        return None
+    phrase = re.sub(r"\b" + numbers[0] + r"\b", "{n}", t) if used else t
+    do = "; ".join(parts)
+    # The rule must give back exactly what the model did for this very sentence.
+    again = custom_match(t, [{"phrase": phrase, "do": do}])
+    want = [(verb, [str(a) for a in args]) for verb, args in actions]
+    if again is None or [(v, [str(a) for a in args]) for v, args in again["actions"]] != want:
+        return None
+    return phrase, do
+
+
+def tally(candidates, phrase, do, now):
+    """Count one more identical result for `phrase`. True when it has now happened often enough to learn
+    (and the candidate is dropped). A different result for the same phrase starts the count again."""
+    entry = candidates.get(phrase)
+    if entry and entry.get("do") == do:
+        entry["seen"] = int(entry.get("seen", 0)) + 1
+    else:
+        entry = {"do": do, "seen": 1}
+    entry["at"] = now
+    candidates[phrase] = entry
+    if entry["seen"] >= LEARN_AFTER:
+        del candidates[phrase]
+        return True
+    for stale in sorted(candidates, key=lambda key: candidates[key].get("at", 0))[:max(0, len(candidates) - LEARN_KEEP)]:
+        del candidates[stale]
+    return False

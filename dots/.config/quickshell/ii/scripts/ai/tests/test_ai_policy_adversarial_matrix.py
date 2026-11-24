@@ -109,11 +109,17 @@ class AgentTransportPrivacyTests(unittest.TestCase):
     """A loopback CLI/server does not make a cloud model local."""
 
     def test_agent_models_are_never_classified_as_local(self):
-        self.assertIn('function isModelLocal(model): bool { return false; }', CATALOG_QML)
-        self.assertIn('local: false', CATALOG_QML)
+        # Locality is decided by the endpoint alone, and an agent's endpoint is
+        # `agent://`, which is never loopback, so a CLI never counts as local.
+        for engine in ("codex", "claude", "opencode"):
+            self.assertIn(f'endpoint: "agent://{engine}"', CATALOG_QML)
+        self.assertIn('return catalog.isLoopbackEndpoint(model.endpoint);', CATALOG_QML)
+        self.assertNotIn('local: true', body_between(CATALOG_QML, 'id: "codex"', 'id: "others"'))
 
     def test_catalog_is_empty_unless_cloud_policy_is_enabled(self):
-        self.assertIn('if (Number(Config.options?.policies?.ai ?? 1) !== 1) return result;', CATALOG_QML)
+        # Off offers nothing; local-only keeps loopback endpoints, which an agent never is.
+        self.assertIn('if (policy === 0)', CATALOG_QML)
+        self.assertIn('entries = entries.filter(entry => catalog.entryAllowed(def, entry));', CATALOG_QML)
 
     def test_runtime_still_enforces_local_only(self):
         self.assertIn('root.localOnly', AI_QML)
@@ -194,7 +200,8 @@ class AgentCapabilitiesTests(unittest.TestCase):
         self.assertIn('capabilitySource: "detected"', CATALOG_QML)
 
     def test_old_ollama_overrides_cannot_grant_agent_capabilities(self):
-        self.assertNotIn('ollamaEntries', CATALOG_QML)
+        # Discovered Ollama models only ever feed the Ollama provider.
+        self.assertIn('if (def.id === "ollama")\n                entries = catalog.ollamaEntries;', CATALOG_QML)
         self.assertNotIn('Config.options.ai.capabilityOverride', CATALOG_QML)
 
 

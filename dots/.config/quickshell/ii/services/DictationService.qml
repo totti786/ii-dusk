@@ -242,8 +242,15 @@ Singleton {
     }
 
     onStateChanged: {
-        if (root.state === "idle" || root.state === "stopped")
+        if (root.state === "idle" || root.state === "stopped") {
             root.dictationFinished();
+            // A recording was running when the engine or the feature was turned off: stop
+            // Hex once the turn is done instead of leaving it resident.
+            if (root.hexQuitPending && !root.busy) {
+                root.hexQuitPending = false;
+                root.quitHex();
+            }
+        }
     }
 
     // ── Actions ───────────────────────────────────────────────────────────
@@ -302,6 +309,22 @@ Singleton {
             return;
         }
         recordProc.exec(["voxtype", "record", "cancel"]);
+    }
+
+    /**
+     * Stops the Hex daemon so nothing stays resident when dictation is turned off or the
+     * engine changes. A recording already in flight is allowed to finish first.
+     */
+    property bool hexQuitPending: false
+    function quitHex(): void {
+        if (root.busy) {
+            root.hexQuitPending = true;
+            return;
+        }
+        if (!root.hexInstalled)
+            return;
+        Quickshell.execDetached([root.hexBin, "quit"]);
+        root.hexState = "stopped";
     }
 
     /** Short label for the language in use, for the bar and the popup. */
@@ -364,6 +387,31 @@ Singleton {
         if (!root.installed || !Config.ready)
             return;
         applyTimer.restart();
+    }
+
+    /**
+     * The shell settings Hex actually has. `hex settings apply -` writes settings.json
+     * directly while Hex is stopped and goes through the running instance otherwise, so
+     * this starts no daemon. Voxtype-only knobs (language, output mode, threads) are not
+     * written here; the microphone is always released between dictations, which is what
+     * keeps an idle Hex from holding it.
+     */
+    function applyHexSettings() {
+        if (!root.useHex || !root.hexInstalled || !Config.ready)
+            return;
+        const body = JSON.stringify({
+            "recording_audio_behavior": root.pauseMedia ? "pause_media" : "do_nothing",
+            "sound_effects": root.soundFeedback === true,
+            "release_microphone_while_idle": true
+        });
+        Quickshell.execDetached(["bash", "-c",
+            "printf '%s' \"$1\" | hex settings apply - >/dev/null 2>&1", "--", body]);
+    }
+
+    Timer {
+        id: hexApplyTimer
+        interval: 400
+        onTriggered: root.applyHexSettings()
     }
 
     /** Restarts our own daemon; a foreign systemd one is left for systemd to manage. */
@@ -618,7 +666,13 @@ Singleton {
         interval: 100
         repeat: true
         running: root.recording
-        onTriggered: root.elapsedMs = Date.now() - root.recordingStartedAt
+        onTriggered: {
+            root.elapsedMs = Date.now() - root.recordingStartedAt;
+            // Hex has no duration setting of its own, so the cap is enforced here for both
+            // engines rather than only in Voxtype's config.
+            if (root.maxDurationSecs > 0 && root.elapsedMs >= root.maxDurationSecs * 1000)
+                root.stop();
+        }
     }
 
     Process {
@@ -717,6 +771,9 @@ Singleton {
             }
             if (root.hexState === "stopped")
                 root.hexState = "idle";
+            // A change made while Hex was down was written straight to settings.json; apply it
+            // through the now-running instance too, so the daemon and the file agree.
+            root.applyHexSettings();
             if (action === "start" || action === "toggle")
                 root.hexCmd(action);
             idleQuitTimer.restart();
@@ -727,7 +784,7 @@ Singleton {
     Timer {
         id: idleQuitTimer
         interval: Math.max(1, root.hexIdleMinutes) * 60000
-        running: root.useHex && root.hexIdleMinutes > 0 && root.state === "idle" && !root.hexStarting
+        running: root.useHex && root.enabled && root.hexIdleMinutes > 0 && root.state === "idle" && !root.hexStarting
         onTriggered: {
             if (root.busy || root.hexStarting)
                 return;
@@ -848,16 +905,28 @@ Singleton {
         function onLanguageChanged() { root.scheduleApply(); }
         function onTranslateToEnglishChanged() { root.scheduleApply(); }
         function onOutputModeChanged() { root.scheduleApply(); }
-        function onPauseMediaChanged() { root.scheduleApply(); }
-        function onSoundFeedbackChanged() { root.scheduleApply(); }
+        function onPauseMediaChanged() { root.scheduleApply(); hexApplyTimer.restart(); }
+        function onSoundFeedbackChanged() { root.scheduleApply(); hexApplyTimer.restart(); }
         function onMaxDurationSecsChanged() { root.scheduleApply(); }
         function onThreadsChanged() { root.scheduleApply(); }
         function onTypeDelayMsChanged() { root.scheduleApply(); }
         function onNotifyOnTranscriptionChanged() { root.scheduleApply(); }
         function onPunctuationHintChanged() { root.scheduleApply(); }
+        function onEngineChanged() {
+            hexApplyTimer.restart();
+            // One engine at a time: leaving Hex for Voxtype stops the Hex daemon instead of
+            // leaving it resident. The Voxtype daemon's own binding starts and stops it.
+            if (!root.useHex)
+                root.quitHex();
+        }
         function onEnabledChanged() {
-            if (Config.options.dictation.enabled)
+            if (Config.options.dictation.enabled) {
                 root.scheduleApply();
+                hexApplyTimer.restart();
+            } else {
+                // Nothing to dictate with: do not leave Hex resident while the feature is off.
+                root.quitHex();
+            }
         }
     }
 

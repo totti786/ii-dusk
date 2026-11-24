@@ -14,6 +14,16 @@ import agent_memory as memory
 
 KNOWLEDGE = {"remember_fact", "memory_search", "skill_save", "skill_search"}
 INTERNAL = KNOWLEDGE | {"memory_forget", "conversation_search"}
+# Read-only context/lookup tools: using one of these means the turn answered a question or
+# looked something up, not that it did something reusable. Reviews triggered by these alone
+# were about half of all reviews and nearly all ended "nothing worth saving".
+TRIVIAL = {
+    "desktop_context", "get_environment", "companion_status", "browser_tools", "wallpaper_search",
+    "running_now", "settings_search", "settings_get", "get_shell_config", "windows_list",
+    "system_get_status", "keybinds_search", "memory_search", "conversation_search", "skill_search",
+    "web_search", "fetch_url", "read_file",
+}
+REVIEW_DEDUPE_DAYS = 7
 DIRECTIVE = """Review the completed task below to improve this desktop companion's future work.
 This is an automatic learning review, not another user task. You have knowledge
 tools only. Never perform desktop actions, run commands, install anything, or
@@ -114,6 +124,31 @@ def kick():
                          start_new_session=True)
 
 
+def normalise_request(text):
+    """A request with numbers and punctuation reduced, so repeats of the same task
+    ("brightness 10%" vs "brightness 20%") share one key. Non-Latin text yields ""."""
+    text = re.sub(r"\d+", "#", str(text or "").lower())
+    text = re.sub(r"[^a-z# ]", " ", text)
+    return " ".join(text.split())
+
+
+def reviewed_recently(key, days=REVIEW_DEDUPE_DAYS):
+    """True when the same normalised request was already reviewed within `days`."""
+    if not key:
+        return False
+    cutoff = int((time.time() - days * 86400) * 1000)
+    for file in directory().glob("*.json"):
+        try:
+            job = memory.read_json(file, {})
+        except (OSError, ValueError):
+            continue
+        if job.get("learningReview") or int(job.get("createdAt", 0)) < cutoff:
+            continue
+        if normalise_request(job.get("request", "")) == key:
+            return True
+    return False
+
+
 def enqueue(body, answer, events, completed=True, start=True):
     try:
         return _enqueue(body, answer, events, completed, start)
@@ -133,7 +168,13 @@ def _enqueue(body, answer, events, completed=True, start=True):
     observed = evidence(events)
     request = str(body.get("text", ""))
     preference = bool(re.search(r"\b(remember|prefer|my .* is|we use|next time|always|never|do not use)\b|تذكر|أفضل", request, re.I))
-    if not observed and not preference:
+    # A review is a full model call. Enqueue one only when the turn did something beyond a
+    # read-only lookup, or the user stated a preference, and never review the same task twice
+    # in a week. This drops most reviews that would end "nothing worth saving".
+    substantive = [row for row in observed if row.get("tool") not in TRIVIAL]
+    if not substantive and not preference:
+        return None
+    if reviewed_recently(normalise_request(request)):
         return None
     ident = "learn_" + uuid.uuid4().hex
     directory().mkdir(parents=True, exist_ok=True, mode=0o700)

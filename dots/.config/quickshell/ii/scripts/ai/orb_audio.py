@@ -173,7 +173,7 @@ class Speculation:
         return self.thread is not None and self.thread.is_alive()
 
     def start(self, frames, speech):
-        if self.alive() or not STT_SOCKET.exists():
+        if self.alive() or not (ENGINE == "hex" or STT_SOCKET.exists()):
             return
         self.text, self.speech_at = None, speech
         snapshot = bytes(frames)
@@ -187,7 +187,7 @@ class Speculation:
                     audio.setsampwidth(2)
                     audio.setframerate(16000)
                     audio.writeframes(snapshot)
-                self.text = resident_transcribe(path)
+                self.text = transcribe_clip(path)
             except Exception:
                 self.text = ""
             finally:
@@ -240,7 +240,8 @@ def capture(path):
     signal.signal(signal.SIGTERM, lambda *_: stopped.update(stop=True, cancel=True))
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    start_resident_stt()
+    if ENGINE != "hex":
+        start_resident_stt()
     process = subprocess.Popen(["pw-record", *aec.source_args(), "--raw", "--format", "s16", "--rate", "16000", "--channels", "1", "-"],
                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     selector = selectors.DefaultSelector()
@@ -334,27 +335,78 @@ STT_PYTHON = Path(os.environ.get("ILLOGICAL_IMPULSE_VIRTUAL_ENV") or Path.home()
 STT_DAEMON = Path(__file__).resolve().parent / "stt_daemon.py"
 
 
-def start_resident_stt():
-    """Warm the resident transcriber while the user is still talking. No-op when it is
-    already up, or when the voice venv has no whisper binding (the Voxtype fallback runs)."""
+def _stt_socket_alive():
+    import socket
+    probe = socket.socket(socket.AF_UNIX)
+    probe.settimeout(1)
+    try:
+        probe.connect(str(STT_SOCKET))
+        return True
+    except OSError:
+        return False
+    finally:
+        probe.close()
+
+
+def start_resident_stt(wait=0.0):
+    """Warm the resident transcriber. During capture `wait` is 0, so it loads while the user is
+    still talking. After a failed Hex clip it waits for the socket: connecting before the daemon
+    was listening used to drop the turn to a cold Voxtype process, model load included."""
     if not STT_PYTHON.exists():
-        return
+        return False
     if STT_SOCKET.exists():
-        import socket
-        probe = socket.socket(socket.AF_UNIX)
-        probe.settimeout(1)
-        try:
-            probe.connect(str(STT_SOCKET))
-            return  # alive
-        except OSError:
-            STT_SOCKET.unlink(missing_ok=True)  # left behind by a process that died
-        finally:
-            probe.close()
+        if _stt_socket_alive():
+            return True
+        STT_SOCKET.unlink(missing_ok=True)  # left behind by a process that died
     try:
         subprocess.Popen([str(STT_PYTHON), str(STT_DAEMON)], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL, start_new_session=True)
     except OSError:
-        pass
+        return False
+    deadline = time.monotonic() + max(0.0, wait)
+    while True:
+        if STT_SOCKET.exists() and _stt_socket_alive():
+            return True
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(0.05)
+
+
+# Which engine reads the clip: "hex" (the dictation engine, `hex transcribe`) or "whisper" (the resident
+# daemon, then Voxtype). The shell resolves the setting and passes it in.
+ENGINE = os.environ.get("II_ORB_STT_ENGINE", "whisper")
+
+
+class EngineUnavailable(RuntimeError):
+    """The chosen engine cannot read this clip (not running, a feature off); the next engine may."""
+
+
+def hex_transcribe(path):
+    """Hex's own model (Parakeet) reads the clip: the same engine as the dictation keys. Prints nothing and
+    exits 1 for a clip with no speech, which is an empty transcript, not a failure."""
+    try:
+        done = subprocess.run(["hex", "transcribe", "--json", str(path)], capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise EngineUnavailable(f"Hex: {error}") from error
+    if done.returncode == 0:
+        try:
+            return str(json.loads(done.stdout).get("text", "")).strip()
+        except ValueError as error:
+            raise EngineUnavailable("Hex gave an answer that is not JSON.") from error
+    said = (done.stderr + done.stdout).lower()
+    if "no speech" in said:
+        return ""
+    raise EngineUnavailable((done.stderr or done.stdout).strip()[-300:] or f"Hex exited {done.returncode}")
+
+
+def transcribe_clip(path):
+    """The transcript from the chosen engine, falling back to the resident Whisper daemon."""
+    if ENGINE == "hex":
+        try:
+            return hex_transcribe(path)
+        except EngineUnavailable:
+            start_resident_stt(wait=5.0)
+    return resident_transcribe(path)
 
 
 def resident_transcribe(path):
@@ -379,7 +431,7 @@ def resident_transcribe(path):
 
 def transcribe(path, output):
     try:
-        text = resident_transcribe(path)
+        text = transcribe_clip(path)
         Path(output).write_text(text)
         os.chmod(output, 0o600)
         return
@@ -392,6 +444,8 @@ def transcribe(path, output):
     if result.returncode:
         raise RuntimeError(result.stderr[-1200:] or "Voxtype transcription failed.")
     text = result.stdout.strip().rsplit("\n\n", 1)[-1].strip()
+    from stt_daemon import clean
+    text = clean(text)
     Path(output).write_text(text)
     os.chmod(output, 0o600)
 

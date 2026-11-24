@@ -15,14 +15,22 @@ import qs.services.ai.integrations
 /**
  * Handles LLM chats: the conversation, the tools, and which model answers.
  *
- * One stream adapter connects signed-in Codex, Claude Code and OpenCode.
- * The CLIs own credentials and inference; this service owns the shared chat,
- * attachments, voice, tool policy and durable conversation history.
+ * Two kinds of model share one chat. API models speak one of three wire formats,
+ * one strategy each: Google's Gemini API, Anthropic's /v1/messages, and the
+ * OpenAI-compatible /v1/chat/completions that OpenRouter, DeepSeek, Mistral and
+ * Ollama serve; their keys live in the keyring. Signed-in agents (Codex, Claude
+ * Code, OpenCode) go through one stream adapter and the CLIs own their
+ * credentials. Which one a model uses is its own `api_format`; nothing here
+ * tests provider names. This service owns the shared chat, attachments, voice,
+ * tool policy and durable conversation history.
  */
 Singleton {
     id: root
 
     property Component aiMessageComponent: AiMessageData {}
+    property Component geminiApiStrategy: GeminiApiStrategy {}
+    property Component openAiCompatStrategy: OpenAiCompatStrategy {}
+    property Component anthropicApiStrategy: AnthropicApiStrategy {}
     property Component opencodeApiStrategy: OpencodeStrategy {}
     readonly property string interfaceRole: "interface"
     readonly property string apiKeyEnvVarName: "API_KEY"
@@ -83,6 +91,20 @@ Singleton {
                 recoveryActionIds: ["open-models"]
             };
 
+        if (model.requires_key && !KeyringStorage.loaded)
+            return {
+                allowed: false,
+                reason: "keyring-loading",
+                recoveryActionIds: ["retry-submit"]
+            };
+
+        if (model.requires_key && !(root.apiKeys?.[model.key_id]?.length > 0))
+            return {
+                allowed: false,
+                reason: "missing-key",
+                recoveryActionIds: ["open-keys"]
+            };
+
         const engine = String(model.quirks?.agentEngine ?? "");
         const account = Array.from(root.agentBackends ?? []).find(entry => entry.id === engine);
         if (account && !account.installed)
@@ -97,11 +119,21 @@ Singleton {
         };
     }
 
+    Connections {
+        target: KeyringStorage
+        function onLoadedChanged() {
+            if (KeyringStorage.loaded)
+                root.resumePendingSubmission();
+        }
+    }
+
     function enforcePolicy() {
         root.runCoordinator.cancelByPolicy(root.localOnly);
         const blocksTransport = transport => transport.running && (!root.enabled || (root.localOnly && transport.model && !root.catalog.isModelLocal(transport.model)));
         if (blocksTransport(requester))
             root.stopGeneration();
+        if (blocksTransport(keyTester))
+            keyTester.abort();
         if (blocksTransport(titleRequester))
             titleRequester.abort();
         if (!root.onlineAllowed && commandExecutionProc.running)
@@ -218,7 +250,7 @@ Singleton {
         if (attachmentProblem.length > 0)
             return root.rejectSubmission("attachment-incompatible", attachmentProblem, ["open-models", "remove-attachment"]);
         const permission = root.canSubmit(modelId);
-        const waitingForKeyring = false;
+        const waitingForKeyring = !!model && model.requires_key && !KeyringStorage.loaded;
         if (!permission.allowed && !waitingForKeyring)
             return root.rejectSubmission(permission.reason || "unavailable", Translation.tr("This AI model is not ready to receive a message."), permission.recoveryActionIds ?? ["open-models"]);
 
@@ -1141,10 +1173,17 @@ Singleton {
     function isFreshMessage(messageId: string): bool {
         return String(messageId ?? "").length > 0 && messageId === root.lastAppendedId && (Date.now() - root.lastAppendedAt) < 1200;
     }
-    // Compatibility projections for older hosts; inference uses CLI account auth.
-    readonly property var apiKeys: ({})
-    readonly property bool apiKeysLoaded: true
-    readonly property bool currentModelHasApiKey: true
+    readonly property var apiKeys: KeyringStorage.keyringData?.apiKeys ?? {}
+    readonly property var apiKeysLoaded: KeyringStorage.loaded
+    readonly property bool currentModelHasApiKey: {
+        const model = root.currentModelEntry;
+        if (!model || !model.requires_key)
+            return true;
+        if (!apiKeysLoaded)
+            return false;
+        const key = apiKeys[model.key_id];
+        return (key?.length > 0);
+    }
     property var postResponseHook
 
     /**
@@ -1305,7 +1344,15 @@ Singleton {
     }
 
     function createApiStrategy(format: string, owner = root): var {
-        return root.opencodeApiStrategy.createObject(owner ?? root);
+        const normalized = String(format ?? "openai").toLowerCase();
+        const parent = owner ?? root;
+        if (normalized === "gemini")
+            return root.geminiApiStrategy.createObject(parent);
+        if (normalized === "anthropic")
+            return root.anthropicApiStrategy.createObject(parent);
+        if (normalized === "opencode")
+            return root.opencodeApiStrategy.createObject(parent);
+        return root.openAiCompatStrategy.createObject(parent);
     }
 
     /**
@@ -2088,6 +2135,7 @@ Singleton {
     // Providers and models are described once, in the catalog. Nothing here
     // builds a model object or tests a provider name for substrings.
     readonly property ModelCatalog catalog: ModelCatalog {
+        ollamaModelNames: root.ollamaModels
         opencodeModelNames: root.opencodeModels
         agentModelNames: root.agentModels
     }
@@ -2200,8 +2248,19 @@ Singleton {
     }
 
     // One event adapter; all engine differences stay in agent_bridge.py.
-    property var apiStrategies: ({"opencode": root.createApiStrategy("opencode", root)})
-    property ApiStrategy currentApiStrategy: apiStrategies["opencode"]
+    property var apiStrategies: {
+        const openAiCompat = openAiCompatStrategy.createObject(this);
+        return {
+            "openai": openAiCompat,
+            // Mistral speaks the same dialect. The name is kept because user
+            // configs (and the shipped default) still ask for it.
+            "mistral": openAiCompat,
+            "gemini": geminiApiStrategy.createObject(this),
+            "anthropic": anthropicApiStrategy.createObject(this),
+            "opencode": root.createApiStrategy("opencode", root)
+        };
+    }
+    property ApiStrategy currentApiStrategy: apiStrategies[root.currentModelEntry?.api_format || "openai"]
 
     property string requestScriptFilePath: `/tmp/quickshell-${SystemInfo.username}/ai/request.sh`
 
@@ -2539,10 +2598,149 @@ Singleton {
         return true;
     }
 
-    // Keep the old /key command as a shortcut to account connections. Secrets
-    // are neither accepted nor stored by the companion.
-    function setApiKey(key) { root.keyManagerRequested(); }
-    function printApiKey() { root.keyManagerRequested(); }
+    // An agent model needs no key: /key opens the connections panel for it instead.
+    function setApiKey(key) {
+        const model = root.currentModelEntry;
+        if (!model)
+            return;
+        if (!model.requires_key) {
+            root.keyManagerRequested();
+            return;
+        }
+        if (!key || key.length === 0) {
+            root.addApiKeyAdvice(model);
+            return;
+        }
+        KeyringStorage.setNestedField(["apiKeys", model.key_id], key.trim());
+        root.addMessage(Translation.tr("API key set for %1").arg(model.name), Ai.interfaceRole);
+    }
+
+    /**
+     * Says whether a key is set. It never prints one: the chat is a visible,
+     * screenshot-able, screen-shared surface, and a secret written into it
+     * stays there.
+     */
+    function printApiKey() {
+        const model = root.currentModelEntry;
+        if (!model)
+            return;
+        if (!model.requires_key) {
+            root.keyManagerRequested();
+            return;
+        }
+        const key = root.apiKeys[model.key_id];
+        if (!key) {
+            root.addApiKeyAdvice(model);
+            return;
+        }
+        root.addMessage(Translation.tr("A key is set for %1 (ending %2). Open the key panel to see or change it.").arg(model.name).arg(key.slice(-4)), root.interfaceRole, {
+            "notice": "apiKey"
+        });
+    }
+
+    /** Whether a provider has a key on file, for the key panel's state dots. */
+    function hasApiKey(keyId: string): bool {
+        return (root.apiKeys?.[keyId]?.length ?? 0) > 0;
+    }
+
+    function setApiKeyFor(keyId: string, key: string) {
+        if (!keyId || keyId.length === 0)
+            return;
+        KeyringStorage.setNestedField(["apiKeys", keyId], String(key ?? "").trim());
+    }
+
+    // ── Does this key work? ───────────────────────────────────────────────
+    // One very small request, whose answer nobody reads. The only thing worth
+    // knowing is what the endpoint says about the key, in words rather than
+    // as an HTTP number.
+
+    property string keyTestId: ""
+    /** "", "running", "ok" or "failed". */
+    property string keyTestState: ""
+    property string keyTestMessage: ""
+    property AiMessageData keyTestMessageData: AiMessageData {}
+
+    function testApiKey(keyId: string) {
+        if (keyTester.running)
+            return;
+        const model = root.catalog.modelIds.map(id => root.catalog.models[id]).find(entry => entry.key_id === keyId && entry.requires_key);
+        if (!model) {
+            root.keyTestId = keyId;
+            root.keyTestState = "failed";
+            root.keyTestMessage = Translation.tr("No model uses this key.");
+            return;
+        }
+        const permission = root.canSubmit(model.id);
+        if (!permission.allowed) {
+            root.keyTestId = keyId;
+            root.keyTestState = "failed";
+            root.keyTestMessage = Translation.tr("This model is unavailable under the current AI policy.");
+            return;
+        }
+        const key = root.apiKeys?.[keyId] ?? "";
+        if (key.length === 0) {
+            root.keyTestId = keyId;
+            root.keyTestState = "failed";
+            root.keyTestMessage = Translation.tr("No key to test.");
+            return;
+        }
+        const strategy = root.titleStrategyFor(model.api_format || "openai");
+        const prompt = root.aiMessageComponent.createObject(root, {
+            "role": "user",
+            "content": "Hi",
+            "rawContent": "Hi",
+            "thinking": false,
+            "done": true
+        });
+        strategy.thinkingOverride = "off";
+        strategy.outputOverride = 16;
+        const data = strategy.buildRequestData(model, [prompt], "Reply with one word.", 0, null);
+        strategy.thinkingOverride = "";
+        strategy.outputOverride = 0;
+        prompt.destroy();
+
+        root.keyTestId = keyId;
+        root.keyTestState = "running";
+        root.keyTestMessage = "";
+        keyTester.model = model;
+        keyTester.strategy = strategy;
+        keyTester.message = root.keyTestMessageData;
+        keyTester.endpoint = strategy.buildEndpoint(model);
+        keyTester.requestData = data;
+        keyTester.apiKey = key;
+        keyTester.start();
+    }
+
+    AiRequest {
+        id: keyTester
+        apiKeyEnvVarName: root.apiKeyEnvVarName
+        scriptPath: `/tmp/quickshell-${SystemInfo.username}/ai/keytest.sh`
+        // One attempt: a key that is refused is refused, and waiting through
+        // two backoffs to be told so is not a test.
+        maxRetries: 0
+
+        onFinished: (reason, status, code) => {
+            if (reason === "done") {
+                root.keyTestState = "ok";
+                root.keyTestMessage = Translation.tr("The key works.");
+                return;
+            }
+            root.keyTestState = "failed";
+            const kind = root.transportErrorKind(status, code);
+            if (kind === "auth")
+                root.keyTestMessage = Translation.tr("Refused: the key is wrong, or not allowed to use this model.");
+            else if (kind === "quota")
+                root.keyTestMessage = Translation.tr("The key is valid but out of quota for now.");
+            else if (kind === "network" || kind === "timeout")
+                root.keyTestMessage = Translation.tr("Could not reach the provider.");
+            else if (status === 0)
+                // Nothing answered because nothing was asked: the request
+                // itself failed to run. "HTTP 0" said none of that.
+                root.keyTestMessage = Translation.tr("The request could not be sent (exit code %1).").arg(code);
+            else
+                root.keyTestMessage = Translation.tr("The provider answered with HTTP %1.").arg(status);
+        }
+    }
 
     function printTemperature() {
         root.addMessage(Translation.tr("Temperature: %1").arg(root.temperature), Ai.interfaceRole);
@@ -3332,7 +3530,7 @@ Singleton {
             KeyringStorage.fetchKeyringData();
 
         const profile = pending ? (pending.profile ?? root.responseProfileForModel(model.id)) : root.responseProfileForModel(model.id);
-        const strategy = pending ? root.apiStrategies["opencode"] : root.currentApiStrategy;
+        const strategy = pending ? root.apiStrategies[model.api_format || "openai"] : root.currentApiStrategy;
         strategy.activeThinkingLevel = profile.thinkingLevel;
         strategy.chatSessionId = pending?.sessionId || root.sessions.currentId;
         const messageArray = root.messageIDs.map(id => root.messageByID[id]);

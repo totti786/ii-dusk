@@ -32,6 +32,7 @@ Scope {
     function routeModel() {
         if (root.route === "rule") return "rules";
         if (root.route === "haiku" || root.route === "look") return root.fastModelId();
+        if (root.route === "quick") return root.quickModelId();
         return root.escalationModelId() || Ai.currentModelId;
     }
     function logTurn() {
@@ -137,7 +138,7 @@ Scope {
             root.fastAsk(String(text));
             return;
         }
-        root.askFull(text);
+        root.askFull(text, !root.quickReady && Ai.attachments.length === 0);
     }
     // The model for turns that need the desktop. Empty keeps whatever the sidebar has selected. Claude Haiku
     // did the same tool turn in 3.7 s against 21.6 s on Codex (2026-11-18), but it is a different
@@ -150,7 +151,30 @@ Scope {
         if (Ai.localOnly && Ai.catalog.models[id] && !Ai.catalog.isModelLocal(Ai.catalog.models[id])) return "";
         return Ai.catalog.models[id] ? id : "";
     }
-    function askFull(text) {
+    // When the warm Claude stage cannot answer, a plain question goes to the chosen fallback model with a
+    // short-answer prompt; anything that sounds like desktop work keeps the desktop-tasks model.
+    readonly property var desktopWords: /\b(open|close|launch|quit|kill|click|type|send|play|pause|resume|skip|search|find|show|switch|move|resize|set|turn|enable|disable|change|install|run|download|screenshot|record|list|which|windows?|files?|folders?|wallpaper|settings?|telegram|browser|terminal|mediator)\b/i;
+    // The quick-answers model is one setting. A Claude model runs as the warm resident session; any other
+    // catalog model answers through an ordinary short-answer turn, and a Claude model that cannot run
+    // (CLI missing or signed out) falls through to the desktop-tasks model.
+    readonly property string quickValue: String(Config.options.ai.voice.fastModel ?? "").trim()
+    readonly property bool quickIsClaude: root.quickValue.indexOf(":") < 0 || root.quickValue.indexOf("claude:") === 0
+    function quickModelId() {
+        if (Config.options.ai.voice.fastPath !== true || root.quickIsClaude) return "";
+        const id = root.quickValue;
+        if (Ai.localOnly && Ai.catalog.models[id] && !Ai.catalog.isModelLocal(Ai.catalog.models[id])) return "";
+        return Ai.catalog.models[id] ? id : "";
+    }
+    // The model for a turn that left the quick stage. `unavailable` is true when the stage could not run,
+    // false when Claude itself asked for the desktop.
+    function handoverModelId(text, unavailable) {
+        if (unavailable && !root.desktopWords.test(String(text))) {
+            const quick = root.quickModelId();
+            if (quick.length > 0) return quick;
+        }
+        return root.escalationModelId();
+    }
+    function askFull(text, unavailable) {
         if (Ai.attachmentWorkPending) {
             root.active = true;
             root.pendingAsk = String(text);
@@ -175,8 +199,9 @@ Scope {
         root.errorText = "";
         root.phase = "thinking";
         root.generationStarted = Date.now();
+        root.route = (unavailable === true && root.handoverModelId(text, true) !== root.escalationModelId()) ? "quick" : "agent";
         const result = Ai.submit(String(text), {
-            modelId: root.escalationModelId(),
+            modelId: root.handoverModelId(text, unavailable === true),
             attachments: Ai.attachments,
             systemPrompt: Ai.systemPrompt + "\nThis turn is a spoken conversation through the desktop voice orb. Give a natural spoken answer, usually one to three short sentences. Avoid markdown, long lists and code unless explicitly requested. Keep the existing tool and approval rules."
         }, "voice-orb");
@@ -201,7 +226,7 @@ Scope {
     readonly property bool claudeFound: root.claudeState !== "missing"
     // Claude is a remote model, so it also needs the global AI policy (Settings > Sidebars) to allow online use:
     // "Local only" and "Off" both rule it out, along with the screenshot it can be sent.
-    readonly property bool quickReady: Config.options.ai.voice.fastPath === true && Ai.onlineAllowed
+    readonly property bool quickReady: Config.options.ai.voice.fastPath === true && Ai.onlineAllowed && root.quickIsClaude
         && root.claudeState !== "missing" && root.claudeState !== "signedOut"
     // Whether anything in the agent can still help: the instant rules need no model at all.
     readonly property bool agentUseful: root.quickReady || Config.options.ai.voice.rules !== false
@@ -246,7 +271,9 @@ Scope {
     // The instant-command settings, sent when the agent starts and whenever they change.
     readonly property string rulesConfig: JSON.stringify({op: "config",
         rulesOff: Array.from(Config.options.ai.voice.rulesOff ?? []),
-        custom: Array.from(Config.options.ai.voice.customRules ?? [])})
+        custom: Array.from(Config.options.ai.voice.customRules ?? []),
+        learned: Array.from(Config.options.ai.voice.learnedRules ?? []),
+        learn: Config.options.ai.voice.learn !== false})
     onRulesConfigChanged: if (voiceAgent.running && root.agentReady) voiceAgent.write(root.rulesConfig + "\n")
     function sendAgent(message) {
         if (voiceAgent.running && root.agentReady) {
@@ -256,10 +283,13 @@ Scope {
         root.agentQueue = root.agentQueue.concat([message]);
         if (!voiceAgent.running) voiceAgent.running = true;
     }
+    // Picking a model in the sidebar pins it for this session: typed messages go to it instead of being
+    // routed. Choosing "Auto" in the picker hands them back to the router. Not saved; a restart starts on Auto.
+    property bool pinnedChatModel: false
     /** Whether a typed message should take the same route as speech. */
     function canRouteTyped(text) {
         const settings = Config.options.ai.voice;
-        return settings.typedRouting !== false && root.agentUseful && Ai.enabled
+        return settings.typedRouting === true && !root.pinnedChatModel && root.agentUseful && Ai.enabled
             && !root.active && root.fastId.length === 0 && !root.typed
             && Ai.attachments.length === 0 && !Ai.attachmentWorkPending && !Ai.isGenerating
             && String(text ?? "").trim().length > 0 && String(text).trim().length < 2000
@@ -300,6 +330,8 @@ Scope {
         root.phase = "thinking";
         root.generationStarted = Date.now();
         root.fastId = "v" + Date.now();
+        root.chosenActions = [];
+        root.chosenAllRan = true;
         root.fastText = text;
         root.fastBuffer = "";
         root.fastSent = 0;
@@ -397,6 +429,11 @@ Scope {
             generationMs: Date.now() - root.generationStarted, firstTokenMs: event.firstTokenMs ?? 0});
         const answer = String(event.text ?? "").trim();
         const notes = root.fastNotes;
+        // The model turned a sentence no rule knew into actions that all ran: let the agent weigh remembering it.
+        if (!event.rule && root.chosenAllRan && root.chosenActions.length > 0 && Config.options.ai.voice.learn !== false)
+            root.sendAgent({op: "learn", text: root.fastText, actions: root.chosenActions});
+        root.chosenActions = [];
+        root.chosenAllRan = true;
         root.fastId = "";
         root.fastNotes = [];
         if (root.mood === "curious") root.mood = "";
@@ -425,14 +462,30 @@ Scope {
     // The model that really answered, as the catalog names it, so the chat does not
     // label a warm Haiku reply with whichever model is selected for the full agent.
     function fastModelId() {
-        const alias = String(Config.options.ai.voice.fastModel);
+        if (!root.quickIsClaude) return root.quickValue;
+        const alias = root.quickValue.replace(/^claude:/, "");
         const key = Object.keys(Ai.models).find(id => id.indexOf("claude") === 0 && id.endsWith(":" + alias));
         return key ?? ("claude:" + alias);
     }
+    // A phrase the agent decided to remember. Kept in the config, where Settings lists it.
+    function keepLearned(rule) {
+        if (!rule || String(rule.phrase ?? "").length === 0 || String(rule.do ?? "").length === 0) return;
+        const list = Array.from(Config.options.ai.voice.learnedRules ?? []);
+        if (list.some(item => item.phrase === rule.phrase)) return;
+        Config.options.ai.voice.learnedRules = list.concat([rule]).slice(-100);
+        console.log("[voice] learned:", rule.phrase, "->", rule.do);
+    }
     // A marker the shell could not carry out. Nothing was spoken yet, so the full agent
     // can take the turn; if something already ran, say so instead of redoing it.
+    // Actions the quick model chose this turn (not a rule), for learning: all must run for the sentence to count.
+    property var chosenActions: []
+    property bool chosenAllRan: true
     function fastAction(event) {
         const result = actions.run(event.verb, event.args, event.confirmed === true);
+        if (event.source === "model") {
+            if (result.ok) root.chosenActions = root.chosenActions.concat([[String(event.verb), Array.from(event.args ?? []).map(a => String(a))]]);
+            else root.chosenAllRan = false;
+        }
         if (result.ok) {
             root.fastNotes = root.fastNotes.concat([result.note]);
             root.setMood("delighted", 2200);
@@ -458,6 +511,10 @@ Scope {
         else if (/log ?in|sign ?in|authenticat|api key|credentials|unauthori[sz]ed|oauth/i.test(String(reason))) root.claudeState = "signedOut";
         const text = root.fastText;
         const typed = root.typed;
+        root.chosenActions = [];
+        root.chosenAllRan = true;
+        // "needs the desktop" is Claude asking for tools; anything else means the stage could not answer.
+        const unavailable = String(reason) !== "needs the desktop" || !root.quickReady;
         root.fastId = "";
         root.fastNotes = [];
         root.typed = false;
@@ -466,17 +523,17 @@ Scope {
             console.log("[voice] typed turn handed over:", reason);
             root.route = "agent";
             root.phase = "idle";
-            const result = Ai.submit(text, {modelId: root.escalationModelId(), attachments: Ai.attachments}, "chat");
+            const result = Ai.submit(text, {modelId: root.handoverModelId(text, unavailable), attachments: Ai.attachments}, "chat");
             if (!result.accepted) console.log("[voice] typed handover rejected:", result.errorCode);
             return;
         }
         if (Ai.speechService.streamOpen) Ai.speechService.stop();
         console.log("[voice] fast path handed over:", reason);
-        root.askFull(text);
+        root.askFull(text, unavailable);
     }
     Process {
         id: voiceAgent
-        command: ["env", "II_VOICE_MODEL=" + Config.options.ai.voice.fastModel,
+        command: ["env", "II_VOICE_MODEL=" + (root.quickIsClaude ? root.quickValue.replace(/^claude:/, "") : "haiku"),
                   "II_VOICE_SCREEN=" + (Config.options.ai.voice.screen === true ? "1" : "0"),
                   "II_VOICE_RULES=" + (Config.options.ai.voice.rules === false ? "0" : "1"),
                   "II_VOICE_LANGUAGE=" + String(Config.options.ai.voice.language ?? "en"),
@@ -494,6 +551,7 @@ Scope {
                     for (const message of queued) voiceAgent.write(JSON.stringify(message) + "\n");
                     return;
                 }
+                if (event.event === "learned") { root.keepLearned(event.rule); return; }
                 if (event.id !== root.fastId || root.fastId.length === 0) return;
                 if (event.event === "delta") {
                     root.fastBuffer += String(event.text);
@@ -582,6 +640,7 @@ Scope {
             "II_ORB_VAD=" + ((Config.options.ai.voice.vad ?? true) ? "1" : "0"),
             "II_ORB_LANGUAGE=" + String(Config.options.ai.voice.language ?? "en"),
             "II_ORB_STT_MODEL=" + String(Config.options.ai.voice.sttModel ?? "auto"),
+            "II_ORB_STT_ENGINE=" + Ai.voiceService.sttEngine,
             "python3", Directories.scriptPath + "/ai/orb_audio.py", "capture", root.recordingPath];
         capture.running = true;
     }
@@ -758,18 +817,32 @@ Scope {
         target: GlobalStates
         function onScreenLockedChanged() { if (GlobalStates.screenLocked) root.stop(); }
     }
-    // The orb's helper daemons (warm Kokoro voice, private ydotoold) are started by the shell, not by systemd.
-    // The script only starts what is not running, so this also revives a crashed one.
+    // The orb's helper daemons (warm Kokoro voice, private ydotoold) are started by the shell, not by
+    // systemd. The script only starts what is not running, so this also revives a crashed one.
+    // The Kokoro model is ~440 MiB of resident and swapped memory, so it is held only while the orb
+    // can be heard: a hidden orb stops it after a grace period instead of paying for it all day.
+    readonly property bool voiceWanted: AiCompanionUi.saved.visible || root.active || Ai.speechService.speaking
     Timer {
-        interval: 60000; running: true; repeat: true; triggeredOnStart: true
+        interval: 60000; repeat: true; triggeredOnStart: true
+        running: root.voiceWanted
         onTriggered: Quickshell.execDetached([Directories.scriptPath + "/ai/ensure_daemons.sh"])
     }
+    // Hiding the orb does not throw the model away at once: a short grace period covers a quick
+    // hide-and-show, and speech in progress keeps voiceWanted true so nothing is cut off.
+    Timer {
+        interval: 90000
+        running: !root.voiceWanted
+        onTriggered: Quickshell.execDetached([Directories.scriptPath + "/ai/ensure_daemons.sh", "stop-voice"])
+    }
     // ── Wake word ────────────────────────────────────────────────────────────────
-    // The detector owns the microphone only while the orb is idle; a session (or the lock
-    // screen) stops it so capture has the mic alone and the reply cannot wake it.
+    // The detector owns the microphone only while the orb is idle; a session, the lock screen,
+    // or the dictation key stops it so one thing owns the microphone at a time. A hidden orb
+    // stops it too: closed means the microphone is off, not silently listening.
     readonly property bool wakeWanted: (Config.options.ai.voice.wakeWord ?? false)
         && !root.active && root.phase === "idle" && !GlobalStates.screenLocked
         && !Ai.speechService.speaking && Ai.voiceService.state === "idle"
+        && !DictationService.recording
+        && AiCompanionUi.saved.visible
     property string wakeError: ""
     onWakeWantedChanged: {
         if (root.wakeWanted) wakeRestart.restart();

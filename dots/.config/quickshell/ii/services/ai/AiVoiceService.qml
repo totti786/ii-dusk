@@ -104,7 +104,7 @@ QtObject {
         if (!root.recorderAvailable)
             return Translation.tr("No audio recorder was found (pw-record is missing).");
         if (!root.backendAvailable)
-            return Translation.tr("Voxtype or its local base model is unavailable. Install Voxtype and its base model, then check again.");
+            return Translation.tr("No speech engine is ready. Open Settings > AI > Voice orb > Speech engines to switch on Hex or download the Whisper model.");
         return "";
     }
 
@@ -269,15 +269,69 @@ QtObject {
         }
     }
 
+    // ── Speech engines ──────────────────────────────────────────────────────────
+    // Which engine reads what you say. "auto" follows the dictation keys: with Hex as the dictation
+    // engine the orb uses Hex's model too (faster, more accurate, and it says "no speech" for noise),
+    // otherwise the local Whisper model. Hex's model is English only, so another language uses Whisper.
+    // The orb falls back to Whisper by itself when Hex cannot read a clip.
+    readonly property string sttEngine: {
+        const chosen = String(Config.options.ai.voice.sttEngine ?? "auto");
+        const english = String(Config.options.ai.voice.language ?? "en") === "en";
+        if (chosen === "whisper" || !english) return "whisper";
+        // Installed is not the same as answering: `which hex` says nothing about whether the
+        // daemon is up. Health comes from DictationService's 4 s `hex status` probe. A running
+        // Hex keeps the model warm (~0.6 s a clip); when it is down, the warm Whisper daemon is
+        // faster than starting Hex cold on every utterance, so the engine follows health.
+        const hexOk = root.setup.hex === true && root.setup.hexTranscribe === true
+            && DictationService.hexState !== "stopped";
+        if (chosen === "hex") return hexOk ? "hex" : "whisper";
+        return DictationService.activeEngine === "hex" && hexOk ? "hex" : "whisper";
+    }
+    // What is installed (scripts/ai/speech_setup.py status), and the downloads in progress.
+    property var setup: ({})
+    readonly property bool setupKnown: root.setup.hasOwnProperty("kokoro")
+    function recheckSetup() { if (!setupProc.running) setupProc.running = true; }
+    function downloadSpeech(kind: string) {
+        Quickshell.execDetached(["python3", Directories.scriptPath + "/ai/speech_setup.py", "get", kind]);
+        setupPoll.restart();
+        recheckTimer.restart();
+    }
+    function enableHexTranscribe() {
+        Quickshell.execDetached(["python3", Directories.scriptPath + "/ai/speech_setup.py", "hex-on"]);
+        recheckTimer.restart();
+    }
+    property Timer recheckTimer: Timer { id: recheckTimer; interval: 1200; onTriggered: { root.recheckSetup(); root.redetect(); } }
+    property Timer setupPollTimer: Timer {
+        id: setupPoll
+        interval: 1500
+        repeat: true
+        onTriggered: {
+            root.recheckSetup();
+            if (Object.keys(root.setup.downloading ?? {}).length === 0 && ++setupPoll.idle > 3) { setupPoll.idle = 0; setupPoll.stop(); root.redetect(); }
+        }
+        property int idle: 0
+    }
+    Component.onCompleted: root.recheckSetup()
+    property Process setupProc: Process {
+        id: setupProc
+        command: ["python3", Directories.scriptPath + "/ai/speech_setup.py", "status"]
+        stdout: StdioCollector {
+            onStreamFinished: { try { root.setup = JSON.parse(text); } catch (e) {} }
+        }
+    }
+
     property Process backendCheckProc: Process {
         id: backendCheckProc
-        command: ["bash", "-c", "command -v voxtype >/dev/null 2>&1 && test -f \"$HOME/.local/share/voxtype/models/ggml-base.bin\" && echo voxtype || echo none"]
+        // Any engine that can read a clip: Hex with "Transcribe files" on, or a Whisper model in Voxtype's
+        // folder (the resident transcriber needs the model, not the voxtype program).
+        command: ["bash", "-c", "if command -v hex >/dev/null 2>&1 && hex labs 2>/dev/null | grep -q '^transcribe-files  *on'; then echo hex; "
+            + "elif ls \"$HOME\"/.local/share/voxtype/models/ggml-*.bin >/dev/null 2>&1; then echo whisper; else echo none; fi"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const lines = text.trim().split("\n");
                 const found = lines[0] ?? "none";
                 root.backendName = found === "none" ? "" : found;
-                root.backendAvailable = found === "voxtype";
+                root.backendAvailable = found === "hex" || found === "whisper";
                 root.backendChecked = true;
             }
         }

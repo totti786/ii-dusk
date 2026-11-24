@@ -35,8 +35,9 @@ class LearningLoop(unittest.TestCase):
                      "text": "Change my wallpaper using the existing native desktop controls.",
                      "tools": ["wallpaper_set", "desktop_context", "memory_search", "remember_fact", "skill_search", "skill_save"]}
 
-    def job(self, failed=False):
-        ident = learning.enqueue(self.body, "Task finished", events(failed), start=False)
+    def job(self, failed=False, text=None):
+        body = {**self.body, "text": text or self.body["text"]}
+        ident = learning.enqueue(body, "Task finished", events(failed), start=False)
         return memory.read_json(learning.directory() / (ident + ".json"))
 
     def teach(self, job):
@@ -68,18 +69,30 @@ class LearningLoop(unittest.TestCase):
         self.body["text"] = "Thanks!"
         self.assertIsNone(learning.enqueue(self.body, "You're welcome", [], start=False))
 
+    def test_read_only_lookup_does_not_spend_a_learning_review(self):
+        self.body["text"] = "How many windows are open?"
+        lookup = [
+            {"type": "session.tool.input.started", "data": {"id": "w", "name": "ii-shell_windows_list"}},
+            {"type": "session.tool.success", "data": {"id": "w", "content": [{"type": "text", "text": "3 windows"}]}},
+        ]
+        self.assertIsNone(learning.enqueue(self.body, "3", lookup, start=False))
+
+    def test_same_task_is_not_reviewed_twice_in_a_week(self):
+        self.job()
+        self.assertIsNone(learning.enqueue(self.body, "Task finished", events(), start=False))
+
     def test_denied_knowledge_writes_are_not_added_by_the_worker(self):
         self.body["tools"] = ["wallpaper_set", "desktop_context"]
         self.assertIsNone(learning.enqueue(self.body, "done", events(), start=False))
 
     def test_durable_review_updates_retrievable_skill_then_improves_its_version(self):
-        self.job()
+        self.job(text="Change my wallpaper using the existing native desktop controls.")
         with mock.patch.object(learning, "perform", side_effect=self.teach):
             learning.drain()
         found = memory.search("wallpaper", ("skill",))
         self.assertEqual(found[0]["metadata"]["version"], 1)
         self.assertTrue(found[0]["metadata"]["learningJob"].startswith("learn_"))
-        self.job()
+        self.job(text="Update my wallpaper again with the native renderer.")
         with mock.patch.object(learning, "perform", side_effect=self.teach):
             learning.drain()
         self.assertEqual(memory.search("wallpaper", ("skill",))[0]["metadata"]["version"], 2)
