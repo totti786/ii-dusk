@@ -2159,7 +2159,7 @@ Singleton {
             "search.typingTest.wordlistSize": ["standard", "extended"],
             "search.typingTest.caretStyle": ["line", "block", "underline", "off"],
             "search.appearance.resultsStyle": ["classic", "expressive"],
-            "search.typingTest.keyboard.layout": ["qwerty", "qwertz", "azerty", "dvorak", "colemak", "vial"],
+            "search.typingTest.keyboard.layout": ["qwerty", "qwertz", "azerty", "dvorak", "colemak", "jcuken", "vial"],
             "search.typingTest.sounds.theme": ["click1", "click2", "click3", "click4", "click5", "click6", "click7"],
             "search.typingTest.sounds.errorTheme": ["error1", "error2", "error3", "error4"],
             "search.speedTest.mode": ["both", "download", "upload"],
@@ -3131,6 +3131,9 @@ Singleton {
                     property bool enable: true
                     // The screen may go over Wi-Fi through the link when no USB is plugged.
                     property bool wireless: true
+                    // Keep playing on this PC too (capture default sink's monitor) instead
+                    // of moving every stream onto a silent virtual sink.
+                    property bool keepPcAudio: true
                 }
                 // The phone's camera as this PC's webcam over ii link, instead of DroidCam.
                 property JsonObject camera: JsonObject {
@@ -3449,6 +3452,8 @@ Singleton {
                     property string wakeWordModel: "hey_jarvis"
                     property real wakeWordThreshold: 0.5
                     property bool fastPath: true
+                    // The quick-answers model: a Claude alias ("haiku", which runs as a warm session) or any catalog
+                    // model id such as "google:gemini-4-hydrogen".
                     property string fastModel: "haiku"
                     // Instant desktop actions from a closed list (media, volume, timers...),
                     // run by the shell without a tool turn.
@@ -3456,8 +3461,9 @@ Singleton {
                     // Pattern-matched commands ("volume 30", "next song", "timer 10 minutes")
                     // answered by scripts/ai/voice_rules.py without asking a model at all.
                     property bool rules: true
-                    // Messages typed in the sidebar take the same route as spoken ones.
-                    property bool typedRouting: true
+                    // Messages typed in the sidebar take the same route as spoken ones. Off by default:
+                    // the model picked in the chat then answers everything typed.
+                    property bool typedRouting: false
                     // Small orbs that bud off the main one for live things (timers, alarms, music).
                     property bool satellites: true
                     property bool satelliteMedia: true
@@ -3470,6 +3476,10 @@ Singleton {
                     // {phrase, do, say}, where `do` is e.g. "theme dark; volume set 20".
                     property list<var> rulesOff: []
                     property list<var> customRules: []
+                    // Phrases the orb learned from what the quick model did (see voice_rules.learnable):
+                    // {phrase, do, say, learnedAt}. Listed in Settings, where each can be forgotten or kept.
+                    property list<var> learnedRules: []
+                    property bool learn: true
                     // A rule-matched command ends with a short chime, not a spoken sentence
                     // (only while shell sounds are enabled).
                     property bool chime: true
@@ -3477,6 +3487,9 @@ Singleton {
                     // one selected in the sidebar. "haiku" or "sonnet" runs them on Claude Code: about
                     // 4 s instead of 10-20 s on Codex in a measured test.
                     property string escalationModel: ""
+                    // What reads your speech: "auto" follows the dictation engine (Hex when that is the dictation
+                    // engine and English is selected, else Whisper), or force "hex" / "whisper".
+                    property string sttEngine: "auto"
                     // May the orb look at the screen when asked "what is on my screen".
                     // One capture, sent only for that turn.
                     property bool screen: true
@@ -6212,7 +6225,7 @@ Singleton {
                     property string activeWindow: "default"
                     property string clock: "expressive" // default, material, expressive, neural, relief
                     property string media: "default" // default | expressive | neural | ring | tonal
-                    property string notification: "default"
+                    property string notification: "default" // notifications_button: default | expressive
                     property string utilButtons: "expressive" // default | expressive | segments | sculpt
                     property string workspaces: "default" // default | minimal | expressive | dock | index
                     property string weather: "expressive" // default | expressive | horizon | tessera | sculpt
@@ -6825,6 +6838,10 @@ Singleton {
                 }
                 property JsonObject power: JsonObject {
                     property string colorMode: "primary"
+                }
+                // Notifications button: the pill's palette while something is unread.
+                property JsonObject notificationButton: JsonObject {
+                    property string colorMode: "secondaryContainer"
                 }
                 property JsonObject policies: JsonObject {
                     property string colorMode: "primary"
@@ -8570,7 +8587,7 @@ Singleton {
                     property bool finishOnLastWord: true
                     property JsonObject keyboard: JsonObject {
                         property bool enable: true
-                        // qwerty, qwertz, azerty, dvorak, colemak, or "vial" for the
+                        // qwerty, qwertz, azerty, dvorak, colemak, jcuken, or "vial" for the
                         // keyboard actually plugged in, read from its own firmware.
                         property string layout: "qwerty"
                         property bool highlightNextKey: true
@@ -8623,6 +8640,12 @@ Singleton {
                     property JsonObject emojis: JsonObject {
                         property bool enable: true
                         property string skinTone: "none"
+                        property int gridColumns: 8
+                        property bool showRecents: true
+                        property string defaultCategory: "all"
+                    }
+                    property JsonObject symbols: JsonObject {
+                        property bool enable: true
                         property int gridColumns: 8
                         property bool showRecents: true
                         property string defaultCategory: "all"
@@ -8983,6 +9006,10 @@ Singleton {
                 }
                 property string position: "default"
                 property string sidebarStyle: "default" // "default" | "connect"
+                // How the dashboard opens in the Default shell mode: the full-height sidebar,
+                // or the control center, a floating card that drops from the bar next to the
+                // dashboard button (header + quick toggles only). Connect mode ignores it.
+                property string dashboardStyle: "sidebar" // "sidebar" | "controlCenter"
                 property JsonObject tabletShade: JsonObject {
                     // Height of the strip at the very top that starts the pull-down. It sits
                     // above the bar on the Overlay layer, so whatever it covers stops being
