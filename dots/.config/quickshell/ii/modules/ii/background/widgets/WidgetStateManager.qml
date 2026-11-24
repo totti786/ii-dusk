@@ -70,8 +70,19 @@ QtObject {
         manager.reapTimer.restart();
     }
 
+    // The first population builds one widget per tick. Each delegate compiles its widget by
+    // URL, and doing all of them in one pass blocks the main thread (no paint, no input)
+    // until the last one exists. After the first full pass this goes false and a config
+    // change adds its widgets at once, as before.
+    property bool stagedInitialLoad: true
+    property Timer stageTimer: Timer {
+        interval: 16
+        onTriggered: manager.syncActiveWidgets()
+    }
+
     function syncActiveWidgets() {
         let configList = Config.options.background.activeWidgets || [];
+        let stagePending = false;
         console.log("[Background] syncActiveWidgets called. Config activeWidgets count: " + configList.length + ", current model count: " + widgetListModel.count);
 
         let addCount = 0;
@@ -112,6 +123,10 @@ QtObject {
             }
 
             if (modelIndex === -1) {
+                if (manager.stagedInitialLoad && addCount >= 1) {
+                    stagePending = true;
+                    continue;
+                }
                 widgetListModel.append({
                     "instanceId": configItem.id,
                     "widgetId": configItem.widgetId,
@@ -156,6 +171,11 @@ QtObject {
                 }
             }
         }
+
+        if (stagePending)
+            stageTimer.restart();
+        else
+            manager.stagedInitialLoad = false;
 
         let isBulkChange = (addCount + moveCount) > 0;
         if (isBulkChange) {
