@@ -105,9 +105,13 @@ Scope {
         }
     }
 
+    // Desktop widgets are the most visible thing after the bar, so they go next, not after
+    // the ~50 remaining panels and the deferred services. This stage only exists once the
+    // wallpaper, bar and island have painted; the short delay lets the remaining-panels
+    // queue start so the widgets' compile lands between panels instead of ahead of the lock.
     Timer {
-        interval: 120
-        running: root.deferredServicesComplete && PanelSchedule.idle && !StartupState.widgetsReady
+        interval: 250
+        running: !StartupState.widgetsReady
         onTriggered: StartupState.releaseWidgets()
     }
 
