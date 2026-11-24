@@ -1106,6 +1106,18 @@ ensure_gtk_theme() {
             printf '%s\n' "$css" > "$data/$variant/gtk-3.0/gtk.css"
         fi
         [[ -e "$data/$variant/gtk-3.0/assets" ]] || ln -s "/usr/share/themes/$system/gtk-3.0/assets" "$data/$variant/gtk-3.0/assets" 2>/dev/null
+        # Plain GTK4 apps (no libadwaita, e.g. pavucontrol) only see a theme that has a gtk-4.0
+        # folder; without one they fall back to GTK's built-in Default theme (grey and blue).
+        # adw-gtk3's gtk-4.0 css imports libadwaita.css, so the palette in ~/.config/gtk-4.0 applies.
+        mkdir -p "$data/$variant/gtk-4.0"
+        local f css4
+        for f in gtk.css gtk-dark.css; do
+            css4=$(printf '@import url("file:///usr/share/themes/%s/gtk-4.0/%s");\n' "$system" "$f")
+            if [[ "$(cat "$data/$variant/gtk-4.0/$f" 2>/dev/null)" != "$css4" ]]; then
+                printf '%s\n' "$css4" > "$data/$variant/gtk-4.0/$f"
+            fi
+        done
+        [[ -e "$data/$variant/gtk-4.0/assets" ]] || ln -s "/usr/share/themes/$system/gtk-4.0/assets" "$data/$variant/gtk-4.0/assets" 2>/dev/null
     done
     [[ -f "$colors" ]] || : > "$colors"
     # Colours left in the user file would load after the theme and win over it, frozen at the

@@ -301,7 +301,7 @@ Singleton {
         target: "windowGuard"
 
         function blocked(): bool {
-            return GlobalStates.mediaModeActive;
+            return GlobalStates.mediaModeActive || GlobalStates.overlayOpen;
         }
     }
 }
