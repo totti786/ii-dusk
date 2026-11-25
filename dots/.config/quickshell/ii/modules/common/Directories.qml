@@ -76,12 +76,9 @@ Singleton {
     property string todoPath: FileUtils.trimFileProtocol(`${Directories.state}/user/todo.json`)
     property string todoDoneHistoryPath: FileUtils.trimFileProtocol(`${Directories.state}/user/todo_done.json`)
     property string remindersPath: FileUtils.trimFileProtocol(`${Directories.state}/user/reminders.json`)
-    // Panadoro (habits, tasks and focus sessions) keeps one mergeable document, so the
-    // optional sync server can hand the whole store to another device in one revision.
+    // Panadoro (habits, tasks and focus sessions) keeps one mergeable document.
     property string panadoroStateDir: FileUtils.trimFileProtocol(`${Directories.state}/user/panadoro`)
     property string panadoroDataPath: `${Directories.panadoroStateDir}/data.json`
-    property string panadoroSyncDataPath: `${Directories.panadoroStateDir}/sync.json`
-    property string panadoroSyncServerPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/panadoro/sync_server.py`)
     // Images attached to reminders are copied here, so a moved or deleted original
     // doesn't leave a broken thumbnail behind.
     property string reminderAttachmentsDir: FileUtils.trimFileProtocol(`${Directories.state}/user/reminder_attachments`)
