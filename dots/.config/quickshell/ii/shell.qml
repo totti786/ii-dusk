@@ -47,6 +47,7 @@ import qs.modules.common.widgets.bluetooth.budslink
 import qs.modules.ii.qanun
 import qs.modules.ii.qanun.components
 import qs.modules.ii.qanun.tabs
+import qs.modules.ii.weather
 import qs.modules.settings.configs.ai
 import qs.modules.settings.configs.apis
 import qs.modules.settings.configs.background
