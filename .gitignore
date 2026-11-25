@@ -118,3 +118,6 @@ __pycache__/
 # Quickshell generates qmldir files at start-up; tracked copies go stale. Lazily loaded
 # modules are imported from shell.qml so the scanner generates theirs too.
 qmldir
+
+# Wallpaper video thumbnails are generated per machine and named after personal files.
+/dots/.config/hypr/custom/scripts/mpvpaper_thumbnails/

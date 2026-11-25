@@ -17,7 +17,7 @@ assert.equal(actions.rateTarget(1, 1, 1), null);
 assert.equal(actions.rateTarget(0.25, 2, NaN), null);
 // URI opening needs a complete, advertised scheme, not just matching text.
 assert.equal(actions.uriAllowed('HTTPS://example.com/media', ['http', 'https']), true);
-assert.equal(actions.uriAllowed(' file:///home/tarek/music.ogg ', ['file']), true);
+assert.equal(actions.uriAllowed(' file:///home/user/music.ogg ', ['file']), true);
 assert.equal(actions.uriAllowed('https', ['https']), false);
 assert.equal(actions.uriAllowed('javascript:alert(1)', ['http', 'https']), false);
 assert.equal(actions.uriAllowed('/tmp/a.mp3', ['file']), false);
