@@ -68,6 +68,7 @@ pysocks==1.7.1
 pyte==0.8.2
 python-dateutil==4.0.0
 pytz==2026.6
+pywalfox==2.9.0
 pywayland==0.4.19
 pywhispercpp==1.5.1
 pyxdg==0.28

@@ -15,6 +15,7 @@ pillow
 psutil
 pycairo==1.28.0
 pygobject==3.52.3
+pywalfox==2.9.0
 pywayland
 requests
 setproctitle

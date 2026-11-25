@@ -120,9 +120,9 @@
       "description": "Browser chrome styling (ag.proton), colours follow Pywalfox",
       "template": "firefox.css",
       "output": "{firefoxProfile}/chrome/userChrome.css",
-      "postHook": "pywalfox update >/dev/null 2>&1 || true",
+      "postHook": "~/.config/quickshell/ii/scripts/colors/pywalfox.sh update >/dev/null 2>&1 || true",
       "profile": "firefox",
-      "setup": "Install the Pywalfox add-on and run `pywalfox install` once, then restart Firefox. Your own userChrome.css is kept as userChrome.css.ii-backup and comes back if you remove the theme."
+      "setup": "Install the Pywalfox add-on in Firefox and restart it. The theme registers the Pywalfox helper from the shell's own Python environment. Your own userChrome.css is kept as userChrome.css.ii-backup and comes back if you remove the theme."
     }
   ]
 }

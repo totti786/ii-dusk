@@ -72,7 +72,7 @@ class Sandbox(unittest.TestCase):
         self.out = self.root / "out"
         self.tpl.mkdir(parents=True)
         self.out.mkdir()
-        self._env = {k: os.environ.get(k) for k in ("MATUGEN_CONFIG_DIR", "XDG_STATE_HOME", "II_FIREFOX_ROOT")}
+        self._env = {k: os.environ.get(k) for k in ("MATUGEN_CONFIG_DIR", "XDG_STATE_HOME", "II_FIREFOX_ROOT", "II_NATIVE_HOSTS")}
         os.environ["MATUGEN_CONFIG_DIR"] = str(self.cfg_dir)
         os.environ["XDG_STATE_HOME"] = str(self.root / "state")
         self.ff_root = self.root / "firefox"
@@ -81,6 +81,7 @@ class Sandbox(unittest.TestCase):
         (self.ff_root / "profiles.ini").write_text(
             "[Profile0]\nName=default\nIsRelative=1\nPath=abc.default-release\nDefault=1\n", encoding="utf-8")
         os.environ["II_FIREFOX_ROOT"] = str(self.ff_root)
+        os.environ["II_NATIVE_HOSTS"] = str(self.root / "hosts")
 
     def tearDown(self) -> None:
         for key, value in self._env.items():
@@ -432,7 +433,8 @@ class ThemeTests(Sandbox):
         self.assertEqual((chrome / "userChrome.css.ii-backup").read_text(), "/* mine */\n")
         self.assertIn("legacyUserProfileCustomizations", (self.ff_profile / "user.js").read_text())
         self.assertIn("abc.default-release/chrome/userChrome.css", self.config_text())
-        self.assertIn("pywalfox update", self.config_text())
+        self.assertIn("pywalfox.sh update", self.config_text())
+        self.assertIn("pywalfox.sh", (self.root / "hosts" / "pywalfox.json").read_text())
         self.run_ok("uninstall-theme", "firefox")
         self.assertEqual((chrome / "userChrome.css").read_text(), "/* mine */\n")
         self.assertEqual((self.ff_profile / "user.js").read_text(), 'user_pref("a", 1);\n')
