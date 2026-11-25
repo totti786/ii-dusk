@@ -22,9 +22,13 @@ Scope {
     property alias controlsOpen: surface.controlsOpen
     property bool motionReady: false
     property real returnProgress: 0
+    // The orb coming out of the island bubble: 1 at the bubble, 0 settled at its spot.
+    property real emerge: 0
+    property real emergeFromX: 0
+    property real emergeFromY: 0
     property real returnStartX: 0
     property real returnStartY: 0
-    readonly property var orbitPositions: Placement.orbitOffsets(root.centerX, root.centerY, root.bounds)
+    readonly property var orbitPositions: Placement.orbitOffsets(root.centerX, root.centerY, root.bounds, root.ui.canAttachScreen)
     // Small orbs for live things (timers, alarms, music) that bud off the main one.
     readonly property var satellites: AiCompanionSatellites {}
     readonly property bool satellitesShown: !root.ui.docked && !root.ui.dragging && !dockFade.running
@@ -50,6 +54,9 @@ Scope {
             NumberAnimation { target: root; property: "orbNudgeY"; to: 0; duration: 750; easing.type: Easing.OutElastic; easing.amplitude: 1; easing.period: .5 }
         }
     }
+    // How far the state label sits above its usual spot: clear of the small orbs and of the control fan.
+    readonly property real labelLift: (root.satellitesShown && root.satelliteOffsets.length > 0 ? 58 : 0)
+        + (root.expanded ? Placement.labelRaise(root.centerX, root.centerY, root.bounds) : 0)
     readonly property bool expanded: root.controlsOpen && !root.ui.dragging && !root.ui.approvalNeeded
     readonly property var bounds: root.ui.screenBounds(overlay.screen)
     readonly property var storedCenter: Placement.fromRatios(root.saved.xRatio, root.saved.yRatio, root.bounds, 38)
@@ -63,7 +70,14 @@ Scope {
     Connections {
         target: root.ui
         function onDocking() { if (overlay.visible) { root.returnStartX = root.centerX; root.returnStartY = root.centerY; dockFade.restart(); } }
-        function onDraggingChanged() { if (root.ui.dragging) { root.controlsOpen = false; dockFade.stop(); root.returnProgress = 0; surface.opacity = 1; } }
+        function onDraggingChanged() { if (root.ui.dragging) { emergeAnim.stop(); root.emerge = 0; root.controlsOpen = false; dockFade.stop(); root.returnProgress = 0; surface.opacity = 1; } }
+        function onEmerging(fromX, fromY) {
+            if (root.ui.reducedMotion) return;
+            root.emergeFromX = fromX - root.bounds.x;
+            root.emergeFromY = fromY - root.bounds.y;
+            surface.opacity = 0;
+            emergeAnim.restart();
+        }
         function onDockedChanged() { if (!root.ui.docked) { dockFade.stop(); root.returnProgress = 0; surface.opacity = 1; } }
     }
     GlobalShortcut {
@@ -71,9 +85,21 @@ Scope {
         description: "Talk to or interrupt the voice companion"
         onPressed: root.ui.toggle()
     }
+    GlobalShortcut {
+        name: "aiCompanionHold"
+        description: "Hold to talk to the voice companion"
+        onPressed: {
+            if (GlobalStates.screenLocked) return;
+            root.ui.show();
+            root.voice.holdStart();
+        }
+        onReleased: root.voice.holdRelease()
+    }
     IpcHandler {
         target: "companion"
         function open(): void { root.ui.show(); }
+        /** Fan the orb's control buttons out (true) or tuck them away, as a click on the orb does. */
+        function controls(open: bool): void { root.controlsOpen = open; }
         function collapse(): void { root.controlsOpen = false; root.voice.stop(); }
         function hide(): void { root.ui.hide(); }
         function toggle(): void { root.ui.toggle(); }
@@ -108,6 +134,10 @@ Scope {
         function deny(): bool { return root.ui.answerApproval(false); }
         function dock(): bool { return root.ui.dock(); }
         function undock(): void { root.ui.undock(); }
+        /** Call the orb to a point on the focused screen, as a double-click on the desktop does. */
+        function summon(x: int, y: int): bool {
+            return root.ui.summon(Quickshell.screens.find(screen => screen.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0], x, y);
+        }
         function kitten(name: string): string { return kitten.play(name); }
         function status(): string {
             return JSON.stringify({visible: root.saved.visible, docked: root.ui.docked, canDock: root.ui.canDock,
@@ -121,6 +151,11 @@ Scope {
                 backend: Ai.voiceService.backendName, engine: Ai.voiceService.sttEngine,
                 voiceAvailable: Ai.voiceService.available});
         }
+    }
+    ParallelAnimation {
+        id: emergeAnim
+        NumberAnimation { target: root; property: "emerge"; from: 1; to: 0; duration: 460; easing.type: Easing.OutBack; easing.overshoot: 1.05 }
+        NumberAnimation { target: surface; property: "opacity"; from: 0; to: 1; duration: 180; easing.type: Easing.OutCubic }
     }
     ParallelAnimation {
         id: dockFade
@@ -340,7 +375,7 @@ Scope {
                         const o = root.satelliteOffsets[i];
                         if (o) out.push({x: o.x - 24, y: o.y - 24, w: 48, h: 48});
                     }
-                const lift = root.satellitesShown && root.satelliteOffsets.length > 0 ? 58 : 0;
+                const lift = root.labelLift;
                 if (root.centerY > 92 + lift && (root.expanded || root.voice.active || root.ui.fileHover))
                     out.push({x: -120, y: -86 - lift, w: 240, h: 28});
                 if (ask.shown) {
@@ -350,6 +385,11 @@ Scope {
                 }
                 return out;
             }
+            // The top of the state label: the kitten rests there while the label is up.
+            perchY: {
+                const lift = root.labelLift;
+                return root.centerY > 92 + lift && (root.expanded || root.voice.active || root.ui.fileHover) ? -86 - lift - 24 : NaN;
+            }
             // Things it can look at besides the orb and the pointer: the small orbs.
             interests: [sat0, sat1, sat2, sat3, sat4].filter(o => o.shown).map(o => ({x: o.x + o.width / 2, y: o.y + o.height / 2}))
         }
@@ -357,12 +397,12 @@ Scope {
             id: surface
             visible: !root.ui.docked || root.ui.dragging || dockFade.running
             dragging: root.ui.dragging
-            interactionHeld: root.ui.controlPressed || chatAction.down || returnAction.down || voiceAction.down || hideAction.down
+            interactionHeld: root.ui.controlPressed || chatAction.down || returnAction.down || voiceAction.down || hideAction.down || screenAction.down
             property real displayedCenterX: root.centerX
             property real displayedCenterY: root.centerY
-            x: (dockFade.running ? root.returnStartX : displayedCenterX) - width/2 + root.orbNudgeX
-            y: (dockFade.running ? root.returnStartY : displayedCenterY) - height/2 + root.orbNudgeY
-            scale: root.ui.reducedMotion ? 1 : 1-root.returnProgress*.55
+            x: (dockFade.running ? root.returnStartX : displayedCenterX + root.emerge * (root.emergeFromX - displayedCenterX)) - width/2 + root.orbNudgeX
+            y: (dockFade.running ? root.returnStartY : displayedCenterY + root.emerge * (root.emergeFromY - displayedCenterY)) - height/2 + root.orbNudgeY
+            scale: root.ui.reducedMotion ? 1 : (1-root.returnProgress*.55) * (1 - .6*root.emerge)
             Behavior on displayedCenterX {
                 enabled: !root.ui.dragging && !root.ui.reducedMotion && overlay.visible && root.motionReady
                 NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
@@ -385,6 +425,10 @@ Scope {
                     return {x: dx / len * k, y: dy / len * k};
                 }
                 ambientMotion: overlay.visible && !root.ui.docked
+                opacity: kitten.orbHidden ? 0 : 1
+                scale: kitten.orbHidden ? .12 : 1
+                Behavior on opacity { enabled: !root.ui.reducedMotion; NumberAnimation { duration: 260 } }
+                Behavior on scale { enabled: !root.ui.reducedMotion; NumberAnimation { duration: kitten.orbHidden ? 300 : 520; easing.type: kitten.orbHidden ? Easing.InCubic : Easing.OutBack; easing.overshoot: 1.8 } }
             }
             CompanionDragArea {
                 id: grip
@@ -401,8 +445,9 @@ Scope {
             Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
                 // Above the small orbs when there are any, so the two never overlap.
-                readonly property real lift: root.satellitesShown && root.satelliteOffsets.length > 0 ? 58 : 0
+                readonly property real lift: root.labelLift
                 y: 18 - lift
+                Behavior on y { enabled: !root.ui.reducedMotion; NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
                 width: Math.min(260, stateLabel.implicitWidth+20)
                 height: 28; radius: 14
                 visible: !root.ui.dragging && !root.ui.approvalNeeded && root.centerY > 92 + lift && (root.expanded || root.voice.active || root.ui.fileHover)
@@ -416,7 +461,7 @@ Scope {
                     font.pixelSize: Appearance.font.pixelSize.small
                     color: Appearance.colors.colOnSurface
                     text: root.ui.fileHover ? root.ui.label
-                        : root.ui.phase === "listening" ? Translation.tr("Listening")
+                        : root.ui.phase === "listening" ? root.ui.label
                         : root.ui.phase === "speaking" ? Translation.tr("Click to interrupt") : root.ui.label
                 }
             }
@@ -467,6 +512,14 @@ Scope {
                     onClicked: root.voice.active ? root.voice.stop() : root.ui.toggle()
                 }
                 OrbitButton {
+                    id: screenAction
+                    slot: 4
+                    visible: root.ui.canAttachScreen
+                    text: "screenshot_region"
+                    tip: Translation.tr("Attach screen region")
+                    onClicked: root.ui.attachScreen()
+                }
+                OrbitButton {
                     id: hideAction
                     slot: 3
                     text: "close"; tip: Translation.tr("Hide companion")
@@ -478,8 +531,8 @@ Scope {
     component OrbitButton: IconToolbarButton {
         property string tip: ""
         property int slot: 0
-        readonly property real offsetX: root.orbitPositions[slot].x
-        readonly property real offsetY: root.orbitPositions[slot].y
+        readonly property real offsetX: (root.orbitPositions[slot]?.x ?? 0)
+        readonly property real offsetY: (root.orbitPositions[slot]?.y ?? 0)
         readonly property real reveal: root.ui.reducedMotion ? 1 : .7 + .3*orbit.spread
         width: 44; height: 44; iconSize: 22
         animationsEnabled: !root.ui.reducedMotion

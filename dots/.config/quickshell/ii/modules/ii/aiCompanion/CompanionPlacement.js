@@ -32,18 +32,47 @@ function nearDock(x, y, target, padding) {
         && y >= target.y - padding && y <= target.y + target.height + padding;
 }
 
-// Keep one evenly spaced fan. Rotate the whole arrangement near edges rather
-// than clamping each button separately and distorting its spacing.
-function orbitOffsets(x, y, bounds) {
+// The direction the control fan points. In the open it points down, away from the state label above
+// the orb. At a side edge it turns down and inward (not straight sideways: its top button would land
+// on the label), and at the bottom it has to point up.
+function fanAxis(x, y, bounds) {
     const left = x < 140, right = x > bounds.width - 140;
     const top = y < 140, bottom = y > bounds.height - 140;
-    let axis = bottom ? -90 : 90;
-    if (left) axis = top ? 45 : bottom ? -45 : 0;
-    else if (right) axis = top ? 135 : bottom ? -135 : 180;
-    return [60, 20, -20, -60].map(offset => {
+    if (left) return bottom ? -45 : 45;
+    if (right) return bottom ? -135 : 135;
+    return bottom ? -90 : 90;
+}
+
+// Keep one evenly spaced fan. Rotate the whole arrangement near edges rather
+// than clamping each button separately and distorting its spacing.
+function orbitOffsets(x, y, bounds, expanded = false) {
+    const base = fanAxis(x, y, bounds);
+    const offsets = expanded ? [76, 38, -38, -76, 0] : [66, 22, -22, -66];
+    const place = axis => offsets.map(offset => {
         const angle = (axis + offset) * Math.PI / 180;
-        return {x: Math.cos(angle)*80, y: Math.sin(angle)*80};
+        return {x: Math.cos(angle)*96, y: Math.sin(angle)*96};
     });
+    // Every button must stay on screen without being squashed against the edge (which would bunch
+    // neighbours together): turn the whole fan until all of them fit, the smallest turn first. Turning
+    // never goes upward past the orb's own height, so the label above it stays clear.
+    const fits = spots => spots.every(p => x + p.x >= 26 && x + p.x <= bounds.width - 26
+        && y + p.y >= 26 && y + p.y <= bounds.height - 26 && p.y > -48);
+    for (let turn = 0; turn <= 90; turn += 6) {
+        for (const sign of turn === 0 ? [1] : [1, -1]) {
+            const spots = place(base + sign * turn);
+            if (fits(spots)) return spots;
+        }
+    }
+    return place(base);
+}
+
+// How far the state label ("Ready to talk") must rise so the control fan does not sit on it. The
+// fan points down from an orb in the open and at a side edge, but upwards at the
+// bottom, and there it would land right across the label.
+function labelRaise(x, y, bounds) {
+    const bottom = y > bounds.height - 140;
+    if (bottom) return 52;
+    return 0;
 }
 
 // A bubble card grows away from its inner edge. Its orb must not travel with
@@ -57,11 +86,7 @@ function bubbleAnchor(side, width, diameter, inset = 0) {
 // never puts a button on top of one. Returns up to `count` offsets from the orb's centre,
 // nearest-the-middle of that arc first, skipping spots that would fall off the screen.
 function satelliteOffsets(count, x, y, bounds, radius) {
-    const left = x < 140, right = x > bounds.width - 140;
-    const top = y < 140, bottom = y > bounds.height - 140;
-    let axis = bottom ? -90 : 90;
-    if (left) axis = top ? 45 : bottom ? -45 : 0;
-    else if (right) axis = top ? 135 : bottom ? -135 : 180;
+    const axis = fanAxis(x, y, bounds);
     const out = [];
     for (const step of [0, 36, -36, 72, -72, 108, -108]) {
         if (out.length >= count) break;

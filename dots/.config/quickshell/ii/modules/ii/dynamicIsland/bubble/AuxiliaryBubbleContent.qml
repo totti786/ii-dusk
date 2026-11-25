@@ -556,7 +556,7 @@ Item {
 
                 MaterialSymbol {
                     anchors.centerIn: parent
-                    text: parent.parent.transcribing ? "graphic_eq" : "mic"
+                    text: DictationService.starting ? "hourglass_empty" : parent.parent.transcribing ? "graphic_eq" : "mic"
                     iconSize: Math.round(root.diameter * 0.45)
                     fill: 1
                     color: parent.parent.transcribing ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnPrimaryContainer

@@ -71,6 +71,12 @@ Item {
                 onClicked: AiCompanionUi.voice.active ? AiCompanionUi.voice.stop() : AiCompanionUi.transcript()
             }
             Action { text: "chat_bubble"; visible: AiCompanionUi.voice.active; tip: Translation.tr("Open conversation"); onClicked: AiCompanionUi.transcript() }
+            Action {
+                text: "screenshot_region"
+                visible: AiCompanionUi.canAttachScreen
+                tip: Translation.tr("Attach screen region")
+                onClicked: AiCompanionUi.attachScreen()
+            }
             Action { text: "open_in_new"; tip: Translation.tr("Float on desktop"); onClicked: AiCompanionUi.undock() }
             Action { text: "close"; tip: Translation.tr("Hide companion"); onClicked: AiCompanionUi.hide() }
         }

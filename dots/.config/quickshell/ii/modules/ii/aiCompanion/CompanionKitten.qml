@@ -39,6 +39,13 @@ Item {
      *  [{x, y, w, h}] as offsets from the orb's centre. */
     property var obstacles: []
     signal moved()
+    /** Where the top of the state label ("Ready to talk") is, as a y offset from the orb, or NaN when there is no label. */
+    property real perchY: NaN
+    readonly property bool canPerch: {
+        if (isNaN(root.perchY) || root.orbY + root.perchY <= 44 || root.hidden) return false;
+        for (const b of root.fan) if (Math.abs(root.side * 34 - b.x) < 56 && Math.abs(root.perchY - b.y) < 54) return false;
+        return true;
+    }
     /** The kitten is playing with the orb: the orb looks at it, wears `orbMood`, and gets poked. */
     property bool withOrb: false
     property string orbMood: ""
@@ -54,8 +61,39 @@ Item {
     readonly property bool alert: root.phase === "attention" || root.phase === "error"
     readonly property bool listening: root.phase === "listening"
     property real purr: 0       // 0..1, decays after a pet
+    // --- What it knows about the desktop and the day.
+    readonly property var kept: AiCompanionUi.saved
+    readonly property real affection: root.kept.affection ?? .5
+    readonly property bool sulky: root.affection < .25
+    readonly property bool fond: root.affection > .75
+    property int hour: new Date().getHours()
+    property int month: new Date().getMonth()
+    readonly property bool night: root.hour >= 23 || root.hour < 5
+    readonly property bool musicOn: MprisController.isPlaying === true
+    readonly property bool cold: Battery.available && Battery.isLow && !Battery.isPluggedIn
+    readonly property bool plugged: Battery.available && Battery.isCharging
+    readonly property bool focusing: TimerService.pomodoroRunning && !TimerService.pomodoroBreak
+    readonly property bool resting: TimerService.pomodoroRunning && TimerService.pomodoroBreak
+    readonly property bool sunny: Number(Weather.data?.wCode ?? 0) === 113 && root.hour >= 8 && root.hour < 18
+    // What it wears: a scarf in winter, sunglasses on a sunny day, a bow tie when it is very fond of you.
+    readonly property string outfit: (root.month === 11 || root.month <= 1) ? "scarf" : root.sunny ? "shades" : root.fond ? "bow" : ""
+    /** Something it carries to you (a gift, a reminder card): a Material symbol name, or "". */
+    property string carry: ""
+    property bool carryIsGift: false
+    readonly property int giftCount: String(root.kept.gifts ?? "").split(",").filter(g => g.length > 0).length
+    /** The orb ducks out of sight (hide and seek). */
+    property bool orbHidden: false
+    property bool laserOn: false
+    property bool deepSleep: false
+    property bool greeted: false
+    property real lastGift: Date.now()
     property real hop: 0        // px lifted
     property real earTwitch: 0  // 0..1
+    property bool chasing: false    // spinning after its own tail
+    property bool annoyed: false    // petted far too much
+    property int petCount: 0
+    property real lastPet: 0
+    signal hearts(int count)
 
     readonly property color toneA: Appearance.colors.colSecondary
     readonly property color toneB: Appearance.colors.colTertiary
@@ -68,15 +106,20 @@ Item {
     Behavior on scale { enabled: !root.reduced; NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
     // Body language: squash (crouch, stretch, curl up), tilt and a wiggle, all about the feet.
     property real squash: 0
+    // Curled up against the cold when the battery is low, on top of whatever else it is doing.
+    readonly property real shape: root.squash + (root.cold && root.activity === "" && !root.walking ? .3 : 0)
     property real tilt: 0
     property real wiggle: 0
+    readonly property bool shivering: root.cold && root.activity === "" && !root.walking && !root.reduced && root.visible
+    // Nods along to music while it is calm.
+    readonly property real musicBob: root.musicOn && !root.reduced && root.calm && root.activity === "" && !root.walking ? Math.abs(Math.sin(root.time * 6.3)) * 2.2 : 0
     property real leap: 0
     Behavior on squash { enabled: !root.reduced; NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
     Behavior on tilt { enabled: !root.reduced; NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
     transform: [
-        Scale { origin.x: root.width / 2; origin.y: root.height * .88; xScale: 1 + root.squash * .16; yScale: 1 - root.squash * .22 },
+        Scale { origin.x: root.width / 2; origin.y: root.height * .88; xScale: 1 + root.shape * .16; yScale: 1 - root.shape * .22 },
         Rotation { origin.x: root.width / 2; origin.y: root.height * .88; angle: root.tilt + root.wiggle },
-        Translate { y: -(root.hop + root.stride + root.leap) }
+        Translate { y: -(root.hop + root.stride + root.leap + (root.phase === "speaking" && !root.reduced ? AiCompanionUi.level * 3.5 : 0) + root.musicBob) }
     ]
 
     onTimeChanged: canvas.requestPaint()
@@ -88,11 +131,39 @@ Item {
 
     function pet() {
         stopActivity();
-        if (root.reduced) { purr = 1; purrFade.restart(); return; }
+        // Pets in a row build up: a heart, then a blissful squint and a burst of them, then too much.
+        const now = Date.now();
+        root.petCount = now - root.lastPet < 3500 ? root.petCount + 1 : 1;
+        root.lastPet = now;
+        const wasSulky = root.sulky;
+        root.kept.affection = Math.min(1, root.affection + (wasSulky ? .15 : .04));
+        root.kept.lastPetAt = now;
+        if (root.carry !== "") root.collectCarry();
+        if (wasSulky) { root.petCount = Math.max(root.petCount, 3); }
+        if (root.reduced) { purr = 1; purrFade.restart(); root.hearts(1); return; }
         petAnim.restart();
         purrFade.restart();
-        heart.restart();
+        root.hearts(root.petCount >= 3 ? 3 : 1);
+        if (root.petCount >= 7) {
+            root.petCount = 0;
+            root.annoyed = true; annoyTimer.restart();
+            shakeAnim.restart(); root.hopNow(22);
+            const spot = root.pickSpot();
+            if (spot) root.goTo(spot.x, spot.y, 420);
+        } else if (root.petCount >= 3) {
+            root.shut = true; root.squash = .3; blissTimer.restart();
+        }
     }
+    // A gift is taken (a reminder card just vanishes with a nod).
+    function collectCarry() {
+        if (root.carryIsGift) {
+            root.kept.gifts = String(root.kept.gifts ?? "") + root.carry + ",";
+            root.kept.affection = Math.min(1, root.affection + .03);
+        }
+        root.carry = ""; root.carryIsGift = false;
+    }
+    Timer { id: blissTimer; interval: 2600; onTriggered: { if (root.activity === "") { root.shut = false; root.squash = 0; } } }
+    Timer { id: annoyTimer; interval: 1800; onTriggered: root.annoyed = false }
     SequentialAnimation {
         id: petAnim
         NumberAnimation { target: root; property: "hop"; to: 9; duration: 110; easing.type: Easing.OutQuad }
@@ -102,6 +173,17 @@ Item {
         id: purrFade
         PropertyAction { target: root; property: "purr"; value: 1 }
         NumberAnimation { target: root; property: "purr"; to: 0; duration: 2200; easing.type: Easing.InQuad }
+    }
+    // Keeps time: the hour and month, and it slowly sulks if nobody pets it for hours.
+    Timer {
+        interval: 60000; repeat: true; running: true
+        onTriggered: {
+            const d = new Date();
+            if (d.getHours() !== root.hour) { root.hour = d.getHours(); root.greeted = false; }
+            root.month = d.getMonth();
+            const since = Date.now() - Number(root.kept.lastPetAt ?? 0);
+            if (since > 2 * 3600000 && root.affection > .05) root.kept.affection = Math.max(.05, root.affection - .0015);
+        }
     }
     // An occasional ear flick.
     Timer {
@@ -150,6 +232,20 @@ Item {
         walkAnim.duration = dur ?? (500 + Math.hypot(dx - cx, dy - cy) * 11);
         walkAnim.restart();
     }
+    // Is this offset inside something drawn around the orb (a label, a small orb, a button)?
+    function inObstacle(dx, dy) {
+        for (const o of root.obstacles)
+            if (dx + 30 > o.x - 4 && dx - 30 < o.x + o.w + 4 && dy + 28 > o.y - 4 && dy - 26 < o.y + o.h + 4) return true;
+        return false;
+    }
+    // Can it walk in a straight line from one offset to another without crossing one? A kitten
+    // that already stands in one is let out.
+    function pathClear(x0, y0, x1, y1) {
+        if (root.inObstacle(x0, y0)) return true;
+        for (let i = 1; i <= 12; i++)
+            if (root.inObstacle(x0 + (x1 - x0) * i / 12, y0 + (y1 - y0) * i / 12)) return false;
+        return true;
+    }
     // Is this offset from the orb a good place to stand: on screen, and clear of the control
     // buttons, the small orbs, the labels and the approval buttons?
     function clear(dx, dy) {
@@ -163,13 +259,13 @@ Item {
     }
     // The clear spot nearest to a wanted one, searching outward around the orb.
     function nearestClear(wx, wy) {
-        if (root.clear(wx, wy)) return {x: wx, y: wy};
+        if (root.clear(wx, wy) && root.pathClear(root.offX, root.offY, wx, wy)) return {x: wx, y: wy};
         let best = null, bestDist = 1e9;
         for (const rad of [74, 88, 102]) {
             for (let deg = 0; deg < 360; deg += 10) {
                 const a = deg * Math.PI / 180;
                 const dx = Math.cos(a) * rad, dy = Math.sin(a) * rad;
-                if (!root.clear(dx, dy)) continue;
+                if (!root.clear(dx, dy) || !root.pathClear(root.offX, root.offY, dx, dy)) continue;
                 const d = Math.hypot(dx - wx, dy - wy);
                 if (d < bestDist) { bestDist = d; best = {x: dx, y: dy}; }
             }
@@ -183,7 +279,7 @@ Item {
             for (const rad of [78, 92]) {
                 const a = deg * Math.PI / 180;
                 const dx = Math.cos(a) * rad, dy = Math.sin(a) * rad;
-                if (!root.clear(dx, dy)) continue;
+                if (!root.clear(dx, dy) || !root.pathClear(root.offX, root.offY, dx, dy)) continue;
                 let nearest = 1e9;
                 for (const b of root.fan) nearest = Math.min(nearest, Math.hypot(dx - b.x, dy - b.y));
                 const score = Math.min(nearest, 140) - Math.hypot(dx - root.offX, dy - root.offY) * .05;
@@ -192,9 +288,31 @@ Item {
         }
         if (best) root.goTo(best.x, best.y);
     }
-    onFanChanged: { if (fan.length > 0) avoid(); else if (!hidden) home(); }
+    onFanChanged: { if (canPerch) perch(); else if (fan.length > 0) avoid(); else if (!hidden) home(); }
+    // A label has come up over the orb: it climbs on top of it, sits a moment, then dozes there
+    // until the label goes. It never stands behind or under the text.
+    function perch() {
+        if (root.activity === "perch") return;
+        stopActivity();
+        root.activity = "perch";
+        root.gazeMode = "orb";
+        root.goTo(root.side * 34, root.perchY, 520);
+        root.after(arrive(80), () => {
+            root.hopNow(6);
+            root.squash = .3; root.tilt = root.side * 2;
+            root.after(2600, () => {
+                if (root.activity !== "perch") return;
+                root.sleeping = true; root.shut = true; root.squash = .5;
+            });
+        });
+    }
+    onPerchYChanged: {
+        if (hidden || !visible) return;
+        if (canPerch) perch();
+        else if (activity === "perch") { stopActivity(); home(); hopNow(10); }
+    }
     function home() {
-        const spot = root.nearestClear(root.side * 74, root.downward * 40);
+        const spot = root.nearestClear(root.side * (root.fond ? 60 : root.sulky ? 106 : 74), root.downward * 40);
         if (spot) root.goTo(spot.x, spot.y);
     }
     function pickSpot() {
@@ -203,16 +321,30 @@ Item {
             const ang = (-35 + Math.random() * 105) * Math.PI / 180;
             const rad = 66 + Math.random() * 44;
             const dx = sgn * Math.cos(ang) * rad, dy = root.downward * Math.sin(ang) * rad;
-            if (root.clear(dx, dy)) return {x: dx, y: dy};
+            if (root.clear(dx, dy) && root.pathClear(root.offX, root.offY, dx, dy)) return {x: dx, y: dy};
         }
         return null;
     }
     // Something moved into its spot (a small orb appeared, a label or the approval buttons came
     // up): it shuffles over rather than standing on it.
     onObstaclesChanged: {
-        if (hidden || !visible || !clear(toX, toY)) {
-            if (hidden || !visible) return;
+        if (hidden || !visible) return;
+        if (canPerch && activity !== "perch") { perch(); return; }
+        if (activity === "perch") return;
+        if (!clear(offX, offY) || !clear(toX, toY)) {
+            if (activity !== "") stopActivity();
             if (fan.length > 0) avoid(); else home();
+        }
+    }
+    // Whatever happened, it is never left standing on the text: if it ends up on one it climbs on
+    // top of it (a label) or steps off.
+    Timer {
+        interval: 250; repeat: true
+        running: root.visible && !root.hidden && root.obstacles.length > 0
+        onTriggered: {
+            if (root.walking || root.zooming || root.activity === "perch" || !root.inObstacle(root.offX, root.offY)) return;
+            if (root.activity !== "") root.stopActivity();
+            if (root.canPerch) root.perch(); else if (root.fan.length > 0) root.avoid(); else root.home();
         }
     }
     onDownwardChanged: if (!walking) home()
@@ -232,7 +364,10 @@ Item {
         }
     }
     // Something happens: it hurries back to the orb's side.
-    onCalmChanged: { if (!calm) stopActivity(); if (!calm && !hidden && fan.length === 0) home(); }
+    onCalmChanged: {
+        if (!calm && activity !== "perch") stopActivity();
+        if (!calm && !hidden && fan.length === 0) { if (canPerch) perch(); else if (activity !== "perch") home(); }
+    }
 
     // --- Looking: the orb, the pointer, the small orbs, or just somewhere else.
     property string gazeMode: "orb"
@@ -246,6 +381,7 @@ Item {
     readonly property var aimAt: {
         root.time;  // follow the orb and the small orbs as they move
         if (root.gazeMode === "orb") return root.toward(root.orbX, root.orbY);
+        if (root.gazeMode === "fly") return root.toward(root.orbX + root.flyX, root.orbY + root.flyY);
         if (root.gazeMode === "interest" && root.interests.length > 0) {
             const o = root.interests[root.glanceIndex % root.interests.length];
             return root.toward(o.x, o.y);
@@ -310,6 +446,11 @@ Item {
         root.withOrb = false; root.orbMood = ""; root.inFront = false;
         root.squash = 0; root.tilt = 0; root.wiggle = 0;
         if (root.toyOn) toyFade.restart();
+        root.chasing = false; flyAnim.stop(); if (root.flyOn) flyFade.restart();
+        root.orbHidden = false; root.deepSleep = false;
+        if (root.laserOn) { root.laserOn = false; CursorGaze.unwatch(); }
+        if (root.cupOn) cupFade.restart();
+        root.yarn = false;
     }
     function endActivity(wait) {
         root.activity = ""; root.squash = 0; root.tilt = 0; root.shut = false;
@@ -319,9 +460,17 @@ Item {
     }
     function hopNow(h) { leapAnim.to = h ?? 12; leapAnim.restart(); }
 
+    // Beds down right against the orb, on its lower side, rather than on the perch above it.
+    function curlUp() {
+        const spots = [[root.side * 46, 20], [-root.side * 46, 20], [root.side * 40, 34]];
+        for (const [x, y] of spots) {
+            if (!root.inObstacle(x, y)) { root.goTo(x, y, 420); return; }
+        }
+        root.home();
+    }
     function doSleep() {
         root.activity = "sleep";
-        root.home();
+        root.curlUp();
         root.after(arrive(300), () => {
             root.sleeping = true; root.shut = true; root.squash = .5; root.tilt = side * 3;
             root.after(11000 + Math.random() * 12000, () => {
@@ -417,7 +566,15 @@ Item {
             if (near) root.goTo(near.x, near.y, 520);
             root.after(arrive(60), () => {
                 // Bat it somewhere else.
-                if (bats-- <= 0) { root.toyOn = false; toyFade.restart(); root.endActivity(500); return; }
+                if (bats-- <= 0) {
+                    root.toyOn = false; toyFade.restart();
+                    if (root.yarn) {                                   // tangled in the thread
+                        root.crouching = true; root.squash = .3;
+                        root.after(1300, () => { root.crouching = false; root.wiggle = 0; root.squash = 0; shakeAnim.restart(); root.yarn = false; root.endActivity(700); });
+                        return;
+                    }
+                    root.endActivity(500); return;
+                }
                 root.squash = .35;
                 root.after(260, () => {
                     root.squash = 0; root.hopNow(10);
@@ -429,6 +586,276 @@ Item {
         };
         chase();
         return true;
+    }
+
+    // Spins after its own tail, gets dizzy, and shakes it off.
+    function doTailChase() {
+        root.activity = "tail";
+        root.home();
+        root.after(arrive(200), () => {
+            root.chasing = true; root.gazeMode = "away"; root.glanceX = root.side * .8; root.glanceY = .5;
+            root.hopNow(8);
+            root.after(2900, () => {
+                root.chasing = false; root.squash = .3; root.tilt = -root.side * 7;     // dizzy
+                root.after(700, () => {
+                    root.squash = 0; root.tilt = 0;
+                    shakeAnim.restart();
+                    root.endActivity(900);
+                });
+            });
+        });
+    }
+    // A butterfly drifts by. It watches, stalks it, pounces, and misses.
+    property bool flyOn: false
+    property real flyX: 0
+    property real flyY: 0
+    property real flySize: 0
+    property real flap: 1
+    function flyTo(x, y, dur) { flyAnim.tx = x; flyAnim.ty = y; flyAnim.dur = dur; flyAnim.restart(); }
+    function doButterfly() {
+        const s = root.side;
+        root.activity = "fly";
+        root.flyX = -s * 150; root.flyY = -60; root.flyOn = true; flyPop.restart();
+        root.gazeMode = "fly";
+        root.flyTo(-s * 50, -74, 1300);
+        root.after(1350, () => {
+            root.flyTo(s * 30, -98, 1200);
+            root.after(1250, () => {
+                root.flyTo(s * 92, -36, 1100);
+                root.after(1150, () => {
+                    root.crouching = true; root.squash = .5;
+                    root.after(850, () => {
+                        root.crouching = false; root.wiggle = 0; root.squash = 0;
+                        const spot = root.nearestClear(s * 76, -22) ?? {x: s * 74, y: root.downward * 40};
+                        root.goTo(spot.x, spot.y, 280);
+                        root.hopNow(22);
+                        root.after(300, () => {
+                            root.flyTo(s * 175, -150, 650); flyFade.restart();   // gone, just out of reach
+                            root.squash = .4;
+                            root.after(420, () => {
+                                root.squash = 0; root.gazeMode = "away"; root.glanceX = s * .9; root.glanceY = -.8;
+                                root.after(1500, () => root.endActivity(600));
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    }
+
+    // A big yawn. The orb catches it.
+    function doYawn() {
+        root.activity = "yawn";
+        root.withOrb = true; root.gazeMode = "orb";
+        root.shut = true; root.squash = -.4;
+        root.after(500, () => { root.orbMood = "night"; });
+        root.after(1700, () => {
+            root.squash = 0; root.shut = false; root.withOrb = false; root.orbMood = "";
+            root.endActivity(500);
+        });
+    }
+    // Washes a paw: little head dips, eyes shut.
+    function doGroom() {
+        root.activity = "groom";
+        root.home();
+        root.after(arrive(250), () => {
+            root.shut = true; root.squash = .25; root.tilt = -root.side * 7;
+            let n = 6;
+            const lick = () => {
+                if (n-- <= 0) { root.shut = false; root.squash = 0; root.tilt = 0; root.endActivity(600); return; }
+                root.tilt = -root.side * (n % 2 ? 3 : 8);
+                root.after(330, lick);
+            };
+            lick();
+        });
+    }
+    // Sits up like it was told to, and the orb is proud of it.
+    function doTrick() {
+        root.activity = "trick";
+        root.withOrb = true; root.orbMood = "curious"; root.gazeMode = "orb";
+        root.goTo(root.side * 62, root.downward * 14, 520);
+        root.after(arrive(900), () => {
+            root.squash = -.3;                                         // sits up tall
+            root.hopNow(6);
+            root.after(900, () => {
+                root.orbMood = "delighted";
+                root.hopNow(18); shakeAnim.restart();
+                root.hearts(1);
+                root.after(1100, () => { root.squash = 0; root.orbMood = ""; root.endActivity(500); });
+            });
+        });
+    }
+    // Hide and seek: the orb ducks out of sight, the kitten looks for it, the orb pops back out.
+    function doHide() {
+        root.activity = "hide";
+        root.withOrb = false; root.orbHidden = true;
+        root.gazeMode = "away";
+        let n = 0;
+        const look = () => {
+            if (n++ >= 3) {
+                root.orbHidden = false;                                // found!
+                root.orbMood = "delighted"; root.withOrb = true;
+                root.squash = -.4; root.hopNow(20); shakeAnim.restart();
+                root.gazeMode = "orb";
+                root.after(1300, () => { root.squash = 0; root.orbMood = ""; root.withOrb = false; root.endActivity(500); });
+                return;
+            }
+            const spot = root.pickSpot();
+            if (spot) root.goTo(spot.x, spot.y, 520);
+            root.glanceX = (Math.random() - .5) * 1.8; root.glanceY = (Math.random() - .5) * 1.2;
+            root.after(arrive(650), () => { root.squash = .2; root.after(350, () => { root.squash = 0; look(); }); });
+        };
+        root.after(500, look);
+        return true;
+    }
+    // A cup near the edge of the orb's patch: it looks at you, then pushes it off.
+    property bool cupOn: false
+    property real cupX: 0
+    property real cupY: 0
+    property real cupSize: 0
+    property real cupSpin: 0
+    function doKnock() {
+        const s = root.side;
+        const spot = root.nearestClear(s * 98, root.downward * 34);
+        if (!spot) return false;
+        root.activity = "knock";
+        root.cupX = spot.x; root.cupY = spot.y; root.cupSpin = 0; root.cupOn = true; cupPop.restart();
+        root.gazeMode = "away"; root.glanceX = s * .8; root.glanceY = .3;
+        const beside = root.nearestClear(spot.x - s * 36, spot.y) ?? {x: s * 62, y: root.downward * 20};
+        root.goTo(beside.x, beside.y, 520);
+        root.after(arrive(500), () => {
+            root.squash = .3;
+            cupSlide.tx = spot.x + s * 26; cupSlide.restart();           // a slow, deliberate push
+            root.after(1500, () => {
+                root.gazeMode = "cursor";                              // looking straight at you
+                root.after(1000, () => {
+                    root.squash = 0; root.hopNow(8);
+                    cupFall.restart();
+                    root.orbMood = "startled"; root.withOrb = true;
+                    root.poke(-s, .3, 1);
+                    root.after(700, () => {
+                        root.gazeMode = "away"; root.glanceX = -s * .8; root.glanceY = -.5;   // who, me?
+                        root.orbMood = "";
+                        root.after(1500, () => root.endActivity(500));
+                    });
+                });
+            });
+        });
+        return true;
+    }
+    // A cup and its string... the yarn ball variant of the toy: it trails thread and gets tangled.
+    property bool yarn: false
+    property real yarnX0: 0
+    property real yarnY0: 0
+    function doYarn() {
+        root.yarn = true;
+        const ok = root.doToy();
+        if (!ok) { root.yarn = false; return false; }
+        root.yarnX0 = root.toyX; root.yarnY0 = root.toyY;
+        return true;
+    }
+    // The laser dot: the kitten chases the pointer for a while.
+    function doLaser() {
+        if (root.laserOn) { root.stopActivity(); root.endActivity(300); return "laser off"; }
+        stopActivity();
+        root.activity = "laser"; root.laserOn = true; CursorGaze.watch();
+        root.gazeMode = "cursor";
+        laserTimer.restart();
+        laserStop.restart();
+        return "laser";
+    }
+    // Something at the orb or on the desktop gets its attention.
+    function perkUp(glx, gly) {
+        if (root.hidden || !root.visible) return;
+        if (root.activity === "perch" || root.activity === "laser") { twitch.restart(); root.hopNow(8); return; }
+        stopActivity();
+        root.activity = "perk";
+        twitch.restart(); root.hopNow(11);
+        root.gazeMode = "away"; root.glanceX = glx; root.glanceY = gly;
+        root.after(2200, () => root.endActivity(300));
+    }
+    // A timer or alarm goes off: a jump, a shake, and the orb joins in.
+    function celebrate() {
+        if (root.hidden || !root.visible) return;
+        stopActivity();
+        root.activity = "party";
+        root.withOrb = true; root.orbMood = "delighted"; root.gazeMode = "orb";
+        root.hopNow(20); shakeAnim.restart();
+        root.after(450, () => { root.hopNow(14); root.poke(-root.side, -.2, .6); });
+        root.after(1900, () => { root.orbMood = ""; root.withOrb = false; root.endActivity(300); });
+    }
+    // Brings you something and keeps it above its head until you take it.
+    readonly property var giftIcons: ["eco", "set_meal", "star", "local_florist", "cookie", "spa", "bug_report", "diamond"]
+    function doGift() {
+        if (root.carry !== "") return false;
+        root.activity = "gift";
+        root.home();
+        root.after(arrive(250), () => {
+            root.hopNow(14);
+            root.carry = root.giftIcons[Math.floor(Math.random() * root.giftIcons.length)];
+            root.carryIsGift = true;
+            root.lastGift = Date.now();
+            root.gazeMode = "cursor";
+            root.after(1500, () => root.endActivity(300));
+        });
+        return true;
+    }
+    function deliver(icon) {
+        if (root.carry !== "" && root.carryIsGift) return;
+        root.carry = icon; root.carryIsGift = false;
+        root.hopNow(10);
+        carryTimer.restart();
+    }
+    Timer { id: carryTimer; interval: 7000; onTriggered: { if (!root.carryIsGift) root.carry = ""; } }
+    // A gift nobody takes is taken back after a while.
+    Timer { interval: 30000; repeat: true; running: root.carryIsGift; onTriggered: if (Date.now() - root.lastGift > 120000) { root.carry = ""; root.carryIsGift = false; } }
+    Timer {
+        id: laserStop; interval: 40000
+        onTriggered: if (root.laserOn) { root.stopActivity(); root.endActivity(300); }
+    }
+    Timer {
+        id: laserTimer; interval: 420; repeat: true
+        running: root.laserOn
+        property real lastX: 0
+        property real lastY: 0
+        property int still: 0
+        onTriggered: {
+            const p = root.pointer();
+            const d = Math.hypot(p.x, p.y);
+            const moved = Math.hypot(p.x - lastX, p.y - lastY);
+            lastX = p.x; lastY = p.y;
+            if (moved < 6) still++; else still = 0;
+            if (root.walking) return;
+            if (still >= 3 && still % 3 === 0) {                        // dot is still: pounce on it
+                root.squash = .45;
+                root.after(220, () => { root.squash = 0; root.hopNow(16); });
+                return;
+            }
+            // Keeps a little way off the dot, on the orb's side of it.
+            const stand = Math.max(0, d - 40);
+            const tx = d > 1 ? p.x / d * stand : 0, ty = d > 1 ? p.y / d * stand : 0;
+            if (!root.inObstacle(tx, ty) && Math.hypot(tx - root.offX, ty - root.offY) > 26)
+                root.goTo(tx, ty, 380);
+        }
+    }
+    // Lies down after the cursor has been still for a long time (and breaks for the Pomodoro);
+    // wakes up startled when it moves.
+    function doDeepSleep() {
+        root.activity = "sleep"; root.deepSleep = true;
+        root.curlUp();
+        root.after(arrive(300), () => {
+            root.sleeping = true; root.shut = true; root.squash = .5; root.tilt = root.side * 3;
+            root.withOrb = true; root.orbMood = "night";
+        });
+    }
+    function wakeUp() {
+        const was = root.deepSleep;
+        root.stopActivity();
+        root.activity = "wake";
+        root.squash = -.45; root.hopNow(16); shakeAnim.restart();
+        root.orbMood = was ? "startled" : ""; root.withOrb = was;
+        root.gazeMode = "orb";
+        root.after(900, () => { root.orbMood = ""; root.withOrb = false; root.squash = 0; root.endActivity(300); });
     }
 
     // Bats at the orb: crouches, springs, and the orb wobbles away and looks back, amused.
@@ -462,7 +889,7 @@ Item {
     }
     // Climbs on top of the orb and sits there while it bobs.
     function doRide() {
-        if (root.orbY < 130) return false;
+        if (root.orbY < 130 || root.obstacles.length > 0) return false;
         root.activity = "ride";
         root.withOrb = true; root.orbMood = "delighted"; root.gazeMode = "orb";
         root.goTo(root.side * 56, 0, 500);
@@ -496,6 +923,7 @@ Item {
     }
     /** Start one by name (also `companion kitten <name>` over IPC): sleep, stretch, zoom, pounce, peek, toy. */
     function play(name) {
+        if (name === "laser" && root.laserOn) { stopActivity(); root.endActivity(300); return "laser off"; }
         stopActivity();
         switch (name) {
         case "sleep": doSleep(); return "sleep";
@@ -505,10 +933,25 @@ Item {
         case "peek": doPeek(); return "peek";
         case "toy": return doToy() ? "toy" : "no room";
         case "bat": doBat(); return "bat";
+        case "tail": doTailChase(); return "tail";
+        case "yawn": doYawn(); return "yawn";
+        case "groom": doGroom(); return "groom";
+        case "trick": doTrick(); return "trick";
+        case "hide": return doHide() ? "hide" : "no room";
+        case "knock": return doKnock() ? "knock" : "no room";
+        case "yarn": return doYarn() ? "yarn" : "no room";
+        case "gift": return doGift() ? "gift" : "already carrying something";
+        case "laser": return doLaser();
+        case "pet": root.pet(); return "pet";
+        case "hop": root.hopNow(18); shakeAnim.restart(); return "hop";
+        case "come": root.home(); root.after(arrive(100), () => { root.hopNow(12); root.hearts(1); }); return "come";
+        case "play": { const pick = ["toy", "butterfly", "bat", "tail", "yarn", "knock", "trick"]; return root.play(pick[Math.floor(Math.random() * pick.length)]); }
+        case "wake": root.wakeUp(); return "wake";
+        case "butterfly": doButterfly(); return "butterfly";
         case "ride": return doRide() ? "ride" : "no room above the orb";
         case "stop": return "stopped";
         }
-        return "unknown: sleep stretch zoom pounce peek toy bat ride stop";
+        return "unknown: sleep stretch zoom pounce peek toy bat ride tail butterfly yawn groom trick hide knock yarn gift laser pet hop come play wake stop";
     }
     // Every so often, if nothing is going on, it picks something to do.
     Timer {
@@ -518,16 +961,78 @@ Item {
         onTriggered: {
             interval = 8000 + Math.random() * 10000;
             if (root.activity !== "" || root.walking || root.fan.length > 0) return;
+            // The time of day and its mood colour what it feels like doing.
+            if (root.sulky && Math.random() < .7) return;
+            if (root.focusing && Math.random() < .6) return;                // quiet while you work
+            if (root.resting && !root.sleeping) { root.doSleep(); return; }  // naps through your breaks
+            if (!root.greeted && root.hour >= 5 && root.hour < 10) { root.greeted = true; root.doYawn(); return; }
+            if (root.night && Math.random() < .55) { if (Math.random() < .5) root.doSleep(); else root.doYawn(); return; }
+            if (!root.carryIsGift && Date.now() - root.lastGift > 40 * 60000 && root.affection > .4 && Math.random() < .35) { if (root.doGift()) return; }
             const roll = Math.random();
-            if (roll < .12) root.doSleep();
-            else if (roll < .22) root.doStretch();
-            else if (roll < .34) { if (!root.doZoomies()) root.doStretch(); }
-            else if (roll < .48) { if (!root.doPounce()) root.doToy(); }
-            else if (roll < .58) root.doPeek();
-            else if (roll < .72) root.doToy();
-            else if (roll < .88) root.doBat();
+            if (roll < .07) root.doSleep();
+            else if (roll < .12) root.doStretch();
+            else if (roll < .16) root.doYawn();
+            else if (roll < .21) root.doGroom();
+            else if (roll < .29) { if (!root.doZoomies()) root.doStretch(); }
+            else if (roll < .38) { if (!root.doPounce()) root.doToy(); }
+            else if (roll < .43) root.doPeek();
+            else if (roll < .50) root.doToy();
+            else if (roll < .56) root.doYarn();
+            else if (roll < .62) root.doBat();
+            else if (roll < .69) root.doTailChase();
+            else if (roll < .77) root.doButterfly();
+            else if (roll < .82) { if (!root.doKnock()) root.doBat(); }
+            else if (roll < .87) root.doTrick();
+            else if (roll < .91) { if (!root.doHide()) root.doPeek(); }
             else { if (!root.doRide()) root.doBat(); }
         }
+    }
+    // --- Awareness: it notices what happens on the desktop.
+    Connections {
+        target: Notifications
+        function onNotify(notification) { root.perkUp(.9, -.8); }
+    }
+    Connections {
+        target: TimerService
+        function onCountdownFinished(countdown) { root.celebrate(); }
+        function onPomodoroBreakChanged() {
+            if (!TimerService.pomodoroRunning || root.hidden || !root.visible) return;
+            if (TimerService.pomodoroBreak) { if (root.calm && root.activity === "") root.doSleep(); }
+            else { root.stopActivity(); root.hopNow(16); shakeAnim.restart(); root.endActivity(500); }   // back to work
+        }
+    }
+    Connections {
+        target: AlarmService
+        function onAlarmRang(alarm) { root.celebrate(); }
+    }
+    Connections {
+        target: RemindersService
+        function onAlerted(reminder, level) { root.deliver("sticky_note_2"); root.perkUp(0, 0); }
+    }
+    Connections {
+        target: Battery
+        function onIsChargingChanged() {
+            if (Battery.isCharging && root.visible && !root.hidden) { purrFade.restart(); root.hearts(1); root.hopNow(8); }
+        }
+    }
+    // Falls asleep when you have not touched the mouse for a long while (and calm), wakes startled.
+    Timer {
+        interval: 15000; repeat: true
+        running: root.visible && !root.hidden && !root.reduced
+        onTriggered: {
+            if (root.activity === "" && root.calm && !root.walking && Date.now() - CursorGaze.lastMoved > 180000) root.doDeepSleep();
+        }
+    }
+    Connections {
+        target: CursorGaze
+        function onMovesChanged() { if (root.deepSleep && root.sleeping) root.wakeUp(); }
+    }
+    Component.onCompleted: CursorGaze.watch()
+    Component.onDestruction: { CursorGaze.unwatch(); if (root.laserOn) CursorGaze.unwatch(); }
+    // Other parts of the shell ask for a trick by name (the voice orb: "good kitty").
+    Connections {
+        target: AiCompanionUi
+        function onKittenRequest(name) { root.play(name); }
     }
     readonly property bool dragged: false
     NumberAnimation { id: zoomAnim; target: root; property: "zoomAngle"; easing.type: Easing.InOutQuad
@@ -550,9 +1055,9 @@ Item {
         NumberAnimation { target: root; property: "wiggle"; to: 0; duration: 80 } }
     // Stalking: a tense little wiggle before the pounce.
     SequentialAnimation on wiggle {
-        running: root.crouching; loops: Animation.Infinite
-        NumberAnimation { to: 4; duration: 90 }
-        NumberAnimation { to: -4; duration: 90 }
+        running: root.crouching || root.chasing || root.shivering; loops: Animation.Infinite
+        NumberAnimation { to: root.chasing ? 9 : root.shivering ? 1.6 : 4; duration: root.chasing ? 110 : root.shivering ? 55 : 90 }
+        NumberAnimation { to: root.chasing ? -9 : root.shivering ? -1.6 : -4; duration: root.chasing ? 110 : root.shivering ? 55 : 90 }
         onRunningChanged: if (!running && !shakeAnim.running) root.wiggle = 0
     }
     // The ball.
@@ -580,6 +1085,94 @@ Item {
             Rectangle { x: 3; y: 6; width: 10; height: 2; radius: 1; color: Appearance.colors.colOnPrimary; opacity: .55; rotation: -25 }
             Rectangle { x: 5; y: 3; width: 2; height: 10; radius: 1; color: Appearance.colors.colOnPrimary; opacity: .4; rotation: 20 }
         }
+    }
+    ParallelAnimation { id: flyAnim; property real tx: 0; property real ty: 0; property real dur: 1000
+        NumberAnimation { target: root; property: "flyX"; to: flyAnim.tx; duration: flyAnim.dur; easing.type: Easing.InOutSine }
+        NumberAnimation { target: root; property: "flyY"; to: flyAnim.ty; duration: flyAnim.dur; easing.type: Easing.InOutSine } }
+    NumberAnimation { id: flyPop; target: root; property: "flySize"; from: 0; to: 1; duration: 300; easing.type: Easing.OutBack }
+    NumberAnimation { id: flyFade; target: root; property: "flySize"; to: 0; duration: 600; easing.type: Easing.InQuad
+        onFinished: root.flyOn = false }
+    SequentialAnimation on flap { running: root.flyOn; loops: Animation.Infinite
+        NumberAnimation { to: 1; duration: 85 }
+        NumberAnimation { to: .4; duration: 85 } }
+    Item {
+        id: butterfly
+        visible: root.flySize > .02
+        width: 20; height: 14
+        x: root.orbX + root.flyX - root.x - width / 2 + Math.sin(root.time * 3.1) * 4
+        y: root.orbY + root.flyY - root.y - height / 2 + 14 + Math.cos(root.time * 4.3) * 4
+        scale: root.flySize
+        rotation: Math.sin(root.time * 3.1) * 14
+        z: 3
+        Rectangle { width: 10; height: 13; radius: 5; color: Appearance.colors.colTertiary; transform: Scale { origin.x: 10; xScale: root.flap } }
+        Rectangle { x: 10; width: 10; height: 13; radius: 5; color: Appearance.colors.colPrimary; transform: Scale { origin.x: 0; xScale: root.flap } }
+        Rectangle { x: 9; y: 1; width: 2; height: 12; radius: 1; color: Appearance.colors.colOnSurface; opacity: .7 }
+    }
+    ParallelAnimation { id: cupSlide; property real tx: 0
+        NumberAnimation { target: root; property: "cupX"; to: cupSlide.tx; duration: 1400; easing.type: Easing.InOutSine } }
+    ParallelAnimation { id: cupFall
+        NumberAnimation { target: root; property: "cupY"; to: root.cupY + 130; duration: 650; easing.type: Easing.InQuad }
+        NumberAnimation { target: root; property: "cupSpin"; to: 260; duration: 650 }
+        SequentialAnimation { PauseAnimation { duration: 400 } NumberAnimation { target: root; property: "cupSize"; to: 0; duration: 250 } }
+        onFinished: root.cupOn = false }
+    NumberAnimation { id: cupPop; target: root; property: "cupSize"; from: 0; to: 1; duration: 300; easing.type: Easing.OutBack }
+    NumberAnimation { id: cupFade; target: root; property: "cupSize"; to: 0; duration: 220; onFinished: root.cupOn = false }
+    Item {
+        id: cup
+        visible: root.cupSize > .02
+        width: 16; height: 18
+        x: root.orbX + root.cupX - root.x - width / 2
+        y: root.orbY + root.cupY - root.y - height / 2 + 10
+        scale: root.cupSize; rotation: root.cupSpin
+        z: -1
+        Rectangle { width: 14; height: 16; y: 2; x: 1; radius: 4; color: Appearance.colors.colSecondaryContainer
+            Rectangle { x: 2; y: 3; width: 10; height: 2; radius: 1; color: Appearance.colors.colOnSecondaryContainer; opacity: .35 } }
+        Rectangle { x: 11; y: 5; width: 7; height: 8; radius: 4; color: "transparent"; border.width: 2; border.color: Appearance.colors.colSecondaryContainer }
+    }
+    // Yarn: a string from where the ball started to where it is now.
+    Rectangle {
+        visible: root.yarn && root.toySize > .02
+        readonly property real ax: root.orbX + root.yarnX0 - root.x
+        readonly property real ay: root.orbY + root.yarnY0 - root.y + 14
+        readonly property real bx: root.orbX + root.toyX - root.x
+        readonly property real by: root.orbY + root.toyY - root.y + 14
+        x: ax; y: ay - 1
+        width: Math.hypot(bx - ax, by - ay); height: 2; radius: 1
+        transformOrigin: Item.Left
+        rotation: Math.atan2(by - ay, bx - ax) * 180 / Math.PI
+        color: Appearance.colors.colPrimary; opacity: .6; z: -2
+    }
+    // The laser dot follows the pointer.
+    Rectangle {
+        visible: root.laserOn
+        width: 9; height: 9; radius: 5; z: 4
+        color: Appearance.m3colors.m3error
+        readonly property var ptr: { CursorGaze.moves; return root.pointer(); }
+        x: root.orbX + ptr.x - root.x - width / 2
+        y: root.orbY + ptr.y - root.y - height / 2
+        Rectangle { anchors.centerIn: parent; width: 18; height: 18; radius: 9; color: parent.color; opacity: .25 }
+    }
+    // What it carries over its head: a gift, or a reminder card.
+    MaterialSymbol {
+        id: carryIcon
+        visible: root.carry !== "" && !root.hidden
+        text: root.carry
+        iconSize: 17
+        fill: 1
+        color: root.carryIsGift ? Appearance.colors.colTertiary : Appearance.colors.colPrimary
+        x: (root.width - width) / 2 + root.side * 20
+        y: -8 + (root.reduced ? 0 : Math.sin(root.time * 3) * 1.5)
+        z: 5
+    }
+    // Sunglasses sit over the eyes.
+    Item {
+        visible: root.outfit === "shades" && !root.shut
+        x: (root.width - 30) / 2; y: root.height * .6 - 8; width: 30; height: 12; z: 3
+        Rectangle { x: 0; y: 1; width: 13; height: 9; radius: 4; color: "#14121a"; opacity: .92
+            Rectangle { x: 2; y: 2; width: 5; height: 2; radius: 1; color: "white"; opacity: .35 } }
+        Rectangle { x: 17; y: 1; width: 13; height: 9; radius: 4; color: "#14121a"; opacity: .92
+            Rectangle { x: 2; y: 2; width: 5; height: 2; radius: 1; color: "white"; opacity: .35 } }
+        Rectangle { x: 12; y: 4; width: 6; height: 2; color: "#14121a"; opacity: .92 }
     }
     // Sleeping: little z's drift up.
     component Zed: StyledText {
@@ -648,6 +1241,32 @@ Item {
                 ctx.closePath();
             }
 
+            // Tail, behind everything: a slow sway, a quick wag when it purrs, straight up and fat
+            // when startled, curled low asleep, and a full spin while it chases it.
+            {
+                const L = w * .4;
+                const bx = cx + s * rx * .78, by = cy + ry * .74;
+                const cxp = bx + s * L * .5, cyp = by - L * .1;
+                const startled = root.alert || AiCompanionUi.mood === "startled";
+                let th;
+                if (root.chasing) th = t * 12;
+                else if (startled) th = .05;
+                else if (root.purr > .05) th = .25 + .55 * Math.sin(t * 9);
+                else if (root.musicOn && root.calm && root.activity === "") th = .3 + .45 * Math.sin(t * 6.3);
+                else if (root.cold || root.sulky) th = 1.25 + .04 * Math.sin(t * 1.2);
+                else if (root.fond) th = .25 + .4 * Math.sin(t * 2.6 + .5);
+                else if (root.sleeping) th = 1.1 + .05 * Math.sin(t * 1.1);
+                else th = .3 + .3 * Math.sin(t * 1.6 + .5);
+                const fx = root.chasing ? 1 : .6, fy = root.chasing ? 1 : .9;
+                const tx = cxp + s * L * Math.sin(th) * fx, ty = cyp - L * Math.cos(th) * fy;
+                ctx.strokeStyle = grad;
+                ctx.lineCap = "round";
+                ctx.lineWidth = w * (startled ? .17 : .12);
+                ctx.beginPath();
+                ctx.moveTo(bx, by);
+                ctx.quadraticCurveTo(cxp, cyp + L * .25, tx, ty);
+                ctx.stroke();
+            }
             // Paws: two little ovals peeking out under the chin.
             const pawY = cy + ry * .95;
             for (let i = -1; i <= 1; i += 2) {
@@ -658,6 +1277,24 @@ Item {
             outline();
             ctx.fill();
 
+            // A scarf round the neck, or a bow tie.
+            if (root.outfit === "scarf") {
+                ctx.strokeStyle = String(Appearance.colors.colError);
+                ctx.lineWidth = w * .1; ctx.lineCap = "round";
+                ctx.beginPath(); ctx.arc(cx, cy + ry * .06, rx * .93, .13 * Math.PI, .87 * Math.PI); ctx.stroke();
+                ctx.lineWidth = w * .075;
+                ctx.beginPath(); ctx.moveTo(cx + s * rx * .35, cy + ry * .98); ctx.lineTo(cx + s * rx * .5, cy + ry * 1.42); ctx.stroke();
+                ctx.globalAlpha = .9;
+            } else if (root.outfit === "bow") {
+                const by = cy + ry * .98;
+                ctx.fillStyle = String(Appearance.colors.colTertiary);
+                ctx.beginPath(); ctx.moveTo(cx, by); ctx.lineTo(cx - w * .13, by - w * .06); ctx.lineTo(cx - w * .13, by + w * .07); ctx.closePath(); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(cx, by); ctx.lineTo(cx + w * .13, by - w * .06); ctx.lineTo(cx + w * .13, by + w * .07); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = String(Appearance.colors.colOnTertiary);
+                ctx.beginPath(); ctx.arc(cx, by, w * .03, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.globalAlpha = .3;
+            ctx.fillStyle = String(Appearance.colors.colPrimaryContainer);
             // Inner ears and a soft light across the head, as on the orb.
             ctx.globalAlpha = .3;
             ctx.fillStyle = String(Appearance.colors.colPrimaryContainer);
@@ -727,7 +1364,7 @@ Item {
         aimY: root.aimAt.y
         color: root.ink
         personality: true
-        mood: root.purr > .05 ? "delighted" : AiCompanionUi.mood
+        mood: root.annoyed ? "worried" : root.purr > .05 ? "delighted" : AiCompanionUi.mood
         listening: root.listening
         speaking: root.phase === "speaking"
         working: root.busy
@@ -735,26 +1372,36 @@ Item {
         level: AiCompanionUi.level
     }
 
-    // A heart for being petted.
-    MaterialSymbol {
-        id: heartIcon
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: -6
+    // Hearts for being petted: one, or a little burst of three when it is really enjoying it.
+    component HeartBit: MaterialSymbol {
+        id: bit
+        required property int index
+        property real dx: 0
         text: "favorite"
-        iconSize: 14
+        iconSize: index === 0 ? 14 : 11
         fill: 1
-        color: Appearance.colors.colTertiary
+        color: index === 1 ? Appearance.colors.colPrimary : Appearance.colors.colTertiary
         opacity: 0
-    }
-    ParallelAnimation {
-        id: heart
-        NumberAnimation { target: heartIcon; property: "y"; from: 2; to: -22; duration: 900; easing.type: Easing.OutCubic }
-        SequentialAnimation {
-            NumberAnimation { target: heartIcon; property: "opacity"; from: 0; to: 1; duration: 120 }
-            PauseAnimation { duration: 450 }
-            NumberAnimation { target: heartIcon; property: "opacity"; to: 0; duration: 330 }
+        x: (root.width - width) / 2 + dx
+        y: -6
+        Connections {
+            target: root
+            function onHearts(count) { if (bit.index < count) beat.restart(); }
+        }
+        ParallelAnimation {
+            id: beat
+            NumberAnimation { target: bit; property: "y"; from: 2; to: -22 - bit.index * 4; duration: 900; easing.type: Easing.OutCubic }
+            SequentialAnimation {
+                PauseAnimation { duration: bit.index * 130 }
+                NumberAnimation { target: bit; property: "opacity"; from: 0; to: 1; duration: 120 }
+                PauseAnimation { duration: 450 }
+                NumberAnimation { target: bit; property: "opacity"; to: 0; duration: 330 }
+            }
         }
     }
+    HeartBit { index: 0 }
+    HeartBit { index: 1; dx: -17 }
+    HeartBit { index: 2; dx: 17 }
 
     MouseArea {
         id: area
@@ -767,6 +1414,6 @@ Item {
     Accessible.name: Translation.tr("Kitten")
     StyledToolTip {
         extraVisibleCondition: area.containsMouse && !root.hidden
-        text: Translation.tr("Pet the kitten")
+        text: root.carry !== "" && root.carryIsGift ? Translation.tr("Take the gift") : root.giftCount > 0 ? Translation.tr("Pet the kitten · %1 gifts collected").arg(root.giftCount) : Translation.tr("Pet the kitten")
     }
 }

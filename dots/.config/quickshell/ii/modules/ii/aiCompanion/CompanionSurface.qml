@@ -21,14 +21,20 @@ Item {
         width: root.controlsOpen ? root.width : 88
         height: root.controlsOpen ? root.height : 88
     }
+    // The square is big enough for the orb's buttons, and the kitten sits inside it. Closed, only
+    // the orb itself opens the controls; once they are out, anywhere in the square keeps them out.
+    function evaluateHover() {
+        const near = hover.hovered
+            && Math.hypot(hover.point.position.x - root.width / 2, hover.point.position.y - root.height / 2) < 48;
+        if (hover.hovered && (near || root.controlsOpen)) { closeDelay.stop(); root.controlsOpen = true; }
+        else if (!closeDelay.running) closeDelay.restart();
+    }
     HoverHandler {
         id: hover
         enabled: !root.dragging
         blocking: false
-        onHoveredChanged: {
-            if (hovered) { closeDelay.stop(); root.controlsOpen = true; }
-            else closeDelay.restart();
-        }
+        onHoveredChanged: root.evaluateHover()
+        onPointChanged: if (!root.controlsOpen) root.evaluateHover()
     }
     Timer {
         id: closeDelay
