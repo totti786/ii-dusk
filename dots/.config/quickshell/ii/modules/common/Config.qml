@@ -6521,6 +6521,10 @@ Singleton {
                     property bool suggestForWindow: true
                     // Unlock with a fingerprint after the master password was typed once this login.
                     property bool fingerprint: false
+                    // Keep the backend session alive for this boot and gate
+                    // re-opening behind PAM (fingerprint / system password) or
+                    // an optional PIN. Disabled by default for security.
+                    property bool quickUnlock: false
                 }
 
                 property JsonObject portWatcher: JsonObject {
@@ -8159,6 +8163,8 @@ Singleton {
                 // Alt+letter on the desktop opens the switcher already searching. Off: typing
                 // searches only once Alt+Tab has opened it.
                 property bool searchAnywhere: false
+                // Switches immediately on a quick Alt+Tab tap without UI delay.
+                property bool snappySwitch: true
             }
 
             // Ctrl+Shift+Super+Q starts the app of the last closed window again, on its workspace.
