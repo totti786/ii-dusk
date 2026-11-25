@@ -108,7 +108,8 @@ hl.bind("CTRL + ALT + H", hl.dsp.global("quickshell:healthToggle"), { descriptio
 hl.bind("SUPER + ALT + K", hl.dsp.global("quickshell:oskToggle"), { description = "Shell: Toggle on-screen keyboard" })
 --##! Screen & input
 hl.bind("ALT + Space", hl.dsp.global("quickshell:dictationHold"), { description = "Dictation: Hold to talk" })
-hl.bind("ALT + SHIFT + Space", hl.dsp.global("quickshell:dictationToggle"), { description = "Dictation: Start/stop" })
+hl.bind("SUPER + ALT + Space", hl.dsp.global("quickshell:aiCompanionHold"), { description = "AI orb: Hold to talk" })
+hl.bind("CTRL + ALT + Space", hl.dsp.global("quickshell:dictationToggle"), { description = "Dictation: Start/stop" })
 --##! Bar & panels
 hl.bind("SUPER + SHIFT + E", hl.dsp.global("quickshell:editModeToggle"), { description = "Shell: Edit desktop layout" })
 --##! Media

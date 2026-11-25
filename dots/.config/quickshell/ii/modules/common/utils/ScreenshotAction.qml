@@ -95,14 +95,9 @@ Singleton {
             if (aiPath === "") {
                 return ["bash", "-c", `${cropToStdout} | wl-copy && ${cleanup}`];
             }
-            // Written first, copied from the file after, so the chat can watch
-            // for the one and the clipboard still gets the other. The folder
-            // is made here rather than trusted to exist: it lives under /tmp,
-            // where it is created once at startup and can be swept away
-            // underneath a running shell, and a crop into a missing folder
-            // fails silently — the chat then waits for a file that never comes.
+            // The selected image goes to the draft as a private attachment.
             const quotedAiPath = `'${StringUtils.shellSingleQuoteEscape(aiPath)}'`;
-            return ["bash", "-c", `mkdir -p "$(dirname ${quotedAiPath})" && ${cropBase} ${quotedAiPath} && wl-copy < ${quotedAiPath} && ${cleanup}`];
+            return ["bash", "-c", `umask 077; mkdir -p "$(dirname ${quotedAiPath})" && ${cropBase} ${quotedAiPath} && ${cleanup}`];
             break;
         case ScreenshotAction.Action.CharRecognition:
             return ["bash", "-c", `${cropInPlace} && tesseract '${StringUtils.shellSingleQuoteEscape(screenshotPath)}' stdout -l $(tesseract --list-langs | awk 'NR>1{print $1}' | tr '\\n' '+' | sed 's/\\+$/\\n/') | wl-copy && ${cleanup}`];
