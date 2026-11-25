@@ -1,4 +1,0 @@
-module qs.modules.ii.dynamicIsland.activities.teleprompter
-TeleprompterExpanded 1.0 TeleprompterExpanded.qml
-TeleprompterText 1.0 TeleprompterText.qml
-# quickshell-generated qmldir

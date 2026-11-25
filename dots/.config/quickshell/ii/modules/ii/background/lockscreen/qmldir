@@ -1,4 +1,0 @@
-module qs.modules.ii.background.lockscreen
-LockAnimController 1.0 LockAnimController.qml
-LockRippleEffect 1.0 LockRippleEffect.qml
-# quickshell-generated qmldir

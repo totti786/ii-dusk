@@ -1,9 +1,0 @@
-module qs.modules.ii.bar.widgets.timer
-ExpressiveTimerWidget 1.0 ExpressiveTimerWidget.qml
-SculptTimerFill 1.0 SculptTimerFill.qml
-SculptTimerPhases 1.0 SculptTimerPhases.qml
-SculptTimerSqueeze 1.0 SculptTimerSqueeze.qml
-SculptTimerWidget 1.0 SculptTimerWidget.qml
-TimerBarState 1.0 TimerBarState.qml
-TimerWidget 1.0 TimerWidget.qml
-# quickshell-generated qmldir

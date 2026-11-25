@@ -1,7 +1,0 @@
-module qs.modules.common.quickToggleDialogs.wifiNetworks
-NetworkConnectionInfoGrid 1.0 NetworkConnectionInfoGrid.qml
-WifiDialog 1.0 WifiDialog.qml
-WifiDialogContent 1.0 WifiDialogContent.qml
-WifiNetworkItem 1.0 WifiNetworkItem.qml
-WiredConnectionSection 1.0 WiredConnectionSection.qml
-# quickshell-generated qmldir

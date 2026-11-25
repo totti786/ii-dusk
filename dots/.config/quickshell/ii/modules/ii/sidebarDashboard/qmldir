@@ -1,7 +1,0 @@
-module qs.modules.ii.sidebarDashboard
-BottomWidgetGroup 1.0 BottomWidgetGroup.qml
-CenterWidgetGroup 1.0 CenterWidgetGroup.qml
-ControlCenter 1.0 ControlCenter.qml
-SidebarDashboard 1.0 SidebarDashboard.qml
-SidebarDashboardContent 1.0 SidebarDashboardContent.qml
-# quickshell-generated qmldir

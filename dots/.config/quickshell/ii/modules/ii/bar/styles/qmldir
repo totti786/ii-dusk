@@ -1,6 +1,0 @@
-module qs.modules.ii.bar.styles
-DynamicIslandStyle 1.0 DynamicIslandStyle.qml
-FloatStyle 1.0 FloatStyle.qml
-HugStyle 1.0 HugStyle.qml
-RectStyle 1.0 RectStyle.qml
-# quickshell-generated qmldir

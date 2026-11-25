@@ -1,5 +1,0 @@
-module qs.modules.ii.bar.widgets.policies
-ExpressivePoliciesPanelButton 1.0 ExpressivePoliciesPanelButton.qml
-OutlinePoliciesPanelButton 1.0 OutlinePoliciesPanelButton.qml
-PoliciesPanelButton 1.0 PoliciesPanelButton.qml
-# quickshell-generated qmldir

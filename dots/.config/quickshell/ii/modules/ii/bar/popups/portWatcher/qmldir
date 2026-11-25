@@ -1,4 +1,0 @@
-module qs.modules.ii.bar.popups.portWatcher
-PortRow 1.0 PortRow.qml
-PortWatcherPopup 1.0 PortWatcherPopup.qml
-# quickshell-generated qmldir

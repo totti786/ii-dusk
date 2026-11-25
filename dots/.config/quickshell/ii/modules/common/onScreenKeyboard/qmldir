@@ -1,8 +1,0 @@
-module qs.modules.common.onScreenKeyboard
-DeckContent 1.0 DeckContent.qml
-DeckKey 1.0 DeckKey.qml
-DeckWindow 1.0 DeckWindow.qml
-OnScreenKeyboard 1.0 OnScreenKeyboard.qml
-OskContent 1.0 OskContent.qml
-OskKey 1.0 OskKey.qml
-# quickshell-generated qmldir

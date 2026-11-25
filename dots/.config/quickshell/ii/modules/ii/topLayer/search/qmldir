@@ -1,7 +1,0 @@
-module qs.modules.ii.topLayer.search
-SearchDrop 1.0 SearchDrop.qml
-SearchDropPositioner 1.0 SearchDropPositioner.qml
-SearchDropState 1.0 SearchDropState.qml
-SearchDropSurface 1.0 SearchDropSurface.qml
-SearchOverviewBubble 1.0 SearchOverviewBubble.qml
-# quickshell-generated qmldir

@@ -1,8 +1,0 @@
-module qs.modules.ii.background.wallpaper
-MpvVideoSurface 1.0 MpvVideoSurface.qml
-MpvWallpaperProbe 1.0 MpvWallpaperProbe.qml
-QtVideoSurface 1.0 QtVideoSurface.qml
-VideoWallpaper 1.0 VideoWallpaper.qml
-WallpaperImage 1.0 WallpaperImage.qml
-WallpaperSizeProbe 1.0 WallpaperSizeProbe.qml
-# quickshell-generated qmldir

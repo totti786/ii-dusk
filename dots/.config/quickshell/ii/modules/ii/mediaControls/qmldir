@@ -1,5 +1,0 @@
-module qs.modules.ii.mediaControls
-MediaControls 1.0 MediaControls.qml
-PlayerControl 1.0 PlayerControl.qml
-QuranMediaCard 1.0 QuranMediaCard.qml
-# quickshell-generated qmldir

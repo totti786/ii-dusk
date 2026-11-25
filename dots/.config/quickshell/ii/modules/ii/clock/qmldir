@@ -1,5 +1,0 @@
-module qs.modules.ii.clock
-ClockApp 1.0 ClockApp.qml
-ClockAppContent 1.0 ClockAppContent.qml
-ClockAppWindow 1.0 ClockAppWindow.qml
-# quickshell-generated qmldir

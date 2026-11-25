@@ -1,6 +1,0 @@
-module qs.modules.ii.easyEffects
-EasyEffectsApp 1.0 EasyEffectsApp.qml
-EasyEffectsAppContent 1.0 EasyEffectsAppContent.qml
-EasyEffectsAppWindow 1.0 EasyEffectsAppWindow.qml
-EasyEffectsEditor 1.0 EasyEffectsEditor.qml
-# quickshell-generated qmldir

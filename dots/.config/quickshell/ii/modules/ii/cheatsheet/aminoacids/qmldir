@@ -1,7 +1,0 @@
-module qs.modules.ii.cheatsheet.aminoacids
-AminoAcidCard 1.0 AminoAcidCard.qml
-AminoAcidDetail 1.0 AminoAcidDetail.qml
-AminoAcidSummaryCard 1.0 AminoAcidSummaryCard.qml
-CodonTablePopup 1.0 CodonTablePopup.qml
-MoleculeStructure 1.0 MoleculeStructure.qml
-# quickshell-generated qmldir

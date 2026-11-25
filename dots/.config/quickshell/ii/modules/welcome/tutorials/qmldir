@@ -1,9 +1,0 @@
-module qs.modules.welcome.tutorials
-
-WelcomeTutorialPage 1.0 WelcomeTutorialPage.qml
-WelcomeIntegrationTutorial 1.0 WelcomeIntegrationTutorial.qml
-WelcomeTutorialStep 1.0 WelcomeTutorialStep.qml
-WelcomeGmailTutorial 1.0 WelcomeGmailTutorial.qml
-WelcomeTickTickTutorial 1.0 WelcomeTickTickTutorial.qml
-WelcomeCalendarTutorial 1.0 WelcomeCalendarTutorial.qml
-WelcomeDriveTutorial 1.0 WelcomeDriveTutorial.qml

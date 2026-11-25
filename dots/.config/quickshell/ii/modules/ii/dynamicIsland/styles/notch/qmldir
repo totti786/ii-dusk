@@ -1,6 +1,0 @@
-module qs.modules.ii.dynamicIsland.styles.notch
-NotchContent 1.0 NotchContent.qml
-NotchIsland 1.0 NotchIsland.qml
-NotchRestingFace 1.0 NotchRestingFace.qml
-NotchShape 1.0 NotchShape.qml
-# quickshell-generated qmldir

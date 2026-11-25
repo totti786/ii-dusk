@@ -41,6 +41,35 @@ import "modules/common"
 // types are resolved by URL when each startup stage is actually needed.
 import "services"
 import "panelFamilies"
+// Modules that are only loaded by URL (Qt.resolvedUrl panels, settings pages, welcome).
+// Nothing imports them statically, so the scanner would never generate their qmldir.
+import qs.modules.common.widgets.bluetooth.budslink
+import qs.modules.ii.qanun
+import qs.modules.ii.qanun.components
+import qs.modules.ii.qanun.tabs
+import qs.modules.settings.configs.ai
+import qs.modules.settings.configs.apis
+import qs.modules.settings.configs.background
+import qs.modules.settings.configs.cheatsheet
+import qs.modules.settings.configs.contextMenus
+import qs.modules.settings.configs.devices
+import qs.modules.settings.configs.dock
+import qs.modules.settings.configs.dockUtilities
+import qs.modules.settings.configs.hyprland
+import qs.modules.settings.configs.interface
+import qs.modules.settings.configs.island
+import qs.modules.settings.configs.language
+import qs.modules.settings.configs.network
+import qs.modules.settings.configs.overlays
+import qs.modules.settings.configs.power
+import qs.modules.settings.configs.presets
+import qs.modules.settings.configs.sidebars
+import qs.modules.settings.configs.startup
+import qs.modules.settings.configs.widgets
+import qs.modules.settings.configs.windows
+import qs.modules.settings.configs.workspaces
+import qs.modules.welcome
+import qs.modules.welcome.tutorials
 
 ShellRoot {
     id: root

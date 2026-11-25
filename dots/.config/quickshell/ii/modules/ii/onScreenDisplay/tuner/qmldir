@@ -1,8 +1,0 @@
-module qs.modules.ii.onScreenDisplay.tuner
-TunerBeam 1.0 TunerBeam.qml
-TunerIndicator 1.0 TunerIndicator.qml
-TunerOsdWindow 1.0 TunerOsdWindow.qml
-TunerSlider 1.0 TunerSlider.qml
-TunerSwitch 1.0 TunerSwitch.qml
-TunerTick 1.0 TunerTick.qml
-# quickshell-generated qmldir

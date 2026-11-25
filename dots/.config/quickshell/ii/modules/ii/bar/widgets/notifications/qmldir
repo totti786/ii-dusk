@@ -1,3 +1,0 @@
-module qs.modules.ii.bar.widgets.notifications
-NotificationsButton 1.0 NotificationsButton.qml
-ExpressiveNotificationsButton 1.0 ExpressiveNotificationsButton.qml

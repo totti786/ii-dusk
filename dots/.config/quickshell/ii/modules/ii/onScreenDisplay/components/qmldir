@@ -1,8 +1,0 @@
-module qs.modules.ii.onScreenDisplay.components
-OsdCollapseButton 1.0 OsdCollapseButton.qml
-OsdDeviceOutputButton 1.0 OsdDeviceOutputButton.qml
-OsdSectionLabel 1.0 OsdSectionLabel.qml
-OsdSlidersRow 1.0 OsdSlidersRow.qml
-OsdToggleRow 1.0 OsdToggleRow.qml
-OsdTopButton 1.0 OsdTopButton.qml
-# quickshell-generated qmldir

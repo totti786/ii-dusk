@@ -1,4 +1,0 @@
-module qs.modules.common.quickToggles.androidStyle.sports
-AndroidSportsCardToggle 1.0 AndroidSportsCardToggle.qml
-AndroidSportsToggle 1.0 AndroidSportsToggle.qml
-# quickshell-generated qmldir

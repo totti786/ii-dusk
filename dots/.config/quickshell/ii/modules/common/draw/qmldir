@@ -1,9 +1,0 @@
-module qs.modules.common.draw
-DrawCanvas 1.0 DrawCanvas.qml
-DrawSurface 1.0 DrawSurface.qml
-DrawToolbar 1.0 DrawToolbar.qml
-DrawToolButton 1.0 DrawToolButton.qml
-LiveDrawMenus 1.0 LiveDrawMenus.qml
-LiveDrawSettings 1.0 LiveDrawSettings.qml
-LiveDrawWindow 1.0 LiveDrawWindow.qml
-# quickshell-generated qmldir

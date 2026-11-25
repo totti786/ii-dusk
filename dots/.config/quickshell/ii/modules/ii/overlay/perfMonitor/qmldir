@@ -1,5 +1,0 @@
-module qs.modules.ii.overlay.perfMonitor
-PerfMonitor 1.0 PerfMonitor.qml
-PerfMonitorContent 1.0 PerfMonitorContent.qml
-PerfSampler 1.0 PerfSampler.qml
-# quickshell-generated qmldir

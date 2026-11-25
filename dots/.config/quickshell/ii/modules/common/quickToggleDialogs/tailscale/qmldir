@@ -1,4 +1,0 @@
-module qs.modules.common.quickToggleDialogs.tailscale
-TailscaleDialog 1.0 TailscaleDialog.qml
-TailscaleDialogContent 1.0 TailscaleDialogContent.qml
-# quickshell-generated qmldir

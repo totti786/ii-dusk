@@ -1,4 +1,0 @@
-module qs.modules.ii.localSendPopup
-
-LocalSendPopup 1.0 LocalSendPopup.qml
-LocalSendPopupContent 1.0 LocalSendPopupContent.qml

@@ -1,7 +1,0 @@
-module qs.modules.common.dashboardWidgets.timer
-CountdownTimer 1.0 CountdownTimer.qml
-DurationDial 1.0 DurationDial.qml
-PomodoroTimer 1.0 PomodoroTimer.qml
-PomodoroWidget 1.0 PomodoroWidget.qml
-Stopwatch 1.0 Stopwatch.qml
-# quickshell-generated qmldir

@@ -1,7 +1,0 @@
-module qs
-CoreDesktop 1.0 CoreDesktop.qml
-singleton GlobalStates 1.0 GlobalStates.qml
-ReloadPopup 1.0 ReloadPopup.qml
-SettingsWindow 1.0 SettingsWindow.qml
-ShellRuntime 1.0 ShellRuntime.qml
-# quickshell-generated qmldir

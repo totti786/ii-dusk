@@ -1,5 +1,0 @@
-module qs.modules.settings.configs.contextMenus
-ContextMenusStage 1.0 ContextMenusStage.qml
-ContextMenusEditor 1.0 ContextMenusEditor.qml
-ContextMenusEntryRow 1.0 ContextMenusEntryRow.qml
-ContextMenusRowAction 1.0 ContextMenusRowAction.qml

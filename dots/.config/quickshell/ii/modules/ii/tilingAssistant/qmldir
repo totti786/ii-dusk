@@ -1,6 +1,0 @@
-module qs.modules.ii.tilingAssistant
-
-LayoutHint 1.0 LayoutHint.qml
-TilingOverlay 1.0 TilingOverlay.qml
-TilingStackBadges 1.0 TilingStackBadges.qml
-ZoneIndicator 1.0 ZoneIndicator.qml

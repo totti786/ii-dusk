@@ -1,8 +1,0 @@
-module qs.modules.ii.bar
-Bar 1.0 Bar.qml
-BarComponent 1.0 BarComponent.qml
-BarContent 1.0 BarContent.qml
-BarEditController 1.0 BarEditController.qml
-BarEditPlaceholder 1.0 BarEditPlaceholder.qml
-BarEditSlot 1.0 BarEditSlot.qml
-# quickshell-generated qmldir

@@ -1,5 +1,0 @@
-module qs.modules.ii.notes.sketch
-NotesInkSheet 1.0 NotesInkSheet.qml
-NotesInkToolbar 1.0 NotesInkToolbar.qml
-NotesInkToolButton 1.0 NotesInkToolButton.qml
-# quickshell-generated qmldir

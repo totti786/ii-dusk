@@ -1,5 +1,0 @@
-module qs.modules.ii.background.depth
-DepthCutoutLayer 1.0 DepthCutoutLayer.qml
-DepthPlaneChain 1.0 DepthPlaneChain.qml
-DepthWallpaperCopy 1.0 DepthWallpaperCopy.qml
-# quickshell-generated qmldir

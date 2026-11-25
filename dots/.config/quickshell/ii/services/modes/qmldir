@@ -1,6 +1,0 @@
-module qs.services.modes
-ModeActions 1.0 ModeActions.qml
-ModeCondition 1.0 ModeCondition.qml
-ModeTasks 1.0 ModeTasks.qml
-ModeWatcher 1.0 ModeWatcher.qml
-# quickshell-generated qmldir

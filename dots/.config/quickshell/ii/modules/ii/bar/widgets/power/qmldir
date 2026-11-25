@@ -1,6 +1,0 @@
-module qs.modules.ii.bar.widgets.power
-DotPowerButton 1.0 DotPowerButton.qml
-ExpressivePowerButton 1.0 ExpressivePowerButton.qml
-PowerButton 1.0 PowerButton.qml
-SolidPowerButton 1.0 SolidPowerButton.qml
-# quickshell-generated qmldir

@@ -1,4 +1,0 @@
-module qs.modules.ii.bar.popups.keyboard
-KeyboardLayoutPopup 1.0 KeyboardLayoutPopup.qml
-KeyboardLayoutPopupContent 1.0 KeyboardLayoutPopupContent.qml
-# quickshell-generated qmldir

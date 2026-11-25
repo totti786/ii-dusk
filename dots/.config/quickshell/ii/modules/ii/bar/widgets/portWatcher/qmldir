@@ -1,4 +1,0 @@
-module qs.modules.ii.bar.widgets.portWatcher
-ExpressivePortWatcher 1.0 ExpressivePortWatcher.qml
-PortWatcherWidget 1.0 PortWatcherWidget.qml
-# quickshell-generated qmldir

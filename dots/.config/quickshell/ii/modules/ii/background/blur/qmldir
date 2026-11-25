@@ -1,8 +1,0 @@
-module qs.modules.ii.background.blur
-BarGradientOverlay 1.0 BarGradientOverlay.qml
-LockBlur 1.0 LockBlur.qml
-LockColorWash 1.0 LockColorWash.qml
-LockDesaturate 1.0 LockDesaturate.qml
-LockVignette 1.0 LockVignette.qml
-WindowBlur 1.0 WindowBlur.qml
-# quickshell-generated qmldir

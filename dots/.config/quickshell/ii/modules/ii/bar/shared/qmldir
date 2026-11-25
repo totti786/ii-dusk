@@ -1,8 +1,0 @@
-module qs.modules.ii.bar.shared
-BarThemes 1.0 BarThemes.qml
-HugIslandGroup 1.0 HugIslandGroup.qml
-ScrollHint 1.0 ScrollHint.qml
-StyledPopup 1.0 StyledPopup.qml
-StyledPopupHeaderRow 1.0 StyledPopupHeaderRow.qml
-StyledPopupValueRow 1.0 StyledPopupValueRow.qml
-# quickshell-generated qmldir

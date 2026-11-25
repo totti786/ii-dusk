@@ -1,5 +1,0 @@
-module qs.modules.common.media
-AndroidMediaArtwork 1.0 AndroidMediaArtwork.qml
-AndroidMediaBackdrop 1.0 AndroidMediaBackdrop.qml
-AndroidMediaPopup 1.0 AndroidMediaPopup.qml
-# quickshell-generated qmldir

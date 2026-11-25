@@ -1,7 +1,0 @@
-module qs.modules.common.quickToggles.androidStyle.calendar
-AndroidCalendarMinimalToggle 1.0 AndroidCalendarMinimalToggle.qml
-AndroidCalendarMonthAgendaToggle 1.0 AndroidCalendarMonthAgendaToggle.qml
-AndroidCalendarMonthGridToggle 1.0 AndroidCalendarMonthGridToggle.qml
-AndroidCalendarUpcomingToggle 1.0 AndroidCalendarUpcomingToggle.qml
-CalendarEventRows 1.0 CalendarEventRows.qml
-# quickshell-generated qmldir

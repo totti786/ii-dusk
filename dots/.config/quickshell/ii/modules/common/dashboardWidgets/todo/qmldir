@@ -1,6 +1,0 @@
-module qs.modules.common.dashboardWidgets.todo
-NewTaskSheet 1.0 NewTaskSheet.qml
-TaskList 1.0 TaskList.qml
-TodoItemActionButton 1.0 TodoItemActionButton.qml
-TodoWidget 1.0 TodoWidget.qml
-# quickshell-generated qmldir

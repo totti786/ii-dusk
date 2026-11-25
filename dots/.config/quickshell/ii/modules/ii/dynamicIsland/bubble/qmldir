@@ -1,7 +1,0 @@
-module qs.modules.ii.dynamicIsland.bubble
-AiCreature 1.0 AiCreature.qml
-AuxiliaryBubble 1.0 AuxiliaryBubble.qml
-AuxiliaryBubbleContent 1.0 AuxiliaryBubbleContent.qml
-AuxiliaryBubbleSurface 1.0 AuxiliaryBubbleSurface.qml
-MediaRingVisual 1.0 MediaRingVisual.qml
-# quickshell-generated qmldir

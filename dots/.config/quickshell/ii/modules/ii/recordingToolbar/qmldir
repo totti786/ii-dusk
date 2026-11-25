@@ -1,5 +1,0 @@
-module qs.modules.ii.recordingToolbar
-RecordingCountdownOverlay 1.0 RecordingCountdownOverlay.qml
-RecordingToolbar 1.0 RecordingToolbar.qml
-RecordingToolbarContent 1.0 RecordingToolbarContent.qml
-# quickshell-generated qmldir

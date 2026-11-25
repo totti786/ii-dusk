@@ -1,9 +1,0 @@
-module qs.modules.ii.sidebarPolicies.translator
-TranslatorDictionaryCard 1.0 TranslatorDictionaryCard.qml
-TranslatorLanguageSheet 1.0 TranslatorLanguageSheet.qml
-TranslatorLanguageTile 1.0 TranslatorLanguageTile.qml
-TranslatorResultCard 1.0 TranslatorResultCard.qml
-TranslatorSession 1.0 TranslatorSession.qml
-TranslatorSourceCard 1.0 TranslatorSourceCard.qml
-TranslatorSwapButton 1.0 TranslatorSwapButton.qml
-# quickshell-generated qmldir

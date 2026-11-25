@@ -1,4 +1,0 @@
-module qs.modules.common.quickToggleDialogs.screenShader
-ScreenShaderDialog 1.0 ScreenShaderDialog.qml
-ScreenShaderDialogContent 1.0 ScreenShaderDialogContent.qml
-# quickshell-generated qmldir
