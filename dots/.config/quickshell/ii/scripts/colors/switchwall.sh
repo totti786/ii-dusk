@@ -1136,9 +1136,9 @@ current_wallpaper() {
     printf '%s\n' "$path"
 }
 
-# Tools that read the palette on their own. pywalfox reads matugen's colors.json.
+# Tools that read the palette on their own. Pywalfox is refreshed by the Firefox app
+# theme's post-hook (matugen-themes/catalog.json).
 refresh_tools() {
-    have pywalfox && ( pywalfox update >/dev/null 2>&1 & )
     return 0
 }
 

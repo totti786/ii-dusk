@@ -72,9 +72,15 @@ class Sandbox(unittest.TestCase):
         self.out = self.root / "out"
         self.tpl.mkdir(parents=True)
         self.out.mkdir()
-        self._env = {k: os.environ.get(k) for k in ("MATUGEN_CONFIG_DIR", "XDG_STATE_HOME")}
+        self._env = {k: os.environ.get(k) for k in ("MATUGEN_CONFIG_DIR", "XDG_STATE_HOME", "II_FIREFOX_ROOT")}
         os.environ["MATUGEN_CONFIG_DIR"] = str(self.cfg_dir)
         os.environ["XDG_STATE_HOME"] = str(self.root / "state")
+        self.ff_root = self.root / "firefox"
+        self.ff_profile = self.ff_root / "abc.default-release"
+        self.ff_profile.mkdir(parents=True)
+        (self.ff_root / "profiles.ini").write_text(
+            "[Profile0]\nName=default\nIsRelative=1\nPath=abc.default-release\nDefault=1\n", encoding="utf-8")
+        os.environ["II_FIREFOX_ROOT"] = str(self.ff_root)
 
     def tearDown(self) -> None:
         for key, value in self._env.items():
@@ -415,6 +421,22 @@ class ThemeTests(Sandbox):
         self.assertFalse((self.tpl / "ii-themes").exists())
         # Only the added custom colours remain from the round trip.
         self.assertEqual(set(self.live()), set(tomllib.loads(original)["templates"]))
+
+    def test_firefox_keeps_and_restores_user_files(self) -> None:
+        chrome = self.ff_profile / "chrome"
+        chrome.mkdir()
+        (chrome / "userChrome.css").write_text("/* mine */\n", encoding="utf-8")
+        (self.ff_profile / "user.js").write_text('user_pref("a", 1);\n', encoding="utf-8")
+        self.write_config("[config]\nversion_check = false\n")
+        self.run_ok("install-theme", "firefox")
+        self.assertEqual((chrome / "userChrome.css.ii-backup").read_text(), "/* mine */\n")
+        self.assertIn("legacyUserProfileCustomizations", (self.ff_profile / "user.js").read_text())
+        self.assertIn("abc.default-release/chrome/userChrome.css", self.config_text())
+        self.assertIn("pywalfox update", self.config_text())
+        self.run_ok("uninstall-theme", "firefox")
+        self.assertEqual((chrome / "userChrome.css").read_text(), "/* mine */\n")
+        self.assertEqual((self.ff_profile / "user.js").read_text(), 'user_pref("a", 1);\n')
+        self.assertFalse((chrome / ".ii-theme").exists())
 
     def test_custom_colors_without_a_table(self) -> None:
         self.write_config("# my config\n[config]\nversion_check = false\n\n[templates.x]\ninput_path = '/a'\noutput_path = '/b'\n")

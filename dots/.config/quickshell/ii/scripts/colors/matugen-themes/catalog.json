@@ -32,7 +32,14 @@
       "output": "~/.config/kitty/matugen.conf",
       "postHook": "pkill -USR1 -x kitty || true",
       "setup": "Add `include matugen.conf` to ~/.config/kitty/kitty.conf.",
-      "customColors": {"code_red": "#E53935", "code_green": "#43A047", "code_yellow": "#FDD835", "code_blue": "#1E88E5", "code_magenta": "#AB47BC", "code_cyan": "#00ACC1"}
+      "customColors": {
+        "code_red": "#E53935",
+        "code_green": "#43A047",
+        "code_yellow": "#FDD835",
+        "code_blue": "#1E88E5",
+        "code_magenta": "#AB47BC",
+        "code_cyan": "#00ACC1"
+      }
     },
     {
       "id": "alacritty",
@@ -44,7 +51,14 @@
       "output": "~/.config/alacritty/matugen.toml",
       "postHook": "",
       "setup": "Add `import = [\"~/.config/alacritty/matugen.toml\"]` under [general] in alacritty.toml.",
-      "customColors": {"code_red": "#E53935", "code_green": "#43A047", "code_yellow": "#FDD835", "code_blue": "#1E88E5", "code_magenta": "#AB47BC", "code_cyan": "#00ACC1"}
+      "customColors": {
+        "code_red": "#E53935",
+        "code_green": "#43A047",
+        "code_yellow": "#FDD835",
+        "code_blue": "#1E88E5",
+        "code_magenta": "#AB47BC",
+        "code_cyan": "#00ACC1"
+      }
     },
     {
       "id": "ghostty",
@@ -56,7 +70,14 @@
       "output": "~/.config/ghostty/themes/matugen",
       "postHook": "pkill -USR2 -x ghostty || true",
       "setup": "Set `theme = matugen` in ~/.config/ghostty/config.",
-      "customColors": {"code_red": "#E53935", "code_green": "#43A047", "code_yellow": "#FDD835", "code_blue": "#1E88E5", "code_magenta": "#AB47BC", "code_cyan": "#00ACC1"}
+      "customColors": {
+        "code_red": "#E53935",
+        "code_green": "#43A047",
+        "code_yellow": "#FDD835",
+        "code_blue": "#1E88E5",
+        "code_magenta": "#AB47BC",
+        "code_cyan": "#00ACC1"
+      }
     },
     {
       "id": "rofi",
@@ -90,6 +111,18 @@
       "output": "~/.config/zathura/matugen-colors",
       "postHook": "",
       "setup": "Add `include matugen-colors` to ~/.config/zathura/zathurarc."
+    },
+    {
+      "id": "firefox",
+      "name": "Firefox",
+      "app": "firefox",
+      "symbol": "web",
+      "description": "Browser chrome styling (ag.proton), colours follow Pywalfox",
+      "template": "firefox.css",
+      "output": "{firefoxProfile}/chrome/userChrome.css",
+      "postHook": "pywalfox update >/dev/null 2>&1 || true",
+      "profile": "firefox",
+      "setup": "Install the Pywalfox add-on and run `pywalfox install` once, then restart Firefox. Your own userChrome.css is kept as userChrome.css.ii-backup and comes back if you remove the theme."
     }
   ]
 }

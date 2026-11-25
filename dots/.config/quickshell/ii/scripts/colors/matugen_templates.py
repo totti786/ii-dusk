@@ -35,6 +35,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -433,7 +434,8 @@ def catalog_entries(templates: list[dict]) -> list[dict]:
     for theme in load_catalog():
         match = next((t for t in templates if t["theme"] == theme["id"]), None)
         result.append({
-            **{k: theme.get(k, "") for k in ("id", "name", "symbol", "description", "output", "postHook", "setup")},
+            **{k: theme.get(k, "") for k in ("id", "name", "symbol", "description", "postHook", "setup")},
+            "output": display_output(theme),
             "app": theme.get("app", ""),
             "installed": match is not None,
             "templateName": match["name"] if match else "",
@@ -447,6 +449,126 @@ def catalog_entries(templates: list[dict]) -> list[dict]:
 def app_found(theme: dict) -> bool:
     binary = theme.get("app", "")
     return bool(binary) and shutil.which(binary) is not None
+
+
+# ── Firefox profile ────────────────────────────────────────────────────────
+# A Firefox profile directory has a random name, so the catalog's output path carries a
+# placeholder and the profile is looked up when the theme is installed. Installing also
+# sets the profile up: the stylesheet pref, and a copy of the user's own userChrome.css.
+
+FIREFOX_PLACEHOLDER = "{firefoxProfile}"
+FIREFOX_PREF = 'user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);'
+FIREFOX_PREF_RE = re.compile(r'^\s*user_pref\("toolkit\.legacyUserProfileCustomizations\.stylesheets",\s*true\)', re.M)
+FIREFOX_BEGIN = "// >>> ii firefox theme"
+FIREFOX_END = "// <<< ii firefox theme"
+FIREFOX_BACKUP = "userChrome.css.ii-backup"
+FIREFOX_STAMP = ".ii-theme"
+
+
+def firefox_roots() -> list[Path]:
+    override = os.environ.get("II_FIREFOX_ROOT")  # tests
+    if override:
+        return [Path(override)]
+    home = Path.home()
+    config = Path(os.environ.get("XDG_CONFIG_HOME") or home / ".config")
+    return [
+        home / ".mozilla" / "firefox",
+        config / "mozilla" / "firefox",
+        home / ".var" / "app" / "org.mozilla.firefox" / ".mozilla" / "firefox",
+        home / "snap" / "firefox" / "common" / ".mozilla" / "firefox",
+    ]
+
+
+def firefox_profile() -> Path | None:
+    """Firefox's default profile: the [Install...] default (what the running install uses),
+    then the profile marked Default=1, then the first one listed."""
+    import configparser
+
+    for root in firefox_roots():
+        ini_path = root / "profiles.ini"
+        if not ini_path.is_file():
+            continue
+        ini = configparser.RawConfigParser()
+        ini.optionxform = str
+        try:
+            ini.read(ini_path, encoding="utf-8")
+        except configparser.Error:
+            continue
+
+        def folder(path: str, relative: bool = True) -> Path | None:
+            if not path:
+                return None
+            full = root / path if relative and not os.path.isabs(path) else Path(path)
+            return full if full.is_dir() else None
+
+        for section in ini.sections():
+            if section.startswith("Install"):
+                found = folder(ini.get(section, "Default", fallback=""))
+                if found:
+                    return found
+        profiles = [s for s in ini.sections() if s.startswith("Profile")]
+        for wanted in (True, False):
+            for section in profiles:
+                if wanted and ini.get(section, "Default", fallback="0") != "1":
+                    continue
+                found = folder(ini.get(section, "Path", fallback=""), ini.get(section, "IsRelative", fallback="1") == "1")
+                if found:
+                    return found
+    return None
+
+
+def resolve_output(theme: dict) -> str:
+    output = theme["output"]
+    if FIREFOX_PLACEHOLDER not in output:
+        return output
+    profile = firefox_profile()
+    if profile is None:
+        raise ManagerError("no Firefox profile found; start Firefox once so it creates one", "no_profile")
+    return output.replace(FIREFOX_PLACEHOLDER, contract(profile))
+
+
+def display_output(theme: dict) -> str:
+    try:
+        return resolve_output(theme)
+    except ManagerError:
+        return theme["output"].replace(FIREFOX_PLACEHOLDER, "<your Firefox profile>")
+
+
+def firefox_prepare(profile: Path, template: Path) -> None:
+    chrome = profile / "chrome"
+    chrome.mkdir(parents=True, exist_ok=True)
+    css = chrome / "userChrome.css"
+    if css.is_file() and not (chrome / FIREFOX_STAMP).exists() and css.read_bytes() != template.read_bytes():
+        dest = chrome / FIREFOX_BACKUP
+        if dest.exists():
+            dest = chrome / f"{FIREFOX_BACKUP}.{time.strftime('%Y%m%d-%H%M%S')}"
+        shutil.copy2(css, dest)
+    shutil.copyfile(template, css)  # matugen rewrites it with the next wallpaper; this makes it work now
+    (chrome / FIREFOX_STAMP).write_text(time.strftime("%Y-%m-%d\n"), encoding="utf-8")
+    userjs = profile / "user.js"
+    text = userjs.read_text(encoding="utf-8") if userjs.is_file() else ""
+    if FIREFOX_BEGIN not in text and not FIREFOX_PREF_RE.search(text):
+        gap = "\n" if text.strip() else ""
+        userjs.write_text(f"{text}{gap}{FIREFOX_BEGIN}\n{FIREFOX_PREF}\n{FIREFOX_END}\n", encoding="utf-8")
+
+
+def firefox_restore(profile: Path, template: Path) -> None:
+    chrome = profile / "chrome"
+    css = chrome / "userChrome.css"
+    ours = (chrome / FIREFOX_STAMP).exists() or (css.is_file() and css.read_bytes() == template.read_bytes())
+    if css.is_file() and ours:
+        css.unlink()
+        saved = sorted(chrome.glob(FIREFOX_BACKUP + "*"), key=lambda f: f.stat().st_mtime, reverse=True)
+        if saved:
+            saved[0].rename(css)
+    (chrome / FIREFOX_STAMP).unlink(missing_ok=True)
+    userjs = profile / "user.js"
+    if userjs.is_file():
+        text = re.sub(rf"\n?^{re.escape(FIREFOX_BEGIN)}\n.*?^{re.escape(FIREFOX_END)}\n?", "", userjs.read_text(encoding="utf-8"), flags=re.M | re.S)
+        if text.strip():
+            userjs.write_text(text, encoding="utf-8")
+        else:
+            userjs.unlink()
 
 
 # ── Commands ───────────────────────────────────────────────────────────────
@@ -781,6 +903,7 @@ def find_theme(theme_id: str) -> dict:
 
 def cmd_install_theme(args) -> dict:
     theme = find_theme(args.id)
+    output = resolve_output(theme)
     doc, original = load_with_original()
     templates = list_templates(doc)
     if any(t["theme"] == theme["id"] for t in templates):
@@ -792,6 +915,8 @@ def cmd_install_theme(args) -> dict:
     dest = config_dir() / "templates" / "ii-themes" / Path(theme["template"]).name
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(source, dest)
+    if theme.get("profile") == "firefox":
+        firefox_prepare(firefox_profile(), source)
     added = ensure_custom_colors(doc, theme.get("customColors", {}))
     while doc.lines and not doc.lines[-1].strip():
         doc.lines.pop()
@@ -799,7 +924,7 @@ def cmd_install_theme(args) -> dict:
         doc.lines.append("")
     doc.lines.append(catalog_comment(theme))
     doc.lines.extend(render_block(name, {
-        "input_path": contract(dest), "output_path": theme["output"], "post_hook": theme.get("postHook", ""),
+        "input_path": contract(dest), "output_path": output, "post_hook": theme.get("postHook", ""),
     }))
     save(doc, original)
     return {"name": name, "addedColors": added}
@@ -813,6 +938,8 @@ def cmd_uninstall_theme(args) -> dict:
         raise ManagerError("this theme is not set up", "not_found")
     if not match["fromCatalog"]:
         raise ManagerError(f"'{match['name']}' is your own template; manage it in the list below", "not_catalog")
+    if theme.get("profile") == "firefox" and firefox_profile() is not None:
+        firefox_restore(firefox_profile(), CATALOG_DIR / theme["template"])
     # Its catalog comment goes too, when it sits right above the block.
     return cmd_remove(argparse.Namespace(name=match["name"], delete_input=True), catalog_comment(theme))
 

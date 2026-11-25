@@ -28,8 +28,6 @@
 #                           (install, the default | rebuild | restore | status)
 #   hyprset <args>          Write a Hyprland key or animation
 #   hyprmerge <args>        Merge a Hyprland config into the local one
-#   firefox-theme [x]       Install or remove the Firefox theme (install|remove|status)
-#                           (a profile other than the default: firefox-theme install -- --profile DIR)
 #   remove-cli              Remove the ii-dusk symlink
 #   help                    Print the full surface (alias: -h, --help)
 #   version                 Print the deployed fork, branch and commit
@@ -3994,7 +3992,6 @@ show_help() {
     printf '  %s%-16s%s %s\n' "$C_OK" "quickshell [x]" "$C_RST" "Install only the fast patched Quickshell (install|rebuild|restore|status)"
     printf '  %s%-16s%s %s\n' "$C_OK" "hyprset" "$C_RST" "Write a Hyprland key/animation"
     printf '  %s%-16s%s %s\n' "$C_OK" "hyprmerge" "$C_RST" "Merge a Hyprland config into the local one"
-    printf '  %s%-16s%s %s\n' "$C_OK" "firefox-theme" "$C_RST" "Install or remove the Firefox theme (install|remove|status)"
     printf '  %s%-16s%s Remove the %s symlink\n' "$C_OK" "remove-cli" "$C_RST" "$CLI_NAME"
     printf '  %s%-16s%s %s\n' "$C_OK" "help, version" "$C_RST" "This message / what is deployed"
     printf '  %s%-16s%s %s\n' "$C_OK" "demo" "$C_RST" "Render every UI primitive and exit"
@@ -4268,7 +4265,7 @@ parse_args() {
         local first="${positional[0]}"
         case "$first" in
             apply | install | update | switch | fork | branch | list-forks | list-branches | \
-                restart | run | doctor | deps | quickshell | remove-cli | hyprset | hyprmerge | firefox-theme | help | version | demo)
+                restart | run | doctor | deps | quickshell | remove-cli | hyprset | hyprmerge | help | version | demo)
                 COMMAND="$first"
                 positional=("${positional[@]:1}")
                 ;;
@@ -4291,7 +4288,7 @@ parse_args() {
         list-branches)
             [[ -n "${positional[0]:-}" && -z "$OPT_FORK" ]] && OPT_FORK="${positional[0]}"
             ;;
-        hyprset | hyprmerge | firefox-theme)
+        hyprset | hyprmerge)
             PASSTHRU_ARGS=("${positional[@]}" "${PASSTHRU_ARGS[@]+"${PASSTHRU_ARGS[@]}"}")
             ;;
         quickshell)
@@ -4380,7 +4377,6 @@ main() {
             ;;
         hyprset) cmd_hypr hyprset "${PASSTHRU_ARGS[@]+"${PASSTHRU_ARGS[@]}"}" ;;
         hyprmerge) cmd_hypr hyprmerge "${PASSTHRU_ARGS[@]+"${PASSTHRU_ARGS[@]}"}" ;;
-        firefox-theme) cmd_hypr firefox-theme "${PASSTHRU_ARGS[@]+"${PASSTHRU_ARGS[@]}"}" ;;
     esac
 
     open_log
