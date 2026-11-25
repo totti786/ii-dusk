@@ -54,9 +54,11 @@ QtObject {
         return file?.extracted === true ? "extract" : "text";
     }
 
+    property var singleTurnAttachmentMessage: null
+
     /** Attachments of a message, skipping any the model in use cannot read. */
     function attachmentsOf(message: AiMessageData, model: AiModel): var {
-        const files = Array.from(message?.attachments ?? []);
+        const files = Array.from(message?.attachments ?? []).filter(file => !file.singleTurn || message === singleTurnAttachmentMessage);
         if (files.length === 0)
             return [];
         return files.filter(file => (file.kind === "context" && String(file.content ?? "").length > 0)

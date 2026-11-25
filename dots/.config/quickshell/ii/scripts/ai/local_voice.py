@@ -43,7 +43,7 @@ def segments(text, limit=150, head=70):
 SILENCE = .008          # amplitude under which the start and end of a sentence count as silence
 KEEP_MS = 12            # a sliver of the original edge is kept so nothing is clipped
 FIRST_HEAD = 36           # characters in the first piece of a reply: first audio grows with it
-DEFAULT_GAP_MS = 130    # the pause after a full sentence; clauses get half, a bare phrase a quarter
+DEFAULT_GAP_MS = 100    # the pause after a full sentence; clauses get half, a bare phrase a quarter
 
 
 def trim_edges(np, samples, rate):
@@ -106,7 +106,8 @@ class Engine:
             raise RuntimeError("Local voice is still stopping its previous utterance. Try again.")
         started = time.monotonic()
         player = None
-        chunks = queue.Queue(maxsize=1)
+        chunks = queue.Queue(maxsize=3)
+        slow = {"rtf": 0.0}
         producer = None
         try:
             def pieces():
@@ -127,8 +128,11 @@ class Engine:
                 try:
                     for part in pieces():
                         if cancelled.is_set(): break
+                        t0 = time.monotonic()
                         samples, rate = self.model.create(part, voice=voice, speed=speed, lang="en-gb" if voice.startswith("b") else "en-us")
+                        took = time.monotonic() - t0
                         samples = trim_edges(self.np, samples, rate)
+                        if len(samples): slow["rtf"] = max(took / (len(samples) / rate), slow["rtf"] * .5)
                         pause = int(rate * gap_for(part, gap_ms) / 1000)
                         if pause: samples = self.np.concatenate([samples, self.np.zeros(pause, dtype=samples.dtype)])
                         if not len(samples): continue
@@ -158,6 +162,12 @@ class Engine:
                 if item is None: break
                 if isinstance(item, Exception): raise item
                 samples, rate = item
+                if first and slow["rtf"] > .6 and not request.get("dryRun"):
+                    # Synthesis is not far ahead of playback (a busy machine): starting now would
+                    # stall between sentences, so wait briefly for the next piece to be ready.
+                    deadline = time.monotonic() + min(3.0, 1.0 + slow["rtf"])
+                    while chunks.qsize() < 1 and producer.is_alive() and not cancelled.is_set() and time.monotonic() < deadline:
+                        time.sleep(.03)
                 if first:
                     if request.get("dryRun"):
                         send({"event": "phase", "phase": "speaking", "firstAudioMs": round((time.monotonic()-started)*1000), "backend": "kokoro"})

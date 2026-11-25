@@ -153,7 +153,7 @@ class StateMachineTests(unittest.TestCase):
         self.assertIn("root.cleanupRecording()", cancel)
 
     def test_no_backend_is_a_named_error_not_a_silent_failure(self):
-        transcription = body_between(SOURCE, "function startTranscription() {", "\n    }")
+        transcription = body_between(SOURCE, "function startTranscription(settings = null) {", "\n    }")
         self.assertIn("root.unavailableReason()", transcription)
         self.assertIn('root.state = "error"', transcription)
 
@@ -194,16 +194,15 @@ class UnavailableReasonTests(unittest.TestCase):
         self.assertIn("recorderAvailable", body)
         self.assertIn("backendAvailable", body)
         self.assertIn("pw-record", body)
-        self.assertIn("Voxtype", body)
+        self.assertIn("Hex", body)
+        self.assertIn("Whisper", body)
 
-    def test_voxtype_is_the_only_detected_and_driven_backend(self):
+    def test_local_transcription_supports_hex_and_whisper(self):
         detection = body_between(SOURCE, "id: backendCheckProc", "\n    }")
-        self.assertIn('found === "voxtype"', detection)
-        self.assertNotIn("whisper-cli", detection)
-        self.assertNotIn("faster-whisper", detection)
-        transcription = body_between(SOURCE, "function startTranscription() {", "\n    }")
+        self.assertIn('found === "hex" || found === "whisper"', detection)
+        transcription = body_between(SOURCE, "function startTranscription(settings = null) {", "\n    }")
         self.assertIn("orb_audio.py", transcription)
-        self.assertNotIn('"whisper"', transcription)
+        self.assertIn("transcriptionEnvironment(speech)", transcription)
 
 
 

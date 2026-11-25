@@ -40,6 +40,20 @@ class Audio(unittest.TestCase):
         self.assertEqual(detector.feed(.08), "")
         self.assertEqual(detector.quiet, 0)
 
+    def test_push_to_talk_keeps_listening_through_long_pauses(self):
+        for vad in (None, type("SilentVAD", (), {"feed": lambda self, pcm: [0.0]})()):
+            with self.subTest(vad=vad):
+                detector = audio.PauseDetector(vad, push_to_talk=True)
+                self.assertTrue(all(detector.feed(.04, pcm=b"fixture") == "" for _ in range(85)))
+                self.assertTrue(all(detector.feed(0, pcm=b"fixture") == "" for _ in range(100)))
+
+    def test_push_to_talk_detects_short_speech_and_keeps_the_recording_limit(self):
+        detector = audio.PauseDetector(push_to_talk=True)
+        for _ in range(4):
+            self.assertEqual(detector.feed(.04), "")
+        self.assertGreaterEqual(detector.speech, .2)
+        self.assertIn("limit", (detector.feed(0) for _ in range(601)))
+
     def test_short_noise_does_not_send_a_command(self):
         detector = audio.PauseDetector()
         detector.feed(.1)

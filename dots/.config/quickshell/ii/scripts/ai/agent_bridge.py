@@ -175,6 +175,8 @@ class Stream:
 def run(body_path, marker, state_path):
     body = json.loads(Path(body_path).read_text())
     import agent_memory
+    if body.get("learningReview") and not agent_memory.online_policy_allowed():
+        raise RuntimeError("Online AI is disabled.")
     body["contextOverheadChars"] = len(oc.TOOLS_GUIDE.encode("utf-8"))
     body = agent_memory.prepare(body)
     engine = body.get("engine", "opencode")

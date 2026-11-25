@@ -246,6 +246,10 @@ Singleton {
                 property real xRatio: 0.98
                 property real yRatio: 0.82
                 property string monitor: ""
+                // The kitten's lasting mood and what it has brought you.
+                property real affection: 0.5
+                property double lastPetAt: 0
+                property string gifts: ""
             }
 
             property JsonObject migrations: JsonObject {

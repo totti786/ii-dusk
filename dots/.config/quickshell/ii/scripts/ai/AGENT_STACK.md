@@ -6,8 +6,9 @@ expand its individual model choices, or search by model name. Codex and Claude
 choices come from their native CLI catalogs, cached for ten minutes without
 generating a response. Default rows show the model the CLI currently recommends.
 Claude aliases such as `opus` track the version offered by Claude Code. OpenCode
-shows models already connected to its service. The floating voice orb uses the
-same selected engine, conversation and tools as the sidebar.
+shows models already connected to its service. The orb uses local rules and a
+chat-scoped quick model for short turns. It uses the shared conversation and
+approved tools for full-agent turns.
 
 All three engines are installed and signed in on this machine. QuickShell
 does not require API keys. If a login expires, run the appropriate command:

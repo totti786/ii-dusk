@@ -215,12 +215,12 @@ Scope {
      * `domains` optionally narrows the offer to whole domains (["modes"]);
      * null or empty means every tool the policy allows, as always.
      */
-    function wireTools(format: string, mode: string, domains = null): var {
+    function wireTools(format: string, mode: string, domains = null, excluded = []): var {
         if (mode === "none")
             return [];
         if (mode === "search")
             return AiToolRegistry.searchPayloads[format] ?? [];
-        const enabled = root.enabledFor(format, domains);
+        const enabled = root.enabledFor(format, domains).filter(def => !excluded.includes(def.id));
         if (enabled.length === 0)
             return [];
         if (format === "gemini")

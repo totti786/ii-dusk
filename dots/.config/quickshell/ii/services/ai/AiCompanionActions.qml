@@ -51,6 +51,23 @@ QtObject {
     /** The last few actions that ran, newest last: {text, at}. Kept in memory only. */
     property var recent: []
 
+    function focusedWindowId(): string {
+        return String(ToplevelManager.activeToplevel?.HyprlandToplevel?.address ?? "");
+    }
+
+    // This is the only automatically attached context the cloud quick model receives.
+    // Local rules can still answer from the richer desktop snapshot below.
+    function contextForModel(text): string {
+        const facts = [];
+        const question = String(text);
+        const sink = Audio.sink?.audio;
+        if (/\b(volume|mute|unmute|louder|quieter|softer)\b/i.test(question) && sink)
+            facts.push("volume: " + Math.round(sink.volume * 100) + "%" + (sink.muted ? " (muted)" : ""));
+        if (/\b(battery|charging|charge)\b/i.test(question) && Battery.available)
+            facts.push("battery: " + Math.round(Battery.percentage * 100) + "%" + (Battery.isCharging ? " (charging)" : ""));
+        return facts.join("\n");
+    }
+
     function snapshot() {
         const now = new Date();
         const lines = [];
@@ -151,13 +168,19 @@ QtObject {
             if (what === "mute") { sink.muted = true; return root.ok("Muted"); }
             if (what === "unmute") { sink.muted = false; return root.ok("Unmuted"); }
             let target = NaN;
-            if (what === "set") target = root.number(args[1], 0, 100);
-            else if (what === "up") target = Math.min(100, Math.round(sink.volume * 100) + 10);
-            else if (what === "down") target = Math.max(0, Math.round(sink.volume * 100) - 10);
+            // Up to 150%, unless the volume protection is on: then its own ceiling holds.
+            const protectedMax = Config.options.audio.protection.enable ? Config.options.audio.protection.maxAllowed : 150;
+            const limit = Math.min(150, protectedMax);
+            const now = Math.round(sink.volume * 100);
+            if (what === "set") target = root.number(args[1], 0, limit);
+            // "Louder" stays within 100% unless it is already past it.
+            else if (what === "up") target = Math.min(now > 100 ? limit : Math.min(100, limit), now + 10);
+            else if (what === "down") target = Math.max(0, now - 10);
             if (!Number.isFinite(target)) return root.no("bad volume");
             sink.muted = false;
             sink.volume = target / 100;
-            return root.ok("Set volume to " + Math.round(target) + "%");
+            const asked = what === "set" ? Number(String(args[1] ?? "").replace("%", "")) : target;
+            return root.ok("Set volume to " + Math.round(target) + "%" + (asked > target ? " (the most allowed)" : ""));
         },
         brightness: args => {
             const monitor = Brightness.getTargetMonitor();
@@ -296,6 +319,29 @@ QtObject {
             }
             return root.no("unknown capture");
         },
+        session: args => {
+            const op = String(args[0] ?? "");
+            const tool = String(args[1] ?? "");
+            const id = String(args[2] ?? "");
+            if (!["send", "stop", "focus"].includes(op)) return root.no("unknown session action");
+            if (!["claude", "codex", "opencode"].includes(tool)) return root.no("unknown coding tool");
+            const script = Quickshell.shellPath("scripts/ai/agent_sessions.py");
+            if (op === "send") {
+                const text = args.slice(3).join(" ").trim();
+                if (text.length === 0) return root.no("nothing to send");
+                Quickshell.execDetached(["python3", script, "send", tool, id, text]);
+                return root.ok("Sent to " + tool);
+            }
+            Quickshell.execDetached(["python3", script, op === "stop" ? "interrupt" : "focus", tool, id]);
+            return root.ok((op === "stop" ? "Stopped " : "Showing ") + tool);
+        },
+        kitten: args => {
+            const name = String(args[0] ?? "");
+            const known = ["play", "pet", "come", "hop", "trick", "sleep", "wake", "yawn", "groom", "hide", "knock", "yarn", "gift", "laser", "stop"];
+            if (!known.includes(name)) return root.no("unknown kitten trick");
+            if (!AiCompanionUi.kittenPlay(name)) return root.no("the kitten is not out (the orb is docked or hidden)");
+            return root.ok("Kitten: " + name);
+        },
         panel: args => {
             const panels = {settings: ["settings", "open", "toggle"], sidebar: ["sidebarRight", "open", "toggle", "close"],
                             cheatsheet: ["cheatsheet", "open", "toggle", "close"], apps: ["appDrawer", "open", "toggle", "close"],
@@ -362,10 +408,11 @@ QtObject {
         const name = String(verb);
         if (root.settings.actions === false) return root.no("actions are off");
         if (!Object.prototype.hasOwnProperty.call(root.table, name)) return root.no("unknown action " + root.clip(name, 20));
-        if (root.needsConfirm.includes(name) && confirmed !== true) return root.no(name + " needs the user's confirmation");
+        const mustConfirm = root.needsConfirm.includes(name) || (name === "session" && ["send", "stop"].includes(String(args?.[0])));
+        if (mustConfirm && confirmed !== true) return root.no(name + " needs the user's confirmation");
         try {
             const result = root.table[name](Array.from(args ?? []).map(item => String(item)));
-            console.log("[voice] action", name, Array.from(args ?? []).join(" "), "->", result.ok ? "ok" : "refused", result.note);
+            console.log("[voice] action", name, result.ok ? "completed" : "refused");
             if (result.ok)
                 root.recent = root.recent.concat([{text: root.clip(result.note, 60), at: Date.now()}]).slice(-3);
             return result;

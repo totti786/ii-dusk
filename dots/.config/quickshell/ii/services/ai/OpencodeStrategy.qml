@@ -50,7 +50,8 @@ ApiStrategy {
         // chat keeps: earlier turns reach the server as they were typed, so the history matches.
         const files = [];
         let context = "";
-        for (const file of Array.from(last?.attachments ?? [])) {
+        const singleTurn = Array.from(last?.attachments ?? []).some(file => file.singleTurn === true);
+        for (const file of attachmentsOf(last, model)) {
             if (file.kind === "context") {
                 context += `\n\n${String(file.content ?? "")}`;
                 continue;
@@ -67,7 +68,7 @@ ApiStrategy {
             .map(tool => String(tool?.function?.name ?? tool?.name ?? ""))
             .filter(name => name.length > 0);
         return {
-            "chatId": chatSessionId,
+            "chatId": singleTurn ? chatSessionId + ":image:" + String(last.createdAt) : chatSessionId,
             "engine": String(model.quirks?.agentEngine ?? "opencode"),
             "projectId": Ai.sessionProjectId,
             "contextWindow": Number(model.contextWindow || 0),

@@ -118,7 +118,7 @@ QtObject {
 
     function startRecording(surface = ""): bool {
         root.ensureDetected();
-        if (root.state !== "idle" && root.state !== "pending-start")
+        if ((root.state !== "idle" && root.state !== "pending-start") || Ai.companionVoice.capturing || DictationService.recording)
             return false;
         if (String(surface).length > 0)
             root.activeSurface = surface;
@@ -217,7 +217,16 @@ QtObject {
         root.activeSurface = "";
     }
 
-    function startTranscription() {
+    function orbTranscriptionSettings(): var {
+        return {model: String(Config.options.ai.voice.sttModel ?? "auto"),
+                language: String(Config.options.ai.voice.language ?? "en"), engine: root.sttEngine};
+    }
+    function transcriptionEnvironment(settings): var {
+        return ["II_ORB_STT_MODEL=" + settings.model, "II_ORB_LANGUAGE=" + settings.language,
+                "II_ORB_STT_ENGINE=" + settings.engine];
+    }
+
+    function startTranscription(settings = null) {
         if (!root.available) {
             root.state = "error";
             root.errorText = root.unavailableReason();
@@ -227,8 +236,8 @@ QtObject {
         root.state = "transcribing";
         const outputBase = root.recordingPath.replace(/\.wav$/, "");
         transcribeProc.outputPath = `${outputBase}.txt`;
-        transcribeProc.command = ["env", "II_ORB_STT_MODEL=" + String(Config.options.ai.voice.sttModel ?? "auto"),
-            "python3", Directories.scriptPath + "/ai/orb_audio.py", "transcribe",
+        const speech = settings ?? {model: String(Config.options.ai.voice.sttModel ?? "auto"), language: "auto", engine: root.sttEngine};
+        transcribeProc.command = ["env", ...root.transcriptionEnvironment(speech), "python3", Directories.scriptPath + "/ai/orb_audio.py", "transcribe",
             root.recordingPath, transcribeProc.outputPath];
         transcribeProc.running = true;
     }
@@ -242,12 +251,12 @@ QtObject {
 
     // The voice orb captures levels and stops on pauses itself, then hands
     // its closed WAV to the same local transcription/review pipeline.
-    function transcribeFile(path: string, surface: string): bool {
+    function transcribeFile(path: string, surface: string, settings = null): bool {
         if (!root.available || root.state !== "idle")
             return false;
         root.activeSurface = surface;
         root.recordingPath = path;
-        root.startTranscription();
+        root.startTranscription(settings);
         return true;
     }
 

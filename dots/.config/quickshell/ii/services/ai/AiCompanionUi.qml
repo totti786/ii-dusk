@@ -25,7 +25,10 @@ Singleton {
         if (root.fileHover) return Translation.tr("Drop files to attach");
         switch (root.phase) {
         case "starting": return Translation.tr("Opening microphone");
-        case "listening": return Translation.tr("Listening");
+        case "listening":
+            if (!root.voice.oneShot) return Translation.tr("Listening");
+            if (!root.voice.holdHeld) return Translation.tr("Finishing recording…");
+            return root.voice.captureReady ? Translation.tr("Release to send") : Translation.tr("Starting microphone…");
         case "transcribing": return Translation.tr("Understanding");
         case "reading-files": return Translation.tr("Reading files");
         case "thinking": return Translation.tr("Thinking");
@@ -137,6 +140,14 @@ Singleton {
         function onRunIdChanged() { if (root.voice.runId.length === 0) root.approval = null; }
     }
 
+    /** Ask the kitten to do something by name (sleep, toy, trick, pet, laser...). */
+    signal kittenRequest(string name)
+    function kittenPlay(name): bool {
+        if (!root.saved.visible || root.docked) return false;
+        root.kittenRequest(String(name));
+        return true;
+    }
+    signal emerging(real fromX, real fromY)
     signal docking()
     property bool fileHover: false
     readonly property int attachmentCount: Ai.attachments.length
@@ -186,6 +197,13 @@ Singleton {
     }
     function hide(): void { root.voice.stop(); root.dragging = false; root.controlPressed = false; root.saved.visible = false; }
     function toggle(): void { root.show(); root.voice.toggle(); }
+    readonly property bool canAttachScreen: Config.options.ai.voice.screen === true && Ai.enabled
+        && Ai.currentModelSupportsVision && !Ai.isGenerating && !GlobalStates.screenLocked
+    function attachScreen(): void {
+        if (!root.canAttachScreen) return;
+        root.voice.stop();
+        GlobalStates.snipForAiRequested();
+    }
     function transcript(): void { Ai.surfaceRouter.open({surface: "sidebar", focusIntent: "composer"}); }
     function dock(): bool {
         if (!root.canDock) return false;
@@ -205,13 +223,21 @@ Singleton {
         root.saved.yRatio = ratios.y;
     }
     /**
-     * Bring a floating orb to a spot on a screen (a double-click on the desktop).
-     * Does nothing while it is docked in the island or hidden: it is only asked to
-     * come to you when it is out on its own. Coordinates are the screen's own.
+     * Bring the orb to a spot on a screen (a double-click on the desktop). Floating, it
+     * glides there; docked in the island, it comes out of the bubble and settles at the
+     * spot (the `emerging` signal carries where it left from). Hidden, it stays hidden.
+     * Coordinates are the screen's own.
      */
     function summon(screen, x, y): bool {
-        if (!screen || !root.saved.visible || root.docked || root.dragging) return false;
+        if (!screen || !root.saved.visible || root.dragging) return false;
         const b = root.screenBounds(screen);
+        if (root.docked) {
+            const target = root.dockTarget;
+            root.place(b.x + x, b.y + y, screen, false);
+            root.saved.docked = false;
+            if (target) root.emerging(target.x + target.width / 2, target.y + target.height / 2);
+            return true;
+        }
         root.place(b.x + x, b.y + y, screen, false);
         return true;
     }

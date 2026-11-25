@@ -210,7 +210,13 @@ def review_body(job):
             "prior": []}
 
 
+class PolicyPaused(RuntimeError):
+    pass
+
+
 def perform(job):
+    if not memory.online_policy_allowed():
+        raise PolicyPaused("Online AI is disabled.")
     body = review_body(job)
     with __import__("tempfile").TemporaryDirectory(prefix="ii-learning-") as tmp:
         path = Path(tmp) / "request.json"
@@ -218,15 +224,27 @@ def perform(job):
         process = subprocess.Popen([sys.executable, str(Path(__file__).with_name("agent_bridge.py")), "turn",
                                     str(path), "LEARNING_STATUS", str(memory.STATE / "learning-agent-state/opencode-state.json")],
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        deadline = time.monotonic() + 180
         try:
-            output, errors = process.communicate(timeout=180)
-        except subprocess.TimeoutExpired:
-            process.terminate()
-            try:
-                process.communicate(timeout=5)
-            except subprocess.TimeoutExpired:
-                process.kill(); process.communicate()
-            raise RuntimeError("Learning review timed out.")
+            while True:
+                if not memory.online_policy_allowed():
+                    raise PolicyPaused("Online AI is disabled.")
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise RuntimeError("Learning review timed out.")
+                try:
+                    output, errors = process.communicate(timeout=min(1, remaining))
+                    break
+                except subprocess.TimeoutExpired:
+                    continue
+        finally:
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.communicate(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.communicate()
     answer = []
     error = ""
     for line in output.splitlines():
@@ -261,6 +279,9 @@ def drain():
                 continue
             if job.get("state") == "failed" and time.time() - job.get("lastAttempt", 0) < 300:
                 continue
+            if not memory.online_policy_allowed():
+                status("paused")
+                return
             config = memory.policy()
             if not config["enabled"] or not config["autoLearn"]:
                 job["state"] = "skipped"; memory.atomic(path, job)
@@ -272,6 +293,11 @@ def drain():
                 result = perform(job)
                 job.update(state="completed", result=result, finishedAt=int(time.time()*1000))
                 status("idle", lastReviewAt=job["finishedAt"], lastResult=result, error="")
+            except PolicyPaused:
+                job.update(state="queued", attempts=max(0, job["attempts"] - 1))
+                memory.atomic(path, job)
+                status("paused")
+                return
             except Exception as error:
                 job.update(state="failed", error=clean(error, 600))
                 status("failed", error=job["error"])

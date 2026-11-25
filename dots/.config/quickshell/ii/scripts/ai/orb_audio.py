@@ -32,7 +32,7 @@ class PauseDetector:
     mic with steady background noise sits well above any fixed level, and a fixed
     threshold then never hears a pause, so the turn only ends when you click."""
 
-    def __init__(self, vad=None):
+    def __init__(self, vad=None, push_to_talk=False):
         self.speech = 0
         self.quiet = 0
         self.total = 0
@@ -43,6 +43,7 @@ class PauseDetector:
         # With a voice-activity model each window is judged on how speech-like it is, not how
         # loud, so the end of a turn is heard in a noisy room too, and sooner.
         self.vad = vad
+        self.push_to_talk = push_to_talk
         self.voiced = False
         self.first_speech_at = None
         self.extra = 0.0   # seconds added to the wait while the transcript so far looks unfinished
@@ -79,6 +80,8 @@ class PauseDetector:
             self.quiet += seconds
         if self.total >= 60:
             return "limit"
+        if self.push_to_talk:
+            return ""
         if self.speech >= .3 and self.quiet + 1e-9 >= self.end_silence():
             return "pause"
         if self.speech < .3 and self.total >= 8:
@@ -108,7 +111,7 @@ class PauseDetector:
         if .4 <= self.total < 1.0:
             self.warm.append(level)
         if self.total < 1.0:
-            if level > .1:
+            if level > (.025 if self.push_to_talk else .1):
                 self.speech += seconds
                 self.quiet = 0
             return ""
@@ -130,6 +133,8 @@ class PauseDetector:
             self.quiet += seconds
         if self.total >= 60:
             return "limit"
+        if self.push_to_talk:
+            return ""
         # Longer utterances have enough context to end confidently; short
         # phrases keep a little extra space for a natural mid-sentence pause.
         end_silence = (.75 if self.speech >= 1.5 else 1.0) + self.extra
@@ -247,7 +252,8 @@ def capture(path):
     selector = selectors.DefaultSelector()
     selector.register(process.stdout, selectors.EVENT_READ)
     import vad as vad_module
-    detector = PauseDetector(vad_module.load())
+    push_to_talk = os.environ.get("II_ORB_PUSH_TO_TALK") == "1"
+    detector = PauseDetector(vad_module.load(), push_to_talk=push_to_talk)
     buffer = b""
     reason = "stopped"
     everything = bytearray()
@@ -277,7 +283,7 @@ def capture(path):
                     level = rms(frame)
                     emit({"event": "level", "level": min(1, level * 9)})
                     reason = detector.feed(level, pcm=frame)
-                    if not reason and os.environ.get("II_ORB_SPECULATE", "1") != "0" and detector.speech >= .3:
+                    if not push_to_talk and not reason and os.environ.get("II_ORB_SPECULATE", "1") != "0" and detector.speech >= .3:
                         if detector.quiet >= SPECULATE_AFTER and not speculation.alive() \
                                 and not speculation.valid(detector.speech):
                             speculation.start(speech_slice(everything, detector), detector.speech)
@@ -303,7 +309,11 @@ def capture(path):
         if stopped["cancel"] or reason == "no-speech" or detector.speech < .2:
             target.unlink(missing_ok=True)
             emit({"event": "cancelled" if stopped["cancel"] else "no-speech"})
+        elif push_to_talk and (reason == "limit" or not stopped["stop"]):
+            target.unlink(missing_ok=True)
+            emit({"event": "error", "message": "Push-to-talk reached its 60-second limit. Hold the shortcut again to retry."})
         else:
+            ended_at = int(time.time() * 1000)
             text = ""
             if reason == "pause" and speculation.thread is not None and speculation.valid(detector.speech):
                 # A speculative transcript still running is the one the real transcription would queue behind.
@@ -311,10 +321,10 @@ def capture(path):
                 early = early or ("reuse" if text else "")
             if text:
                 target.unlink(missing_ok=True)   # the audio is not needed, and is not kept
-                emit({"event": "captured", "text": text, "early": early})
+                emit({"event": "captured", "text": text, "early": early, "endedAt": ended_at})
             else:
                 trim_wav(target, speech_slice(everything, detector))
-                emit({"event": "captured", "path": str(target)})
+                emit({"event": "captured", "path": str(target), "endedAt": ended_at})
     except Exception:
         target.unlink(missing_ok=True)
         raise
@@ -411,10 +421,9 @@ def transcribe_clip(path):
 
 def resident_transcribe(path):
     import socket
-    client = socket.socket(socket.AF_UNIX)
-    client.settimeout(60)
-    client.connect(str(STT_SOCKET))
-    with client:
+    with socket.socket(socket.AF_UNIX) as client:
+        client.settimeout(60)
+        client.connect(str(STT_SOCKET))
         client.sendall(json.dumps({"path": str(path), "language": os.environ.get("II_ORB_LANGUAGE", "auto"),
                                    "model": os.environ.get("II_ORB_STT_MODEL", "auto")}).encode() + b"\n")
         data = b""
@@ -439,7 +448,8 @@ def transcribe(path, output):
         pass  # no resident transcriber yet: the cold Voxtype path below still works
     # Isolate from the user's dictation config and post-processing hooks.
     result = subprocess.run(["voxtype", "--quiet", "--config", "/dev/null", "--engine", "whisper",
-                             "--model", "base", "--language", "auto", "transcribe", path],
+                             "--model", os.environ.get("II_ORB_STT_MODEL", "auto").replace("auto", "base"),
+                             "--language", os.environ.get("II_ORB_LANGUAGE", "auto"), "transcribe", path],
                             capture_output=True, text=True, timeout=100)
     if result.returncode:
         raise RuntimeError(result.stderr[-1200:] or "Voxtype transcription failed.")

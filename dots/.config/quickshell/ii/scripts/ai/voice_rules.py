@@ -63,7 +63,10 @@ def normalise(text):
     # "the third workspace" -> "the workspace 3"
     text = re.sub(r"\b(" + "|".join(ORDINALS) + r") (workspace|desktop|space)\b",
                   lambda m: f"{m.group(2)} {ORDINALS[m.group(1)]}", text)
-    return words_to_digits(text)
+    text = words_to_digits(text)
+    # "one hundred and twenty" came out as "1 hundred and 20": volume goes to 150, so hundreds matter.
+    text = re.sub(r"\b(?:1|a) hundred(?: and)? (\d{1,2})\b", lambda m: str(100 + int(m.group(1))), text)
+    return re.sub(r"\b(?:1|a) hundred\b", "100", text)
 
 
 def hit(actions, say, **extra):
@@ -109,7 +112,8 @@ WHAT_TIME = r"(\d{1,2})(?::(\d{2}))?(?: ?(am|pm))?"
 # Which settings group a verb belongs to, so a group can be switched off as a whole.
 GROUPS = {"media": "media", "volume": "volume", "brightness": "brightness", "theme": "theme", "timer": "timers",
           "alarm": "alarms", "remind": "notes", "task": "notes", "workspace": "workspace", "open": "apps",
-          "toggle": "toggles", "power": "power", "capture": "capture", "panel": "panels", "window": "windows"}
+          "toggle": "toggles", "power": "power", "capture": "capture", "panel": "panels", "window": "windows",
+          "kitten": "kitten", "session": "sessions"}
 # Verbs that need a spoken yes first. They are not in GROUPS, so a custom phrase can never run them
 # without the confirmation, and the shell refuses them unless the confirmation really happened.
 CONFIRMED_VERBS = ("lock", "suspend", "reboot", "shutdown", "close")
@@ -121,7 +125,7 @@ CONFIRMED_DONE = {"lock": "Locking.", "suspend": "Going to sleep.", "reboot": "R
 # is generated from this, so it cannot drift from GROUPS, and a test checks it against the shell's action table.
 ACTION_HELP = (
     ("media play", "also pause, toggle, next, previous"),
-    ("volume set 30", "0 to 100; also up, down, mute, unmute"),
+    ("volume set 30", "0 to 150; also up, down, mute, unmute"),
     ("brightness set 60", "5 to 100; also up, down"),
     ("theme dark", "or light"),
     ("open firefox", "an application's name"),
@@ -135,6 +139,8 @@ ACTION_HELP = (
     ("capture shot", "also area, record, region, stop, color"),
     ("panel settings open", "settings, sidebar, cheatsheet, apps, power, clipboard, mixer; then open or close"),
     ("window fullscreen", "also float, pin, move 3, focus firefox"),
+    ("kitten play", "also pet, come, hop, trick, sleep, yawn, hide, laser, stop"),
+    ("session focus claude", "bring a coding session's terminal forward: claude, codex or opencode; sending text to one or stopping it needs the user's spoken yes, so use the rules for that"),
 )
 
 
@@ -332,9 +338,100 @@ def extended(t):
 
 
 
+# ── Coding sessions (Claude Code, Codex, OpenCode) ─────────────────────────────────────────────
+TOOL_WORDS = {"claude": r"claude(?: code)?|cloud code|clod", "codex": r"codex|codecs|code x", "opencode": r"open ?code|open-code"}
+TOOL_ANY = "(" + "|".join(f"(?:{words})" for words in TOOL_WORDS.values()) + ")"
+SESSION_NOUN = r"(?: ?(?:coding )?(?:sessions?|agents?|terminals?|instances?|windows?))?"
+
+
+def tool_of(word):
+    word = word.strip().lower()
+    for name, words in TOOL_WORDS.items():
+        if re.fullmatch(words, word):
+            return name
+    return None
+
+
+def sessions_rule(t):
+    """Questions about, and commands for, the running coding sessions. Sending text to one or stopping
+    one is confirmed out loud first; the session it means is worked out by the voice agent."""
+    if re.fullmatch(r"(?:what|how)(?:'s| is| are)? (?:are )?(?:all )?(?:my |the )?(?:coding |running )?(?:sessions?|agents?)(?: (?:doing|up to|going|running))?"
+                    r"|(?:any|are there any|do i have any)(?: of)? (?:my |the )?(?:coding )?(?:sessions?|agents?)(?: running| working| active)?"
+                    r"|(?:status|state|report) of (?:my |the )?(?:coding )?(?:sessions?|agents?)|(?:session|agent) (?:status|report)"
+                    r"|(?:which|what) (?:coding )?(?:sessions?|agents?) (?:are )?(?:running|working|active|open)"
+                    r"|(?:is|are) (?:any|anything)(?: of my)? (?:coding )?(?:sessions?|agents?)? ?(?:running|working|waiting)(?: for me)?"
+                    r"|(?:any )?(?:sessions?|agents?) (?:waiting|need(?:ing)? me)", t):
+        return info("sessions")
+    m = re.fullmatch(r"(?:(?:what|how)(?:'s| is) )?" + TOOL_ANY + SESSION_NOUN + r"(?: (?:doing|working on|up to|status))?"
+                     r"|(?:is|has) " + TOOL_ANY + SESSION_NOUN + r" (?:done|finished|working|running|stuck|waiting)(?: yet)?"
+                     r"|(?:what|how)(?:'s| is) " + TOOL_ANY + SESSION_NOUN + r" (?:doing|up to|working on)", t)
+    if m and len(t.split()) > 1:
+        word = next(g for g in m.groups() if g)
+        return info("sessions:" + (tool_of(word) or ""))
+    # Any short sentence that is about the coding sessions themselves ("list the running coding sessions",
+    # "show me my agents", "give me a rundown of claude sessions") and is not a command for one.
+    if len(t.split()) <= 14 and not re.search(r"\b(?:how (?:do|to|can)|what is an?|why|build|create|write|make|install|define|explain)\b", t):
+        about = re.search(r"\b(?:coding|running|active|open|my|the|all|any|your)\s+(?:coding\s+|running\s+|active\s+|open\s+)*(?:sessions?|agents?)\b", t) \
+            or re.search(TOOL_ANY + r"\s+(?:coding\s+)?(?:sessions?|agents?)\b", t)
+        if about and re.search(r"\b(?:list|show|give|get|tell|read|report|check|display|status|rundown|overview|summary|summari[sz]e|what|which|how|any|are|is|who|doing|running|working|done|finished|waiting|stuck)\b", t):
+            only = re.search(TOOL_ANY + r"\s+(?:coding\s+)?(?:sessions?|agents?)?", t)
+            tool = tool_of(only.group(1)) if only and only.group(1) else None
+            return info("sessions" + (":" + tool if tool else ""))
+    m = re.fullmatch(r"(?:status|state|progress) (?:of|for|on) " + TOOL_ANY + SESSION_NOUN + r"|" + TOOL_ANY + SESSION_NOUN + r" (?:status|state|progress)", t)
+    if m and tool_of(next(g for g in m.groups() if g)):
+        return info("sessions:" + tool_of(next(g for g in m.groups() if g)))
+    m = re.fullmatch(r"(?:tell|ask|message|prompt|instruct|have|get) " + TOOL_ANY + SESSION_NOUN + r"(?: to| that| about)? (.{3,})", t) \
+        or re.fullmatch(r"send (?:this |a message |the message )?(.{3,}?) to " + TOOL_ANY + SESSION_NOUN, t)
+    if m:
+        groups = m.groups()
+        if re.fullmatch(TOOL_ANY, groups[0]):
+            word, text = groups[0], groups[1]
+        else:
+            text, word = groups[0], groups[1]
+        tool = tool_of(word)
+        if tool and not re.fullmatch(r"(?:to |that |about )?(?:it|this|that)", text):
+            return confirm([("session", ["send", tool, "", text.strip()])], "", group="sessions")
+    m = re.fullmatch(r"(?:stop|interrupt|cancel|abort|halt|pause|cut off) " + TOOL_ANY + SESSION_NOUN, t)
+    if m and tool_of(m.group(1)):
+        return confirm([("session", ["stop", tool_of(m.group(1)), ""])], "", group="sessions")
+    m = re.fullmatch(r"(?:show|go to|focus|switch to|bring up|take me to|open) (?:the )?" + TOOL_ANY + SESSION_NOUN, t)
+    if m and tool_of(m.group(1)):
+        return hit([("session", ["focus", tool_of(m.group(1)), ""])], "", group="sessions")
+    return None
+
+
+KITTEN_WORDS = r"(?:kitty|kitten|kitties|cat|kitty cat|the (?:kitty|kitten|cat))"
+
+
+def kitten_rule(t):
+    """'good kitty', 'pet the kitten', 'play with the cat', 'kitty sit', 'pspsps'."""
+    if re.fullmatch(r"(?:ps+)+ ?(?:ps+)*|here " + KITTEN_WORDS + r"(?: kitty)*|come here " + KITTEN_WORDS, t):
+        return hit([("kitten", ["come"])], "Here, kitty.")
+    if re.fullmatch(r"(?:(?:such )?a )?(?:good|nice|sweet|clever|brave|pretty|cute) " + KITTEN_WORDS + r"|(?:pet|stroke|cuddle|scratch) (?:the |my )?" + KITTEN_WORDS, t):
+        return hit([("kitten", ["pet"])], "Purr.")
+    if re.fullmatch(r"(?:play|have fun) with (?:the |my )?" + KITTEN_WORDS + r"|" + KITTEN_WORDS + r" (?:play|playtime)|entertain (?:the |my )?" + KITTEN_WORDS, t):
+        return hit([("kitten", ["play"])], "Playtime.")
+    if re.fullmatch(KITTEN_WORDS + r" (?:sit|do a trick|trick|show me a trick)|(?:make|let) (?:the |my )?" + KITTEN_WORDS + r" (?:sit|do a trick)", t):
+        return hit([("kitten", ["trick"])], "Good kitty.")
+    if re.fullmatch(KITTEN_WORDS + r" (?:jump|hop)|make (?:the |my )?" + KITTEN_WORDS + r" jump", t):
+        return hit([("kitten", ["hop"])], "Hop.")
+    if re.fullmatch(KITTEN_WORDS + r" (?:sleep|nap|go to sleep|bedtime)|(?:put|send) (?:the |my )?" + KITTEN_WORDS + r" to (?:sleep|bed)", t):
+        return hit([("kitten", ["sleep"])], "Sleep tight.")
+    if re.fullmatch(KITTEN_WORDS + r" (?:wake up|get up)|wake (?:up )?(?:the |my )?" + KITTEN_WORDS, t):
+        return hit([("kitten", ["wake"])], "Wakey wakey.")
+    if re.fullmatch(r"(?:hide and seek|play hide and seek)(?: with (?:the |my )?" + KITTEN_WORDS + r")?", t):
+        return hit([("kitten", ["hide"])], "Ready or not.")
+    if re.fullmatch(r"(?:laser|laser pointer|laser dot|play with the laser)(?: for (?:the |my )?" + KITTEN_WORDS + r")?|(?:turn|switch) (?:on|off) (?:the )?laser", t):
+        return hit([("kitten", ["laser"])], "Laser.")
+    return None
+
+
 def builtin(t):
     if not t or len(t.split()) > 14:
         return None
+    found = kitten_rule(t) or sessions_rule(t)
+    if found:
+        return found
     found = extended(t)
     if found:
         return found
@@ -363,7 +460,7 @@ def builtin(t):
         or re.fullmatch(r"(\d{1,3}) percent (?:volume|sound)", t)
     if m:
         level = int(m.group(1))
-        if 0 <= level <= 100:
+        if 0 <= level <= 150:
             return hit([("volume", ["set", str(level)])], f"Volume {level}.")
     if re.fullmatch(r"(?:mute|silence|shut up)(?: the)?(?: sound| audio| volume| speakers| music)?", t):
         return hit([("volume", ["mute"])], "Muted.")
@@ -511,6 +608,18 @@ def answer_info(kind, context):
     if kind == "notifications":
         value = lines.get("unread notifications", "")
         return f"You have {value} unread." if value else "No unread notifications."
+    if kind.startswith("sessions"):
+        try:
+            import agent_sessions
+            sessions = agent_sessions.list_sessions()
+            only = kind.partition(":")[2]
+            if only:
+                sessions = [s for s in sessions if s["tool"] == only]
+                if not sessions:
+                    return f"No {only.replace('opencode', 'OpenCode').capitalize()} session is running."
+            return agent_sessions.spoken_summary(sessions)
+        except Exception:
+            return None
     if kind == "focused":
         value = lines.get("focused", "")
         return (re.sub(r"\s*\(workspace \d+\)\s*$", "", value).replace(" — ", ", ") + ".") if value else None

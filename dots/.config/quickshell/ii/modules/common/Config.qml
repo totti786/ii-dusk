@@ -26,6 +26,8 @@ Singleton {
     // config.json from being clobbered with defaults during hot-reload.
     property int missingFileGracePeriod: 5000
     property int missingFileRetryInterval: 1500
+    property real missingFileSince: -1
+    readonly property bool configWritesPaused: root.configBackupFailed || root.configBackupRequest !== null || root.missingFileSince >= 0
     // Minimum time (ms) since singleton creation before ANY write is allowed,
     // even after `onLoaded` sets `ready = true`. This catches hot-reload races
     // where the file loads from page cache almost instantly but the
@@ -429,7 +431,7 @@ Singleton {
         // "Always" button) defeat the malformed-config write block — that
         // block exists specifically to stop the in-memory defaults from
         // clobbering a broken-but-recoverable file.
-        if (root.configMalformed)
+        if (root.configMalformed || root.configWritesPaused)
             return;
         root.blockWrites = false;
         if (!root.ready)
@@ -443,12 +445,18 @@ Singleton {
         id: fileReloadTimer
         interval: root.readWriteDelay
         repeat: false
-        onTriggered: {
-            if (root.ready && !root.configMalformed)
-                incomingFileView.reload();
-            else
-                configFileView.reload();
+        onTriggered: root.reloadConfigFromDisk()
+    }
+
+    function reloadConfigFromDisk() {
+        if (root.configBackupRequest !== null) {
+            root.configReloadPending = true;
+            return;
         }
+        if (root.ready && !root.configMalformed && !root.configBackupFailed)
+            incomingFileView.reload();
+        else
+            configFileView.reload();
     }
 
     // External rewrites of config.json (presets, switchwall, scripts) do not go
@@ -480,11 +488,17 @@ Singleton {
         printErrors: false
         // It preloads at startup too; the adapter's own load covers that one.
         onLoaded: {
-            if (root.ready)
+            if (root.ready) {
+                root.configFileFound();
                 root._stageIncoming(incomingFileView.text());
+            }
         }
-        // Missing or unreadable: the native path owns the retry/defaults logic.
-        onLoadFailed: configFileView.reload()
+        onLoadFailed: error => {
+            if (root.ready && error === FileViewError.FileNotFound)
+                root.handleMissingConfig();
+            else
+                configFileView.reload();
+        }
     }
 
     // What the adapter last matched on disk. After a staged apply the
@@ -511,6 +525,10 @@ Singleton {
     }
 
     function _stageIncoming(text) {
+        if (root.configBackupRequest !== null) {
+            root.configReloadPending = root.configReloadPending || text !== root.configBackupRequest.text;
+            return;
+        }
         if (GlobalStates.presetWorkDeferred) {
             root._deferredIncoming = text;
             return;
@@ -534,9 +552,16 @@ Singleton {
             const migrated = root.migrateRaw(raw);
             root.repairTypeConflicts(raw, root.options, root.defaultOptions, "", repaired);
             root.repairEnumViolations(raw, repaired);
-            if (migrated || repaired.length > 0)
-                root._incomingNeedsSave = true;
+            if (migrated || repaired.length > 0) {
+                root.backUpConfig(text, () => root._queueIncoming(text, raw, true));
+                return;
+            }
         }
+        root._queueIncoming(text, raw, false);
+    }
+
+    function _queueIncoming(text, raw, needsSave) {
+        root._incomingNeedsSave = needsSave;
         root._stagedText = text;
         root._stagedTextCurrent = true;
         // A newer file replaces whatever is still queued from an older one.
@@ -624,7 +649,7 @@ Singleton {
             // is loaded). If the file has not loaded yet, defer the write and
             // keep retrying — once `onLoaded` flips `root.ready` the pending
             // write will fire with the file's real values merged in.
-            if (root.blockWrites) {
+            if (root.blockWrites || root.configWritesPaused) {
                 return;
             }
             if (!root.ready) {
@@ -657,9 +682,34 @@ Singleton {
         id: missingFileRetryTimer
         interval: root.missingFileRetryInterval
         repeat: false
-        onTriggered: {
-            configFileView.reload();
+        onTriggered: root.reloadConfigFromDisk()
+    }
+
+    function configFileFound() {
+        missingFileRetryTimer.stop();
+        root.missingFileSince = -1;
+    }
+
+    function handleMissingConfig() {
+        if (root.missingFileSince < 0)
+            root.missingFileSince = root.ready ? Date.now() : root.initTimestamp;
+        const remaining = root.missingFileGracePeriod - (Date.now() - root.missingFileSince);
+        if (remaining > 0) {
+            missingFileRetryTimer.interval = Math.min(root.missingFileRetryInterval, remaining);
+            if (!missingFileRetryTimer.running)
+                missingFileRetryTimer.start();
+            return;
         }
+        // The watcher will pick up a replacement. Keep loaded settings in
+        // memory and wait for it instead of recreating the file with defaults.
+        if (root.ready)
+            return;
+
+        root.options.configVersion = root.currentConfigVersion;
+        configFileView.writeAdapter();
+        root.configFileFound();
+        root.ready = true;
+        LocalPreferences.reconcile();
     }
 
     // Shared gate for every OSD implementation (default, minimal/material).
@@ -1201,12 +1251,15 @@ Singleton {
     // completion the adapter still holds nothing but the QML defaults.
     property var defaultOptions: null
     property bool configRepaired: false
+    property var configBackupRequest: null
+    property bool configReloadPending: false
+    property bool configBackupFailed: false
     // True while config.json fails to parse as JSON at all. Writes stay
     // blocked the whole time (see saveOptionsNow() and fileWriteTimer)
     // because the in-memory adapter holds nothing but QML defaults, and the
     // broken file on disk is the only remaining source of truth.
     property bool configMalformed: false
-    // Drives ConfigHealthBanner: "ok" | "malformed" | "recovered" | "migrated" | "repaired" | "unknownKeys" | "reset"
+    // Drives ConfigHealthBanner, including whether a failed backup paused saves.
     property string configHealthState: "ok"
     property list<string> configHealthKeys: []
 
@@ -2252,9 +2305,14 @@ Singleton {
         // migration/type-repair pass, and gating parse detection on it too
         // would mean a corruption introduced *after* the first repair goes
         // undetected for the rest of the session.
+        const original = configFileView.text();
+        if (root.configBackupRequest !== null) {
+            root.configReloadPending = root.configReloadPending || original !== root.configBackupRequest.text;
+            return true;
+        }
         let raw;
         try {
-            raw = JSON.parse(configFileView.text());
+            raw = JSON.parse(original);
         } catch (e) {
             // JsonAdapter's own C++ parser swallows this exact same error
             // with a qmlWarning and treats the load as successful, so
@@ -2280,7 +2338,7 @@ Singleton {
         }
         root.recoverFromMalformedConfig();
 
-        if (root.configRepaired || root.defaultOptions === null)
+        if ((root.configRepaired && !root.configBackupFailed) || root.defaultOptions === null)
             return false;
 
         const migrated = root.migrateRaw(raw);
@@ -2293,37 +2351,76 @@ Singleton {
         if (unknown.length > 0)
             console.warn(`[Config] Ignoring ${unknown.length} unrecognized key(s), which the next save will drop: ${unknown.join(", ")}`);
 
-        if (!migrated && repaired.length === 0) {
-            // Unknown keys alone never justify a rewrite — they're dropped by
-            // the next write regardless. Back the file up so the discarded
-            // lines survive somewhere, then just report them.
-            if (unknown.length > 0) {
-                root.configRepaired = true;
-                Quickshell.execDetached(["cp", "--", root.filePath, `${root.filePath}.bak`]);
-                root.notifyConfigHealth("unknownKeys", unknown);
-            }
+        const needsRepair = migrated || repaired.length > 0;
+        if (!needsRepair && unknown.length === 0) {
+            root.clearConfigBackupFailure();
             return false;
         }
 
-        root.configRepaired = true;
-        // Keep a copy before healing — the reset values are the only record of
-        // what the user had, and a wrong guess here should be recoverable.
-        // Unknown keys ride along: this same write is what erases them.
-        if (repaired.length > 0 || unknown.length > 0)
-            Quickshell.execDetached(["cp", "--", root.filePath, `${root.filePath}.bak`]);
-
-        // Deferred: a setText issued from inside onLoaded is treated as part of
-        // the load still in flight and its save gets dropped.
-        const payload = JSON.stringify(raw, null, 2);
-        Qt.callLater(() => {
-            configFileView.setText(payload);
-            root._adapterMatchesDisk();
-            // setText re-deserializes, so the adapter now holds the repaired
-            // values and rounding can be migrated off them.
+        root.backUpConfig(original, () => {
+            root.configRepaired = true;
+            // Unknown keys alone never justify a rewrite. Keep the backup
+            // for when the next normal save drops those keys.
+            if (needsRepair) {
+                configFileView.setText(JSON.stringify(raw, null, 2));
+                root._adapterMatchesDisk();
+            }
             root.migrateRoundingConfig();
+            root.syncAppLaunchAnimation();
+            if (Persistent.ready)
+                Persistent.tryMigrateAndSyncUserData();
+            LocalPreferences.reconcile();
+            root.notifyConfigHealth(needsRepair ? (migrated ? "migrated" : "repaired") : "unknownKeys",
+                                    needsRepair ? repaired : unknown);
         });
-        root.notifyConfigHealth(migrated ? "migrated" : "repaired", repaired);
         return true;
+    }
+
+    function clearConfigBackupFailure() {
+        if (root.configBackupFailed) {
+            root.configBackupFailed = false;
+            root.configHealthState = "ok";
+        }
+    }
+
+    function backUpConfig(text, finish) {
+        root.configBackupRequest = { text: text, finish: finish };
+        configBackupProcess.stdinEnabled = true;
+        configBackupProcess.running = true;
+    }
+
+    function configBackupFinished(code) {
+        const request = root.configBackupRequest;
+        if (request === null)
+            return;
+        root.configBackupRequest = null;
+        // A preset or external editor replaced the file while we were
+        // backing it up. Re-read it before writing any repair.
+        if (root.configReloadPending || fileReloadTimer.running || code === 2) {
+            root.configReloadPending = false;
+            fileReloadTimer.restart();
+        } else if (code === 0) {
+            root.clearConfigBackupFailure();
+            request.finish();
+        } else if (!root.configBackupFailed) {
+            root.configBackupFailed = true;
+            root.notifyConfigHealth("backupFailed", []);
+        }
+    }
+
+    Process {
+        id: configBackupProcess
+        command: ["python3", Directories.scriptPath + "/backup/config_snapshot.py", FileUtils.trimFileProtocol(root.filePath)]
+        onStarted: {
+            if (root.configBackupRequest !== null)
+                write(JSON.stringify(root.configBackupRequest.text) + "\n");
+            stdinEnabled = false;
+        }
+        onExited: (code, status) => root.configBackupFinished(status === 0 ? code : 1)
+        onRunningChanged: {
+            if (!running && root.configBackupRequest !== null)
+                root.configBackupFinished(1);
+        }
     }
 
     // Called once per malformed load, from the JSON.parse catch above.
@@ -2356,7 +2453,7 @@ Singleton {
     // Escape hatch for a user who can't or doesn't want to hand-fix a
     // malformed config.json — wired to ConfigHealthBanner's reset action.
     function resetConfigToDefaults() {
-        if (root.defaultOptions === null)
+        if (root.defaultOptions === null || root.configBackupFailed)
             return;
         console.warn("[Config] Resetting config.json to defaults at user request");
         root.configMalformed = false;
@@ -2387,6 +2484,7 @@ Singleton {
             "migrated": ["Config updated", "Some settings were migrated to a newer format."],
             "repaired": ["Config values reset", `${keys.length} setting${keys.length === 1 ? "" : "s"} had an invalid value and ${keys.length === 1 ? "was" : "were"} reset to default.`],
             "unknownKeys": ["Unrecognized settings", `${keys.length} entr${keys.length === 1 ? "y" : "ies"} in config.json ${keys.length === 1 ? "isn't" : "aren't"} recognized and will be removed on the next save.`],
+            "backupFailed": ["Settings backup failed", "Settings saves are paused. Check that config.json.bak can be written, then reload the shell."],
             "reset": ["Config reset to defaults", "config.json was replaced with default settings."]
         }[state];
         if (!copy)
@@ -2415,10 +2513,11 @@ Singleton {
         atomicWrites: true
         onFileChanged: fileReloadTimer.restart()
         onAdapterUpdated: {
-            if (root.ready && !root.blockWrites && !root._assigningIncoming)
+            if (root.ready && !root.blockWrites && !root.configWritesPaused && !root._assigningIncoming)
                 fileWriteTimer.restart();
         }
         onLoaded: {
+            root.configFileFound();
             root.ready = true;
             root._adapterMatchesDisk();
             // When a repair is queued, rounding is migrated from inside it —
@@ -2435,31 +2534,8 @@ Singleton {
             LocalPreferences.reconcile();
         }
         onLoadFailed: error => {
-            if (error != FileViewError.FileNotFound) {
-                return;
-            }
-            const elapsed = Date.now() - root.initTimestamp;
-            if (elapsed > root.missingFileGracePeriod && !root.ready) {
-                // Singleton has been alive past the grace window and the file
-                // is still gone — legitimately missing (first-run install or
-                // user manually deleted it). Safe to seed defaults.
-                // Stamp the schema version so a brand-new file is not mistaken
-                // for a pre-versioning one and re-migrated on next start.
-                root.options.configVersion = root.currentConfigVersion;
-                writeAdapter();
-                // Mark ready so subsequent user-triggered writes go through
-                // (fileWriteTimer guards on `root.ready`).
-                root.ready = true;
-                // config.json was genuinely missing and defaults were just
-                // seeded — reconcile (restore before pull) so the protected
-                // machine-local settings come back from local-preferences.json.
-                LocalPreferences.reconcile();
-            } else {
-                // Likely transient: schedule a reload. If it succeeds,
-                // `onLoaded` flips `root.ready` and nothing is overwritten. If
-                // it still fails past the grace window, defaults are written.
-                missingFileRetryTimer.restart();
-            }
+            if (error === FileViewError.FileNotFound)
+                root.handleMissingConfig();
         }
 
         Component.onDestruction: {
@@ -3501,7 +3577,13 @@ Singleton {
                     // Local voice (Kokoro) speed, 1 = normal, and the pause between sentences in ms.
                     // The helper trims Kokoro's own sentence padding, so this pause is the whole gap.
                     property real speechSpeed: 1.25
-                    property int speechGapMs: 130
+                    property int speechGapMs: 100
+                    // Pause the music while you talk to the orb, and resume it afterwards (as dictation does).
+                    property bool pauseMedia: true
+                    // Alert when a Claude Code, Codex or OpenCode session finishes or needs you (a question, an approval).
+                    property bool sessionAlerts: true
+                    // ...and say it out loud too, when the orb is not already busy.
+                    property bool sessionAlertsSpeak: true
                     // Microphone: end a turn after this many seconds of quiet (a short phrase gets a
                     // little more, a long one a little less); the voice-activity model; and the
                     // speech-to-text model: "base", "small" (installed, more accurate, slower) or "auto" for the best installed.

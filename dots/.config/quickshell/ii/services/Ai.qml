@@ -47,6 +47,14 @@ Singleton {
     // never dispatch calls into the same broker at once.
     property string sharedTaskOwner: ""
 
+    function ensureOrbChatId(): string {
+        if (root.sessions.currentId.length === 0) {
+            root.sessions.currentId = root.sessions.newId();
+            root.sessionCreatedAt = Date.now();
+        }
+        return root.sessions.currentId;
+    }
+
     function beginSharedTask(owner: string): bool {
         const key = String(owner ?? "").trim();
         if (key.length === 0 || (root.sharedTaskOwner.length > 0 && root.sharedTaskOwner !== key))
@@ -268,6 +276,7 @@ Singleton {
             functionExposure: profile.functionExposure,
             thinkingLevel: profile.thinkingLevel,
             temperature: root.temperature,
+            denyScreenCapture: context?.denyScreenCapture === true,
             // A surface may hand the turn its own task instructions and a
             // corner of the toolbox: the Modes agent reads and writes
             // definitions, so it is offered the modes tools and nothing
@@ -3475,6 +3484,8 @@ Singleton {
     /**
      * Builds and sends a request for the conversation as it currently stands.
      */
+    property bool currentRunDenyScreenCapture: false
+
     function makeRequest(submission = null, options = ({})) {
         const pending = submission;
         if (pending && root.pendingSubmissionId !== pending.submissionId)
@@ -3532,6 +3543,7 @@ Singleton {
         const profile = pending ? (pending.profile ?? root.responseProfileForModel(model.id)) : root.responseProfileForModel(model.id);
         const strategy = pending ? root.apiStrategies[model.api_format || "openai"] : root.currentApiStrategy;
         strategy.activeThinkingLevel = profile.thinkingLevel;
+        strategy.singleTurnAttachmentMessage = root.messageByID[requestMessageId] ?? null;
         strategy.chatSessionId = pending?.sessionId || root.sessions.currentId;
         const messageArray = root.messageIDs.map(id => root.messageByID[id]);
         const filteredMessageArray = messageArray.filter(message => message.role !== root.interfaceRole);
@@ -3578,8 +3590,10 @@ Singleton {
         // local model that can call functions keeps them; a remote one
         // that cannot does not get them handed over anyway.
         const toolOverride = profile.toolMode;
+        const denyScreenCapture = pending ? pending.denyScreenCapture : root.currentRunDenyScreenCapture;
         const tools = model.tools && (root.onlineAllowed || toolOverride !== "search")
-                ? root.toolbox.wireTools(model.api_format, toolOverride, pending?.toolDomains ?? null)
+                ? root.toolbox.wireTools(model.api_format, toolOverride, pending?.toolDomains ?? null,
+                                        denyScreenCapture ? ["desktop_capture"] : [])
                 : null;
 
         const data = strategy.buildRequestData(model, windowed.messages, promptWithSummary, pending ? pending.temperature : root.temperature, tools);
@@ -3628,6 +3642,7 @@ Singleton {
             }
             return;
         }
+        root.currentRunDenyScreenCapture = denyScreenCapture;
         root.currentRunId = runResult.runId;
         root.currentRunSessionId = runResult.sessionId;
         root.currentRunRequestId = requestMessageId;
@@ -3685,6 +3700,10 @@ Singleton {
      * Stops the answer being written, keeping whatever arrived so far.
      */
     function stopGeneration(): bool {
+        if (root.companionVoice.fastId.length > 0) {
+            root.companionVoice.stop();
+            return true;
+        }
         root.followUpQueued = false;
         root.pendingToolCalls = [];
         root.activeToolCallId = "";
@@ -3764,8 +3783,9 @@ Singleton {
      * machine happened to be quick enough.
      */
     function attachSnip(path: string) {
-        if (!path || path.length === 0)
+        if (!path || path.length === 0 || !root.enabled || GlobalStates.screenLocked)
             return;
+        snipWaitProc.chatId = root.sessions.currentId;
         snipWaitProc.attachPath = path;
         snipWaitProc.running = false;
         snipWaitProc.running = true;
@@ -3774,6 +3794,7 @@ Singleton {
     Process {
         id: snipWaitProc
         property string attachPath: ""
+        property string chatId: ""
         // Four seconds at most: a crop of a screen takes a fraction of one,
         // and a wait that never ends would hold a stale path forever.
         command: ["bash", "-c", `for i in $(seq 1 40); do [ -s '${CF.StringUtils.shellSingleQuoteEscape(snipWaitProc.attachPath)}' ] && exit 0; sleep 0.1; done; exit 1`]
@@ -3782,7 +3803,8 @@ Singleton {
                 console.warn("[Ai] Region snip never appeared at", snipWaitProc.attachPath);
                 return;
             }
-            root.attachFile(snipWaitProc.attachPath);
+            if (snipWaitProc.chatId === root.sessions.currentId && root.enabled && !GlobalStates.screenLocked)
+                root.attachFile(snipWaitProc.attachPath, true);
         }
     }
 
@@ -3974,10 +3996,11 @@ Singleton {
     property var pendingAttachmentPaths: []
     property string activeProbePath: ""
     property int activeProbeGeneration: -1
+    property bool activeProbeSingleTurn: false
     readonly property int pendingAttachmentCount: root.pendingAttachmentPaths.length
     readonly property bool attachmentWorkPending: root.pendingAttachmentCount > 0 || root.probeQueue.length > 0 || probeProc.running || root.extractQueue.length > 0 || extractProc.running
 
-    function attachFile(filePath: string) {
+    function attachFile(filePath: string, singleTurn = false) {
         const path = CF.FileUtils.trimFileProtocol(String(filePath ?? "")).trim();
         if (path.length === 0) {
             root.clearAttachments();
@@ -3992,6 +4015,7 @@ Singleton {
         root.pendingAttachmentPaths = [...root.pendingAttachmentPaths, path];
         root.probeQueue = [...root.probeQueue, {
                 path: path,
+                singleTurn: singleTurn,
                 generation: root.attachmentGeneration
             }];
         root.runProbe();
@@ -4246,6 +4270,7 @@ Singleton {
         const job = root.probeQueue[0];
         root.probeQueue = root.probeQueue.slice(1);
         root.activeProbePath = job.path;
+        root.activeProbeSingleTurn = job.singleTurn === true;
         root.activeProbeGeneration = job.generation;
         probeProc.command = ["python3", Directories.aiAttachScriptPath, "probe", job.path];
         probeProc.running = true;
@@ -4266,6 +4291,8 @@ Singleton {
             root.attachmentNotice = file.error;
             return;
         }
+        if (root.activeProbeSingleTurn)
+            file.singleTurn = true;
         const plan = root.attachmentPlan(file);
         if (plan.action === "reject") {
             root.attachmentNotice = plan.reason;
@@ -5331,6 +5358,14 @@ Singleton {
     }
 
     function handleFunctionCall(name, args: var, message: AiMessageData, callId = "") {
+        if (name === "desktop_capture" && root.currentRunDenyScreenCapture) {
+            root.addFunctionOutputMessage(name, JSON.stringify({
+                error: Translation.tr("Use Attach screen region to share an image for this conversation."),
+                status: "unavailable", retryable: false
+            }), callId, "");
+            root.requestFollowUp();
+            return;
+        }
         message.functionName = name;
         message.functionCallId = callId;
         message.functionCall = {
@@ -7581,7 +7616,7 @@ Singleton {
                 // Context content is deliberately ephemeral. The chip's safe
                 // metadata remains in the transcript, while copied clipboard
                 // text can never be recovered from a saved session.
-                "attachments": Array.from(message.attachments ?? []).map(attachment => {
+                "attachments": Array.from(message.attachments ?? []).filter(attachment => !attachment?.singleTurn).map(attachment => {
                     if (attachment?.kind !== "context")
                         return attachment;
                     return {
@@ -7892,6 +7927,7 @@ Singleton {
             root.cancelPendingSubmission("new-chat");
             return;
         }
+        root.companionVoice.resetForChatChange();
         root.commitSession();
         root.keepDraft();
         root.clearMessages();
@@ -7946,6 +7982,7 @@ Singleton {
         // Never overwrite a file while explicitly reloading that same id:
         // the in-memory transcript may be stale/empty after a host handoff.
         // Other chats still get their pending snapshot before we switch.
+        root.companionVoice.resetForChatChange();
         if (sessionId !== root.sessions.currentId)
             root.commitSession();
         root.keepDraft();

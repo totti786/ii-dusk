@@ -69,9 +69,9 @@ READ_TOOLS = frozenset({
 })
 CONFIG_WRITE_TOOLS = frozenset({"settings_set"})
 # Ask, unless the user turned auto mode on.
-AUTO_TOOLS = frozenset({"remember_fact", "skill_save", "memory_forget", "wallpaper_set", "run_shell_command", "write_file", "undo_change", "brightness_set", "browser_call", "desktop_capture", "desktop_input", "speak_text"})
+AUTO_TOOLS = frozenset({"remember_fact", "skill_save", "memory_forget", "wallpaper_set", "run_shell_command", "write_file", "undo_change", "brightness_set"})
 # Ask every time, in any mode.
-ALWAYS_ASK_TOOLS = frozenset({"run_privileged_command"})
+ALWAYS_ASK_TOOLS = frozenset({"run_privileged_command", "browser_call", "desktop_capture", "desktop_input", "speak_text"})
 TOOLS_INSTRUCTIONS_KEY = "ii-shell-tools"
 TOOLS_GUIDE = """You are a companion embedded inside the user's QuickShell ii desktop on Hyprland/Wayland.
 - desktop_context reports this shell's current wallpaper, configured library, architecture and native control routes. Use it first for desktop requests. The local shell is the authority for its configuration, not old chat text or generic Linux defaults.
@@ -309,6 +309,8 @@ def shell_action(tool: str) -> str:
 def tool_effect(tool: str, auto: bool, config_writes: bool) -> str:
     """allow, or ask. Only this table can let a call run without the user: the shell's request body
     names the modes, never a tool's effect."""
+    if tool in ALWAYS_ASK_TOOLS:
+        return "ask"
     if tool in READ_TOOLS:
         return "allow"
     if tool in CONFIG_WRITE_TOOLS:

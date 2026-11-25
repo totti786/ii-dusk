@@ -10,6 +10,9 @@ import qs.modules.common.functions
 Scope {
     id: root
     property bool active: false
+    property bool oneShot: false
+    property bool holdHeld: false
+    property bool captureReady: false
     property string phase: "idle"
     property real level: 0
     property string errorText: ""
@@ -24,25 +27,50 @@ Scope {
     property double speechRequested: 0
     property double listenStarted: 0
     property string route: ""
-    property string early: ""
-    property string turnText: ""
-    // One line per spoken turn, so slowness can be traced to a stage and a route instead of guessed at:
-    // ~/.local/state/quickshell/user/ai/voice-timings.jsonl
-    // The model that served this turn, as the settings page names them.
+    property double captureEndedAt: 0
+    property double firstAudioAt: 0
+    property var lastReceipt: null
+    property var turnActions: []
+    property var sharedContextFields: []
+    property bool loggedTurn: false
+    readonly property string timingLog: FileUtils.trimFileProtocol(Directories.state) + "/user/ai/voice-timings.jsonl"
+    readonly property string timingScript: Directories.scriptPath + "/ai/voice_metrics.py"
+
     function routeModel() {
         if (root.route === "rule") return "rules";
-        if (root.route === "haiku" || root.route === "look") return root.fastModelId();
+        if (root.route === "haiku") return root.fastModelId();
         if (root.route === "quick") return root.quickModelId();
         return root.escalationModelId() || Ai.currentModelId;
     }
-    function logTurn() {
+    function metricsCommand(operation, data = null) {
+        const command = ["python3", root.timingScript, operation, root.timingLog];
+        if (data !== null) command.push(JSON.stringify(data));
+        Quickshell.execDetached(command);
+    }
+    function clearTimings() { root.lastReceipt = null; root.metricsCommand("clear"); }
+    function logTurn(outcome = "completed") {
+        if (root.loggedTurn) return;
+        root.loggedTurn = true;
         const t = root.timings;
-        const line = JSON.stringify({at: new Date().toISOString(), route: root.route, early: root.early, model: root.routeModel(), text: root.turnText.slice(0, 80),
-            captureMs: t.captureMs ?? null, transcriptionMs: t.transcriptionMs ?? null, generationMs: t.generationMs ?? null,
-            speechStartMs: t.speechStartMs ?? null,
-            afterSpeechEndMs: (t.transcriptionMs ?? 0) + (t.generationMs ?? 0) + (t.speechStartMs ?? 0)});
-        Quickshell.execDetached(["bash", "-c", 'mkdir -p "$(dirname "$1")" && printf "%s\\n" "$2" >> "$1"', "_",
-            FileUtils.trimFileProtocol(Directories.state) + "/user/ai/voice-timings.jsonl", line]);
+        const data = {
+            at: new Date().toISOString(), route: root.route, model: root.routeModel(), outcome: outcome,
+            input: root.captureEndedAt > 0 ? "voice" : "text", captureMs: t.captureMs ?? null,
+            transcriptionMs: t.transcriptionMs ?? null, generationMs: t.generationMs ?? null,
+            firstTokenMs: t.firstTokenMs ?? null, speechStartMs: t.speechStartMs ?? null,
+            captureToAudioMs: root.captureEndedAt > 0 && root.firstAudioAt >= root.captureEndedAt
+                ? root.firstAudioAt - root.captureEndedAt : null
+        };
+        root.lastReceipt = Object.assign({}, data, {actions: root.turnActions.slice(), context: root.sharedContextFields.slice()});
+        root.metricsCommand("record", data);
+    }
+    function resetTimings() {
+        root.loggedTurn = false;
+        root.timings = ({});
+        root.captureEndedAt = 0;
+        root.firstAudioAt = 0;
+        root.speechRequested = 0;
+        root.turnActions = [];
+        root.sharedContextFields = [];
     }
     readonly property string state: root.active && root.runId.length > 0
         && (Ai.runCoordinator.runFor(root.runId)?.state === "needsAction" || AiCompanionUi.approval !== null)
@@ -61,7 +89,11 @@ Scope {
     AiCompanionActions { id: actions }
 
     function fail(message) {
+        root.abortAgentTurn();
+        if (root.fastId.length > 0) root.releaseQuickTurn();
         root.active = false;
+        root.oneShot = false;
+        root.holdHeld = false;
         root.pendingAsk = "";
         root.phase = "error";
         root.level = 0;
@@ -71,22 +103,82 @@ Scope {
         root.submissionId = "";
         root.runId = "";
     }
-    function start() {
+    function start(hold = false) {
         if (GlobalStates.screenLocked) return;
         if (Ai.isGenerating && root.runId.length === 0) {
             root.fail("The assistant is already working. Open the sidebar to see its progress.");
             return;
         }
+        root.oneShot = hold;
         root.active = true;
         root.phase = "starting";
-        root.timings = ({});
+        root.resetTimings();
         root.transcriptionStarted = 0;
-        if (root.quickReady) root.sendAgent({op: "warm"});
+        if (root.quickReady) root.sendAgent({op: "warm", session: Ai.sessions.currentId});
         if (Ai.speechService.speaking) Ai.speechService.stop();
+        root.pauseMediaForTurn();
         root.errorText = "";
         root.detectionAttempts = 0;
         Ai.voiceService.ensureDetected();
-        listenTimer.restart();
+        if (hold) root.beginListening();
+        else listenTimer.restart();
+    }
+
+    // Music is paused while you talk to the orb, like dictation does, and comes back once the whole
+    // turn (the reply too) is over. Only music this paused is resumed, never one you paused yourself.
+    property bool mediaPausedByOrb: false
+    function pauseMediaForTurn() {
+        if (Config.options.ai.voice.pauseMedia === false || root.mediaPausedByOrb) return;
+        if (MprisController.activePlayer && MprisController.isPlaying) {
+            MprisController.togglePlaying();
+            root.mediaPausedByOrb = true;
+            mediaResume.restart();
+        }
+    }
+    Timer {
+        id: mediaResume
+        interval: 600; repeat: true
+        onTriggered: {
+            if (!root.mediaPausedByOrb) { mediaResume.stop(); return; }
+            if (root.active || Ai.speechService.speaking || capture.running) return;
+            root.mediaPausedByOrb = false;
+            mediaResume.stop();
+            if (MprisController.activePlayer && !MprisController.isPlaying) MprisController.togglePlaying();
+        }
+    }
+
+    function holdStart() {
+        if (root.holdHeld || GlobalStates.screenLocked) return;
+        // Push to talk interrupts: whatever the orb is saying or working on stops, and it listens.
+        if (root.active || capture.running || Ai.speechService.speaking) root.stop();
+        else if (Ai.isGenerating) return;
+        root.holdHeld = true;
+        root.start(true);
+    }
+
+    function holdRelease() {
+        if (!root.holdHeld)
+            return;
+        root.holdHeld = false;
+        if (root.captureReady && capture.running)
+            capture.signal(10);
+        else
+            root.stop();
+    }
+
+    function finishSpokenTurn(afterChime = false) {
+        root.phase = "idle";
+        root.level = 0;
+        if (AiCompanionUi.approval !== null)
+            return;
+        if (root.oneShot) {
+            root.oneShot = false;
+            root.active = false;
+        } else if (afterChime) {
+            chimeTimer.restart();
+        } else {
+            listenTimer.restart();
+        }
     }
     // Also accepts an explicit prompt from local IPC; it follows the same
     // correlated response path as a transcribed utterance.
@@ -129,15 +221,13 @@ Scope {
                 return;
             }
             root.phase = "idle";
-            listenTimer.restart();
+            if (!root.oneShot) listenTimer.restart();
             return;
         }
         const wantsFast = root.agentUseful && Ai.attachmentWorkPending === false
             && Ai.attachments.length === 0 && !Ai.isGenerating;
-        if (wantsFast) {
-            root.fastAsk(String(text));
+        if (wantsFast && root.fastAsk(String(text)))
             return;
-        }
         root.askFull(text, !root.quickReady && Ai.attachments.length === 0);
     }
     // The model for turns that need the desktop. Empty keeps whatever the sidebar has selected. Claude Haiku
@@ -174,7 +264,7 @@ Scope {
         }
         return root.escalationModelId();
     }
-    function askFull(text, unavailable) {
+    function askFull(text, unavailable, toolRequired = false) {
         if (Ai.attachmentWorkPending) {
             root.active = true;
             root.pendingAsk = String(text);
@@ -183,7 +273,6 @@ Scope {
         }
         root.pendingAsk = "";
         root.route = "agent";
-        root.turnText = String(text);
         root.agentStreaming = false;
         root.fastBuffer = "";
         root.fastSent = 0;
@@ -191,7 +280,7 @@ Scope {
         if (Ai.isGenerating) { root.fail("The assistant is already working."); return; }
         // With the chat's Tools switch off the model is offered nothing, and some models then act out
         // tool calls in plain text. Say so instead of sending the turn.
-        if (Ai.functionExposure === "none") {
+        if (Ai.functionExposure === "none" && toolRequired) {
             root.fail(Translation.tr("Tools are switched off in the chat, so I can't do desktop tasks. Turn Tools on in the sidebar."));
             return;
         }
@@ -203,13 +292,26 @@ Scope {
         const result = Ai.submit(String(text), {
             modelId: root.handoverModelId(text, unavailable === true),
             attachments: Ai.attachments,
-            systemPrompt: Ai.systemPrompt + "\nThis turn is a spoken conversation through the desktop voice orb. Give a natural spoken answer, usually one to three short sentences. Avoid markdown, long lists and code unless explicitly requested. Keep the existing tool and approval rules."
+            denyScreenCapture: true,
+            systemPrompt: Ai.systemPrompt + "\nThis turn is a spoken conversation through the desktop voice orb. Give a natural spoken answer, usually one to three short sentences. Avoid markdown, long lists and code unless explicitly requested. Keep the existing tool and approval rules. For visual questions, ask the user to attach a screen region."
         }, "voice-orb");
         if (!result.accepted) { root.fail("Could not send your voice message. Open the sidebar for details."); return; }
         root.submissionId = String(result.submissionId ?? "");
     }
     // ── Fast path: a warm Claude session, spoken a sentence at a time ───────────
     property string fastId: ""
+    property string fastSessionId: ""
+    property int fastSerial: 0
+    property var sttSettings: null
+    readonly property bool capturing: capture.running || (root.active && root.phase === "listening")
+    Timer {
+        id: quickDeadline
+        interval: 42000
+        onTriggered: {
+            root.abortAgentTurn();
+            root.fastFallback("The quick model timed out.");
+        }
+    }
     property string fastText: ""
     property string fastBuffer: ""
     property int fastSent: 0
@@ -235,8 +337,8 @@ Scope {
         // Switching remote AI off ends the warm Claude session and drops any turn it was answering.
         function onOnlineAllowedChanged() {
             if (Ai.onlineAllowed) return;
-            if (root.fastId.length > 0) root.fastFallback("remote AI turned off");
-            root.sendAgent({op: "reset"});
+            root.stop();
+            root.resetAgent();
         }
     }
     function recheckClaude() { if (!claudeCheck.running) claudeCheck.running = true; }
@@ -269,7 +371,16 @@ Scope {
     readonly property var nonLatin: /[\u0400-\u052f\u0590-\u08ff\u0900-\u0dff\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/
 
     // The instant-command settings, sent when the agent starts and whenever they change.
-    readonly property string rulesConfig: JSON.stringify({op: "config",
+    readonly property string agentModel: root.quickIsClaude ? root.quickValue.replace(/^claude:/, "") : "haiku"
+    readonly property string agentLanguage: String(Config.options.ai.voice.language ?? "en")
+    readonly property bool localRulesEnabled: Config.options.ai.voice.rules !== false
+    readonly property string agentSettings: JSON.stringify([root.agentModel, root.agentLanguage, root.localRulesEnabled])
+    onAgentSettingsChanged: {
+        if (root.fastId.length > 0) root.stop();
+        root.resetAgent();
+    }
+    readonly property string rulesConfig: JSON.stringify({op: "config", model: root.agentModel,
+        language: root.agentLanguage, rulesEnabled: root.localRulesEnabled,
         rulesOff: Array.from(Config.options.ai.voice.rulesOff ?? []),
         custom: Array.from(Config.options.ai.voice.customRules ?? []),
         learned: Array.from(Config.options.ai.voice.learnedRules ?? []),
@@ -282,6 +393,55 @@ Scope {
         }
         root.agentQueue = root.agentQueue.concat([message]);
         if (!voiceAgent.running) voiceAgent.running = true;
+    }
+    function abortAgentTurn() {
+        root.agentQueue = [];
+        if (voiceAgent.running && root.agentReady)
+            voiceAgent.write(JSON.stringify({op: "cancel", id: root.fastId}) + "\n");
+    }
+    function resetAgent() {
+        root.agentQueue = [];
+        if (voiceAgent.running && root.agentReady)
+            voiceAgent.write('{"op":"reset"}\n');
+    }
+    // A turn that is "thinking" with nothing behind it (no quick turn, no run, no submission) for this long
+    // is stuck: let go of it rather than leave the orb waiting forever.
+    property double thinkingSince: 0
+    onPhaseChanged: root.thinkingSince = root.phase === "thinking" ? Date.now() : 0
+    Timer {
+        interval: 10000; repeat: true
+        running: root.phase === "thinking"
+        onTriggered: {
+            const orphan = root.fastId.length === 0 && root.runId.length === 0 && root.submissionId.length === 0 && !Ai.isGenerating;
+            if (orphan && root.thinkingSince > 0 && Date.now() - root.thinkingSince > 30000) {
+                console.log("[voice] stuck thinking for 30 s with no turn behind it; stopping");
+                root.stop();
+            }
+        }
+    }
+    // The id of what was said, already shown in the chat while the answer is still being worked out.
+    property string postedUserId: ""
+    function takePosted() { const id = root.postedUserId; root.postedUserId = ""; return id; }
+    function releaseQuickTurn() {
+        root.postedUserId = "";
+        quickDeadline.stop();
+        const id = root.fastId;
+        root.fastId = "";
+        root.fastSessionId = "";
+        root.typed = false;
+        Ai.endSharedTask(id);
+    }
+    function resetForChatChange() {
+        if (root.fastId.length > 0 || (root.active && !root.runId && !root.submissionId))
+            root.stop();
+        root.resetAgent();
+    }
+    Connections {
+        target: Ai.sessions
+        function onCurrentIdChanged() {
+            if (root.fastId.length > 0 && root.fastSessionId !== Ai.sessions.currentId)
+                root.resetForChatChange();
+        }
     }
     // Picking a model in the sidebar pins it for this session: typed messages go to it instead of being
     // routed. Choosing "Auto" in the picker hands them back to the router. Not saved; a restart starts on Auto.
@@ -296,21 +456,25 @@ Scope {
             && !/^[\/!]/.test(String(text).trim());
     }
     function typedAsk(text) {
+        root.resetTimings();
         root.typed = true;
-        root.fastAsk(String(text));
-        Ai.clearDraftIfCurrent();
+        if (!root.fastAsk(String(text))) {
+            root.typed = false;
+            return {accepted: false, state: "rejected", errorCode: "busy"};
+        }
+        Ai.clearDraftIfCurrent(text);
         return {accepted: true, state: "pending", routed: "quick"};
     }
     /** The typed turn is over: put it in the chat, with what was done, and let the orb rest. */
     function typedFinish(question, answer, notes, rule) {
         const done = notes.length > 0 ? "(" + notes.join("; ") + ")" : "";
         const reply = done.length > 0 && answer.length > 0 ? done + "\n\n" + answer : done + answer;
-        root.typed = false;
-        root.fastId = "";
+        const inChat = root.fastSessionId === Ai.sessions.currentId;
+        root.releaseQuickTurn();
         root.fastNotes = [];
         if (root.mood === "curious") root.mood = "";
         root.phase = "idle";
-        if (reply.trim().length > 0) {
+        if (inChat && reply.trim().length > 0) {
             Ai.addMessage(question, "user");
             Ai.addMessage(reply, "assistant", {"model": rule ? "rules" : root.fastModelId()});
             Ai.sessions.scheduleSave();
@@ -322,24 +486,43 @@ Scope {
     // The context block the quick-answer model is given with each turn (read-only; used by `aitools orbContext`).
     function contextText() { return actions.snapshot(); }
     function fastAsk(text) {
+        const activeRun = Ai.runCoordinator.runFor(Ai.runCoordinator.activeRunId);
+        if (Ai.isGenerating || Ai.runCoordinator.activeStates.includes(activeRun?.state) || !Ai.enabled || GlobalStates.screenLocked)
+            return false;
+        const id = "orb-quick:" + Date.now() + ":" + (++root.fastSerial);
+        if (!Ai.beginSharedTask(id))
+            return false;
+        root.fastSessionId = Ai.ensureOrbChatId();
         root.route = "haiku";
-        root.turnText = text;
         root.pendingAsk = "";
         if (!root.typed) root.active = true;
         root.errorText = "";
         root.phase = "thinking";
         root.generationStarted = Date.now();
-        root.fastId = "v" + Date.now();
+        root.fastId = id;
         root.chosenActions = [];
         root.chosenAllRan = true;
         root.fastText = text;
+        // A spoken request shows in the chat at once, not only when the reply is done.
+        root.postedUserId = "";
+        if (!root.typed && root.fastSessionId === Ai.sessions.currentId && text.trim().length > 0) {
+            Ai.addMessage(text, "user");
+            root.postedUserId = Ai.messageIDs[Ai.messageIDs.length - 1] ?? "";
+            Ai.sessions.scheduleSave();
+        }
         root.fastBuffer = "";
         root.fastSent = 0;
         root.fastWhole = false;
         root.fastNotes = [];
-        root.sendAgent({op: "ask", id: root.fastId, text: text, context: actions.snapshot(), quick: root.quickReady,
-                        via: root.typed ? "typed" : "spoken",
-                        screen: root.quickReady && Config.options.ai.voice.screen === true});
+        const remoteContext = root.quickReady ? actions.contextForModel(text) : "";
+        root.sharedContextFields = remoteContext ? remoteContext.split("\n").map(line => line.split(":")[0]) : [];
+        root.sendAgent({op: "ask", id: id, text: text,
+                        context: root.localRulesEnabled ? actions.snapshot() : "",
+                        remoteContext: remoteContext, quick: root.quickReady,
+                        via: root.typed ? "typed" : "spoken", session: root.fastSessionId,
+                        target: actions.focusedWindowId()});
+        quickDeadline.restart();
+        return true;
     }
     // Hand off whole sentences to the speaker. The first may be a clause: waiting for
     // a full stop is what makes a long reply feel slow to start.
@@ -415,6 +598,8 @@ Scope {
     }
     Timer { id: chimeTimer; interval: 420; onTriggered: root.beginListening() }
     function fastDone(event) {
+        root.timings = Object.assign({}, root.timings, {firstTokenMs: event.firstTokenMs ?? null});
+        if (event.rule) root.sharedContextFields = [];
         if (root.typed) {
             root.typedFinish(root.fastText, String(event.text ?? "").trim(), root.fastNotes, !!event.rule);
             return;
@@ -434,14 +619,16 @@ Scope {
             root.sendAgent({op: "learn", text: root.fastText, actions: root.chosenActions});
         root.chosenActions = [];
         root.chosenAllRan = true;
-        root.fastId = "";
+        const inChat = root.fastSessionId === Ai.sessions.currentId;
+        const alreadyPosted = root.takePosted().length > 0;
+        root.releaseQuickTurn();
         root.fastNotes = [];
         if (root.mood === "curious") root.mood = "";
-        if (answer.length > 0 || notes.length > 0) {
+        if (inChat && (answer.length > 0 || notes.length > 0)) {
             // The exchange belongs in the chat the sidebar shows, and in what the full
             // agent reads as history on the next tool turn, including what was done.
             const done = notes.length > 0 ? "(" + notes.join("; ") + ")" : "";
-            Ai.addMessage(root.fastText, "user");
+            if (!alreadyPosted) Ai.addMessage(root.fastText, "user");
             Ai.addMessage(done.length > 0 && answer.length > 0 ? done + "\n\n" + answer : done + answer,
                           "assistant", {"model": root.fastModelId()});
             Ai.sessions.scheduleSave();
@@ -450,14 +637,16 @@ Scope {
             Quickshell.execDetached(["pw-play", "--volume", "0.5", root.chimeFile]);
             root.timings = Object.assign({}, root.timings, {speechStartMs: 0});
             root.logTurn();
-            root.phase = "idle";
-            root.level = 0;
-            // Listen again once the chime is over, so the microphone does not hear it.
-            if (AiCompanionUi.approval === null) chimeTimer.restart();
+            root.finishSpokenTurn(true);
             return;
         }
         if (Ai.speechService.streamOpen) Ai.speechService.endStream();
         else if (answer.length === 0) root.stop();
+        else if (root.oneShot) {
+            root.logTurn();
+            root.finishSpokenTurn();
+        }
+        if (root.firstAudioAt > 0) root.logTurn();
     }
     // The model that really answered, as the catalog names it, so the chat does not
     // label a warm Haiku reply with whichever model is selected for the full agent.
@@ -473,7 +662,7 @@ Scope {
         const list = Array.from(Config.options.ai.voice.learnedRules ?? []);
         if (list.some(item => item.phrase === rule.phrase)) return;
         Config.options.ai.voice.learnedRules = list.concat([rule]).slice(-100);
-        console.log("[voice] learned:", rule.phrase, "->", rule.do);
+
     }
     // A marker the shell could not carry out. Nothing was spoken yet, so the full agent
     // can take the turn; if something already ran, say so instead of redoing it.
@@ -481,6 +670,25 @@ Scope {
     property var chosenActions: []
     property bool chosenAllRan: true
     function fastAction(event) {
+        if (event.source === "model" && event.verb === "capture") {
+            root.abortAgentTurn();
+            const reply = Translation.tr("Use Attach screen region to choose what to share.");
+            root.fastBuffer = reply;
+            root.fastDone({text: reply});
+            return;
+        }
+        if (event.source === "model" && Ai.functionExposure === "none") {
+            root.abortAgentTurn();
+            root.fastFallback("needs the desktop");
+            return;
+        }
+        if (event.confirmed === true && event.verb === "close" && (!event.target || event.target !== actions.focusedWindowId())) {
+            root.abortAgentTurn();
+            const reply = Translation.tr("The focused window changed. Ask again on the window you want to close.");
+            root.fastBuffer = reply;
+            root.fastDone({text: reply});
+            return;
+        }
         const result = actions.run(event.verb, event.args, event.confirmed === true);
         if (event.source === "model") {
             if (result.ok) root.chosenActions = root.chosenActions.concat([[String(event.verb), Array.from(event.args ?? []).map(a => String(a))]]);
@@ -488,56 +696,57 @@ Scope {
         }
         if (result.ok) {
             root.fastNotes = root.fastNotes.concat([result.note]);
+            root.turnActions = root.turnActions.concat([result.note]);
             root.setMood("delighted", 2200);
             return;
         }
-        console.log("[voice] action refused:", event.verb, result.note);
-        root.sendAgent({op: "cancel"});
-        if (root.fastNotes.length === 0) { root.fastFallback("action: " + result.note); return; }
-        const done = root.fastNotes.join(", ");
-        if (root.typed) {
-            root.typedFinish(root.fastText, Translation.tr("%1, but the rest didn't work.").arg(done), [], false);
-            return;
-        }
-        root.fastId = "";
-        root.fastNotes = [];
-        if (Ai.speechService.streamOpen) Ai.speechService.stop();
-        Ai.speechService.speak(Translation.tr("%1, but the rest didn't work.").arg(done), "orb:action-" + Date.now());
-        root.phase = "preparing";
+        root.abortAgentTurn();
+        root.fastFallback("action refused");
     }
     function fastFallback(reason) {
         // The agent says so when the CLI vanished after the check: stop offering the stage.
         if (/not installed/i.test(String(reason))) root.claudeState = "missing";
         else if (/log ?in|sign ?in|authenticat|api key|credentials|unauthori[sz]ed|oauth/i.test(String(reason))) root.claudeState = "signedOut";
+        if (root.fastId.length === 0 || root.fastSessionId !== Ai.sessions.currentId) {
+            root.stop();
+            return;
+        }
+        if (root.fastNotes.length > 0) {
+            const reply = Translation.tr("Some actions completed. I stopped before retrying the rest.");
+            if (root.typed) {
+                root.typedFinish(root.fastText, reply, root.fastNotes, false);
+            } else {
+                root.chosenAllRan = false;
+                root.fastBuffer = reply;
+                root.fastSent = 0;
+                root.fastDone({text: reply});
+            }
+            return;
+        }
         const text = root.fastText;
         const typed = root.typed;
+        // The full agent posts the request again itself.
+        const early = root.takePosted();
+        if (early.length > 0) Ai.removeMessage(early);
+        const needsTools = ["needs the desktop", "action refused"].includes(String(reason));
         root.chosenActions = [];
         root.chosenAllRan = true;
-        // "needs the desktop" is Claude asking for tools; anything else means the stage could not answer.
-        const unavailable = String(reason) !== "needs the desktop" || !root.quickReady;
-        root.fastId = "";
-        root.fastNotes = [];
-        root.typed = false;
+        root.releaseQuickTurn();
         if (typed) {
-            // The ordinary chat turn, on the desktop-tasks model, as a spoken request would get.
-            console.log("[voice] typed turn handed over:", reason);
-            root.route = "agent";
             root.phase = "idle";
-            const result = Ai.submit(text, {modelId: root.handoverModelId(text, unavailable), attachments: Ai.attachments}, "chat");
-            if (!result.accepted) console.log("[voice] typed handover rejected:", result.errorCode);
+            const result = Ai.submit(text, {
+                modelId: root.handoverModelId(text, !needsTools), attachments: [],
+                denyScreenCapture: true
+            }, "chat");
+            if (!result.accepted) root.fail(Translation.tr("The assistant could not continue this turn."));
             return;
         }
         if (Ai.speechService.streamOpen) Ai.speechService.stop();
-        console.log("[voice] fast path handed over:", reason);
-        root.askFull(text, unavailable);
+        root.askFull(text, !needsTools, needsTools);
     }
     Process {
         id: voiceAgent
-        command: ["env", "II_VOICE_MODEL=" + (root.quickIsClaude ? root.quickValue.replace(/^claude:/, "") : "haiku"),
-                  "II_VOICE_SCREEN=" + (Config.options.ai.voice.screen === true ? "1" : "0"),
-                  "II_VOICE_RULES=" + (Config.options.ai.voice.rules === false ? "0" : "1"),
-                  "II_VOICE_LANGUAGE=" + String(Config.options.ai.voice.language ?? "en"),
-                  "python3", Directories.scriptPath + "/ai/voice_agent.py"]
+        command: ["python3", Directories.scriptPath + "/ai/voice_agent.py"]
         stdinEnabled: true
         stdout: SplitParser {
             onRead: line => {
@@ -552,43 +761,118 @@ Scope {
                     return;
                 }
                 if (event.event === "learned") { root.keepLearned(event.rule); return; }
-                if (event.id !== root.fastId || root.fastId.length === 0) return;
+                if (event.id !== root.fastId || root.fastId.length === 0 || root.fastSessionId !== Ai.sessions.currentId) return;
                 if (event.event === "delta") {
                     root.fastBuffer += String(event.text);
                     root.drainSpeech(false);
                 } else if (event.event === "done") root.fastDone(event);
                 else if (event.event === "action") root.fastAction(event);
-                else if (event.event === "looking") root.setMood("curious", 15000);
+                else if (event.event === "look-required") {
+                    const reply = Translation.tr("Use Attach screen region to choose what to share.");
+                    root.fastBuffer = reply;
+                    root.fastDone({text: reply});
+                }
                 else if (event.event === "escalate") root.fastFallback("needs the desktop");
                 else if (event.event === "error") root.fastFallback(event.message);
             }
         }
         onExited: {
             root.agentReady = false;
+            root.agentQueue = [];
             if (root.fastId.length > 0) root.fastFallback("the voice agent exited");
         }
     }
 
-    function stop() {
-        root.typed = false;
-        if (root.fastId.length > 0) {
-            root.sendAgent({op: "cancel"});
-            root.fastId = "";
-            Ai.speechService.stop();
+    // ── Coding-session alerts ─────────────────────────────────────────────────────────────────────
+    // Polls scripts/ai/agent_sessions.py and alerts on a change that matters: a session that was working
+    // is now idle (finished), or any session now waits for the user (a question, an approval).
+    property var sessionStates: ({})
+    property bool sessionBaseline: false
+    property var sessionAlertQueue: []
+    property Timer sessionPoll: Timer {
+        interval: 7000; repeat: true; triggeredOnStart: true
+        running: Config.options.ai.voice.sessionAlerts !== false
+        onTriggered: if (!sessionProc.running) sessionProc.running = true
+    }
+    property Process sessionProc: Process {
+        command: ["python3", Quickshell.shellPath("scripts/ai/agent_sessions.py"), "list"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let list = [];
+                try { list = JSON.parse(text); } catch (e) { return; }
+                root.noteSessions(list);
+            }
         }
+    }
+    function toolLabel(tool) { return ({claude: "Claude", codex: "Codex", opencode: "OpenCode"})[tool] ?? tool; }
+    function noteSessions(list) {
+        const next = {};
+        for (const item of list) {
+            const key = item.tool + ":" + item.id;
+            next[key] = item.status;
+            const before = root.sessionStates[key];
+            if (!root.sessionBaseline || before === undefined || before === item.status) continue;
+            const who = root.toolLabel(item.tool) + " \"" + String(item.name).slice(0, 50) + "\"";
+            if (item.status === "waiting")
+                root.raiseSessionAlert("question", who + " " + (item.why || "needs you") + ".");
+            else if (item.status === "idle" && before === "working")
+                root.raiseSessionAlert("done", who + " finished.");
+        }
+        root.sessionStates = next;
+        root.sessionBaseline = true;
+    }
+    function raiseSessionAlert(kind, text) {
+        console.log("[voice] session alert:", text);
+        Quickshell.execDetached(["notify-send", "-a", "Coding sessions", "-i", kind === "done" ? "emblem-ok-symbolic" : "dialog-question-symbolic",
+                                 kind === "done" ? "Session finished" : "Session needs you", text]);
+        root.sessionAlertQueue = root.sessionAlertQueue.concat([text]).slice(-4);
+        sessionSpeakTimer.restart();
+    }
+    // Wait for the orb to be free (and group alerts that arrive together), then say them.
+    property Timer sessionSpeakTimer: Timer {
+        interval: 1500; repeat: true
+        onTriggered: {
+            if (root.sessionAlertQueue.length === 0) { running = false; return; }
+            if (root.active || Ai.speechService.speaking) return;
+            const lines = root.sessionAlertQueue;
+            root.sessionAlertQueue = [];
+            running = false;
+            if (Config.options.ai.voice.sessionAlertsSpeak === false)
+                Quickshell.execDetached(["pw-play", "--volume", "0.5", root.chimeFile]);
+            else
+                Ai.speechService.speak(lines.join(" "), "session-alert");
+        }
+    }
+
+    function stop() {
+        root.abortAgentTurn();
+        if (root.typed && root.fastSessionId === Ai.sessions.currentId && !Ai.draft)
+            Ai.draft = root.fastText;
+        if (root.fastId.length > 0)
+            root.releaseQuickTurn();
+        root.typed = false;
         root.active = false;
+        root.oneShot = false;
+        root.holdHeld = false;
+        root.captureReady = false;
         root.pendingAsk = "";
         listenTimer.stop();
+        chimeTimer.stop();
         if (capture.running) capture.signal(15);
         if (Ai.voiceService.activeSurface === "orb") Ai.voiceService.cancel();
-        if (root.submissionId.length > 0 || root.runId.length > 0) Ai.stopGeneration();
-        if (Ai.speechService.messageId.indexOf("orb:") === 0) Ai.speechService.stop();
+        const stopFullRun = root.submissionId.length > 0 || root.runId.length > 0;
         root.submissionId = "";
         root.runId = "";
+        if (stopFullRun) Ai.stopGeneration();
+        if (Ai.speechService.messageId.indexOf("orb:") === 0) Ai.speechService.stop();
         root.phase = "idle";
         root.level = 0;
     }
     function toggle() {
+        if (root.holdHeld) {
+            root.stop();
+            return;
+        }
         if (AiCompanionUi.approval !== null && root.phase !== "listening") {
             // Answer the approval by voice: tap, then say yes or no. The conversation is one
             // chat orbit button away.
@@ -600,12 +884,8 @@ Scope {
         } else if (root.phase === "listening") {
             capture.signal(10); // finish this utterance, then send it
         } else if (root.phase === "speaking" || root.phase === "preparing") {
-            // Mark the handoff first: the cancelled player's finished(false)
-            // must not turn an intentional interruption into an error.
-            root.phase = "starting";
-            Ai.speechService.stop();
-            root.active = true;
-            listenTimer.restart();
+            root.stop();
+            root.start();
         } else if (root.active) {
             root.stop();
         } else {
@@ -613,7 +893,7 @@ Scope {
         }
     }
     function beginListening() {
-        if (!root.active || GlobalStates.screenLocked) return;
+        if (!root.active || GlobalStates.screenLocked || (root.oneShot && !root.holdHeld)) return;
         if (!Ai.voiceService.detectionSettled) {
             if (++root.detectionAttempts > 30) {
                 root.fail("Microphone detection timed out.");
@@ -626,21 +906,23 @@ Scope {
             root.fail(Ai.voiceService.unavailableReason());
             return;
         }
-        if (Ai.speechService.speaking) { listenTimer.restart(); return; }
-        if (Ai.voiceService.state !== "idle") {
+        if (Ai.speechService.speaking || (root.oneShot && wake.running)) { listenTimer.restart(); return; }
+        if (capture.running || DictationService.recording || Ai.voiceService.state !== "idle") {
             root.fail("Another dictation is active. Finish it before speaking to the orb.");
             return;
         }
+        root.resetTimings();
+        root.sttSettings = Ai.voiceService.orbTranscriptionSettings();
         root.phase = "listening";
+        root.captureReady = false;
         root.level = 0;
         root.listenStarted = Date.now();
         root.recordingPath = Ai.voiceService.voiceDir + "/orb-" + Date.now() + ".wav";
         capture.command = ["env",
+            "II_ORB_PUSH_TO_TALK=" + (root.oneShot ? "1" : "0"),
             "II_ORB_END_SILENCE=" + String(Config.options.ai.voice.endSilence ?? 0.6),
             "II_ORB_VAD=" + ((Config.options.ai.voice.vad ?? true) ? "1" : "0"),
-            "II_ORB_LANGUAGE=" + String(Config.options.ai.voice.language ?? "en"),
-            "II_ORB_STT_MODEL=" + String(Config.options.ai.voice.sttModel ?? "auto"),
-            "II_ORB_STT_ENGINE=" + Ai.voiceService.sttEngine,
+            ...Ai.voiceService.transcriptionEnvironment(root.sttSettings),
             "python3", Directories.scriptPath + "/ai/orb_audio.py", "capture", root.recordingPath];
         capture.running = true;
     }
@@ -659,7 +941,7 @@ Scope {
             return;
         }
         if (AiCompanionUi.approval === null && root.stopPhrase.test(text)) {
-            console.log("[voice] stop requested by voice:", text);
+            console.log("[voice] stopped by voice");
             root.stop();
             if (Config.options.ai.voice.chime !== false)
                 Quickshell.execDetached(["pw-play", "--volume", "0.5", "/usr/share/sounds/freedesktop/stereo/service-logout.oga"]);
@@ -677,22 +959,22 @@ Scope {
                 let event;
                 try { event = JSON.parse(line); } catch (e) { return; }
                 if (!root.active) return;
-                if (event.event === "level") root.level = event.level;
+                if (event.event === "recording") root.captureReady = true;
+                else if (event.event === "level") root.level = event.level;
                 else if (event.event === "captured") {
-                    root.timings = Object.assign({}, root.timings, {captureMs: Date.now() - root.listenStarted});
+                    root.captureEndedAt = Number(event.endedAt) || Date.now();
+                    root.timings = Object.assign({}, root.timings, {captureMs: root.captureEndedAt - root.listenStarted});
                     root.level = 0;
                     if (event.text !== undefined) {
                         // Transcribed while the pause was still being waited out (orb_audio.py), and
                         // the audio already removed: no second transcription.
-                        root.early = String(event.early ?? "reuse");
                         root.timings = Object.assign({}, root.timings, {transcriptionMs: 0});
                         root.heard(String(event.text).trim());
                         return;
                     }
-                    root.early = "none";
                     root.phase = "transcribing";
                     root.transcriptionStarted = Date.now();
-                    if (!Ai.voiceService.transcribeFile(event.path, "orb"))
+                    if (!Ai.voiceService.transcribeFile(event.path, "orb", root.sttSettings))
                         root.fail("Could not start transcription.");
                 } else if (event.event === "no-speech") {
                     // Nobody answered the approval: leave the card up and the run waiting
@@ -704,6 +986,7 @@ Scope {
             }
         }
         onExited: code => {
+            root.captureReady = false;
             if (root.active && root.phase === "listening")
                 root.fail("The microphone stopped. Check your input device.");
         }
@@ -765,6 +1048,7 @@ Scope {
                 root.drainSpeech(true);
                 root.agentStreaming = false;
                 if (Ai.speechService.streamOpen) Ai.speechService.endStream();
+                if (root.firstAudioAt > 0) root.logTurn();
                 return;
             }
             root.agentStreaming = false;
@@ -786,10 +1070,13 @@ Scope {
     Connections {
         target: Ai.speechService
         function onPhaseChanged() {
-            if (root.active && Ai.speechService.phase === "speaking" && root.speechRequested > 0) {
-                root.timings = Object.assign({}, root.timings, {speechStartMs: Date.now()-root.speechRequested});
+            if (root.active && Ai.speechService.messageId.startsWith("orb:")
+                    && Ai.speechService.phase === "speaking" && root.speechRequested > 0) {
+                root.firstAudioAt = Date.now();
+                root.timings = Object.assign({}, root.timings, {speechStartMs: root.firstAudioAt - root.speechRequested});
                 root.speechRequested = 0;
-                root.logTurn();
+                if (root.fastId.length === 0 && root.runId.length === 0)
+                    root.logTurn();
             }
             if (root.active && Ai.speechService.messageId.indexOf("orb:") === 0)
                 root.phase = Ai.speechService.phase || root.phase;
@@ -799,14 +1086,8 @@ Scope {
         }
         function onFinished(ok) {
             if (!root.active || (root.phase !== "speaking" && root.phase !== "preparing")) return;
-            if (!ok) root.fail(Ai.speechService.errorText);
-            else {
-                root.phase = "idle";
-                root.level = 0;
-                // Not after an approval prompt: the open microphone would hear the orb's own
-                // "yes or no" and answer for you. The card has buttons; tap the orb to speak.
-                if (AiCompanionUi.approval === null) listenTimer.restart();
-            }
+            if (!ok) { root.logTurn("speech-error"); root.fail(Ai.speechService.errorText); }
+            else root.finishSpokenTurn();
         }
     }
     Connections {
@@ -848,7 +1129,10 @@ Scope {
         if (root.wakeWanted) wakeRestart.restart();
         else { wakeRestart.stop(); wakeRetry.stop(); if (wake.running) wake.signal(15); }
     }
-    Component.onCompleted: if (root.wakeWanted) wakeRestart.restart()
+    Component.onCompleted: {
+        root.metricsCommand("scrub");
+        if (root.wakeWanted) wakeRestart.restart();
+    }
     // The detector reads its word and threshold once at start, so a settings change restarts it.
     Connections {
         target: Config.options.ai.voice

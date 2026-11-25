@@ -55,59 +55,14 @@ QtObject {
         const out = [];
         if (!root.enabled) return out;
         const now = Date.now();
-        for (const countdown of Array.from(TimerService.countdowns ?? [])) {
-            if (!countdown) continue;
-            const left = TimerService.countdownSecondsLeft(countdown);
-            const done = countdown.notified === true || (!countdown.paused && left <= 0);
-            // A finished timer lingers for ten minutes as a nudge, then lets go.
-            if (done && now - Number(countdown.endsAt ?? 0) > 600000) continue;
-            out.push({id: "t:" + countdown.id, kind: "timer", icon: done ? "timer_off" : countdown.paused ? "timer_pause" : "timer",
-                label: String(countdown.label ?? "") || Translation.tr("Timer"),
-                detail: done ? Translation.tr("Finished") : root.clock(left) + (countdown.paused ? " · " + Translation.tr("paused") : ""),
-                progress: done ? 1 : TimerService.countdownProgress(countdown), left: left,
-                state: done ? "done" : countdown.paused ? "paused" : "running", order: done ? 0 : 1 + left / 1e6});
-        }
-        const minutesNow = new Date().getHours() * 60 + new Date().getMinutes();
-        for (const alarm of Array.from(AlarmService.alarms ?? [])) {
-            if (!alarm || alarm.enabled === false || !String(alarm.time).match(/^\d{1,2}:\d{2}$/)) continue;
-            const parts = String(alarm.time).split(":");
-            const wait = Number(parts[0]) * 60 + Number(parts[1]) - minutesNow;
-            if (wait < 0 || wait > 60) continue;
-            out.push({id: "a:" + alarm.time + ":" + (alarm.label ?? ""), kind: "alarm", icon: "alarm",
-                label: String(alarm.label ?? "") || Translation.tr("Alarm"),
-                detail: alarm.time + " · " + Translation.tr("in %1 min").arg(wait), progress: 1 - wait / 60, state: "soon", order: 2 + wait / 100});
-        }
-        const reminder = RemindersService.upcoming;
-        if (reminder?.reminder) {
-            const wait = Math.max(0, Math.round((reminder.at - now) / 60000));
-            out.push({id: "r:" + reminder.reminder.id, kind: "reminder", icon: "notifications_active",
-                label: String(reminder.reminder.title ?? "") || Translation.tr("Reminder"),
-                detail: Translation.tr("in %1 min").arg(wait), progress: 1 - wait / 60, state: "soon", order: 2 + wait / 100});
-        }
-        if (root.settings.satelliteTasks !== false) {
-            const run = Ai.runCoordinator.runFor(Ai.runCoordinator.activeRunId);
-            if (run && Ai.runCoordinator.activeStates.includes(run.state) && !root.voiceBusy) {
-                const waiting = run.state === "needsAction";
-                const lastTool = Array.from(run.activityEvents ?? []).reverse().find(event => event.tool)?.tool ?? "";
-                const verb = waiting ? Translation.tr("Waiting for you") : run.state === "toolRunning" && lastTool.length > 0
-                    ? Translation.tr("Running %1").arg(lastTool) : run.state === "searching" ? Translation.tr("Searching")
-                    : run.state === "streaming" ? Translation.tr("Writing the answer") : Translation.tr("Thinking");
-                out.push({id: "k:" + run.runId, kind: "task", icon: waiting ? "front_hand" : run.state === "toolRunning" ? "build"
-                    : run.state === "searching" ? "search" : run.state === "streaming" ? "edit_note" : "neurology",
-                    label: Translation.tr("AI task"), detail: verb + " · " + root.clock((now - run.startedAt) / 1000),
-                    progress: -1, state: waiting ? "waiting" : "working", order: -1});
-            }
-        }
+        // Timers, alarms, reminders, music and running agents each have a bubble in the island, so they get
+        // no orb here. Only a finished AI task does: nothing else says "done, click to read".
         for (const task of root.finishedTasks) {
             if (now - task.at > 600000) continue;
             out.push({id: task.id, kind: "task", icon: task.state === "failed" ? "error" : "check",
                 label: Translation.tr("AI task"), detail: task.state === "failed" ? Translation.tr("Failed · click to open") : Translation.tr("Done · click to read"),
                 progress: -1, state: task.state, order: 0.5});
         }
-        const player = MprisController.activePlayer;
-        if (root.settings.satelliteMedia !== false && player && MprisController.isPlaying && player.trackTitle)
-            out.push({id: "m", kind: "media", icon: "music_note", label: String(player.trackTitle),
-                detail: String(player.trackArtist ?? ""), progress: -1, state: "playing", order: 9});
         out.sort((a, b) => a.order - b.order);
         return out.slice(0, root.maxCount);
     }

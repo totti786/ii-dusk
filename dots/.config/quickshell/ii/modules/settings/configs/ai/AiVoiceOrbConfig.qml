@@ -68,11 +68,13 @@ Item {
         {id: "power", icon: "battery_saver", name: Translation.tr("Power profile"), example: Translation.tr("power saver mode, performance mode")},
         {id: "capture", icon: "screenshot_region", name: Translation.tr("Screenshots & recording"), example: Translation.tr("take a screenshot, start recording, color picker")},
         {id: "panels", icon: "dashboard", name: Translation.tr("Open shell panels"), example: Translation.tr("open settings, show the cheat sheet, open the clipboard")},
+        {id: "sessions", icon: "terminal", name: Translation.tr("Coding sessions"), example: Translation.tr("what are my sessions doing, tell Claude to run the tests, stop OpenCode")},
+        {id: "kitten", icon: "pets", name: Translation.tr("The kitten"), example: Translation.tr("good kitty, play with the kitten, hide and seek")},
         {id: "windows", icon: "select_window", name: Translation.tr("Window control"), example: Translation.tr("fullscreen, float this window, switch to firefox")},
         {id: "info", icon: "help", name: Translation.tr("Quick answers"), example: Translation.tr("what time is it, battery, what's playing")},
         {id: "system", icon: "lock", name: Translation.tr("Lock, sleep, restart, shut down, close window"), example: Translation.tr("asks you to say yes first")}
     ]
-    readonly property var actionVerbs: ["media", "volume", "brightness", "theme", "open", "timer", "alarm", "remind", "task", "workspace", "toggle", "power", "capture", "panel", "window"]
+    readonly property var actionVerbs: ["media", "volume", "brightness", "theme", "open", "timer", "alarm", "remind", "task", "workspace", "toggle", "power", "capture", "panel", "window", "kitten", "session"]
     readonly property var rulesOff: Array.from(Config.options.ai.voice.rulesOff ?? [])
     readonly property var customRules: Array.from(Config.options.ai.voice.customRules ?? [])
     readonly property var learnedRules: Array.from(Config.options.ai.voice.learnedRules ?? [])
@@ -203,6 +205,18 @@ Item {
         }
 
         ContentSection {
+            icon: "mic"
+            title: Translation.tr("Push to talk")
+
+            StyledText {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                color: Appearance.colors.colSubtext
+                text: Translation.tr("Hold Super + Alt + Space to talk. Release to send one request. The orb ends the conversation after its reply.")
+            }
+        }
+
+        ContentSection {
             icon: "record_voice_over"
             title: Translation.tr("Trigger word")
 
@@ -271,7 +285,7 @@ Item {
 
             ConfigSwitch {
                 buttonIcon: "bubble_chart"
-                text: Translation.tr("Show live things as small orbs beside the orb")
+                text: Translation.tr("Show a small orb when a background AI task finishes")
                 checked: Config.options.ai.voice.satellites
                 onCheckedChanged: Config.options.ai.voice.satellites = checked
             }
@@ -280,21 +294,7 @@ Item {
                 wrapMode: Text.WordWrap
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
-                text: Translation.tr("A timer, an alarm or reminder within the hour, or the track that is playing buds off the orb as a small orb. Click a timer to pause or resume it, right-click to remove it, and click the music one to play or pause. They show only while the orb floats on the desktop, not while it is in the island.")
-            }
-            ConfigSwitch {
-                buttonIcon: "neurology"
-                enabled: Config.options.ai.voice.satellites
-                text: Translation.tr("Include running AI tasks")
-                checked: Config.options.ai.voice.satelliteTasks
-                onCheckedChanged: Config.options.ai.voice.satelliteTasks = checked
-            }
-            ConfigSwitch {
-                buttonIcon: "music_note"
-                enabled: Config.options.ai.voice.satellites
-                text: Translation.tr("Include the playing track")
-                checked: Config.options.ai.voice.satelliteMedia
-                onCheckedChanged: Config.options.ai.voice.satelliteMedia = checked
+                text: Translation.tr("Timers, alarms, reminders and music already have bubbles in the island, so they get no orb. Only a finished AI task does: click it to read the answer. It shows only while the orb floats on the desktop.")
             }
             ConfigSwitch {
                 buttonIcon: "pets"
@@ -593,12 +593,12 @@ Item {
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 text: Ai.companionVoice.quickIsClaude
-                    ? Translation.tr("A Claude model runs as a warm session and answers in about a second. It also sees what is playing, the focused window, battery, timers and tasks, and can run the instant actions itself. If Claude Code is missing or signed out, the desktop-tasks model answers instead.")
+                    ? Translation.tr("A warm Claude session gives quick answers. It can receive battery or volume when you ask about them. Window titles, reminders and tasks stay with local rules.")
                     : Translation.tr("Plain questions go to this model with a short-answer prompt, usually 2 to 5 s. Anything that sounds like desktop work, and anything it cannot answer, goes to the desktop-tasks model.")
             }
             ConfigSwitch {
                 buttonIcon: "screenshot_monitor"
-                text: Translation.tr("Let it look at the screen when asked")
+                text: Translation.tr("Show Attach screen region on the orb")
                 checked: Config.options.ai.voice.screen
                 onCheckedChanged: Config.options.ai.voice.screen = checked
             }
@@ -607,7 +607,27 @@ Item {
                 wrapMode: Text.WordWrap
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
-                text: Translation.tr("“What is on my screen?” sends one screenshot of the focused monitor to Claude for that turn. Nothing is captured otherwise.")
+                text: Translation.tr("Choose a window or draw a region to add it to the chat draft. Review the image and selected model before sending. The image is shared for one turn.")
+            }
+        }
+
+        ContentSection {
+            icon: "receipt_long"
+            title: Translation.tr("Last orb turn")
+
+            StyledText {
+                readonly property var receipt: Ai.companionVoice.lastReceipt
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: receipt === null ? Translation.tr("No recent orb turn.")
+                    : Translation.tr("%1 · %2").arg(receipt.model).arg(receipt.outcome)
+                        + (receipt.captureToAudioMs === null ? "" : "\n" + Translation.tr("Capture to audio: %1 ms").arg(receipt.captureToAudioMs))
+                        + (receipt.context.length > 0 ? "\n" + Translation.tr("Quick model context: %1").arg(receipt.context.join(", ")) : "")
+                        + (receipt.actions.length > 0 ? "\n" + receipt.actions.join("\n") : "")
+            }
+            RippleButton {
+                buttonText: Translation.tr("Clear voice timing history")
+                onClicked: Ai.companionVoice.clearTimings()
             }
         }
 
@@ -706,6 +726,25 @@ Item {
                 text: Translation.tr("Detect speech with a voice model (better in a noisy room)")
                 checked: Config.options.ai.voice.vad
                 onCheckedChanged: Config.options.ai.voice.vad = checked
+            }
+            ConfigSwitch {
+                buttonIcon: "music_off"
+                text: Translation.tr("Pause the music while I talk to the orb")
+                checked: Config.options.ai.voice.pauseMedia
+                onCheckedChanged: Config.options.ai.voice.pauseMedia = checked
+            }
+            ConfigSwitch {
+                buttonIcon: "notifications_active"
+                text: Translation.tr("Alert me when a coding session finishes or needs me")
+                checked: Config.options.ai.voice.sessionAlerts
+                onCheckedChanged: Config.options.ai.voice.sessionAlerts = checked
+            }
+            ConfigSwitch {
+                buttonIcon: "record_voice_over"
+                enabled: Config.options.ai.voice.sessionAlerts
+                text: Translation.tr("Say session alerts out loud")
+                checked: Config.options.ai.voice.sessionAlertsSpeak
+                onCheckedChanged: Config.options.ai.voice.sessionAlertsSpeak = checked
             }
             StyledComboBox {
                 buttonIcon: "hearing"

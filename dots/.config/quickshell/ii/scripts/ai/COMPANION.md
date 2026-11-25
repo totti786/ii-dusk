@@ -23,7 +23,7 @@ Code blocks and old inline reasoning are omitted. Speech is capped at 4000
 characters. The default English voice is now local Kokoro `af_heart`, with streaming playback.
 Edge TTS remains installed for unsupported scripts and explicit Edge voices.
 That fallback sends text to Microsoft; local English speech stays on the machine.
-Speech input uses local Voxtype exclusively, with the multilingual base model.
+Speech input stays on-device and uses Hex or Whisper, depending on the speech settings.
 
 Try: “Check your companion capabilities”, “What is on my screen?”, or
 “Use my browser to research this”. Screen understanding requires a model with
@@ -37,13 +37,9 @@ browser profile and enable its browse extension if status says paired-offline.
 The bridge has been checked against browse 0.0.17 and the paired Chromium extension. It does not copy browser
 credentials or configure a new browser profile.
 
-Agent Auto mode is enabled in this environment: browser actions, screenshots,
-input, ordinary commands and speech run without individual approval cards.
-The setting can be changed in AI Tools & Permissions. Root-level
-commands retain their separate approval. Auto mode is broad user-level access,
-not a security sandbox; confirmation of irreversible actions in auto mode is a
-model instruction, not a technical transaction barrier. Tool permissions can
-disable individual capabilities. Screen/page content is marked untrusted.
+Auto mode applies to Codex, Claude Code and OpenCode. Browser actions, desktop capture,
+desktop input, speech and privileged commands require approval across those engines.
+AI Tools & Permissions controls which tools the assistant can request.
 
 Pointer input, shortcuts and fallback typing use a private user ydotoold (started by the shell via `scripts/ai/ensure_daemons.sh`, no systemd unit) with a
 0600 socket at `$XDG_RUNTIME_DIR/ii-companion-input.sock`. It uses this machine's
@@ -227,9 +223,11 @@ are not in the table. A refused or failed action sends the turn to the full agen
 something already ran, the orb says so instead of repeating it. What was done is recorded
 in the chat as `(Set volume to 26%)` so later Codex turns know.
 
-**Look at the screen.** "What's on my screen" makes the model reply `[[LOOK]]`; the agent
-captures the focused monitor once (grim, JPEG, scaled), sends it as an image block in the
-same turn and the answer streams as usual (about 2 s). Off with `ai.voice.screen`.
+**Attach screen region.** Choose a window or drag a rectangle from the orb's screen button.
+The image appears in the chat draft, where you can review it and the selected model before
+sending. The screenshot is scoped to that turn. The quick model receives battery or volume
+information when relevant and has no screenshot access. Settings → AI Assistant → Voice orb
+shows the latest turn receipt and can clear local, prompt-free timing history.
 
 **Moods.** `AiCompanionUi.mood` picks one word for the creature: forced (IPC), the voice
 session's (`delighted` after an action, `curious` while looking), `startled` on a new

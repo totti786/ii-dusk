@@ -233,7 +233,7 @@ ContentPage {
 
         ConfigSwitch {
             buttonIcon: "tune"
-            text: Translation.tr("OpenCode chats change shell settings without asking")
+            text: Translation.tr("Signed-in agents can change shell settings without asking")
             checked: Config.options.ai.tools.opencodeConfigWrites
             onCheckedChanged: {
                 Config.options.ai.tools.opencodeConfigWrites = checked;
@@ -245,13 +245,13 @@ ContentPage {
 
         ConfigSwitch {
             buttonIcon: "bolt"
-            text: Translation.tr("Auto mode: OpenCode chats run commands and edit files without asking")
+            text: Translation.tr("Auto mode for signed-in agents")
             checked: Config.options.ai.tools.opencodeAuto
             onCheckedChanged: {
                 Config.options.ai.tools.opencodeAuto = checked;
             }
             StyledToolTip {
-                text: Translation.tr("Commands that install or remove packages, need root, change system services or delete recursively still ask. That check catches honest mistakes; it is not a sandbox. Applies to new chats.")
+                text: Translation.tr("Supported commands and file changes can run automatically. Screen capture, browser actions, desktop input, speech and privileged commands always ask.")
             }
         }
 

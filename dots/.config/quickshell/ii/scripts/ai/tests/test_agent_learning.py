@@ -31,6 +31,9 @@ class LearningLoop(unittest.TestCase):
             patch = mock.patch.object(memory, key, value); patch.start(); self.addCleanup(patch.stop)
         self.config = {"enabled": True, "limit": 40, "skills": True, "autoLearn": True, "retrieveHistory": True, "maxInputTokens": 12000}
         patch = mock.patch.object(memory, "policy", side_effect=lambda options=None: {**self.config, **(options or {})}); patch.start(); self.addCleanup(patch.stop)
+        self.online = mock.patch.object(memory, "online_policy_allowed", return_value=True)
+        self.online_status = self.online.start()
+        self.addCleanup(self.online.stop)
         self.body = {"engine": "codex", "model": {"modelID": "default"}, "chatId": "source-session",
                      "text": "Change my wallpaper using the existing native desktop controls.",
                      "tools": ["wallpaper_set", "desktop_context", "memory_search", "remember_fact", "skill_search", "skill_save"]}
@@ -45,6 +48,15 @@ class LearningLoop(unittest.TestCase):
                            "verification": "Read the current configured ref after apply.", "evidence": "Native apply reported requested and configured true.",
                            "triggers": ["wallpaper"], "learningJob": job["id"]})
         return "Updated the native wallpaper skill from the verified result."
+
+    def test_local_policy_pauses_pending_learning(self):
+        job = self.job()
+        self.online_status.return_value = False
+        with mock.patch.object(learning, "perform") as perform:
+            learning.drain()
+            perform.assert_not_called()
+        saved = memory.read_json(learning.directory() / (job["id"] + ".json"))
+        self.assertEqual(saved["state"], "pending")
 
     def test_job_keeps_bounded_actual_evidence_and_not_images(self):
         job = self.job()

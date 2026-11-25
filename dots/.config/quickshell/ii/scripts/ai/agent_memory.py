@@ -65,6 +65,15 @@ def checked(text, limit):
     return text
 
 
+def online_policy_allowed():
+    path = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "illogical-impulse/config.json"
+    try:
+        config = read_json(path)
+        return isinstance(config, dict) and config.get("policies", {}).get("ai", 1) == 1
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
 def policy(options=None):
     # Read only the memory/context section; never expose the rest of config.
     path = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "illogical-impulse/config.json"
