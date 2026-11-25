@@ -7,6 +7,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import qs.modules.common
 import qs.modules.common.functions
+import qs.services
 
 /**
  * Speech typed straight into whatever window has focus, through voxtype or Hex.
@@ -216,6 +217,11 @@ Singleton {
     readonly property bool recording: root.state === "recording" || root.state === "streaming"
     readonly property bool transcribing: root.state === "transcribing"
     readonly property bool busy: root.recording || root.transcribing
+    readonly property bool starting: !root.busy && (root.hexPending.length > 0 || pendingToggleTimer.running || hexCommandProc.starting)
+    readonly property bool engaged: root.starting || root.busy
+    readonly property string statusLabel: root.starting ? Translation.tr("Starting dictation…")
+        : root.transcribing ? Translation.tr("Transcribing…")
+        : root.recording ? Translation.tr("Listening…") : Translation.tr("Dictate")
     readonly property bool daemonUp: root.state !== "stopped"
 
     property real recordingStartedAt: 0
@@ -254,16 +260,69 @@ Singleton {
     }
 
     // ── Actions ───────────────────────────────────────────────────────────
-    /**
-     * The one thing the keybind does. Refuses loudly rather than silently when
-     * something is missing — a dictation key that does nothing at all reads as
-     * a broken shell, not as an unconfigured feature.
-     */
-    function hexCmd(sub: string): void {
-        Quickshell.execDetached([root.hexBin, "dictation", sub]);
+    function hexCmd(action: string): void {
+        if (hexCommandProc.action.length > 0) {
+            hexCommandProc.nextAction = action;
+            return;
+        }
+        hexCommandProc.action = action;
+        hexCommandProc.running = true;
+    }
+
+    Process {
+        id: hexCommandProc
+        property string action: ""
+        property string nextAction: ""
+        readonly property bool starting: action === "start" || action === "toggle"
+        command: ["bash", "-c",
+            'timeout 5 "$1" dictation "$2" >/dev/null 2>&1; result=$?; '
+            + 'if [ "$2" = cancel ] && [ "$result" = 2 ]; then exec timeout 25 "$1" dictation stop --print >/dev/null 2>&1; fi; exit "$result"',
+            "--", root.hexBin, action]
+        onExited: code => {
+            const completed = action;
+            const queued = nextAction;
+            action = queued;
+            nextAction = "";
+            if (code === 0) root.lastError = "";
+            else root.reportError(completed === "start" || completed === "toggle"
+                ? Translation.tr("Hex couldn’t start dictation. Check the microphone and Hex permissions.")
+                : Translation.tr("Hex couldn’t finish the dictation command."));
+            if (queued.length > 0)
+                Qt.callLater(() => { if (action === queued) running = true; });
+        }
+    }
+
+    function cancelPendingStart(): bool {
+        if (root.hexPending.length > 0) {
+            if (root.hexPending === "start")
+                root.holdPressedAt = 0;
+            root.hexPending = "";
+            return true;
+        }
+        if (pendingToggleTimer.running) {
+            pendingToggleTimer.stop();
+            return true;
+        }
+        return false;
+    }
+
+    function voiceCaptureBusy(): bool {
+        return Ai.companionVoice.capturing || ["pending-start", "recording"].includes(Ai.voiceService.state);
     }
 
     function toggle() {
+        if (root.holdPressedAt > 0 || holdStopTimer.running)
+            return;
+        if (root.cancelPendingStart())
+            return;
+        if (hexCommandProc.starting) {
+            root.hexCmd("cancel");
+            return;
+        }
+        if (!root.busy && root.voiceCaptureBusy()) {
+            root.reportError(Translation.tr("The AI assistant is using the microphone. Stop it to start dictation."));
+            return;
+        }
         if (!root.available) {
             root.complain();
             return;
@@ -290,7 +349,9 @@ Singleton {
     }
 
     function stop() {
-        if (!root.busy)
+        if (root.cancelPendingStart())
+            return;
+        if (!root.busy && !hexCommandProc.starting)
             return;
         if (root.useHex) {
             root.hexCmd("stop");
@@ -301,11 +362,12 @@ Singleton {
 
     /** Throws the recording away: nothing is transcribed and nothing is typed. */
     function discard() {
-        if (!root.busy)
+        if (root.cancelPendingStart())
+            return;
+        if (!root.recording && !hexCommandProc.starting)
             return;
         if (root.useHex) {
-            // Hex 3.1.2 dropped `cancel`; `stop --print` prints the words instead of pasting them.
-            Quickshell.execDetached([root.hexBin, "dictation", "stop", "--print"]);
+            root.hexCmd("cancel");
             return;
         }
         recordProc.exec(["voxtype", "record", "cancel"]);
@@ -332,12 +394,19 @@ Singleton {
         ? Translation.tr("AUTO")
         : root.language.split(",")[0].trim().toUpperCase()
 
-    function complain() {
-        const reason = root.unavailableReason();
-        if (reason.length === 0)
+    property double lastErrorNotifiedAt: 0
+    function reportError(message: string): void {
+        if (message.length === 0)
             return;
-        Quickshell.execDetached(["notify-send", Translation.tr("Dictation"), reason, "-a", "Shell", "-i", "mic"]);
+        const now = Date.now();
+        if (message !== root.lastError || now - root.lastErrorNotifiedAt >= 4000) {
+            root.lastErrorNotifiedAt = now;
+            Quickshell.execDetached(["notify-send", Translation.tr("Dictation"), message, "-a", "Shell", "-i", "mic"]);
+        }
+        root.lastError = message;
     }
+
+    function complain() { root.reportError(root.unavailableReason()); }
 
     function redetect() {
         root.binaryChecked = false;
@@ -654,8 +723,13 @@ Singleton {
         id: pendingToggleTimer
         interval: 400
         onTriggered: {
+            if (!root.available || root.useHex) return;
+            if (root.voiceCaptureBusy()) {
+                root.reportError(Translation.tr("The AI assistant is using the microphone. Stop it to start dictation."));
+                return;
+            }
             if (!root.daemonUp) {
-                root.lastError = Translation.tr("The dictation daemon did not start.");
+                root.reportError(Translation.tr("The dictation daemon did not start."));
                 return;
             }
             recordProc.exec(["voxtype", "record", "toggle"]);
@@ -750,7 +824,7 @@ Singleton {
 
     Process {
         id: hexReadyProc
-        command: ["bash", "-c",
+        command: ["timeout", "12", "bash", "-c",
             "h=\"$1\"; [ -n \"$h\" ] || h=$(command -v hex); " +
             // Answering is not enough: dictation commands are refused until the listener is enabled
             "ready() { timeout 2 \"$h\" status 2>&1 | grep -q 'running: Enabled'; }; " +
@@ -764,9 +838,9 @@ Singleton {
             root.hexStarting = false;
             root.hexPending = "";
             if (code !== 0) {
-                root.lastError = Translation.tr("Hex did not start.");
                 root.hexState = "stopped";
-                Quickshell.execDetached(["notify-send", Translation.tr("Dictation"), root.lastError, "-a", "Shell", "-i", "mic"]);
+                if (action.length > 0)
+                    root.reportError(Translation.tr("Hex did not get ready for dictation. Try the shortcut again."));
                 return;
             }
             if (root.hexState === "stopped")
@@ -774,8 +848,12 @@ Singleton {
             // A change made while Hex was down was written straight to settings.json; apply it
             // through the now-running instance too, so the daemon and the file agree.
             root.applyHexSettings();
-            if (action === "start" || action === "toggle")
-                root.hexCmd(action);
+            if ((action === "start" || action === "toggle") && root.available && root.useHex) {
+                if (root.voiceCaptureBusy())
+                    root.reportError(Translation.tr("The AI assistant is using the microphone. Stop it to start dictation."));
+                else
+                    root.hexCmd(action);
+            }
             idleQuitTimer.restart();
         }
     }
@@ -924,6 +1002,7 @@ Singleton {
                 root.scheduleApply();
                 hexApplyTimer.restart();
             } else {
+                root.cancelPendingStart();
                 // Nothing to dictate with: do not leave Hex resident while the feature is off.
                 root.quitHex();
             }
@@ -1011,23 +1090,38 @@ Singleton {
     property real holdPressedAt: 0
 
     function holdStart(): void {
-        root.holdPressedAt = Date.now();
-        holdStopTimer.stop();
+        if (root.holdPressedAt > 0 || holdStopTimer.running || root.engaged || root.hexStarting)
+            return;
+        if (root.voiceCaptureBusy()) {
+            root.reportError(Translation.tr("The AI assistant is using the microphone. Stop it to start dictation."));
+            return;
+        }
         if (!root.available) {
             root.complain();
             return;
         }
-        if (root.useHex) {
+        if (!root.useHex && !root.daemonUp) {
+            root.reportError(Translation.tr("Dictation is starting. Hold the shortcut again when it is ready."));
+            return;
+        }
+        root.holdPressedAt = Date.now();
+        if (root.useHex)
             root.ensureHex("start");
-        } else if (root.daemonUp && !root.busy)
+        else
             recordProc.exec(["voxtype", "record", "start"]);
     }
 
     function holdStop(): void {
-        // Released before Hex finished starting: there is nothing to record any more.
-        if (root.hexStarting)
+        const pressedAt = root.holdPressedAt;
+        if (pressedAt === 0)
+            return;
+        root.holdPressedAt = 0;
+        // A queued start that has not run must never stop another recording.
+        if (root.hexStarting && root.hexPending === "start") {
             root.hexPending = "";
-        holdStopTimer.interval = Math.max(1, 300 - (Date.now() - root.holdPressedAt));
+            return;
+        }
+        holdStopTimer.interval = Math.max(1, 300 - (Date.now() - pressedAt));
         holdStopTimer.restart();
     }
 

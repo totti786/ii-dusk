@@ -32,13 +32,13 @@ MouseArea {
     readonly property bool transcribing: DictationService.transcribing
     readonly property bool busy: DictationService.busy
     /** Idle and still shown: a button to start dictation with, rather than a status. */
-    readonly property bool idleButton: !busy && (Config.options?.dictation?.alwaysShowIndicator ?? false)
+    readonly property bool idleButton: !DictationService.engaged && (Config.options?.dictation?.alwaysShowIndicator ?? false)
     /**
      * Out in one of the Dynamic Island's auxiliary bubbles right now, so the bar
      * leaves it to the bubble instead of showing it twice.
      */
     readonly property bool bubbled: IslandGeometry.bubbled("dictation")
-    readonly property bool active: (busy || idleButton) && (Config.options?.dictation?.showIndicator ?? true)
+    readonly property bool active: (DictationService.engaged || idleButton) && (Config.options?.dictation?.showIndicator ?? true)
         && !indicator.bubbled
     readonly property int elapsedSeconds: Math.floor(DictationService.elapsedMs / 1000)
 
@@ -95,6 +95,8 @@ MouseArea {
         return Appearance.colors.colOnPrimaryContainer;
     }
     readonly property string glyph: {
+        if (DictationService.starting)
+            return "hourglass_empty";
         if (indicator.transcribing)
             return "graphic_eq";
         if (indicator.idleButton)
@@ -327,15 +329,11 @@ MouseArea {
                 titleSize: Appearance.font.pixelSize.larger
                 subtitleSize: Appearance.font.pixelSize.smaller
 
-                icon: indicator.transcribing ? "graphic_eq" : "mic"
-                title: {
-                    if (indicator.transcribing)
-                        return Translation.tr("Transcribing…");
-                    if (indicator.idleButton)
-                        return Translation.tr("Dictate");
-                    return Translation.tr("Dictating…");
-                }
+                icon: indicator.glyph
+                title: DictationService.statusLabel
                 subtitle: {
+                    if (DictationService.starting)
+                        return Translation.tr("Waiting for the dictation engine");
                     if (indicator.transcribing)
                         return Translation.tr("Turning speech into text");
                     if (indicator.idleButton)
@@ -458,7 +456,7 @@ MouseArea {
                 RippleButtonWithIcon {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 38
-                    visible: indicator.busy
+                    visible: indicator.recording
                     buttonRadius: Appearance.rounding.full
                     materialIcon: "keyboard_tab"
                     mainText: Config.options.dictation.outputMode === "clipboard"
@@ -477,10 +475,10 @@ MouseArea {
                 RippleButtonWithIcon {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 38
-                    visible: indicator.busy
+                    visible: indicator.recording || DictationService.starting
                     buttonRadius: Appearance.rounding.full
                     materialIcon: "delete"
-                    mainText: Translation.tr("Discard")
+                    mainText: DictationService.starting ? Translation.tr("Cancel start") : Translation.tr("Discard")
                     colBackground: Appearance.colors.colErrorContainer
                     colBackgroundHover: Appearance.colors.colErrorContainerHover
                     colRipple: Appearance.colors.colErrorContainerActive

@@ -10,5 +10,5 @@ ContinuousSource {
     id: source
 
     activityId: "dictation"
-    condition: DictationService.busy && (Config.options?.dictation?.showInIsland ?? true)
+    condition: DictationService.engaged && (Config.options?.dictation?.showInIsland ?? true)
 }

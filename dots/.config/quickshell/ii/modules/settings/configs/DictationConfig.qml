@@ -141,6 +141,13 @@ ContentPage {
             }
         }
 
+        StyledText {
+            Layout.fillWidth: true
+            wrapMode: Text.WordWrap
+            color: Appearance.colors.colSubtext
+            text: Translation.tr("Hold Alt + Space to dictate. Press Ctrl + Alt + Space to start or stop hands-free dictation.")
+        }
+
         RowLayout {
             Layout.fillWidth: true
             Layout.topMargin: 4
@@ -159,7 +166,7 @@ ContentPage {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: page.ready
+                    text: DictationService.engaged ? DictationService.statusLabel : page.ready
                         ? (DictationService.useHex ? Translation.tr("Ready — Hex.")
                             : Translation.tr("Ready — %1, %2.").arg(DictationService.qualityLabel).arg(DictationService.requiredModel))
                         : Translation.tr("Not ready yet")

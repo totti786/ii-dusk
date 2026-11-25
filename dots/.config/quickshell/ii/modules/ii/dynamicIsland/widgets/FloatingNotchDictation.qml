@@ -27,6 +27,7 @@ Item {
     /** The header disc, handed over from the bubble's glance (see AuxiliaryBubble's hero). */
     readonly property var heroItems: root.isExpanded ? [headerDisc] : []
 
+    readonly property string glyph: DictationService.starting ? "hourglass_empty" : root.transcribing ? "graphic_eq" : "mic"
     readonly property bool recording: DictationService.recording
     readonly property bool transcribing: DictationService.transcribing
     readonly property int elapsedSeconds: Math.floor(DictationService.elapsedMs / 1000)
@@ -103,7 +104,7 @@ Item {
 
         MaterialSymbol {
             Layout.alignment: Qt.AlignVCenter
-            text: root.transcribing ? "graphic_eq" : "mic"
+            text: root.glyph
             iconSize: Appearance.font.pixelSize.large
             color: root.accent
 
@@ -118,7 +119,7 @@ Item {
 
         StyledText {
             Layout.alignment: Qt.AlignVCenter
-            text: root.transcribing ? Translation.tr("Transcribing…") : Translation.tr("Listening…")
+            text: DictationService.statusLabel
             font.pixelSize: Appearance.font.pixelSize.smaller
             font.weight: Font.DemiBold
             color: Appearance.colors.colOnSurface
@@ -165,7 +166,7 @@ Item {
 
                 MaterialSymbol {
                     anchors.centerIn: parent
-                    text: root.transcribing ? "graphic_eq" : "mic"
+                    text: root.glyph
                     iconSize: Appearance.font.pixelSize.normal
                     color: root.transcribing ? Appearance.colors.colOnSecondary : Appearance.colors.colOnPrimary
                 }
@@ -177,7 +178,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: root.transcribing ? Translation.tr("Transcribing…") : Translation.tr("Dictation")
+                    text: DictationService.statusLabel
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.Bold
                     color: Appearance.colors.colOnSurface
@@ -219,9 +220,9 @@ Item {
 
         RippleButtonWithIcon {
             Layout.alignment: Qt.AlignHCenter
-            visible: root.recording
+            visible: root.recording || DictationService.starting
             materialIcon: "stop"
-            mainText: Translation.tr("Stop and type")
+            mainText: DictationService.starting ? Translation.tr("Cancel start") : Translation.tr("Stop and type")
             onClicked: DictationService.stop()
         }
     }
