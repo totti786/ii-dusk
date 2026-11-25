@@ -1,0 +1,494 @@
+/*==============================================================================================*
+
+  +-----+-----+-----+-----+-----+-----+-----+
+  | █▀▀ | ▄▀█ | █▀▀ | █▀▀ | ▄▀█ | █▀▄ | █▀▀ |
+  | █▄▄ | █▀█ | ▄▄█ | █▄▄ | █▀█ | █▄▀ | ██▄ |
+  +-----+-----+-----+-----+-----+-----+-----+
+
+
+  Description:    Minimalist, Simple, Keyboard Centered and based on SimpleFox. 🦊
+                  What you get is a really simple responsive one-line layout using the new Proton UI.
+
+                  > SimpleFox: https://github.com/migueravila/SimpleFox
+
+
+  Author:         Andreas Grafen
+                  (https://andreas.grafen.info)
+
+
+  Repository:     https://github.com/andreasgrafen/ag.proton
+
+
+                  Thank you Nick, Abdallah and Benyamin for all the great suggestions for improvements! ♡
+                  Nick:     https://github.com/nicksundermeyer)
+                  Abdallah: https://github.com/HeiWiper)
+                  Benyamin: https://github.com/benyaminl)
+
+                  If you're looking for a **mouse-friendly** clone please check out Waterfall.
+                  https://github.com/crambaud/waterfall
+
+*==============================================================================================*/
+
+/*-----------------------------------------------------------------------------------------------
+  2026-10-14 - compatibility fixes for the Firefox 157 chrome redesign:
+  * one-line layout rebuilt with flexbox (--urlbar-min-height was removed from Firefox)
+  * --toolbar-bgcolor / --toolbar-color / --lwt-tab-text / :-moz-lwtheme / --button-bgcolor
+    no longer exist - remapped to their modern replacements
+  * --urlbar-popup-url-color removed - now a real rule on .urlbarView-url
+  * pinned-tab position attributes ([haspinnedtabs] etc.) removed - stale rule dropped
+  * container palette (--uc-identity-color-*) defined (was referenced but never included)
+------------------------------------------------------------------------------------------------*/
+
+
+/*---+---+---+---+---+---+
+ | C | O | N | F | I | G |
+ +---+---+---+---+---+---*/
+
+/* Feel free to tweak the following
+ * config settingsto your own liking. */
+
+:root {
+
+    /* URL colour in URL bar suggestions - 2026-10-14: --urlbar-popup-url-color was
+     * removed in Firefox 157; the real rule now lives next to the .urlbarView rules */
+
+
+    /*---+---+---+---+---+---+---+
+     | V | I | S | U | A | L | S |
+     +---+---+---+---+---+---+---*/
+
+    /* global border radius */
+    --uc-border-radius: 10px;
+
+    /* dynamic url bar width settings */
+    --uc-urlbar-width: clamp(200px, 40vw, 500px);
+
+    /* dynamic tab width settings */
+    --uc-active-tab-width:   clamp(100px, 20vw, 300px);
+    --uc-inactive-tab-width: clamp( 50px, 15vw, 200px);
+
+    /* if active always shows the tab close button */
+    --show-tab-close-button: none; /* DEFAULT: inline-flex; */
+
+    /* if active only shows the tab close button on hover
+     * 2026-10-31: -moz-inline-box was removed from Firefox CSS - hover
+     * declaration was invalid and got dropped, so the button never showed */
+    --show-tab-close-button-hover: inline-flex; /* DEFAULT: inline-flex; */
+
+    /* adds left and right margin to the container-tabs indicator */
+    --container-tabs-indicator-margin: 10px;
+
+}
+
+    /*---+---+---+---+---+---+---+
+     | B | U | T | T | O | N | S |
+     +---+---+---+---+---+---+---*/
+
+     #back-button,
+     #forward-button { display: none !important; }
+
+     /* bookmark icon */
+     #star-button{ display: none !important; }
+
+     /* zoom indicator */
+     #urlbar-zoom-button { display: none !important; }
+
+     /* 2026-10-14: hide the hamburger menu button. In Firefox 157 it sits in a
+      * #PanelUI-button toolbaritem wrapper, so the old PanelUI-menu-button
+      * max-height/1px trick no longer matched - switch to a direct hide. */
+     #PanelUI-button { display: none !important; }
+
+     #reader-mode-button{ display: none !important; }
+
+     /* tracking protection shield icon */
+     #tracking-protection-icon-container { display: none !important; }
+
+     /* #identity-box { display: none !important } /* hides encryption AND permission items */
+     #identity-permission-box { display: none !important; } /* only hides permission items */
+
+     /* e.g. playing indicator (secondary - not icon) */
+     .tab-secondary-label { display: none !important; }
+
+     #pageActionButton { display: none !important; }
+     #page-action-buttons { display: none !important; }
+
+     #urlbar-go-button { display: none !important; }
+
+
+/*=============================================================================================*/
+
+/*---+---+---+---+---+---+
+ | L | A | Y | O | U | T |
+ +---+---+---+---+---+---*/
+
+/* No need to change anything below this comment.
+ * Just tweak it if you want to tweak the overall layout. c: */
+
+:root {
+
+    /* 2026-10-14: re-mapped onto variables that still exist in Firefox 157 */
+    --uc-theme-colour:                          var(--window-colour,    var(--toolbox-background-color));
+    --uc-hover-colour:                          var(--secondary-colour, color-mix(in srgb, currentColor 10%, transparent));
+    /* 2026-10-31: was 20% - active tab came out #373d42, too bright against
+     * the pywal palette. 10% halves the overlay => ~#22282d, still derived
+     * from the live wallpaper via pywalfox. Tune this percent to taste. */
+    --uc-inverted-colour:                       var(--inverted-colour,  currentColor);
+
+    --button-background-color:                  var(--uc-theme-colour)    !important;
+    --button-background-color-hover:            var(--uc-hover-colour)    !important;
+    --button-background-color-active:           var(--uc-hover-colour)    !important;
+
+    --toolbarbutton-border-radius:              var(--uc-border-radius)   !important;
+
+    --tab-border-radius:                        var(--uc-border-radius)   !important;
+    --lwt-text-color:                           var(--uc-inverted-colour) !important;
+    --toolbar-text-color:                       var(--uc-inverted-colour) !important;
+
+    --panel-border-radius:                      var(--uc-border-radius)   !important;
+    --arrowpanel-border-radius:                 var(--uc-border-radius)   !important;
+
+    --tab-margin-block: 2px !important;
+
+}
+
+
+window,
+#main-window,
+#toolbar-menubar,
+#TabsToolbar,
+#PersonalToolbar,
+#navigator-toolbox,
+#sidebar-box,
+#nav-bar {
+
+    -moz-appearance: none !important;
+
+    border: none !important;
+    box-shadow: none !important;
+    background: var(--uc-theme-colour) !important;
+
+}
+
+
+/* grey out ccons inside the toolbar to make it
+ * more aligned with the Black & White colour look */
+#PersonalToolbar toolbarbutton:not(:hover),
+#bookmarks-toolbar-button:not(:hover) { filter: grayscale(1) !important; }
+
+
+/* remove window control buttons */
+.titlebar-buttonbox-container { display: none !important; }
+
+
+/* remove "padding" left and right from tabs */
+.titlebar-spacer { display: none !important; }
+
+
+/* 2026-10-14: the [haspinnedtabs]/[positionpinnedtabs]/[first-visible-unpinned-tab]
+ * attributes no longer exist in Firefox 157 - tab spacing is fully internal now,
+ * so the pin-gap workaround was dropped. */
+
+
+/* remove tab shadow */
+.tabbrowser-tab
+    >.tab-stack
+    > .tab-background { box-shadow: none !important;  }
+
+
+/* tab background */
+.tabbrowser-tab
+    > .tab-stack
+    > .tab-background { background: var(--uc-theme-colour) !important; }
+
+
+/* active tab background */
+.tabbrowser-tab[selected]
+    > .tab-stack
+    > .tab-background { background: var(--uc-hover-colour) !important; }
+
+
+/* multi tab selection */
+#tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background { background: var(--uc-hover-colour) !important; }
+
+
+/* tab close button options */
+.tabbrowser-tab:not([pinned]) .tab-close-button { display: var(--show-tab-close-button) !important; }
+.tabbrowser-tab:not([pinned]):hover .tab-close-button { display: var(--show-tab-close-button-hover) !important }
+
+
+/* adaptive tab width */
+.tabbrowser-tab[selected][fadein]:not([pinned]) { max-width: var(--uc-active-tab-width) !important; }
+.tabbrowser-tab[fadein]:not([selected]):not([pinned]) { max-width: var(--uc-inactive-tab-width) !important; }
+
+
+/* container tabs indicator */
+.tabbrowser-tab[usercontextid]
+    > .tab-stack
+    > .tab-background
+    > .tab-context-line {
+
+        margin: -1px var(--container-tabs-indicator-margin) 0 var(--container-tabs-indicator-margin) !important;
+        height: 1px !important;
+
+        border-radius: var(--tab-border-radius) !important;
+        box-shadow: 0 1px 10px 1px var(--uc-identity-gradient-color, var(--identity-icon-color)) !important;
+
+}
+
+
+/* show favicon when media is playing but tab is hovered */
+.tab-icon-image:not([pinned]) { opacity: 1 !important; }
+
+
+/* Makes the speaker icon to always appear if the tab is playing (not only on hover) */
+.tab-icon-overlay:not([crashed]),
+.tab-icon-overlay[pinned][crashed][selected] {
+
+  top: 5px !important;
+  z-index: 1 !important;
+
+  padding: 1.5px !important;
+  inset-inline-end: -8px !important;
+  width: 16px !important; height: 16px !important;
+
+  border-radius: 10px !important;
+
+}
+
+
+/* style and position speaker icon */
+.tab-icon-overlay:not([sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) {
+
+  stroke: transparent !important;
+  background: transparent !important;
+  opacity: 1 !important; fill-opacity: 0.8 !important;
+
+  color: currentColor !important;
+
+  stroke: var(--uc-theme-colour) !important;
+  background-color: var(--uc-theme-colour) !important;
+
+}
+
+
+/* change the colours of the speaker icon on active tab to match tab colours */
+.tabbrowser-tab[selected] .tab-icon-overlay:not([sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) {
+
+  stroke: var(--uc-hover-colour) !important;
+  background-color: var(--uc-hover-colour) !important;
+
+}
+
+
+.tab-icon-overlay:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) { margin-inline-end: 9.5px !important; }
+
+
+.tabbrowser-tab:not([image]) .tab-icon-overlay:not([pinned], [sharing], [crashed]) {
+
+  top: 0 !important;
+
+  padding: 0 !important;
+  margin-inline-end: 5.5px !important;
+  inset-inline-end: 0 !important;
+
+}
+
+
+.tab-icon-overlay:not([crashed])[soundplaying]:hover,
+.tab-icon-overlay:not([crashed])[muted]:hover,
+.tab-icon-overlay:not([crashed])[activemedia-blocked]:hover {
+
+    color: currentColor !important;
+    stroke: var(--uc-inverted-colour) !important;
+    background-color: var(--uc-inverted-colour) !important;
+    fill-opacity: 0.95 !important;
+
+}
+
+
+.tabbrowser-tab[selected] .tab-icon-overlay:not([crashed])[soundplaying]:hover,
+.tabbrowser-tab[selected] .tab-icon-overlay:not([crashed])[muted]:hover,
+.tabbrowser-tab[selected] .tab-icon-overlay:not([crashed])[activemedia-blocked]:hover {
+
+    color: currentColor !important;
+    stroke: var(--uc-inverted-colour) !important;
+    background-color: var(--uc-inverted-colour) !important;
+    fill-opacity: 0.95 !important;
+
+}
+
+
+/* speaker icon colour fix */
+#TabsToolbar .tab-icon-overlay:not([crashed])[soundplaying],
+#TabsToolbar .tab-icon-overlay:not([crashed])[muted],
+#TabsToolbar .tab-icon-overlay:not([crashed])[activemedia-blocked] { color: var(--uc-inverted-colour) !important; }
+
+
+/* speaker icon colour fix on hover */
+#TabsToolbar .tab-icon-overlay:not([crashed])[soundplaying]:hover,
+#TabsToolbar .tab-icon-overlay:not([crashed])[muted]:hover,
+#TabsToolbar .tab-icon-overlay:not([crashed])[activemedia-blocked]:hover { color: var(--uc-theme-colour) !important; }
+
+
+
+
+
+#nav-bar {
+
+    border:     none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+
+}
+
+
+/* remove border below whole nav */
+#navigator-toolbox { border-bottom: none !important; }
+
+/* 2026-10-14: Firefox 157 (Nova content area) draws the chrome<->content
+ * separator as a 1px top border on each tab panel container - removed */
+#tabbrowser-tabbox .browserContainer { border-block-start: none !important; }
+
+
+#urlbar,
+#urlbar * {
+
+    outline: none !important;
+    box-shadow: none !important;
+
+}
+
+
+/* 2026-10-31: was `border: var(--uc-hover-colour)` - a bare colour is not a
+ * valid border shorthand, so the rule was a no-op. Intent is to kill the
+ * default urlbar border. */
+#urlbar-background { border: none !important; }
+
+
+#urlbar[focused="true"]
+    > #urlbar-background,
+#urlbar:not([open])
+    > #urlbar-background { background: transparent !important; }
+
+
+#urlbar[open]
+    > #urlbar-background { background: var(--uc-theme-colour) !important; }
+
+
+.urlbarView-row:hover
+    > .urlbarView-row-inner,
+.urlbarView-row[selected]
+    > .urlbarView-row-inner { background: var(--uc-hover-colour) !important; }
+
+
+/* URL colour in URL bar suggestions - 2026-10-14 (--urlbar-popup-url-color was removed) */
+.urlbarView-row .urlbarView-url { color: var(--uc-identity-color-purple) !important; }
+
+
+
+
+
+#statuspanel {
+
+    position: absolute !important;
+    bottom: 12px !important; left: 12px !important;
+
+}
+
+
+#statuspanel #statuspanel-label {
+
+    border: none !important;
+    border-radius: var(--uc-border-radius) !important;
+    background: var(--uc-theme-colour) !important;
+
+}
+
+
+/* transition to oneline - 2026-10-14: rebuilt with flexbox because Firefox 157
+ * removed --urlbar-min-height (which made the old negative-margin calc invalid,
+ * collapsing this theme into a two-row layout). Same technique current Cascade uses. */
+@media (min-width: 1000px) {
+
+    #navigator-toolbox {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+    }
+
+    /* URL bar on the left */
+    #nav-bar {
+        order: 1;
+        width: var(--uc-urlbar-width) !important;
+    }
+
+    /* tab bar on the right */
+    #TabsToolbar {
+        order: 2;
+        width: calc(100vw - var(--uc-urlbar-width) - 1px) !important;
+    }
+
+    /* let the urlbar fill its now fixed-width container */
+    #nav-bar #urlbar-container {
+        min-width: 0 !important;
+        width: auto !important;
+    }
+
+    /* bookmarks toolbar and alt menu bar each get their own full-width row */
+    #PersonalToolbar { order: 3; width: 100%; }
+    #toolbar-menubar { order: 0; width: 100%; }
+
+} /* end media query */
+
+/* optional: the Firefox 157 toolbar ships with new buttons that eat into the
+ * urlbar zone (in order of width: IP-protection chip ~72px, overflow ">>" ~36px).
+ * Uncomment to reclaim the space: */
+/* #ipprotection-button      { display: none !important; } */
+/* #nav-bar-overflow-button  { display: none !important; } */
+
+
+/* Container Tabs - 2026-10-14: the palette below was referenced by these rules
+ * but never actually included in this file - now defined */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --uc-identity-color-blue:      #7ed6df;
+        --uc-identity-color-turquoise: #55e6c1;
+        --uc-identity-color-green:     #b8e994;
+        --uc-identity-color-yellow:    #f7d794;
+        --uc-identity-color-orange:    #f19066;
+        --uc-identity-color-red:       #fc5c65;
+        --uc-identity-color-pink:      #f78fb3;
+        --uc-identity-color-purple:    #786fa6;
+    }
+}
+@media (prefers-color-scheme: light) {
+    :root {
+        --uc-identity-color-blue:      #1d65f5;
+        --uc-identity-color-turquoise: #209fb5;
+        --uc-identity-color-green:     #40a02b;
+        --uc-identity-color-yellow:    #e49320;
+        --uc-identity-color-orange:    #fe640b;
+        --uc-identity-color-red:       #fc5c65;
+        --uc-identity-color-pink:      #ec83d0;
+        --uc-identity-color-purple:    #822fee;
+    }
+}
+:root {
+    --uc-identity-color-blue-muted:      color-mix(in srgb, var(--uc-identity-color-blue) 60%, transparent);
+    --uc-identity-color-turquoise-muted: color-mix(in srgb, var(--uc-identity-color-turquoise) 60%, transparent);
+    --uc-identity-color-green-muted:     color-mix(in srgb, var(--uc-identity-color-green) 60%, transparent);
+    --uc-identity-color-yellow-muted:    color-mix(in srgb, var(--uc-identity-color-yellow) 60%, transparent);
+    --uc-identity-color-orange-muted:    color-mix(in srgb, var(--uc-identity-color-orange) 60%, transparent);
+    --uc-identity-color-red-muted:       color-mix(in srgb, var(--uc-identity-color-red) 60%, transparent);
+    --uc-identity-color-pink-muted:      color-mix(in srgb, var(--uc-identity-color-pink) 60%, transparent);
+    --uc-identity-color-purple-muted:    color-mix(in srgb, var(--uc-identity-color-purple) 60%, transparent);
+}
+
+.identity-color-blue      { --identity-tab-color: var(--uc-identity-color-blue)      !important; --identity-icon-color: var(--uc-identity-color-blue)      !important; --uc-identity-gradient-color: var(--uc-identity-color-blue-muted) !important; }
+.identity-color-turquoise { --identity-tab-color: var(--uc-identity-color-turquoise) !important; --identity-icon-color: var(--uc-identity-color-turquoise) !important; --uc-identity-gradient-color: var(--uc-identity-color-turquoise-muted) !important;  }
+.identity-color-green     { --identity-tab-color: var(--uc-identity-color-green)     !important; --identity-icon-color: var(--uc-identity-color-green)     !important; --uc-identity-gradient-color: var(--uc-identity-color-green-muted) !important;  }
+.identity-color-yellow    { --identity-tab-color: var(--uc-identity-color-yellow)    !important; --identity-icon-color: var(--uc-identity-color-yellow)    !important; --uc-identity-gradient-color: var(--uc-identity-color-yellow-muted) !important;  }
+.identity-color-orange    { --identity-tab-color: var(--uc-identity-color-orange)    !important; --identity-icon-color: var(--uc-identity-color-orange)    !important; --uc-identity-gradient-color: var(--uc-identity-color-orange-muted) !important;  }
+.identity-color-red       { --identity-tab-color: var(--uc-identity-color-red)       !important; --identity-icon-color: var(--uc-identity-color-red)       !important; --uc-identity-gradient-color: var(--uc-identity-color-red-muted) !important;  }
+.identity-color-pink      { --identity-tab-color: var(--uc-identity-color-pink)      !important; --identity-icon-color: var(--uc-identity-color-pink)      !important; --uc-identity-gradient-color: var(--uc-identity-color-pink-muted) !important;  }
+.identity-color-purple    { --identity-tab-color: var(--uc-identity-color-purple)    !important; --identity-icon-color: var(--uc-identity-color-purple)    !important; --uc-identity-gradient-color: var(--uc-identity-color-purple-muted) !important;  }
