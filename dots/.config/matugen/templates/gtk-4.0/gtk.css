@@ -81,3 +81,10 @@
     @define-color thumbnail_bg_color {{colors.surface_container_high.dark.hex}};
     @define-color thumbnail_fg_color {{colors.on_surface.dark.hex}};
 }
+
+/* adw-gtk3's libadwaita-tweaks.css pins the accent variables to blue, which plain GTK4 apps
+   (no libadwaita, e.g. pavucontrol) then use. Point them at the palette. */
+:root {
+    --accent-bg-color: @accent_bg_color;
+    --accent-fg-color: @accent_fg_color;
+}
