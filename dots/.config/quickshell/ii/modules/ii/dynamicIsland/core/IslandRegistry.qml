@@ -527,7 +527,7 @@ Singleton {
             content: {}
         },
         {
-            // A Grit focus session, running or paused: a bubble with the tag's shape and the
+            // A Panadoro focus session, running or paused: a bubble with the tag's shape and the
             // time left, and a card to pause, skip or open Focus. See FocusSource.
             id: "focus",
             tier: "live",

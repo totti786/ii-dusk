@@ -8,7 +8,7 @@ import qs.modules.common
 import qs.modules.ii.clock.components
 
 /**
- * The Qanun window: a regular floating toplevel like the clock and Grit, large
+ * The Qanun window: a regular floating toplevel like the clock and Panadoro, large
  * enough for the landscape tuner and metronome layouts.
  */
 FloatingWindow {

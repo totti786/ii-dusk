@@ -6108,7 +6108,7 @@ Singleton {
                     property JsonObject prayer: JsonObject {
                         property bool enable: true
                     }
-                    // A Grit focus session: the time left, beside the clock.
+                    // A Panadoro focus session: the time left, beside the clock.
                     property JsonObject focus: JsonObject {
                         property bool enable: true
                     }
@@ -7607,7 +7607,7 @@ Singleton {
                 property string position: "top_right"
                 property int zoomPercent: 100 // 50-200, step 10
                 property bool autoDndFullscreen: true
-                // Quiet during a Grit focus session: notifications are kept, not shown, and one
+                // Quiet during a Panadoro focus session: notifications are kept, not shown, and one
                 // line says how many came in when the session ends. Urgent ones still show.
                 property bool holdDuringFocus: true
                 // Buttons for what a notification contains: copy a code, open a link.

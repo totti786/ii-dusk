@@ -164,7 +164,7 @@ Scope {
         return !PanelFamily.isLite;
         case 3:
         BedtimeService.enabled; // Bedtime reminders and tracking; idles when off but keeps its IPC
-        GritService.loaded; // Habits, tasks and focus: keeps the timer and sync alive with the window closed
+        PanadoroService.loaded; // Habits, tasks and focus: keeps the timer and sync alive with the window closed
         if (Config.options?.clockApp?.reminders?.todoSync?.enable ?? false)
             RemindersSync.enabled; // Two-way Microsoft To Do sync
         if (Config.options?.clockApp?.phoneAlarm?.enable ?? true)

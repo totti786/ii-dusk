@@ -129,11 +129,11 @@ Singleton {
     property bool popupInhibited: (GlobalStates?.sidebarRightOpen ?? false) || effectiveSilent
 
     // ── Hold during a focus session ──────────────────────────────────────────
-    // While a Grit focus phase runs, ordinary notifications are stored but neither shown nor
+    // While a Panadoro focus phase runs, ordinary notifications are stored but neither shown nor
     // sounded. The shell's own alarms (calendar, reminders, battery) are never held: you asked
     // for those. When the phase ends, one note says what came in.
     readonly property bool holdActive: (Config?.options.notifications.holdDuringFocus ?? true)
-        && GritService.timerRunning && GritService.timerPhase === "focus"
+        && PanadoroService.timerRunning && PanadoroService.timerPhase === "focus"
     property var heldByApp: ({})
     property int heldCount: 0
 

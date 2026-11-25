@@ -144,14 +144,14 @@ Singleton {
         root.clockAppOpen = true;
     }
 
-    /// The Grit window (habits, tasks and focus sessions), built on demand like the clock app.
-    property bool gritAppOpen: false
+    /// The Panadoro window (habits, tasks and focus sessions), built on demand like the clock app.
+    property bool panadoroAppOpen: false
     /// A tab the app should land on when it opens, consumed on arrival.
-    property string gritPendingTab: ""
+    property string panadoroPendingTab: ""
 
-    function openGritApp(tab = ""): void {
-        root.gritPendingTab = String(tab ?? "");
-        root.gritAppOpen = true;
+    function openPanadoroApp(tab = ""): void {
+        root.panadoroPendingTab = String(tab ?? "");
+        root.panadoroAppOpen = true;
     }
 
     /// The floating weather app (multi-provider forecasts, charts and air quality).

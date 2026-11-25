@@ -27,7 +27,7 @@ import qs.modules.ii.mediator
 import qs.modules.ii.quran
 import qs.modules.ii.diwan
 import qs.modules.ii.clock
-import qs.modules.ii.grit
+import qs.modules.ii.panadoro
 import qs.modules.ii.health
 import qs.modules.ii.dock
 import qs.modules.ii.lock
@@ -122,8 +122,8 @@ Scope {
     }
     PanelUrlLoader {
         // Habit tracker and focus timer. Its Scope holds the keybind; the window is
-        // built only while Grit is open, and the timer keeps running without it.
-        panelUrl: Qt.resolvedUrl("../modules/ii/grit/GritApp.qml")
+        // built only while Panadoro is open, and the timer keeps running without it.
+        panelUrl: Qt.resolvedUrl("../modules/ii/panadoro/PanadoroApp.qml")
     }
     PanelUrlLoader {
         // The calculator keeps its own open state, so its Scope holds the keybind and IPC

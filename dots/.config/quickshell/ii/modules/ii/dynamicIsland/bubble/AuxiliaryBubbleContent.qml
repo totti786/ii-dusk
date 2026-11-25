@@ -1576,7 +1576,7 @@ Item {
         }
     }
 
-    // A Grit focus session: the tag's shape and the time left, folding to the shape alone
+    // A Panadoro focus session: the tag's shape and the time left, folding to the shape alone
     // while paused. The card pauses, skips or opens Focus.
     Component {
         id: focusGlance
@@ -1584,9 +1584,9 @@ Item {
         Item {
             id: focus
 
-            readonly property bool running: GritService.timerRunning
-            readonly property bool onBreak: GritService.timerPhase !== "focus"
-            readonly property int secondsLeft: GritService.timerSecondsLeft
+            readonly property bool running: PanadoroService.timerRunning
+            readonly property bool onBreak: PanadoroService.timerPhase !== "focus"
+            readonly property int secondsLeft: PanadoroService.timerSecondsLeft
             readonly property real markerSize: root.diameter - 10
             readonly property real preferredWidth: focus.running
                 ? (root.diameter - focus.markerSize) / 2 + focusRow.implicitWidth + root.endPadding
@@ -1602,7 +1602,7 @@ Item {
                 MaterialShapeWrappedMaterialSymbol {
                     id: focusMarker
                     anchors.verticalCenter: parent.verticalCenter
-                    shape: focus.onBreak ? "SoftBurst" : String(GritService.activeTag?.shape ?? "Cookie7Sided")
+                    shape: focus.onBreak ? "SoftBurst" : String(PanadoroService.activeTag?.shape ?? "Cookie7Sided")
                     implicitSize: focus.markerSize
                     iconSize: Appearance.font.pixelSize.normal
                     padding: 3

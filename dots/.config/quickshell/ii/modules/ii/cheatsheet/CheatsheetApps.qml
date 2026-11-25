@@ -19,7 +19,7 @@ Item {
     readonly property var blurbs: ({
         notes: Translation.tr("Quick notes and sticky pads you can pin on screen"),
         clock: Translation.tr("Alarms, timers, stopwatch, pomodoro and world clocks"),
-        grit: Translation.tr("Habit tracker and tasks with streaks and a focus timer"),
+        panadoro: Translation.tr("Habit tracker and tasks with streaks and a focus timer"),
         weather: Translation.tr("Forecast, rain, wind, air quality and pollen"),
         calculator: Translation.tr("Standard and scientific calculator with history"),
         mediator: Translation.tr("Your shows, anime and movies, with resume and episode info"),
@@ -55,7 +55,7 @@ Item {
 
     /// What opens each app from the keyboard. Apps with none are opened from here or search.
     readonly property var chords: ({
-        notes: "Super + Alt + N", clock: "Super + Alt + T", grit: "Super + Alt + G",
+        notes: "Super + Alt + N", clock: "Super + Alt + T", panadoro: "Super + Alt + G",
         calculator: "Super + Ctrl + X", mediator: "Super + Ctrl + M", music: "Super + Ctrl + A",
         mixer: "Ctrl + Alt + V", easyEffects: "Super + Alt + E", patchbay: "Ctrl + Alt + G",
         soundscapes: "Super + Ctrl + S", books: "Super + Ctrl + Shift + B", quran: "Super + Ctrl + W",
@@ -70,7 +70,7 @@ Item {
         { name: Translation.tr("Watch and listen"), ids: ["mediator", "music", "audioPlayer", "youtube", "syncplay", "imageViewer", "camera"] },
         { name: Translation.tr("Sound"), ids: ["mixer", "easyEffects", "patchbay", "audioRecorder", "soundscapes", "qanun"] },
         { name: Translation.tr("Read and learn"), ids: ["books", "quran", "diwan", "anki", "wikipedia"] },
-        { name: Translation.tr("Day to day"), ids: ["notes", "clock", "grit", "calculator", "weather"] },
+        { name: Translation.tr("Day to day"), ids: ["notes", "clock", "panadoro", "calculator", "weather"] },
         { name: Translation.tr("Files and devices"), ids: ["fileManager", "downloads", "torrents", "quickshare", "bluetoothManager", "discordoVoice"] },
         { name: Translation.tr("System"), ids: ["monitor", "health", "usage", "modes", "packages"] }
     ]

@@ -28,9 +28,9 @@ hl.window_rule({match = {title = "^(ii Notes)$" },                           cen
 -- whole-app windows read as one family.
 hl.window_rule({match = {title = "^(ii Clock)$" },                           float = true})
 hl.window_rule({match = {title = "^(ii Clock)$" },                           center = true})
--- Grit: the habit tracker and focus timer, the same kind of toplevel as the clock.
-hl.window_rule({match = {title = "^(ii Grit)$" },                            float = true})
-hl.window_rule({match = {title = "^(ii Grit)$" },                            center = true})
+-- Panadoro: the habit tracker and focus timer, the same kind of toplevel as the clock.
+hl.window_rule({match = {title = "^(Panadoro)$" },                            float = true})
+hl.window_rule({match = {title = "^(Panadoro)$" },                            center = true})
 hl.window_rule({match = {title = "^(ii Calculator)$" },                      float = true})
 hl.window_rule({match = {title = "^(ii Calculator)$" },                      center = true})
 hl.window_rule({match = {title = "^(ii EasyEffects)$" },                     float = true})

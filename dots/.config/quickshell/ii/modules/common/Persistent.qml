@@ -421,27 +421,31 @@ Singleton {
                 property bool railExpanded: true
             }
             /**
-             * Grit's window, goals and sync settings.
+             * Panadoro's window, goals and sync settings.
              *
              * The habit, task and focus records themselves live in
-             * `Directories.gritDataPath`, not here: they are a synced document with
+             * `Directories.panadoroDataPath`, not here: they are a synced document with
              * tombstones, and mirroring them through states.json would rewrite both
              * files on every habit tick. These are the machine-local facts around it.
              */
-            property JsonObject grit: JsonObject {
+            property JsonObject panadoro: JsonObject {
                 property string tab: "today"
                 property bool railExpanded: true
                 property string deviceId: ""
                 property int dailyGoalMinutes: 120
                 property bool weekStartMonday: true
                 property bool showCompleted: true
-                property string syncUrl: ""
-                property string syncToken: ""
-                property bool autoSync: false
-                property int syncIntervalSec: 120
-                property int syncPort: 8765
-                property bool hostLocal: false
+                property bool autoSync: true
+                property string authEmail: ""
+                property string authUid: ""
+                property string authIdToken: ""
+                property string authRefreshToken: ""
+                property real authExpiresAt: 0
                 property string lastSyncAt: ""
+                property string displayName: ""
+                property real displayNameUpdatedAt: 0
+                property list<string> publicTagIds: []
+                property real publicTagsUpdatedAt: 0
             }
             property JsonObject easyEffectsApp: JsonObject {
                 property string tab: "presets"

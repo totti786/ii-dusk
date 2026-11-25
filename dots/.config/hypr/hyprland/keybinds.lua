@@ -86,7 +86,7 @@ hl.bind("SUPER + ALT + N", hl.dsp.global("quickshell:notesToggle"), { descriptio
 hl.bind("SUPER + ALT + T", hl.dsp.global("quickshell:clockToggle"), { description = "Shell: Toggle clock" })
 --##! Modules
 --##! Overlays
-hl.bind("SUPER + ALT + G", hl.dsp.global("quickshell:gritToggle"), { description = "Grit: Toggle habits, tasks and focus" })
+hl.bind("SUPER + ALT + G", hl.dsp.global("quickshell:panadoroToggle"), { description = "Panadoro: Toggle habits, tasks and focus" })
 --##! Modules
 --##! Overlays
 hl.bind("SUPER + ALT + E", hl.dsp.global("quickshell:easyEffectsToggle"), { description = "Shell: Toggle EasyEffects" })

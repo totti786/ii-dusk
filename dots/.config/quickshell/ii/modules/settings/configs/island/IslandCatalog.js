@@ -83,7 +83,7 @@ const activities = [
       label: "Quick Share", tip: "Quick Share as a bubble beside the island while this PC is visible to nearby phones, a request or transfer is in flight, or files wait for a device: accept or decline with the PIN, watch the progress, pick the phone to send to. Off until Quick Share is turned on" },
 
     { id: "focus", key: "disableFocus", widget: "focus", group: "live", icon: "psychiatry", shape: "Cookie7Sided",
-      label: "Focus session", tip: "A Grit focus session as a bubble beside the island while it runs or is paused: the tag's shape and the time left. Rest on it to pause, skip or open Focus" },
+      label: "Focus session", tip: "A Panadoro focus session as a bubble beside the island while it runs or is paused: the tag's shape and the time left. Rest on it to pause, skip or open Focus" },
     { id: "prayer", key: "disablePrayer", widget: "prayer", group: "live", icon: "mosque", shape: "Cookie9Sided",
       label: "Prayer times", tip: "The next prayer as a small bubble for the last 20 minutes before it, with its minutes left. Rest on it for the day's times" },
     { id: "monitorAlert", key: "disableMonitorAlert", widget: "monitorAlert", group: "live", icon: "speed", shape: "Burst",

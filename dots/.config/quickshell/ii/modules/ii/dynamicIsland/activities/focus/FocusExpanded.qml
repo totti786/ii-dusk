@@ -8,18 +8,18 @@ import qs.modules.common
 import qs.modules.common.widgets
 
 /**
- * The Grit focus session: the time left, how far through it is, and the three things you
+ * The Panadoro focus session: the time left, how far through it is, and the three things you
  * want mid-session: pause or resume, skip to the next phase, open Focus.
  *
  * Self-contained on purpose: the bubble loads cards by URL, and such a file gets none of its
- * directory's types. It reads GritService, which the island already follows.
+ * directory's types. It reads PanadoroService, which the island already follows.
  */
 Item {
     id: root
 
-    readonly property bool running: GritService.timerRunning
-    readonly property bool onBreak: GritService.timerPhase !== "focus"
-    readonly property int secondsLeft: GritService.timerSecondsLeft
+    readonly property bool running: PanadoroService.timerRunning
+    readonly property bool onBreak: PanadoroService.timerPhase !== "focus"
+    readonly property int secondsLeft: PanadoroService.timerSecondsLeft
     readonly property var heroItems: [marker]
 
     readonly property real margin: 14
@@ -42,7 +42,7 @@ Item {
 
             MaterialShapeWrappedMaterialSymbol {
                 id: marker
-                shape: root.onBreak ? "SoftBurst" : String(GritService.activeTag?.shape ?? "Cookie7Sided")
+                shape: root.onBreak ? "SoftBurst" : String(PanadoroService.activeTag?.shape ?? "Cookie7Sided")
                 implicitSize: 44
                 iconSize: 22
                 padding: 5
@@ -57,7 +57,7 @@ Item {
                 spacing: 0
                 StyledText {
                     Layout.fillWidth: true
-                    text: GritService.timerPhaseLabel + (root.running ? "" : "  ·  " + Translation.tr("Paused"))
+                    text: PanadoroService.timerPhaseLabel + (root.running ? "" : "  ·  " + Translation.tr("Paused"))
                     elide: Text.ElideRight
                     font.pixelSize: Appearance.font.pixelSize.normal
                     font.weight: Font.DemiBold
@@ -65,7 +65,7 @@ Item {
                 }
                 StyledText {
                     Layout.fillWidth: true
-                    text: (GritService.activeTag?.name ?? "") + "  ·  " + (GritService.timerCycle + 1) + "/" + GritService.timerCycles
+                    text: (PanadoroService.activeTag?.name ?? "") + "  ·  " + (PanadoroService.timerCycle + 1) + "/" + PanadoroService.timerCycles
                     elide: Text.ElideRight
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: Appearance.colors.colSubtext
@@ -88,7 +88,7 @@ Item {
             radius: 3
             color: Appearance.colors.colSurfaceContainerHighest
             Rectangle {
-                width: parent.width * Math.max(0, Math.min(1, GritService.timerProgress))
+                width: parent.width * Math.max(0, Math.min(1, PanadoroService.timerProgress))
                 height: parent.height
                 radius: 3
                 color: root.onBreak ? Appearance.colors.colTertiary : Appearance.colors.colPrimary
@@ -105,17 +105,17 @@ Item {
                 Layout.fillWidth: true
                 filled: true
                 label: root.running ? Translation.tr("Pause") : Translation.tr("Resume")
-                onClicked: GritService.toggleTimer()
+                onClicked: PanadoroService.toggleTimer()
             }
             ActionButton {
                 Layout.fillWidth: true
                 label: Translation.tr("Skip")
-                onClicked: GritService.skipTimer()
+                onClicked: PanadoroService.skipTimer()
             }
             ActionButton {
                 Layout.fillWidth: true
                 label: Translation.tr("Open")
-                onClicked: GlobalStates.openGritApp("focus")
+                onClicked: GlobalStates.openPanadoroApp("focus")
             }
         }
     }
