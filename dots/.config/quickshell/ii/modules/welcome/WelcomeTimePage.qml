@@ -31,7 +31,7 @@ Item {
     }
 
     function sampleFor(format: string): string {
-        return Qt.locale().toString(sampleClock.date, format);
+        return Translation.formatDate(sampleClock.date, format);
     }
 
     function selectedIndex(options, value): int {

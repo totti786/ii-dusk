@@ -264,7 +264,7 @@ Item {
 
             StyledToolTip {
                 extraVisibleCondition: dayHover.hovered
-                text: Qt.formatDate(root.cellData?.date ?? new Date(), Locale.LongFormat)
+                text: Translation.formatDate(root.cellData?.date ?? new Date(), Locale.LongFormat)
             }
         }
 

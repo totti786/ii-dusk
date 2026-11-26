@@ -23,7 +23,7 @@ Item {
 
     function formatWhen(timestamp) {
         const date = new Date(Number(timestamp ?? 0));
-        return Qt.formatDateTime(date, "dd MMM HH:mm");
+        return Translation.formatDate(date, "dd MMM HH:mm");
     }
 
     ColumnLayout {

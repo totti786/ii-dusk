@@ -339,7 +339,7 @@ Item {
     }
 
     readonly property string reminderLabel: root.reminderAt > 0
-        ? Qt.formatDateTime(new Date(root.reminderAt), "d MMM, HH:mm")
+        ? Translation.formatDate(new Date(root.reminderAt), "d MMM, HH:mm")
         : ""
 
     function setReminder(timestamp): void {
@@ -693,6 +693,7 @@ Item {
                 }
 
                 StyledText {
+                    width: parent.width
                     anchors.verticalCenter: parent.verticalCenter
                     text: Translation.tr("Untitled note")
                     font: titleField.font
@@ -810,7 +811,7 @@ Item {
 
             StyledText {
                 text: root.note
-                    ? Translation.tr("Edited %1").arg(Qt.formatDateTime(new Date(root.note.modified), "d MMM yyyy, HH:mm"))
+                    ? Translation.tr("Edited %1").arg(Translation.formatDate(new Date(root.note.modified), "d MMM yyyy, HH:mm"))
                     : ""
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 color: Appearance.colors.colSubtext

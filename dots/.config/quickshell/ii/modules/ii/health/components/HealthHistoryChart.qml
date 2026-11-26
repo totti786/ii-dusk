@@ -64,7 +64,7 @@ Rectangle {
             return Translation.tr("Filled in day by day while the checks run.");
         if (root.hovered >= 0) {
             const d = root.days[root.hovered];
-            const day = Qt.formatDate(d.date, "ddd d MMM");
+            const day = Translation.formatDate(d.date, "ddd d MMM");
             if (!d.row)
                 return Translation.tr("%1 · no data").arg(day);
             const parts = [day,

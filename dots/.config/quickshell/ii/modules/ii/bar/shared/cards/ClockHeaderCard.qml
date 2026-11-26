@@ -287,7 +287,7 @@ Rectangle {
                 id: timeText
                 text: {
                     const timeStr = DateTime.time;
-                    const match = timeStr.match(/^(\d{1,2}:\d{2})(?:\s*(AM|PM|am|pm))?$/);
+                    const match = timeStr.match(/^(\d{1,2}:\d{2})(?:\s*(\D+))?$/);
                     return match ? match[1] : timeStr;
                 }
                 font.pixelSize: Math.min(72, root.width * 0.17)
@@ -314,7 +314,7 @@ Rectangle {
                 id: ampmText
                 text: {
                     const timeStr = DateTime.time;
-                    const match = timeStr.match(/^(\d{1,2}:\d{2})(?:\s*(AM|PM|am|pm))?$/);
+                    const match = timeStr.match(/^(\d{1,2}:\d{2})(?:\s*(\D+))?$/);
                     return (match && match[2]) ? match[2] : "";
                 }
                 visible: text !== ""
@@ -356,7 +356,7 @@ Rectangle {
                 id: dayText
                 property real translateX: 20
                 Layout.alignment: Qt.AlignLeft
-                text: Qt.locale().toString(DateTime.clock.date, "dddd")
+                text: Translation.formatDate(DateTime.clock.date, "dddd")
                 font.pixelSize: dateColumn.fontSize
                 font.family: Appearance.font.family.title
                 font.weight: Font.Normal
@@ -378,7 +378,7 @@ Rectangle {
                 id: dateText
                 property real translateX: 20
                 Layout.alignment: Qt.AlignLeft
-                text: Qt.locale().toString(DateTime.clock.date, "dd MMMM")
+                text: Translation.formatDate(DateTime.clock.date, "dd MMMM")
                 font.pixelSize: dateColumn.fontSize
                 font.family: Appearance.font.family.title
                 font.weight: Font.Normal

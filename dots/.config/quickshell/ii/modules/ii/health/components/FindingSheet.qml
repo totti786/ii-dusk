@@ -236,7 +236,7 @@ ClockSheet {
         if (s === "boot")
             return Translation.tr("Snoozed until the next restart");
         if (s)
-            return Translation.tr("Snoozed until %1").arg(Qt.formatDateTime(new Date(Number(s)), "ddd d MMM hh:mm"));
+            return Translation.tr("Snoozed until %1").arg(Translation.formatDate(new Date(Number(s)), "ddd d MMM hh:mm"));
         return "";
     }
 

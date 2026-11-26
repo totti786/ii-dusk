@@ -134,7 +134,7 @@ ExpressiveCardWidget {
 
         StyledText {
             anchors.right: parent.right
-            text: Qt.locale().toString(root.now, "ddd").replace(".", "").toUpperCase()
+            text: Translation.formatDate(root.now, "ddd").replace(".", "").toUpperCase()
             color: WidgetColorScheme.accentColor
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.smaller
@@ -152,7 +152,7 @@ ExpressiveCardWidget {
         }
         StyledText {
             anchors.right: parent.right
-            text: Qt.locale().toString(root.now, "MMM").replace(".", "").toUpperCase()
+            text: Translation.formatDate(root.now, "MMM").replace(".", "").toUpperCase()
             color: WidgetColorScheme.subtextColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.smaller

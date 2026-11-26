@@ -177,7 +177,7 @@ Item {
 
     function formatDate(value): string {
         const timestamp = Number(value ?? 0);
-        return timestamp > 0 ? Qt.formatDateTime(new Date(timestamp), "dd MMM yyyy · HH:mm") : "—";
+        return timestamp > 0 ? Translation.formatDate(new Date(timestamp), "dd MMM yyyy · HH:mm") : "—";
     }
 
     function filterEntries(): var {

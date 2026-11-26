@@ -92,7 +92,14 @@ Singleton {
 
     function weekdayName(key, short) {
         const date = root.dateFromKey(key);
-        return Qt.locale().dayName(date.getDay(), short ? Locale.ShortFormat : Locale.LongFormat);
+        return Translation.dayName(date.getDay(), short ? Locale.ShortFormat : Locale.LongFormat);
+    }
+
+    // Two letters for a chart column; Arabic uses its one-letter form.
+    function shortWeekday(key) {
+        if (!Translation.isArabic)
+            return root.weekdayName(key, true).slice(0, 2);
+        return Translation.dayName(root.dateFromKey(key).getDay(), Locale.NarrowFormat);
     }
 
     function relativeDay(key) {
@@ -102,7 +109,7 @@ Singleton {
             return Translation.tr("Tomorrow");
         if (key === root.addDays(root.todayKey, -1))
             return Translation.tr("Yesterday");
-        return Qt.locale().toString(root.dateFromKey(key), "ddd, d MMM");
+        return Translation.formatDate(root.dateFromKey(key), "ddd, d MMM");
     }
 
     function weekStartOffset() {
@@ -693,7 +700,7 @@ Singleton {
     function habitWeek(habit) {
         return root.thisWeekDays().map(key => ({
             date: key,
-            label: root.weekdayName(key, true).slice(0, 2),
+            label: root.shortWeekday(key),
             done: root.habitDone(habit, key),
             scheduled: root.scheduledOn(habit, key),
             today: key === root.todayKey
@@ -1440,7 +1447,7 @@ Singleton {
         const keys = root.lastNDays(Math.max(1, Number(days ?? 7)));
         const index = {};
         for (const key of keys)
-            index[key] = { date: key, label: root.weekdayName(key, true).slice(0, 2), focus: 0, breaks: 0 };
+            index[key] = { date: key, label: root.shortWeekday(key), focus: 0, breaks: 0 };
         for (const session of root.activeSessions) {
             const key = root.dateKey(new Date(Number(session.endedAt ?? 0)));
             if (!index[key])
@@ -1463,7 +1470,7 @@ Singleton {
         for (const key of keys)
             index[key] = {
                 date: key,
-                label: root.weekdayName(key, true).slice(0, 2),
+                label: root.shortWeekday(key),
                 total: 0,
                 segments: []
             };

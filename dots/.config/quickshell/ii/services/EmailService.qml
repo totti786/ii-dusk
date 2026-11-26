@@ -163,27 +163,27 @@ Singleton {
             if (date.toDateString() === today.toDateString()) {
                 return date.toLocaleTimeString(Qt.locale(), "HH:mm");
             }
-            return date.toLocaleDateString(Qt.locale(), "MMM d");
+            return Translation.formatDate(date, "MMM d");
         }
 
         let now = Math.floor(Date.now() / 1000);
         let diff = now - timestamp;
 
         if (diff < 0)
-            return "Just now"; // Clock skew
+            return Translation.tr("Just now"); // Clock skew
         if (diff < 60)
-            return "Just now";
+            return Translation.tr("Just now");
         if (diff < 3600)
-            return Math.floor(diff / 60) + "m ago";
+            return Translation.tr("%1m ago").arg(Math.floor(diff / 60));
         if (diff < 86400)
-            return Math.floor(diff / 3600) + "h ago";
+            return Translation.tr("%1h ago").arg(Math.floor(diff / 3600));
         if (diff < 172800)
-            return "Yesterday";
+            return Translation.tr("Yesterday");
 
         if (date.getFullYear() === today.getFullYear()) {
-            return date.toLocaleDateString(Qt.locale(), "MMM d");
+            return Translation.formatDate(date, "MMM d");
         }
-        return date.toLocaleDateString(Qt.locale(), "MMM d, yyyy");
+        return Translation.formatDate(date, "MMM d, yyyy");
     }
     Process {
         id: credentialsChecker

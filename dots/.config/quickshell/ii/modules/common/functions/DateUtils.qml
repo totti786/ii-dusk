@@ -2,6 +2,7 @@ pragma Singleton
 import Quickshell
 import qs.modules.common
 import qs.modules.common.functions
+import qs.services
 
 Singleton {
     id: root

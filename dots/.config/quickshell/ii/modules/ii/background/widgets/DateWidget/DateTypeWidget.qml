@@ -57,8 +57,9 @@ AbstractBackgroundWidget {
         id: cal
     }
 
-    readonly property string word: cal.locale.toString(cal.today, "dddd")
-    readonly property var letters: root.word.split("")
+    readonly property string word: Translation.formatDate(cal.today, "dddd")
+    // Split per letter, Arabic would lose its joins, so it stays one word.
+    readonly property var letters: Translation.isArabic ? [root.word] : root.word.split("")
 
     function axesAt(index) {
         const n = Math.max(1, root.letters.length - 1);
@@ -161,7 +162,7 @@ AbstractBackgroundWidget {
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: root.padding - 4
                 width: parent.width * 0.6
-                text: cal.locale.toString(cal.today, "d MMMM")
+                text: Translation.formatDate(cal.today, "d MMMM")
                 color: root.accentWord ? WidgetColorScheme.textColorOnBg : WidgetColorScheme.accentColor
                 font.family: Appearance.font.family.main
                 font.pixelSize: Appearance.font.pixelSize.huge

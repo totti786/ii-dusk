@@ -34,7 +34,7 @@ AndroidWidgetTileBase {
     readonly property int currentDay: root.today.getDate()
     readonly property int currentMonth: root.today.getMonth()
     readonly property int currentYear: root.today.getFullYear()
-    readonly property string monthLabel: Qt.locale().toString(root.today, "MMMM")
+    readonly property string monthLabel: Translation.formatDate(root.today, "MMMM")
 
     /** Monday is column 0, as the weekday row is drawn. */
     readonly property int firstDayOfWeek: (new Date(root.currentYear, root.currentMonth, 1).getDay() + 6) % 7
@@ -48,8 +48,7 @@ AndroidWidgetTileBase {
         const monday = new Date(root.currentYear, root.currentMonth, root.currentDay - ((root.today.getDay() + 6) % 7));
         for (let index = 0; index < 7; index++) {
             const day = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + index);
-            const name = Qt.locale().toString(day, "ddd").replace(/\./g, "");
-            letters.push(name.substring(0, 1).toLocaleUpperCase());
+            letters.push(Translation.dayName(day.getDay(), Locale.NarrowFormat).toLocaleUpperCase());
         }
         return letters;
     }
@@ -66,12 +65,12 @@ AndroidWidgetTileBase {
             list.push({
                 "date": date,
                 "isToday": offset === 0,
-                "label": Qt.locale().toString(date, "ddd, MMM d"),
+                "label": Translation.formatDate(date, "ddd, MMM d"),
                 "events": events
             });
         }
         if (list.length === 0)
-            list.push({ "date": anchor, "isToday": true, "label": Qt.locale().toString(anchor, "ddd, MMM d"), "events": [] });
+            list.push({ "date": anchor, "isToday": true, "label": Translation.formatDate(anchor, "ddd, MMM d"), "events": [] });
         return list;
     }
 

@@ -502,7 +502,7 @@ Item {
 
                         StyledText {
                             visible: modelData.hasDate && !!modelData.date
-                            text: Qt.formatDateTime(modelData.date, "d MMM")
+                            text: Translation.formatDate(modelData.date, "d MMM")
                             font.pixelSize: Appearance.font.pixelSize.smallest * 0.85
                             color: Appearance.colors.colSubtext
                         }

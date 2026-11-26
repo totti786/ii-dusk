@@ -160,7 +160,7 @@ AndroidWidgetTileBase {
                     visible: miniColDay.day !== null
 
                     StyledText {
-                        text: miniColDay.day?.date ? new Date(miniColDay.day.date).toLocaleDateString(Qt.locale(), "ddd") : ""
+                        text: miniColDay.day?.date ? Translation.formatDate(new Date(miniColDay.day.date), "ddd") : ""
                         color: root.textColor
                         font.pixelSize: Appearance.font.pixelSize.smallest * 0.85
                         font.weight: Font.Medium
@@ -294,7 +294,7 @@ AndroidWidgetTileBase {
 
                 StyledText {
                     Layout.preferredWidth: 40
-                    text: dayRow.day?.date ? new Date(dayRow.day.date).toLocaleDateString(Qt.locale(), "ddd") : ""
+                    text: dayRow.day?.date ? Translation.formatDate(new Date(dayRow.day.date), "ddd") : ""
                     color: root.textColor
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     font.weight: Font.Medium

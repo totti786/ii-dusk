@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// "A file with this name already exists": replace, skip, keep both, or stop.
 FmDialog {
@@ -17,13 +18,13 @@ FmDialog {
 
     signal resolved(string action, bool all)
 
-    title: root.mismatch ? qsTr("“%1” is already taken").arg(root.dst.name ?? "") : qsTr("Replace “%1”?").arg(root.dst.name ?? "")
+    title: root.mismatch ? Translation.tr("“%1” is already taken").arg(root.dst.name ?? "") : Translation.tr("Replace “%1”?").arg(root.dst.name ?? "")
     cardWidth: 560
     dismissOnScrim: false
 
     function sizeText(e: var): string {
         if (e.isDir)
-            return qsTr("Folder");
+            return Translation.tr("Folder");
         const s = e.size ?? 0;
         if (s < 1024)
             return s + " B";
@@ -60,7 +61,7 @@ FmDialog {
                 StyledText { text: side.heading; font.pixelSize: Appearance.font.pixelSize.smaller; color: ClockStyle.colPrimary; font.weight: Font.DemiBold }
                 StyledText { text: root.sizeText(side.entry); font.pixelSize: Appearance.font.pixelSize.smallie; color: ClockStyle.colOnSurface }
                 StyledText {
-                    text: Qt.formatDateTime(new Date((side.entry.mtime ?? 0) * 1000), "d MMM yyyy, HH:mm")
+                    text: Translation.formatDate(new Date((side.entry.mtime ?? 0) * 1000), "d MMM yyyy, HH:mm")
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: ClockStyle.colSubtext
                 }
@@ -71,9 +72,9 @@ FmDialog {
     StyledText {
         Layout.fillWidth: true
         text: root.mismatch
-            ? (root.dst.isDir ? qsTr("A folder with this name is already here, and the incoming item is a file. They cannot replace each other; keep both or skip.")
-                              : qsTr("A file with this name is already here, and the incoming item is a folder. They cannot replace each other; keep both or skip."))
-            : (root.dst.isDir ? qsTr("A folder with the same name is already in this folder.") : qsTr("A file with the same name is already in this folder."))
+            ? (root.dst.isDir ? Translation.tr("A folder with this name is already here, and the incoming item is a file. They cannot replace each other; keep both or skip.")
+                              : Translation.tr("A file with this name is already here, and the incoming item is a folder. They cannot replace each other; keep both or skip."))
+            : (root.dst.isDir ? Translation.tr("A folder with the same name is already in this folder.") : Translation.tr("A file with the same name is already in this folder."))
         font.pixelSize: Appearance.font.pixelSize.small
         color: ClockStyle.colOnSurfaceVariant
         wrapMode: Text.WordWrap
@@ -81,19 +82,19 @@ FmDialog {
     RowLayout {
         Layout.fillWidth: true
         spacing: 12
-        Side { heading: qsTr("Already here"); entry: root.dst }
-        Side { heading: qsTr("Incoming"); entry: root.src }
+        Side { heading: Translation.tr("Already here"); entry: root.dst }
+        Side { heading: Translation.tr("Incoming"); entry: root.src }
     }
     FmChip {
-        text: qsTr("Do this for all conflicts")
+        text: Translation.tr("Do this for all conflicts")
         checked: root.all
         onClicked: root.all = !root.all
     }
 
     actions: [
-        FmButton { text: qsTr("Stop"); onClicked: root.resolved("cancel", false) },
-        FmButton { text: qsTr("Skip"); onClicked: root.resolved("skip", root.all) },
-        FmButton { text: qsTr("Keep both"); kind: root.mismatch ? "filled" : "tonal"; onClicked: root.resolved("rename", root.all) },
-        FmButton { visible: !root.mismatch; text: qsTr("Replace"); kind: "filled"; onClicked: root.resolved("replace", root.all) }
+        FmButton { text: Translation.tr("Stop"); onClicked: root.resolved("cancel", false) },
+        FmButton { text: Translation.tr("Skip"); onClicked: root.resolved("skip", root.all) },
+        FmButton { text: Translation.tr("Keep both"); kind: root.mismatch ? "filled" : "tonal"; onClicked: root.resolved("rename", root.all) },
+        FmButton { visible: !root.mismatch; text: Translation.tr("Replace"); kind: "filled"; onClicked: root.resolved("replace", root.all) }
     ]
 }

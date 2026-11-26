@@ -102,9 +102,9 @@ AbstractBackgroundWidget {
 
                 Repeater {
                     model: [
-                        Qt.locale().toString(root.now, "ddd").replace(".", "").toUpperCase(),
+                        Translation.formatDate(root.now, "ddd").replace(".", "").toUpperCase(),
                         Qt.locale().toString(root.now, "dd"),
-                        Qt.locale().toString(root.now, "MMM").replace(".", "").toUpperCase()
+                        Translation.formatDate(root.now, "MMM").replace(".", "").toUpperCase()
                     ]
 
                     delegate: StyledText {

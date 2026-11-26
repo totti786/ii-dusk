@@ -50,7 +50,7 @@ Singleton {
             return Translation.tr("Today");
         if (days === 1)
             return Translation.tr("Yesterday");
-        return Qt.locale().dayName(d.getDay(), Locale.ShortFormat);
+        return Translation.dayName(d.getDay(), Locale.ShortFormat);
     }
 
     /// Binary sizes, the way a disk tool shows them: 477 GiB, 96 MiB.

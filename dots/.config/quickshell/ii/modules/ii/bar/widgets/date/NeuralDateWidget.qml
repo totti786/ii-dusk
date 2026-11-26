@@ -49,7 +49,9 @@ Item {
     // the punctuation first and fall back to whatever letters are left rather
     // than assuming three of them.
     readonly property string weekdayLetters: root.weekdayText.replace(/[^A-Za-zÀ-ÿ]/g, "")
-    readonly property string glyphHead: root.weekdayLetters.length > 0 ? root.weekdayLetters.charAt(0) : ""
+    // Arabic letters join, so there the head is the day's one-letter form alone.
+    readonly property string glyphHead: Translation.isArabic ? Translation.dayName(DateTime.clock.date.getDay(), Locale.NarrowFormat)
+        : root.weekdayLetters.length > 0 ? root.weekdayLetters.charAt(0) : ""
     readonly property string glyphTail: root.weekdayLetters.length > 1
         ? root.weekdayLetters.charAt(root.weekdayLetters.length - 1)
         : ""

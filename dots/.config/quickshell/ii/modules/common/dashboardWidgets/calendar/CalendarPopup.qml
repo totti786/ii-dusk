@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import qs
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.services
 
 
 Rectangle {
@@ -72,7 +73,7 @@ Rectangle {
                             Layout.leftMargin: 10
                             Layout.rightMargin: 10
                                         
-                            text: Qt.formatDateTime(modelData.startDate,  Config.options.time.format) + " - " + Qt.formatDateTime(modelData.endDate,  Config.options.time.format)
+                            text: Translation.formatDate(modelData.startDate,  Config.options.time.format) + " - " + Translation.formatDate(modelData.endDate,  Config.options.time.format)
                             color: Appearance.m3colors.m3outline
                             wrapMode: Text.Wrap
                         }

@@ -16,13 +16,17 @@ function kickoffTime(isoDate) {
     return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function westernDigits(text) {
+    return text.replace(/[\u0660-\u0669\u06f0-\u06f9]/g, c => String(c.charCodeAt(0) & 0xf));
+}
+
 function shortDate(isoDate, locale) {
     if (!isoDate)
         return "";
     const date = new Date(isoDate);
     if (isNaN(date.getTime()))
         return "";
-    return date.toLocaleDateString(locale, "d MMM");
+    return westernDigits(date.toLocaleDateString(locale, "d MMM"));
 }
 
 function longDate(isoDate, locale) {
@@ -31,7 +35,7 @@ function longDate(isoDate, locale) {
     const date = new Date(isoDate);
     if (isNaN(date.getTime()))
         return "";
-    return date.toLocaleDateString(locale, "dddd, d MMMM yyyy");
+    return westernDigits(date.toLocaleDateString(locale, "dddd, d MMMM yyyy"));
 }
 
 function startOfDay(date) {

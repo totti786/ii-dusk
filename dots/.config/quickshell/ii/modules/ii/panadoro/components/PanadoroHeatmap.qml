@@ -69,7 +69,7 @@ Item {
 
                         StyledText {
                             anchors.centerIn: parent
-                            text: Qt.locale().dayName((root.startDay + index) % 7, Locale.ShortFormat).slice(0, 1)
+                            text: Translation.dayName((root.startDay + index) % 7, Locale.NarrowFormat)
                             font.pixelSize: Math.max(9, root.cellSize * 0.5)
                             font.weight: Font.DemiBold
                             color: PanadoroStyle.colOnSurfaceVariant

@@ -338,7 +338,7 @@ Item {
                                 StyledText {
                                     id: dateText
                                     Layout.fillWidth: true
-                                    text: dateChip.visible ? Qt.formatDateTime(todoItem.modelData.date, "dd MMM") : ""
+                                    text: dateChip.visible ? Translation.formatDate(todoItem.modelData.date, "dd MMM") : ""
                                     elide: Text.ElideRight
                                     font.pixelSize: Appearance.font.pixelSize.smaller
                                     font.weight: Font.Medium
@@ -350,7 +350,7 @@ Item {
                             StyledToolTip {
                                 extraVisibleCondition: dateHover.hovered
                                 text: (dateChip.overdue ? Translation.tr("Overdue") + " · " : "")
-                                    + (dateChip.visible ? Qt.formatDateTime(todoItem.modelData.date, "dddd, dd MMMM yyyy") : "")
+                                    + (dateChip.visible ? Translation.formatDate(todoItem.modelData.date, "dddd, dd MMMM yyyy") : "")
                             }
                         }
 

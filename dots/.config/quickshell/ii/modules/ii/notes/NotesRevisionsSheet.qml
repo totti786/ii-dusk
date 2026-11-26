@@ -211,7 +211,7 @@ Item {
                                         StyledText {
                                             Layout.fillWidth: true
                                             text: revBtn.modelData.date
-                                                ? new Date(revBtn.modelData.date).toLocaleString()
+                                                ? Translation.westernDigits(new Date(revBtn.modelData.date).toLocaleString(Translation.locale))
                                                 : Translation.tr("Snapshot")
                                             font.pixelSize: Appearance.font.pixelSize.small
                                             font.weight: revBtn.toggled ? Font.DemiBold : Font.Normal
@@ -276,7 +276,7 @@ Item {
                             StyledText {
                                 Layout.fillWidth: true
                                 text: root.activeRevisionMeta
-                                    ? Translation.tr("Comparing with %1").arg(new Date(root.activeRevisionMeta.date).toLocaleString())
+                                    ? Translation.tr("Comparing with %1").arg(Translation.westernDigits(new Date(root.activeRevisionMeta.date).toLocaleString(Translation.locale)))
                                     : Translation.tr("Select a version to compare")
                                 font.pixelSize: Appearance.font.pixelSize.normal
                                 font.weight: Font.DemiBold

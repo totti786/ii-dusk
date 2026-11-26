@@ -63,7 +63,7 @@ QtObject {
     readonly property var currentMonthCells: root.monthCells(root.today)
 
     // Narrow weekday names (M T W …) in the user's week order.
-    readonly property var narrowDayNames: root.currentWeek.map(d => root.locale.dayName(d.getDay(), Locale.NarrowFormat))
+    readonly property var narrowDayNames: root.currentWeek.map(d => Translation.dayName(d.getDay(), Locale.NarrowFormat))
 
     // ISO-8601 week number.
     function weekNumber(date) {
@@ -93,7 +93,7 @@ QtObject {
     function eventTime(event) {
         if (CalendarService.isAllDayEvent(event))
             return Translation.tr("All day");
-        return Qt.locale().toString(event.startDate, Config.options?.time?.format ?? "hh:mm");
+        return Translation.formatDate(event.startDate, Config.options?.time?.format ?? "hh:mm");
     }
 
     // The next event from now on, today or later this week; null when none.

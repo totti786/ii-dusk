@@ -27,24 +27,24 @@ UtilityTile {
     readonly property string timeFormat: Config.options?.time?.format ?? "hh:mm"
     readonly property bool soon: tile.nextItem !== null
         && (CalendarAgenda.isHappening(tile.nextItem, tile.now) || tile.nextItem.start - tile.now < 15 * 60000)
-    readonly property string weekday: Qt.formatDate(tile.now, "ddd").replace(".", "")
+    readonly property string weekday: Translation.formatDate(tile.now, "ddd").replace(".", "")
 
     surfaceColor: tile.soon ? ClockStyle.colPrimaryContainer : ClockStyle.colSurfaceHigh
     contentColor: tile.soon ? ClockStyle.colOnPrimaryContainer : ClockStyle.colOnSurface
 
     function whenText(item) {
         const relative = CalendarAgenda.relative(item, tile.now, s => Translation.tr(s));
-        const clock = Qt.formatDateTime(item.start, tile.timeFormat);
+        const clock = Translation.formatDate(item.start, tile.timeFormat);
         if (relative === Translation.tr("Now"))
-            return relative + " · " + Translation.tr("until %1").arg(Qt.formatDateTime(item.end, tile.timeFormat));
-        return relative.length > 0 ? relative + " · " + clock : Qt.formatDateTime(item.start, "ddd ") + clock;
+            return relative + " · " + Translation.tr("until %1").arg(Translation.formatDate(item.end, tile.timeFormat));
+        return relative.length > 0 ? relative + " · " + clock : Translation.formatDate(item.start, "ddd ") + clock;
     }
 
     tooltipText: tile.nextItem
         ? tile.nextItem.event.content + " · " + tile.whenText(tile.nextItem)
-        : Qt.formatDate(tile.now, "dddd, d MMMM")
+        : Translation.formatDate(tile.now, "dddd, d MMMM")
     panelWidth: 360
-    panelSubtitle: Qt.formatDate(tile.now, "dddd, d MMMM")
+    panelSubtitle: Translation.formatDate(tile.now, "dddd, d MMMM")
 
     // ── The date block, shared ──────────────────────────────────────────
     Item {

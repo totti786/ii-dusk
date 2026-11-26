@@ -85,7 +85,7 @@ ExpressiveCardWidget {
         x: root.padding - 2
         anchors.top: moon.bottom
         anchors.topMargin: 2
-        text: root.enabled ? Qt.locale().toString(root.target, Config.options?.time?.format ?? "hh:mm") : "--:--"
+        text: root.enabled ? Translation.formatDate(root.target, Config.options?.time?.format ?? "hh:mm") : "--:--"
         color: root.cardScheme.textColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: 54
@@ -172,7 +172,7 @@ ExpressiveCardWidget {
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: 6
                         // The evening the night belongs to, not the morning a late target falls on.
-                        text: Qt.locale().toString(new Date(night.modelData.night + "T12:00:00"), "ddd").charAt(0).toUpperCase()
+                        text: Translation.dayName(new Date(night.modelData.night + "T12:00:00").getDay(), Locale.NarrowFormat).toUpperCase()
                         color: root.cardScheme.subtextColorOnBg
                         font.family: Appearance.font.family.main
                         font.pixelSize: 11

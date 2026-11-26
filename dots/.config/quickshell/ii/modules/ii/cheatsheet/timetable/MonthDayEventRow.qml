@@ -66,7 +66,7 @@ RippleButton {
 
             StyledText {
                 Layout.fillWidth: true
-                text: root.rowAllDay ? Translation.tr("All day") : H.eventRangeText(root.eventData, Config.options?.time.format)
+                text: root.rowAllDay ? Translation.tr("All day") : Translation.dayMarks(H.eventRangeText(root.eventData, Config.options?.time.format))
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.weight: Font.Medium
                 color: root.sports ? Appearance.colors.colOnTertiaryContainer : Appearance.colors.colOnSurfaceVariant

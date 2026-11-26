@@ -151,7 +151,7 @@ ClockSheet {
         if (early.kind === "week")
             return Translation.tr("1 week before");
         const date = new Date(early.at);
-        return Qt.locale().toString(date, "ddd, d MMM") + " " + ClockFormat.dateTime(date);
+        return Translation.formatDate(date, "ddd, d MMM") + " " + ClockFormat.dateTime(date);
     }
 
     function pickEarly(): void {
@@ -347,7 +347,7 @@ ClockSheet {
         shapeKind: MaterialShape.Shape.Cookie12Sided
         label: Translation.tr("Date and time")
         description: root.hasSchedule
-            ? (Qt.locale().toString(root.draftDay, "dddd, d MMMM") + (root.allDay ? " · " + Translation.tr("All day") : " · " + ClockFormat.alarmTime(root.draftTime)))
+            ? (Translation.formatDate(root.draftDay, "dddd, d MMMM") + (root.allDay ? " · " + Translation.tr("All day") : " · " + ClockFormat.alarmTime(root.draftTime)))
             : Translation.tr("No alert: it waits in No alert until you're ready")
         checked: root.hasSchedule
         onToggled: checked => root.setSchedule(checked)
@@ -405,8 +405,8 @@ ClockSheet {
                     const today = new Date(new Date().setHours(0, 0, 0, 0));
                     const days = Math.round((root.draftDay.getTime() - today.getTime()) / 86400000);
                     const name = days === 0 || days === 1 ? ClockFormat.relativeDay(root.draftDay, new Date())
-                        : Qt.locale().toString(root.draftDay, "ddd");
-                    const month = Qt.locale().toString(root.draftDay,
+                        : Translation.formatDate(root.draftDay, "ddd");
+                    const month = Translation.formatDate(root.draftDay,
                         root.draftDay.getFullYear() === today.getFullYear() ? "MMMM" : "MMM yyyy");
                     return name + " · " + month;
                 }
@@ -1015,10 +1015,10 @@ ClockSheet {
         signal triggered()
 
         Layout.fillHeight: true
-        topLeftRadius: tile.leading ? ClockStyle.radiusLarge : tile.seam
-        bottomLeftRadius: tile.leading ? ClockStyle.radiusLarge : tile.seam
-        topRightRadius: tile.leading ? tile.seam : ClockStyle.radiusLarge
-        bottomRightRadius: tile.leading ? tile.seam : ClockStyle.radiusLarge
+        topLeftRadius: LayoutMirroring.enabled ? (tile.leading ? tile.seam : ClockStyle.radiusLarge) : (tile.leading ? ClockStyle.radiusLarge : tile.seam)
+        bottomLeftRadius: LayoutMirroring.enabled ? (tile.leading ? tile.seam : ClockStyle.radiusLarge) : (tile.leading ? ClockStyle.radiusLarge : tile.seam)
+        topRightRadius: LayoutMirroring.enabled ? (tile.leading ? ClockStyle.radiusLarge : tile.seam) : (tile.leading ? tile.seam : ClockStyle.radiusLarge)
+        bottomRightRadius: LayoutMirroring.enabled ? (tile.leading ? ClockStyle.radiusLarge : tile.seam) : (tile.leading ? tile.seam : ClockStyle.radiusLarge)
         color: tile.hovered ? ClockStyle.colPrimaryContainer : ClockStyle.colField
 
         Behavior on color {

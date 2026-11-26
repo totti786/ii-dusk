@@ -92,8 +92,8 @@ RippleButton {
         if (when.toDateString() === now.toDateString())
             return Qt.formatDateTime(when, "HH:mm");
         if (when.getFullYear() === now.getFullYear())
-            return Qt.formatDateTime(when, "d MMM");
-        return Qt.formatDateTime(when, "MMM yyyy");
+            return Translation.formatDate(when, "d MMM");
+        return Translation.formatDate(when, "MMM yyyy");
     }
 
     contentItem: ColumnLayout {

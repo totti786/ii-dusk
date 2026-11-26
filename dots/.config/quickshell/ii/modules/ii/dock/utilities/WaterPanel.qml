@@ -167,7 +167,7 @@ ColumnLayout {
                     }
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
-                        text: Qt.formatDate(day.modelData.date, "ddd").charAt(0).toUpperCase()
+                        text: Translation.dayName(day.modelData.date.getDay(), Locale.NarrowFormat).toUpperCase()
                         color: day.today ? ClockStyle.colPrimary : ClockStyle.colOnSurfaceVariant
                         font.pixelSize: ClockStyle.textSmall
                         font.weight: day.today ? Font.Black : Font.DemiBold

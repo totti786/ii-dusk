@@ -97,7 +97,7 @@ Item {
             if (root.hoverIndex < 0 || root.hoverIndex >= root.values.length)
                 return Translation.tr("Contributions per week");
             const d = root.dates[root.hoverIndex]?.[0] ?? "";
-            const when = d ? new Date(d + "T00:00:00").toLocaleDateString(Qt.locale(), "d MMM yyyy") : "";
+            const when = d ? Translation.formatDate(new Date(d + "T00:00:00"), "d MMM yyyy") : "";
             return Translation.tr("Week of %1 · %2 contributions").arg(when).arg(root.values[root.hoverIndex]);
         }
     }
@@ -128,7 +128,7 @@ Item {
             visible: dt !== null && (index === 0 || (prev && prev.getMonth() !== dt.getMonth())) && x + width <= root.width
             x: canvas.x + (root.values.length > 1 ? index / (root.values.length - 1) : 0) * canvas.width
             anchors.bottom: parent.bottom
-            text: dt ? dt.toLocaleDateString(Qt.locale(), "MMM") : ""
+            text: dt ? Translation.formatDate(dt, "MMM") : ""
             font.pixelSize: Appearance.font.pixelSize.smallest
             color: Appearance.colors.colOnSurfaceVariant
         }

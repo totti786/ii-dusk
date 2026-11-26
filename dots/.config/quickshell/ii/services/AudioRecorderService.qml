@@ -118,7 +118,7 @@ Singleton {
         const yesterday = new Date(now.getTime() - 86400000);
         if (date.toDateString() === yesterday.toDateString())
             return Translation.tr("Yesterday, %1").arg(time);
-        return Qt.formatDate(date, "d MMM") + ", " + time;
+        return Translation.formatDate(date, "d MMM") + ", " + time;
     }
 
     function startRecording(): void {

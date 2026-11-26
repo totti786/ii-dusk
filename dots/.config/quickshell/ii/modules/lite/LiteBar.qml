@@ -113,8 +113,8 @@ Scope {
                 const day = (now.getDay() + 6) % 7;
                 const thursday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day + 3);
                 const week = 1 + Math.round(((thursday - new Date(thursday.getFullYear(), 0, 4)) / 86400000 - 3 + (new Date(thursday.getFullYear(), 0, 4).getDay() + 6) % 7) / 7);
-                const zone = Qt.formatDateTime(now, "t");
-                return Qt.locale().toString(now, "dddd, d MMMM yyyy") + "\n" + Translation.tr("Week %1").arg(week) + (zone ? " · " + zone : "");
+                const zone = Translation.formatDate(now, "t");
+                return Translation.formatDate(now, "dddd, d MMMM yyyy") + "\n" + Translation.tr("Week %1").arg(week) + (zone ? " · " + zone : "");
             }
 
             function occupied(id: int): bool {

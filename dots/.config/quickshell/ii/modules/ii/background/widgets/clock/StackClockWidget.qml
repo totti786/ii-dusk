@@ -95,7 +95,7 @@ AbstractBackgroundWidget {
                 }
                 StyledText {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Qt.locale().toString(root.now, "ddd dd").replace(".", "").toUpperCase()
+                    text: Translation.formatDate(root.now, "ddd dd").replace(".", "").toUpperCase()
                     color: WidgetColorScheme.subtextColorOnBg
                     font.family: Appearance.font.family.monospace
                     font.pixelSize: Appearance.font.pixelSize.smaller

@@ -243,7 +243,7 @@ Item {
                         StyledText {
                             id: dateLabel
                             anchors.centerIn: parent
-                            text: root.upcomingMode ? Translation.tr("Upcoming") : Qt.formatDate(root.selectedDate, "ddd dd MMM")
+                            text: root.upcomingMode ? Translation.tr("Upcoming") : Translation.formatDate(root.selectedDate, "ddd dd MMM")
                             font.pixelSize: Appearance.font.pixelSize.small
                             color: Appearance.colors.colOnSurface
                         }

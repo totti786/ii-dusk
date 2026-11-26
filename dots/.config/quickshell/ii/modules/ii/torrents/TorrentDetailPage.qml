@@ -630,9 +630,9 @@ Item {
                     Layout.fillWidth: true
                     spacing: ClockStyle.gapSmall
                     Stat { implicitWidth: 260; label: Translation.tr("Hash"); value: root.hash }
-                    Stat { label: Translation.tr("Added"); value: Fmt.date(root.props.addition_date) }
-                    Stat { label: Translation.tr("Finished"); value: Fmt.date(root.props.completion_date) || "—" }
-                    Stat { label: Translation.tr("Created"); value: Fmt.date(root.props.creation_date) || "—" }
+                    Stat { label: Translation.tr("Added"); value: Fmt.date(root.props.addition_date, (d, f) => Translation.formatDate(d, f)) }
+                    Stat { label: Translation.tr("Finished"); value: Fmt.date(root.props.completion_date, (d, f) => Translation.formatDate(d, f)) || "—" }
+                    Stat { label: Translation.tr("Created"); value: Fmt.date(root.props.creation_date, (d, f) => Translation.formatDate(d, f)) || "—" }
                     Stat { label: Translation.tr("Created by"); value: root.props.created_by || "—" }
                     Stat { label: Translation.tr("Piece size"); value: Fmt.bytes(root.props.piece_size) }
                     Stat { label: Translation.tr("Pieces"); value: `${root.props.pieces_have ?? 0} of ${root.props.pieces_num ?? 0}` }

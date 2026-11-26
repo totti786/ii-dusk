@@ -311,7 +311,7 @@ ClockSheet {
         shapeKind: MaterialShape.Shape.Cookie12Sided
         caption: Translation.tr("Rings on")
         value: root.draftDay
-            ? ClockFormat.relativeDay(root.draftDay, new Date()) + " · " + Qt.locale().toString(root.draftDay, "dddd, d MMMM")
+            ? ClockFormat.relativeDay(root.draftDay, new Date()) + " · " + Translation.formatDate(root.draftDay, "dddd, d MMMM")
             : Translation.tr("Next time it comes round")
         onTriggered: root.pickDate()
 

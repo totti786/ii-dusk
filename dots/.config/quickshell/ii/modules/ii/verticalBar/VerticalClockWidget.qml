@@ -33,11 +33,11 @@ Item {
                     delegate: StyledText {
                         required property string modelData
                         Layout.alignment: Qt.AlignHCenter
-                        font.pixelSize: modelData.match(/am|pm/i) ? 
+                        font.pixelSize: !/\d/.test(modelData) ?
                             Appearance.font.pixelSize.smaller // Smaller "am"/"pm" text
                             : Appearance.font.pixelSize.large
                         color: dropArea.containsDrag ? Appearance.colors.colPrimary : rootItem.highlighted ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSurface
-                        text: modelData.padStart(2, "0")
+                        text: /\d/.test(modelData) ? modelData.padStart(2, "0") : modelData
                     }
                 }
 
@@ -115,11 +115,11 @@ Item {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 font.family: Appearance.font.family.main
                                 font.features: { "tnum": 1 }
-                                font.pixelSize: modelData.match(/am|pm/i)
+                                font.pixelSize: !/\d/.test(modelData)
                                     ? Appearance.font.pixelSize.smallest
                                     : Appearance.font.pixelSize.small
                                 color: Config.options.bar.clock.swapPrimaryWithSecondary ? Appearance.colors.colPrimary : Appearance.colors.colOnPrimary
-                                text: modelData.padStart(2, "0")
+                                text: /\d/.test(modelData) ? modelData.padStart(2, "0") : modelData
                             }
                         }
                     }

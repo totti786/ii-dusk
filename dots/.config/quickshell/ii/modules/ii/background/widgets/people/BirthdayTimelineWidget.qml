@@ -124,7 +124,7 @@ ExpressiveCardWidget {
                     }
                     StyledText {
                         text: person.modelData.days === 0 ? Translation.tr("Today")
-                            : Qt.locale().toString(person.modelData.date, "d MMM")
+                            : Translation.formatDate(person.modelData.date, "d MMM")
                         color: person.modelData.days === 0 ? root.cardScheme.accentColor : root.cardScheme.subtextColorOnBg
                         font.family: Appearance.font.family.main
                         font.pixelSize: 11

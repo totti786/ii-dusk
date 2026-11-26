@@ -58,8 +58,8 @@ Item {
         if (date.toDateString() === yesterday.toDateString())
             return Translation.tr("Yesterday");
         if (date.getFullYear() === now.getFullYear())
-            return Qt.formatDateTime(date, "d MMM");
-        return Qt.formatDateTime(date, "MMM yyyy");
+            return Translation.formatDate(date, "d MMM");
+        return Translation.formatDate(date, "MMM yyyy");
     }
 
     Component.onCompleted: root.sessions.ensureLoaded()
@@ -319,6 +319,7 @@ Item {
                     }
 
                     StyledText {
+                        width: parent.width
                         anchors.verticalCenter: parent.verticalCenter
                         visible: searchField.text.length === 0
                         text: Translation.tr("Search chats")
@@ -482,6 +483,7 @@ Item {
                                     }
 
                                     StyledText {
+                                        width: parent.width
                                         anchors.verticalCenter: parent.verticalCenter
                                         visible: tagField.text.length === 0
                                         text: Translation.tr("Labels, separated by commas")
@@ -539,6 +541,7 @@ Item {
                         Row {
                             height: rowFlick.height
                             spacing: root.rowSpacing
+                            LayoutMirroring.enabled: false // pages are scrolled to by contentX
 
                             // PAGE 1 — the chat itself
                             RowLayout {

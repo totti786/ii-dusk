@@ -111,7 +111,7 @@ AndroidWidgetTileBase {
                     visible: miniColDay.day !== null
 
                     StyledText {
-                        text: miniColDay.day?.date ? new Date(miniColDay.day.date).toLocaleDateString(Qt.locale(), "ddd") : ""
+                        text: miniColDay.day?.date ? Translation.formatDate(new Date(miniColDay.day.date), "ddd") : ""
                         color: root.textColor
                         font.pixelSize: Appearance.font.pixelSize.smallest * 0.85
                         font.weight: Font.Medium
@@ -222,7 +222,7 @@ AndroidWidgetTileBase {
                     spacing: 10
 
                     StyledText {
-                        text: forecastRow.day?.date ? new Date(forecastRow.day.date).toLocaleDateString(Qt.locale(), "ddd") : ""
+                        text: forecastRow.day?.date ? Translation.formatDate(new Date(forecastRow.day.date), "ddd") : ""
                         color: root.textColor
                         font.pixelSize: Appearance.font.pixelSize.normal
                         font.weight: Font.DemiBold
@@ -344,7 +344,7 @@ AndroidWidgetTileBase {
 
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
-                        text: dayPill.day?.date ? new Date(dayPill.day.date).toLocaleDateString(Qt.locale(), "ddd") : ""
+                        text: dayPill.day?.date ? Translation.formatDate(new Date(dayPill.day.date), "ddd") : ""
                         color: root.textColor
                         font.pixelSize: Appearance.font.pixelSize.smallest
                         font.weight: Font.Bold

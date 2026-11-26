@@ -46,7 +46,7 @@ Scope {
     readonly property var due: root.reminder ? RemindersService.dueAt(root.reminder) : null
     readonly property bool hasTime: root.due !== null && (root.reminder?.schedule?.time ?? "").length > 0
     readonly property string timeText: root.hasTime
-        ? Qt.locale().toString(root.due, Config.options?.time?.format ?? "hh:mm") : ""
+        ? Translation.formatDate(root.due, Config.options?.time?.format ?? "hh:mm") : ""
     readonly property string dayText: {
         if (!root.reminder)
             return "";

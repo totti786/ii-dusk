@@ -769,7 +769,7 @@ Item {
 
     function _dateString(epoch) {
         const d = new Date(epoch * 1000);
-        return d.toLocaleDateString(Qt.locale(), "dd MMM yyyy");
+        return Translation.formatDate(d, "dd MMM yyyy");
     }
 
     function _ageString(epoch) {

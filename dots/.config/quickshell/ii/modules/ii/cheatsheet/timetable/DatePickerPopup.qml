@@ -32,7 +32,7 @@ Item {
 
     readonly property int firstDayOfWeek: Config.options.time.firstDayOfWeek
     readonly property var cells: H.buildMonthCells(root.viewYear, root.viewMonth, root.firstDayOfWeek, DateTime.clock.date)
-    readonly property var weekdays: H.weekdayLabels(root.firstDayOfWeek, Config.options.calendar.locale, Locale.NarrowFormat)
+    readonly property var weekdays: H.weekdayLabels(root.firstDayOfWeek, Translation.calendarLocale(Config.options.calendar.locale), Locale.NarrowFormat)
     readonly property real cellSize: 38
 
     function open(date, titleText) {
@@ -179,7 +179,7 @@ Item {
 
                 AnimatedStyledText {
                     anchors.centerIn: parent
-                    text: Qt.formatDate(new Date(root.viewYear, root.viewMonth, 1), "MMMM yyyy")
+                    text: Translation.formatDate(new Date(root.viewYear, root.viewMonth, 1), "MMMM yyyy")
                     font.pixelSize: Appearance.font.pixelSize.large
                     font.weight: Font.Bold
                     color: Appearance.colors.colOnSurface

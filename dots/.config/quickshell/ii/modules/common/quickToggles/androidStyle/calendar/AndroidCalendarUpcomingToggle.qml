@@ -40,7 +40,7 @@ AndroidWidgetTileBase {
             list.push({
                 "date": date,
                 "isToday": offset === 0,
-                "label": Qt.locale().toString(date, "ddd, MMM d"),
+                "label": Translation.formatDate(date, "ddd, MMM d"),
                 // The service's index is already a day's events in its own order:
                 // all-day first, then by start time.
                 "events": CalendarService.eventsForDay(date) ?? []

@@ -709,7 +709,7 @@ Item {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: reminderGlance.upcoming
-                    ? Qt.locale().toString(new Date(reminderGlance.upcoming.at), Config.options?.time?.format ?? "hh:mm")
+                    ? Translation.formatDate(new Date(reminderGlance.upcoming.at), Config.options?.time?.format ?? "hh:mm")
                     : ""
                 color: Appearance.colors.colOnLayer0
                 font.family: face.clockFamily

@@ -40,7 +40,7 @@ Item {
     readonly property bool sportEvent: root.eventData?.sportEvent === true
     readonly property bool hasExceptions: (root.eventData?.exdates?.length ?? CalendarService.eventDetailsForUid(root.eventData?.uid)?.exdates?.length ?? 0) > 0
     readonly property string titleText: root.eventData?.content ?? Translation.tr("Event")
-    readonly property string timeText: H.eventStartText(root.eventData, Config.options?.time.format)
+    readonly property string timeText: Translation.dayMarks(H.eventStartText(root.eventData, Config.options?.time.format))
 
     opacity: root.dragging ? 0.3 : 1.0
     Behavior on opacity {
@@ -172,7 +172,7 @@ Item {
             if (root.allDay)
                 parts.push(Translation.tr("All day"));
             else
-                parts.push(H.eventRangeText(root.eventData, Config.options?.time.format));
+                parts.push(Translation.dayMarks(H.eventRangeText(root.eventData, Config.options?.time.format)));
             if (root.eventData?.description)
                 parts.push(root.eventData.description);
             if (root.eventData?.calendar)

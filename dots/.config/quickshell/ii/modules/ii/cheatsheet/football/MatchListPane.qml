@@ -193,7 +193,7 @@ Rectangle {
                             text: dayButton.offset === 0 ? Translation.tr("Today")
                                 : dayButton.offset === -1 ? Translation.tr("Yest.")
                                 : dayButton.offset === 1 ? Translation.tr("Tom.")
-                                : dayButton.day.toLocaleDateString(root.locale, "ddd")
+                                : Translation.formatDate(dayButton.day, "ddd")
                             font.pixelSize: FootballStyle.textSmallest
                             font.weight: Font.Bold
                             color: dayButton.colContent

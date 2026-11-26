@@ -6,6 +6,7 @@ import QtQuick.Controls
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// Details view: a sortable table of the folder, one row per file. Input works as in FileGridView.
 Item {
@@ -75,7 +76,7 @@ Item {
         if (e.isDir) {
             const known = root.folderSizes[e.path];
             if (known === undefined)
-                return e.itemCount !== undefined ? qsTr("%1 items").arg(e.itemCount) : "—";
+                return e.itemCount !== undefined ? Translation.tr("%1 items").arg(e.itemCount) : "—";
             s = known;
         }
         if (s < 1024)
@@ -95,17 +96,17 @@ Item {
         if (d.toDateString() === now.toDateString())
             return Qt.formatTime(d, "HH:mm");
         if (d.getFullYear() === now.getFullYear())
-            return Qt.formatDate(d, "d MMM") + ", " + Qt.formatTime(d, "HH:mm");
-        return Qt.formatDate(d, "d MMM yyyy");
+            return Translation.formatDate(d, "d MMM") + ", " + Qt.formatTime(d, "HH:mm");
+        return Translation.formatDate(d, "d MMM yyyy");
     }
 
     function typeText(e: var): string {
         if (e.isDir)
-            return qsTr("Folder");
+            return Translation.tr("Folder");
         const kinds = { image: "Image", video: "Video", audio: "Audio", pdf: "PDF", archive: "Archive", code: "Source code",
             text: "Text", sheet: "Spreadsheet", slides: "Presentation", doc: "Document", book: "E-book", font: "Font", exec: "Program", file: "File" };
         const ext = e.name.includes(".") ? e.name.split(".").pop().toUpperCase() : "";
-        return (kinds[e.kind] ?? "File") + (ext && ext.length < 6 ? " · " + ext : "");
+        return Translation.tr(kinds[e.kind] ?? "File") + (ext && ext.length < 6 ? " · " + ext : "");
     }
 
     // Header
@@ -154,20 +155,20 @@ Item {
         HeadCell {
             x: root.nameX - 8
             width: root.nameW
-            label: qsTr("Name")
+            label: Translation.tr("Name")
             key: "name"
         }
         HeadCell {
             visible: root.wide
             x: root.xDate
             width: root.dateW
-            label: root.trashMode ? qsTr("Deleted") : qsTr("Modified")
+            label: root.trashMode ? Translation.tr("Deleted") : Translation.tr("Modified")
             key: "mtime"
         }
         HeadCell {
             x: root.xSize
             width: root.sizeW
-            label: qsTr("Size")
+            label: Translation.tr("Size")
             key: "size"
             align: Text.AlignRight
         }
@@ -175,7 +176,7 @@ Item {
             visible: root.showType
             x: root.xType
             width: root.typeW
-            label: root.trashMode ? qsTr("Original location") : (root.searchMode ? qsTr("Folder") : qsTr("Type"))
+            label: root.trashMode ? Translation.tr("Original location") : (root.searchMode ? Translation.tr("Folder") : Translation.tr("Type"))
             key: "type"
         }
     }

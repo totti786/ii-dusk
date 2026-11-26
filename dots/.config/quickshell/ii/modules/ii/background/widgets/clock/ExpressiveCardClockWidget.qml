@@ -23,9 +23,9 @@ AbstractBackgroundWidget {
     readonly property string minute: timeStr.split(":")[1] ? timeStr.split(":")[1].split(" ")[0].padStart(2, "0") : "00"
     readonly property string formattedTime: hour + ":" + minute
 
-    readonly property string monthName: Qt.locale().toString(DateTime.clock.date, "MMM").toUpperCase()
+    readonly property string monthName: Translation.formatDate(DateTime.clock.date, "MMM").toUpperCase()
     readonly property string dayNum: Qt.locale().toString(DateTime.clock.date, "dd")
-    readonly property string weekDayShort: Qt.locale().toString(DateTime.clock.date, "ddd").toUpperCase()
+    readonly property string weekDayShort: Translation.formatDate(DateTime.clock.date, "ddd").toUpperCase()
     
     // Weather bindings from Weather service
     readonly property string locationName: (Weather.data?.city && Weather.data.city !== "" && Weather.data.city !== "City") ? Weather.data.city : (Config.options.bar.weather.city !== "" ? Config.options.bar.weather.city : "")

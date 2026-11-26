@@ -3,6 +3,7 @@ import qs.modules.common.widgets
 import QtQuick
 import "."
 import "TimetableHelpers.js" as H
+import qs.services
 
 Column {
     id: timeColumn
@@ -24,7 +25,7 @@ Column {
             StyledText {
                 text: {
                     let totalMinutes = startMinute + (index * slotDuration);
-                    return H.minutesToTimeStr(totalMinutes, Config.options?.time.format);
+                    return Translation.dayMarks(H.minutesToTimeStr(totalMinutes, Config.options?.time.format));
                 }
                 anchors.top: parent.top
                 anchors.topMargin: -font.pixelSize / 2
@@ -34,6 +35,9 @@ Column {
                 horizontalAlignment: Text.AlignRight
                 font.weight: Font.Medium
                 color: Appearance.colors.colOnSurfaceVariant
+                // A 12-hour label is wider than the column at full size.
+                fontSizeMode: Text.HorizontalFit
+                minimumPixelSize: 8
                 elide: Text.ElideRight
             }
         }

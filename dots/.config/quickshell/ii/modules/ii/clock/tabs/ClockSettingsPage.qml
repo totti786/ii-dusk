@@ -221,7 +221,7 @@ Rectangle {
                     symbol: "power_settings_new"
                     title: Translation.tr("Wake from suspend")
                     description: AlarmService.wakeScheduledFor
-                        ? Translation.tr("Next wake-up %1").arg(Qt.formatDateTime(AlarmService.wakeScheduledFor, "ddd HH:mm"))
+                        ? Translation.tr("Next wake-up %1").arg(Translation.formatDate(AlarmService.wakeScheduledFor, "ddd HH:mm"))
                         : Translation.tr("Wakes a sleeping computer shortly before the next alarm")
                     Toggle {
                         target: root.alarms
@@ -262,7 +262,7 @@ Rectangle {
                     symbol: "phone_android"
                     title: Translation.tr("Mirror the phone's alarm")
                     description: PhoneAlarmService.nextAt
-                        ? Translation.tr("Phone's next alarm %1").arg(Qt.formatDateTime(PhoneAlarmService.nextAt, "ddd HH:mm"))
+                        ? Translation.tr("Phone's next alarm %1").arg(Translation.formatDate(PhoneAlarmService.nextAt, "ddd HH:mm"))
                         : Translation.tr("Read over ADB while the phone is connected")
                     Toggle {
                         target: Config.options.clockApp.phoneAlarm

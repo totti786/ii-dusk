@@ -36,7 +36,7 @@ Rectangle {
         const start = new Date(eventData.startDate);
         const format = Config.options.time.format;
         return (format.includes("ap") || format.includes("AP"))
-            ? Qt.formatDateTime(start, "h:mm ap")
+            ? Translation.formatDate(start, "h:mm ap")
             : Qt.formatDateTime(start, "hh:mm");
     }
 

@@ -51,7 +51,7 @@ Item {
 
     function rangeText(startMinutes, endMinutes) {
         const format = Config.options?.time.format;
-        return H.minutesToTimeStr(startMinutes, format) + " — " + H.minutesToTimeStr(endMinutes, format);
+        return Translation.dayMarks(H.minutesToTimeStr(startMinutes, format)) + " — " + Translation.dayMarks(H.minutesToTimeStr(endMinutes, format));
     }
 
     // Target column tint: a surface, not an outline.

@@ -145,8 +145,8 @@ AbstractBackgroundWidget {
                         Layout.fillWidth: true
                         elide: Text.ElideRight
                         text: root.focusDayOffset === 1 ? Translation.tr("Tomorrow")
-                            : root.focusDayOffset > 6 ? Qt.locale().toString(root.focusDate, "ddd MMM")
-                            : Qt.locale().toString(root.focusDate, "ddd")
+                            : root.focusDayOffset > 6 ? Translation.formatDate(root.focusDate, "ddd MMM")
+                            : Translation.formatDate(root.focusDate, "ddd")
                         font {
                             pixelSize: 22
                             weight: Font.Medium
@@ -253,8 +253,8 @@ AbstractBackgroundWidget {
                                 text: {
                                     if (CalendarService.isAllDayEvent(modelData)) return Translation.tr("All Day");
                                     const fmt = Config.options.time.format || "hh:mm";
-                                    let st = Qt.formatDateTime(new Date(modelData.startDate), fmt);
-                                    let et = Qt.formatDateTime(new Date(modelData.endDate), fmt);
+                                    let st = Translation.formatDate(new Date(modelData.startDate), fmt);
+                                    let et = Translation.formatDate(new Date(modelData.endDate), fmt);
                                     return st + " – " + et;
                                 }
                                 font {

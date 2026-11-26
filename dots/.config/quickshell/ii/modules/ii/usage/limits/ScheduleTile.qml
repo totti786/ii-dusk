@@ -206,7 +206,7 @@ Rectangle {
 
                     StyledText {
                         anchors.centerIn: parent
-                        text: Qt.locale().dayName(dayDot.day, Locale.NarrowFormat)
+                        text: Translation.dayName(dayDot.day, Locale.NarrowFormat)
                         font.pixelSize: ClockStyle.textSmall
                         font.weight: Font.Bold
                         color: dayDot.on ? root.colContainer : ColorUtils.applyAlpha(root.colContent, 0.6)

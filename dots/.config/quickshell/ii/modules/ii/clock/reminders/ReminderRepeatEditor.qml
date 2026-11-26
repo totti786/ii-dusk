@@ -191,7 +191,7 @@ ColumnLayout {
                 readonly property var parts: dateChip.modelData.split("-").map(Number)
                 selected: true
                 symbol: "close"
-                label: Qt.locale().toString(new Date(2000, dateChip.parts[0] - 1, dateChip.parts[1]), "d MMMM")
+                label: Translation.formatDate(new Date(2000, dateChip.parts[0] - 1, dateChip.parts[1]), "d MMMM")
                 onClicked: root.change(next => {
                     const dates = next.yearDates.filter(key => key !== dateChip.modelData);
                     next.yearDates = dates.length > 0 ? dates : next.yearDates;
@@ -267,7 +267,7 @@ ColumnLayout {
         symbol: "event_busy"
         shapeKind: MaterialShape.Shape.Arch
         caption: Translation.tr("Until")
-        value: root.repeat?.end?.until ? Qt.locale().toString(ClockFormat.parseDay(root.repeat.end.until), "dddd, d MMMM yyyy") : ""
+        value: root.repeat?.end?.until ? Translation.formatDate(ClockFormat.parseDay(root.repeat.end.until), "dddd, d MMMM yyyy") : ""
         onTriggered: root.pickers?.pickDate(ClockFormat.parseDay(root.repeat.end.until), Translation.tr("Repeat until"),
             date => root.change(next => next.end.until = Qt.formatDate(date, "yyyy-MM-dd")))
     }

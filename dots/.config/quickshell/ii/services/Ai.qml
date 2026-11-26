@@ -1675,7 +1675,7 @@ Singleton {
 
     property var promptSubstitutions: {
         "{DISTRO}": SystemInfo.distroName,
-        "{DATETIME}": `${DateTime.time}, ${DateTime.collapsedCalendarFormat}`,
+        "{DATETIME}": Qt.locale("en_US").toString(DateTime.clock.date, `${Config.options?.time.format ?? "hh:mm"}, dddd, MMMM dd`),
         "{WINDOWCLASS}": ToplevelManager.activeToplevel?.appId ?? "Unknown",
         "{DE}": `${SystemInfo.desktopEnvironment} (${SystemInfo.windowingSystem})`
     }

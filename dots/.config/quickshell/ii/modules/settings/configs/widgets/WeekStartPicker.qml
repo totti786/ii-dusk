@@ -171,7 +171,7 @@ GridLayout {
 
                                     StyledText {
                                     anchors.centerIn: parent
-                                    text: Qt.locale().toString(model.date, "ddd")
+                                    text: Translation.formatDate(model.date, "ddd")
                                     font.pixelSize: Appearance.font.pixelSize.smaller
                                     font.weight: index === 0 ? Font.Bold : Font.Normal
                                     font.variableAxes: Appearance.font.variableAxes.rounded

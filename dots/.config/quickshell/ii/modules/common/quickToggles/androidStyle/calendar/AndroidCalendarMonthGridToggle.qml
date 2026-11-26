@@ -57,8 +57,7 @@ AndroidWidgetTileBase {
         const monday = new Date(root.currentYear, root.currentMonth, root.currentDay - ((root.today.getDay() + 6) % 7));
         for (let index = 0; index < 7; index++) {
             const day = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + index);
-            const name = Qt.locale().toString(day, "ddd").replace(/\./g, "");
-            letters.push(name.substring(0, 1).toLocaleUpperCase());
+            letters.push(Translation.dayName(day.getDay(), Locale.NarrowFormat).toLocaleUpperCase());
         }
         return letters;
     }

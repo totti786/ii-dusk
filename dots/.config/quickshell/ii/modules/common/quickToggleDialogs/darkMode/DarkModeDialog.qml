@@ -71,8 +71,8 @@ WindowDialog {
                 endTime.setHours(toH, toM, 0, 0);
 
                 const format = Config.options?.time.format ?? "hh:mm";
-                const startStr = Qt.locale().toString(startTime, format);
-                const endStr = Qt.locale().toString(endTime, format);
+                const startStr = Translation.formatDate(startTime, format);
+                const endStr = Translation.formatDate(endTime, format);
                 return Translation.tr("Auto Dark Mode (%1 - %2)").arg(startStr).arg(endStr);
             }
             checked: Config.options.light.darkMode.automatic

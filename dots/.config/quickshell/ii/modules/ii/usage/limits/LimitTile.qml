@@ -92,7 +92,7 @@ Rectangle {
         const names = [];
         for (let i = 0; i < 7; i++)
             if (list[i])
-                names.push(Qt.locale().dayName(i, Locale.ShortFormat));
+                names.push(Translation.dayName(i, Locale.ShortFormat));
         return names.join(", ");
     }
 

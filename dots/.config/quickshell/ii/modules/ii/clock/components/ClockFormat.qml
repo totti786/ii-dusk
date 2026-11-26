@@ -26,7 +26,7 @@ Singleton {
         return {
             hours: root.pad(hours % 12 || 12),
             minutes: minutes,
-            meridiem: hours >= 12 ? Qt.locale().pmText : Qt.locale().amText
+            meridiem: hours >= 12 ? Translation.locale.pmText : Translation.locale.amText
         };
     }
 
@@ -36,7 +36,7 @@ Singleton {
     }
 
     function dateTime(date): string {
-        return Qt.locale().toString(date, Config.options?.time?.format ?? "hh:mm");
+        return Translation.formatDate(date, Config.options?.time?.format ?? "hh:mm");
     }
 
     /** "Every day", "Weekdays", "Mon, Wed" or, for a one-off alarm, the day it rings. */
@@ -62,7 +62,7 @@ Singleton {
         for (let i = 0; i < 7; i++) {
             const day = (first + i) % 7;
             if (days[day])
-                names.push(Qt.locale().dayName(day, Locale.ShortFormat));
+                names.push(Translation.dayName(day, Locale.ShortFormat));
         }
         return names.join(", ");
     }
@@ -83,7 +83,7 @@ Singleton {
             return Translation.tr("Today");
         if (diff === 1)
             return Translation.tr("Tomorrow");
-        return Qt.locale().toString(date, "ddd, d MMM");
+        return Translation.formatDate(date, "ddd, d MMM");
     }
 
     /** Seconds → "1:05:09" or "05:09". */

@@ -177,7 +177,7 @@ Item {
                 text: AiMemory.learning.state === "reviewing" ? Translation.tr("Reviewing the last task and improving saved knowledge…")
                     : AiMemory.learning.state === "queued" ? Translation.tr("A learning review is queued")
                     : AiMemory.learning.state === "failed" ? Translation.tr("Learning review failed: %1").arg(AiMemory.learning.error ?? "")
-                    : AiMemory.learning.lastReviewAt ? Translation.tr("Last review: %1").arg(new Date(AiMemory.learning.lastReviewAt).toLocaleString())
+                    : AiMemory.learning.lastReviewAt ? Translation.tr("Last review: %1").arg(Translation.westernDigits(new Date(AiMemory.learning.lastReviewAt).toLocaleString(Translation.locale)))
                     : Translation.tr("Completed tasks are reviewed automatically. Reviews use your selected agent’s allowance.")
                 wrapMode: Text.Wrap
                 color: Appearance.colors.colSubtext

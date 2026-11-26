@@ -36,7 +36,7 @@ Item {
             readonly property bool is12h: root.is12h
             readonly property string hours: is12h ? ("0" + (DateTime.clock.date.getHours() % 12 || 12)).slice(-2) : Qt.formatDateTime(DateTime.clock.date, "HH")
             readonly property string minutes: Qt.formatDateTime(DateTime.clock.date, "mm")
-            readonly property string ampm: is12h ? Qt.formatDateTime(DateTime.clock.date, Config.options.time.format.includes("AP") ? "AP" : "ap").trim() : ""
+            readonly property string ampm: is12h ? Translation.formatDate(DateTime.clock.date, Config.options.time.format.includes("AP") ? "AP" : "ap").trim() : ""
 
             readonly property bool showAMPM: is12h && ampm.length > 0
 
@@ -153,7 +153,7 @@ Item {
             readonly property bool is12h: root.is12h
             readonly property string hours: is12h ? ("0" + (DateTime.clock.date.getHours() % 12 || 12)).slice(-2) : Qt.formatDateTime(DateTime.clock.date, "HH")
             readonly property string minutes: Qt.formatDateTime(DateTime.clock.date, "mm")
-            readonly property string ampm: is12h ? Qt.formatDateTime(DateTime.clock.date, Config.options.time.format.includes("AP") ? "AP" : "ap").trim() : ""
+            readonly property string ampm: is12h ? Translation.formatDate(DateTime.clock.date, Config.options.time.format.includes("AP") ? "AP" : "ap").trim() : ""
 
             readonly property bool showAMPM: is12h && ampm.length > 0
 

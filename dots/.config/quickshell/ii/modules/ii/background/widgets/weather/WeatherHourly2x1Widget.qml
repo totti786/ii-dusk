@@ -208,7 +208,7 @@ AbstractBackgroundWidget {
                             readonly property string dayNameStr: {
                                 if (!fcItem || !fcItem.date) return "";
                                 const dateObj = new Date(fcItem.date);
-                                return dateObj.toLocaleDateString(Qt.locale(), "dddd");
+                                return Translation.formatDate(dateObj, "dddd");
                             }
 
                             StyledText {

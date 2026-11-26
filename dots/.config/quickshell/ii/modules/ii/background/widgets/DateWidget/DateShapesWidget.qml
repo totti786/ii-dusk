@@ -111,7 +111,7 @@ AbstractBackgroundWidget {
                 y: root.padding - 6
                 width: root.textColumnWidth
                 height: 84
-                text: cal.locale.toString(cal.today, "dddd").toUpperCase()
+                text: Translation.formatDate(cal.today, "dddd").toUpperCase()
                 color: WidgetColorScheme.textColorOnBg
                 font.family: Appearance.font.family.main
                 font.pixelSize: 72
@@ -139,7 +139,7 @@ AbstractBackgroundWidget {
 
                     StyledText {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: cal.locale.toString(cal.today, "MMMM")
+                        text: Translation.formatDate(cal.today, "MMMM")
                         color: WidgetColorScheme.textColorOnPillFill
                         font.pixelSize: Appearance.font.pixelSize.larger
                         font.variableAxes: ({ "wght": 650, "wdth": 100, "ROND": 100 })

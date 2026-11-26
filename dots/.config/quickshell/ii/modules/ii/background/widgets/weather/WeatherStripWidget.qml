@@ -118,7 +118,7 @@ ExpressiveCardWidget {
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: 12
                     text: (column.today ? Translation.tr("Today")
-                        : Qt.locale().toString(new Date(column.modelData.date + "T12:00:00"), "ddd").replace(".", "")).toUpperCase()
+                        : Translation.formatDate(new Date(column.modelData.date + "T12:00:00"), "ddd").replace(".", "")).toUpperCase()
                     color: column.colContent
                     font.family: Appearance.font.family.main
                     font.pixelSize: 11

@@ -58,7 +58,7 @@ ColumnLayout {
                 Layout.preferredWidth: 52
                 spacing: -2
                 StyledText {
-                    text: row.item.allDay ? Translation.tr("All day") : Qt.formatDateTime(row.item.start, panel.timeFormat)
+                    text: row.item.allDay ? Translation.tr("All day") : Translation.formatDate(row.item.start, panel.timeFormat)
                     color: row.colContent
                     font.family: ClockStyle.fontMain
                     font.variableAxes: ClockStyle.axesDigitsBold
@@ -66,7 +66,7 @@ ColumnLayout {
                 }
                 StyledText {
                     visible: !row.item.allDay
-                    text: Qt.formatDateTime(row.item.end, panel.timeFormat)
+                    text: Translation.formatDate(row.item.end, panel.timeFormat)
                     color: row.colContent
                     opacity: 0.7
                     font.pixelSize: ClockStyle.textSmall
@@ -164,7 +164,7 @@ ColumnLayout {
             spacing: 4
             StyledText {
                 Layout.leftMargin: 4
-                text: Qt.formatDate(dayGroup.modelData.day, "dddd, d MMM")
+                text: Translation.formatDate(dayGroup.modelData.day, "dddd, d MMM")
                 color: ClockStyle.colOnSurfaceVariant
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.weight: Font.Bold

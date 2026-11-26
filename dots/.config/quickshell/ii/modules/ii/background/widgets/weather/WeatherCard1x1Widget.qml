@@ -124,7 +124,7 @@ AbstractBackgroundWidget {
                         readonly property string dayLabel: {
                             if (!dayFc || !dayFc.date) return "";
                             const dateObj = new Date(dayFc.date);
-                            return dateObj.toLocaleDateString(Qt.locale(), "ddd");
+                            return Translation.formatDate(dateObj, "ddd");
                         }
 
                         StyledText {

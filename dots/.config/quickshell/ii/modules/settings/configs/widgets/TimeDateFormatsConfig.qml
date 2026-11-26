@@ -67,8 +67,8 @@ ContentPage {
         readonly property string errorCode: DateUtils.dateTimeFormatError(card.draft)
         readonly property bool valid: card.errorCode.length === 0
         readonly property bool pending: card.valid && card.draft !== card.configValue
-        readonly property string savedPreview: Qt.locale().toString(card.now, card.configValue)
-        readonly property string draftPreview: card.valid ? Qt.locale().toString(card.now, card.draft) : ""
+        readonly property string savedPreview: Translation.formatDate(card.now, card.configValue)
+        readonly property string draftPreview: card.valid ? Translation.formatDate(card.now, card.draft) : ""
 
         function errorMessage(code) {
             if (code === "empty")

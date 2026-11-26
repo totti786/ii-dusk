@@ -117,7 +117,7 @@ AbstractBackgroundWidget {
 
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: Qt.locale().toString(DateTime.clock.date, "ddd").toUpperCase()
+                    text: Translation.formatDate(DateTime.clock.date, "ddd").toUpperCase()
                     font.pixelSize: Math.round(centerBadge.width * 0.20)
                     font.weight: Font.Bold
                     font.family: Appearance.font.family.main

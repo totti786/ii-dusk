@@ -546,7 +546,7 @@ Item {
                                 text: {
                                     if (ShellUpdates.lastCheck <= 0)
                                         return "";
-                                    return Translation.tr("Last checked %1").arg(new Date(ShellUpdates.lastCheck).toLocaleString(Qt.locale(), Locale.ShortFormat));
+                                    return Translation.tr("Last checked %1").arg(Translation.westernDigits(new Date(ShellUpdates.lastCheck).toLocaleString(Translation.locale, Locale.ShortFormat)));
                                 }
                             }
                         }

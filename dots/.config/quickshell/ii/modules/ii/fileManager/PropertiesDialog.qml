@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// Details of the selection: type, size (counted in the background), dates, owner and permissions.
 FmDialog {
@@ -21,12 +22,12 @@ FmDialog {
 
     signal changed()
 
-    title: root.paths.length > 1 ? qsTr("%1 items").arg(root.paths.length) : (root.info.name ?? "")
+    title: root.paths.length > 1 ? Translation.tr("%1 items").arg(root.paths.length) : (root.info.name ?? "")
     cardWidth: 480
 
     function bytes(s: real): string {
         if (s < 1024)
-            return qsTr("%1 bytes").arg(Math.round(s));
+            return Translation.tr("%1 bytes").arg(Math.round(s));
         const u = ["KiB", "MiB", "GiB", "TiB"];
         let v = s / 1024, i = 0;
         while (v >= 1024 && i < u.length - 1) {
@@ -37,7 +38,7 @@ FmDialog {
     }
 
     function when(t: real): string {
-        return t ? Qt.formatDateTime(new Date(t * 1000), "d MMMM yyyy, HH:mm") : "—";
+        return t ? Translation.formatDate(new Date(t * 1000), "d MMMM yyyy, HH:mm") : "—";
     }
 
     Component.onCompleted: {
@@ -102,7 +103,7 @@ FmDialog {
                 elide: Text.ElideRight
             }
             StyledText {
-                text: root.counting ? qsTr("Counting…") : root.bytes(root.info.size ?? 0)
+                text: root.counting ? Translation.tr("Counting…") : root.bytes(root.info.size ?? 0)
                 font.pixelSize: 18
                 font.weight: Font.DemiBold
                 color: ClockStyle.colOnSurface
@@ -110,17 +111,17 @@ FmDialog {
         }
     }
 
-    Row2 { visible: !root.info.multiple; k: qsTr("Location"); v: (root.info.path ?? "").replace(/\/[^/]*$/, "") || "/" }
+    Row2 { visible: !root.info.multiple; k: Translation.tr("Location"); v: (root.info.path ?? "").replace(/\/[^/]*$/, "") || "/" }
     Row2 {
         visible: (root.info.isDir ?? false) || root.info.multiple === true
-        k: qsTr("Contents")
-        v: qsTr("%1 files, %2 folders").arg(root.info.files ?? 0).arg(Math.max(0, (root.info.folders ?? 0) - (root.info.multiple ? 0 : 1)))
+        k: Translation.tr("Contents")
+        v: Translation.tr("%1 files, %2 folders").arg(root.info.files ?? 0).arg(Math.max(0, (root.info.folders ?? 0) - (root.info.multiple ? 0 : 1)))
     }
-    Row2 { visible: (root.info.isLink ?? false); k: qsTr("Links to"); v: root.info.target ?? "" }
-    Row2 { visible: !root.info.multiple; k: qsTr("Modified"); v: root.when(root.info.mtime) }
-    Row2 { visible: !root.info.multiple; k: qsTr("Accessed"); v: root.when(root.info.atime) }
-    Row2 { visible: !root.info.multiple; k: qsTr("Owner"); v: (root.info.owner ?? "") + " : " + (root.info.group ?? "") }
-    Row2 { k: qsTr("Free space"); v: root.info.free ? root.bytes(root.info.free) : "—"; visible: !root.info.multiple }
+    Row2 { visible: (root.info.isLink ?? false); k: Translation.tr("Links to"); v: root.info.target ?? "" }
+    Row2 { visible: !root.info.multiple; k: Translation.tr("Modified"); v: root.when(root.info.mtime) }
+    Row2 { visible: !root.info.multiple; k: Translation.tr("Accessed"); v: root.when(root.info.atime) }
+    Row2 { visible: !root.info.multiple; k: Translation.tr("Owner"); v: (root.info.owner ?? "") + " : " + (root.info.group ?? "") }
+    Row2 { k: Translation.tr("Free space"); v: root.info.free ? root.bytes(root.info.free) : "—"; visible: !root.info.multiple }
 
     // Permissions
     ColumnLayout {
@@ -129,7 +130,7 @@ FmDialog {
         spacing: 4
 
         StyledText {
-            text: qsTr("Permissions")
+            text: Translation.tr("Permissions")
             font.pixelSize: Appearance.font.pixelSize.smallie
             font.weight: Font.DemiBold
             color: ClockStyle.colOnSurface
@@ -139,7 +140,7 @@ FmDialog {
             spacing: 0
             Item { Layout.fillWidth: true }
             Repeater {
-                model: [qsTr("Read"), qsTr("Write"), qsTr("Execute")]
+                model: [Translation.tr("Read"), Translation.tr("Write"), Translation.tr("Execute")]
                 delegate: StyledText {
                     required property string modelData
                     Layout.preferredWidth: 72
@@ -151,7 +152,7 @@ FmDialog {
             }
         }
         Repeater {
-            model: [qsTr("Owner"), qsTr("Group"), qsTr("Others")]
+            model: [Translation.tr("Owner"), Translation.tr("Group"), Translation.tr("Others")]
             delegate: RowLayout {
                 id: prow
                 required property string modelData
@@ -202,10 +203,10 @@ FmDialog {
 
     FmChip {
         visible: root.perms.length > 0 && (root.info.folders ?? 0) > 0
-        text: qsTr("Apply to everything inside")
+        text: Translation.tr("Apply to everything inside")
         checked: root.recursive
         onClicked: root.recursive = !root.recursive
     }
 
-    actions: [FmButton { text: qsTr("Close"); kind: "tonal"; onClicked: root.close() }]
+    actions: [FmButton { text: Translation.tr("Close"); kind: "tonal"; onClicked: root.close() }]
 }

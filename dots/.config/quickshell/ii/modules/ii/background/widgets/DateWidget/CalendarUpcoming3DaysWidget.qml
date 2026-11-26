@@ -67,7 +67,7 @@ AbstractBackgroundWidget {
             daysList.push({
                 "date": dayDate,
                 "isToday": d === 0,
-                "dateString": Qt.locale().toString(dayDate, "ddd, MMM d"),
+                "dateString": Translation.formatDate(dayDate, "ddd, MMM d"),
                 "events": root.getEventsForDate(dayDate)
             });
         }
@@ -214,7 +214,7 @@ AbstractBackgroundWidget {
                                     text: {
                                         if (modelData.allDay) return Translation.tr("All Day");
                                         let st = Qt.formatDateTime(new Date(modelData.startDate), "hh:mm");
-                                        let et = Qt.formatDateTime(new Date(modelData.endDate), "hh:mm A");
+                                        let et = Translation.formatDate(new Date(modelData.endDate), "hh:mm A");
                                         return st + " - " + et;
                                     }
                                     font {

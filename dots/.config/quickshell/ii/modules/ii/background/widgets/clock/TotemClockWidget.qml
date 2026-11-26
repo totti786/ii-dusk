@@ -123,7 +123,7 @@ ExpressiveCardWidget {
         StyledText {
             x: 22
             y: 14
-            text: Qt.locale().toString(root.now, "MMMM d").toUpperCase()
+            text: Translation.formatDate(root.now, "MMMM d").toUpperCase()
             color: WidgetColorScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.normal
@@ -149,7 +149,7 @@ ExpressiveCardWidget {
                     readonly property int weekday: (days.firstDay + index) % 7
                     readonly property bool isToday: day.weekday === days.today
                     // QML's Locale counts days like Date.getDay: Sunday = 0.
-                    readonly property string initial: Qt.locale().dayName(day.weekday, Locale.NarrowFormat)
+                    readonly property string initial: Translation.dayName(day.weekday, Locale.NarrowFormat)
                     anchors.verticalCenter: parent.verticalCenter
                     width: day.isToday ? days.todayWidth : days.dot
                     height: day.isToday ? days.dot + 8 : days.dot

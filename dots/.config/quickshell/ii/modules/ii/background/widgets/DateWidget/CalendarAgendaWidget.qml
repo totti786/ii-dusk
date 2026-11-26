@@ -117,7 +117,7 @@ AbstractBackgroundWidget {
                 anchors.leftMargin: 16
                 anchors.top: parent.top
                 anchors.topMargin: 16
-                text: Qt.locale().toString(root.currDate, "MMM yyyy")
+                text: Translation.formatDate(root.currDate, "MMM yyyy")
                 font {
                     pixelSize: 18
                     weight: Font.Bold
@@ -141,15 +141,7 @@ AbstractBackgroundWidget {
 
                 // Row of Weekday Initials (S M T W T F S)
                 Repeater {
-                    model: [
-                        Translation.tr("S"),
-                        Translation.tr("M"),
-                        Translation.tr("T"),
-                        Translation.tr("W"),
-                        Translation.tr("T"),
-                        Translation.tr("F"),
-                        Translation.tr("S")
-                    ]
+                    model: [0, 1, 2, 3, 4, 5, 6].map(day => Translation.dayName(day, Locale.NarrowFormat))
                     delegate: Item {
                         required property int index
                         required property string modelData
@@ -281,8 +273,8 @@ AbstractBackgroundWidget {
                             StyledText {
                                 text: {
                                     if (modelData.allDay) return Translation.tr("All Day");
-                                    let st = Qt.formatDateTime(new Date(modelData.startDate), "hh:mm A");
-                                    let et = Qt.formatDateTime(new Date(modelData.endDate), "hh:mm A");
+                                    let st = Translation.formatDate(new Date(modelData.startDate), "hh:mm A");
+                                    let et = Translation.formatDate(new Date(modelData.endDate), "hh:mm A");
                                     return st + " - " + et;
                                 }
                                 font {

@@ -1,5 +1,6 @@
 pragma Singleton
 import Quickshell
+import qs.services
 
 Singleton {
     id: root
@@ -71,7 +72,7 @@ Singleton {
 
         // Less than 1 minute
         if (diffMs < 60000)
-            return 'Now';
+            return Translation.tr("Now");
 
         // Same day - show relative time
         if (messageTime.toDateString() === now.toDateString()) {
@@ -79,18 +80,18 @@ Singleton {
             const diffHours = Math.floor(diffMs / 3600000);
 
             if (diffHours > 0) {
-                return `${diffHours}h`;
+                return Translation.tr("%1h").arg(diffHours);
             } else {
-                return `${diffMinutes}m`;
+                return Translation.tr("%1m").arg(diffMinutes);
             }
         }
 
         // Yesterday
         if (messageTime.toDateString() === new Date(now.getTime() - 86400000).toDateString())
-            return 'Yesterday';
+            return Translation.tr("Yesterday");
 
         // Older dates
-        return Qt.formatDateTime(messageTime, "MMMM dd");
+        return Translation.formatDate(messageTime, "MMMM dd");
     }
 
     function processNotificationBody(body, appName) {

@@ -66,7 +66,7 @@ AbstractBackgroundWidget {
                     spacing: 0
 
                     StyledText {
-                        text: Qt.locale().toString(DateTime.clock.date, "MMMM")
+                        text: Translation.formatDate(DateTime.clock.date, "MMMM")
                         font {
                             pixelSize: 18
                             weight: Font.Medium
@@ -76,7 +76,7 @@ AbstractBackgroundWidget {
                     }
 
                     StyledText {
-                        text: Qt.locale().toString(DateTime.clock.date, "dddd")
+                        text: Translation.formatDate(DateTime.clock.date, "dddd")
                         font {
                             pixelSize: 22
                             weight: Font.Bold

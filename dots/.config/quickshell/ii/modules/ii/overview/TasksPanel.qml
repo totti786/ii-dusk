@@ -57,7 +57,7 @@ Item {
         const date = new Date(value);
         if (isNaN(date.getTime()))
             return Translation.tr("No date");
-        return Qt.formatDate(date, "dd MMM");
+        return Translation.formatDate(date, "dd MMM");
     }
 
     function parseQuickTask(input) {

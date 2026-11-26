@@ -553,7 +553,7 @@ Item {
                 shapeKind: MaterialShape.Shape.Cookie12Sided
                 caption: root.showShortcutHints ? "Ctrl + D" : Translation.tr("Due date")
                 value: root.formHasDate
-                    ? Qt.formatDate(root.formDate, "dddd, d MMMM yyyy")
+                    ? Translation.formatDate(root.formDate, "dddd, d MMMM yyyy")
                     : Translation.tr("No date")
                 trailingSymbol: "expand_more"
                 onTriggered: root.openDatePicker()

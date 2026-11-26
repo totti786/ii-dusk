@@ -665,7 +665,7 @@ Item {
 
                     AnimatedStyledText {
                         Layout.fillWidth: true
-                        text: Qt.formatDate(root.viewAnchorDate, "MMMM")
+                        text: Translation.formatDate(root.viewAnchorDate, "MMMM")
                         font.family: Appearance.font.family.title
                         font.pixelSize: root.compactNav ? 26 : 32
                         font.weight: Font.Bold
@@ -1018,7 +1018,7 @@ Item {
 
                 // Locale short names ("Mon", "Seg"). Deliberately not tied to
                 // a two-character weekday option.
-                readonly property var labels: H.weekdayLabels(root.firstDayOfWeek, Config.options.calendar.locale, Locale.ShortFormat)
+                readonly property var labels: H.weekdayLabels(root.firstDayOfWeek, Translation.calendarLocale(Config.options.calendar.locale), Locale.ShortFormat)
 
                 Repeater {
                     model: 7

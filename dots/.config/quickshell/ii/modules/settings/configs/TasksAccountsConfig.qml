@@ -97,7 +97,7 @@ Item {
         Translation.tr("Mon"), Translation.tr("Tue"), Translation.tr("Wed"),
         Translation.tr("Thu"), Translation.tr("Fri"), Translation.tr("Sat"), Translation.tr("Sun")
     ]
-    readonly property string heatmapMonthLabel: new Date().toLocaleDateString(Qt.locale(), "MMMM yyyy")
+    readonly property string heatmapMonthLabel: Translation.formatDate(new Date(), "MMMM yyyy")
     readonly property int heatmapActiveDays: root.heatmapCells.filter(cell => Number((cell && cell.value) || 0) > 0).length
     readonly property string heatmapActiveDaysLabel: String(root.heatmapActiveDays) + " "
         + (root.heatmapActiveDays === 1
@@ -264,13 +264,13 @@ Item {
 
     function activityBucketTooltip(date, granularity) {
         if (granularity === "month")
-            return date.toLocaleDateString(Qt.locale(), "MMMM yyyy");
+            return Translation.formatDate(date, "MMMM yyyy");
         if (granularity === "week") {
             const end = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 6);
-            return date.toLocaleDateString(Qt.locale(), "dd MMM")
-                + " – " + end.toLocaleDateString(Qt.locale(), "dd MMM yyyy");
+            return Translation.formatDate(date, "dd MMM")
+                + " – " + Translation.formatDate(end, "dd MMM yyyy");
         }
-        return date.toLocaleDateString(Qt.locale(), "dd MMM yyyy");
+        return Translation.formatDate(date, "dd MMM yyyy");
     }
 
     function buildActivityBuckets(granularity) {
@@ -441,7 +441,7 @@ Item {
         const totalWeeks = Math.max(1, Number(weekCount || 5));
         for (let week = 0; week < totalWeeks; ++week) {
             labels.push(week === 0
-                ? today.toLocaleDateString(Qt.locale(), "MMM")
+                ? Translation.formatDate(today, "MMM")
                 : "");
         }
         return labels;
@@ -512,7 +512,7 @@ Item {
         const next = root.nextRunDate();
         if (!next)
             return driveOptions.enabled ? Translation.tr("Waiting for first sync") : Translation.tr("Backup is disabled");
-        return next.toLocaleDateString(Qt.locale(), "dd MMM") + " · " + next.toLocaleTimeString(Qt.locale(), "HH:mm");
+        return Translation.formatDate(next, "dd MMM") + " · " + next.toLocaleTimeString(Qt.locale(), "HH:mm");
     }
 
     function syncStatusLabel(entry) {
@@ -540,7 +540,7 @@ Item {
         const date = new Date(String((entry && entry.time) || ""));
         if (!isFinite(date.getTime()))
             return Translation.tr("Unknown time");
-        return date.toLocaleDateString(Qt.locale(), "dd MMM") + " · " + date.toLocaleTimeString(Qt.locale(), "HH:mm");
+        return Translation.formatDate(date, "dd MMM") + " · " + date.toLocaleTimeString(Qt.locale(), "HH:mm");
     }
 
     function formatMegabytes(value) {
@@ -996,7 +996,7 @@ Item {
             text: Translation.tr("Back up my settings")
             description: ShellBackup.lastBackupTime !== ""
                 ? Translation.tr("Last backup: %1").arg(
-                    new Date(ShellBackup.lastBackupTime).toLocaleString(Qt.locale()))
+                    Translation.westernDigits(new Date(ShellBackup.lastBackupTime).toLocaleString(Translation.locale)))
                 : Translation.tr("Settings, presets, notes, keybinds and usage, in one zip")
             checked: ShellBackup.enabled
             configPage: Qt.resolvedUrl("widgets/ShellBackupConfig.qml")

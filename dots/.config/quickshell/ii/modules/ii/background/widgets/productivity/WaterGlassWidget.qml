@@ -257,7 +257,7 @@ ExpressiveCardWidget {
                 StyledText {
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.bottom: parent.bottom
-                    text: Qt.locale().toString(day.modelData.date, "ddd").charAt(0).toUpperCase()
+                    text: Translation.dayName(day.modelData.date.getDay(), Locale.NarrowFormat).toUpperCase()
                     color: day.today ? root.cardScheme.accentColor : root.cardScheme.subtextColorOnBg
                     font.family: Appearance.font.family.monospace
                     font.pixelSize: Appearance.font.pixelSize.smallest

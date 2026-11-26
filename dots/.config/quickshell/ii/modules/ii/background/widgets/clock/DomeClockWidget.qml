@@ -202,8 +202,8 @@ ExpressiveCardWidget {
     // ── The date, one word in each foot ──
     Repeater {
         model: root.showDate ? [
-            { text: Qt.locale().toString(root.now, "ddd").replace(".", "").toUpperCase(), left: true },
-            { text: Qt.locale().toString(root.now, "d MMM").replace(".", "").toUpperCase(), left: false }
+            { text: Translation.formatDate(root.now, "ddd").replace(".", "").toUpperCase(), left: true },
+            { text: Translation.formatDate(root.now, "d MMM").replace(".", "").toUpperCase(), left: false }
         ] : []
         delegate: StyledText {
             required property var modelData

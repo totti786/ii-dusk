@@ -45,7 +45,7 @@ ExpressiveCardWidget {
     function dayName(day, index) {
         if (index === 0)
             return Translation.tr("Today");
-        return Qt.locale().toString(new Date(day.date + "T12:00:00"), "ddd").replace(".", "");
+        return Translation.formatDate(new Date(day.date + "T12:00:00"), "ddd").replace(".", "");
     }
 
     // ── Now ──

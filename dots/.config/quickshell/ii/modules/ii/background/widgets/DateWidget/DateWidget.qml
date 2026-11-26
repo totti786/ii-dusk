@@ -58,9 +58,9 @@ AbstractBackgroundWidget {
                 StyledText {
                     anchors.centerIn: parent
                     text: {
-                        let monthStr = Qt.locale().toString(DateTime.clock.date, "MMM");
+                        let monthStr = Translation.formatDate(DateTime.clock.date, "MMM");
                         monthStr = monthStr.replace(".", "");
-                        return monthStr.substring(0, 3).toUpperCase();
+                        return Translation.clip(monthStr, 3).toUpperCase();
                     }
                     font {
                         pixelSize: 42

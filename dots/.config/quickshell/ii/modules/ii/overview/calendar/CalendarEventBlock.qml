@@ -62,7 +62,7 @@ RippleButton {
                 id: subtitle
                 Layout.fillWidth: true
                 readonly property string datePrefix: root.showDate
-                    ? Qt.formatDate(root.event?.startDate ?? new Date(), "ddd dd MMM") + " · "
+                    ? Translation.formatDate(root.event?.startDate ?? new Date(), "ddd dd MMM") + " · "
                     : ""
                 text: datePrefix + (root.event?.allDay
                     ? Translation.tr("All day")

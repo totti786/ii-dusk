@@ -607,7 +607,7 @@ ItemContextDialog {
                 const value = Number(seconds);
                 if (!isFinite(value) || value <= 0)
                     return "";
-                return new Date(value * 1000).toLocaleString(Qt.locale(), Locale.ShortFormat);
+                return Translation.westernDigits(new Date(value * 1000).toLocaleString(Translation.locale, Locale.ShortFormat));
             }
             function duration(seconds) {
                 let total = Math.round(Number(seconds));

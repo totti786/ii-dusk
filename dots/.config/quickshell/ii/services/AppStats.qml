@@ -234,14 +234,14 @@ Singleton {
         if (granularity === "day") {
             if (offset === 0) return Translation.tr("Today");
             if (offset === -1) return Translation.tr("Yesterday");
-            return start.toLocaleDateString(Qt.locale(), "ddd d MMM");
+            return Translation.formatDate(start, "ddd d MMM");
         }
         if (granularity === "week") {
             if (offset === 0) return Translation.tr("This week");
             if (offset === -1) return Translation.tr("Last week");
-            return Translation.tr("Week of %1").arg(start.toLocaleDateString(Qt.locale(), "d MMM"));
+            return Translation.tr("Week of %1").arg(Translation.formatDate(start, "d MMM"));
         }
-        return start.toLocaleDateString(Qt.locale(), "MMMM yyyy");
+        return Translation.formatDate(start, "MMMM yyyy");
     }
 
     /// The dates a period actually covers, for the line under its name. A named
@@ -251,13 +251,13 @@ Singleton {
         const dates = root.periodDates(granularity, offset);
         if (dates.length === 0) return "";
         const start = root.periodStart(granularity, offset);
-        if (granularity === "day") return start.toLocaleDateString(Qt.locale(), "d MMMM yyyy");
+        if (granularity === "day") return Translation.formatDate(start, "d MMMM yyyy");
 
         const last = dates[dates.length - 1].split("-");
         const end = new Date(parseInt(last[0]), parseInt(last[1]) - 1, parseInt(last[2]));
         const sameMonth = start.getMonth() === end.getMonth();
-        const from = sameMonth ? `${start.getDate()}` : start.toLocaleDateString(Qt.locale(), "d MMM");
-        return `${from} – ${end.toLocaleDateString(Qt.locale(), "d MMM")}`;
+        const from = sameMonth ? `${start.getDate()}` : Translation.formatDate(start, "d MMM");
+        return `${from} – ${Translation.formatDate(end, "d MMM")}`;
     }
 
     function parseDoc(text) {

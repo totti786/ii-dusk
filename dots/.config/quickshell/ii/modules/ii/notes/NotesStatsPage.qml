@@ -152,7 +152,7 @@ Item {
                 cells.push({
                     inRange: !ahead,
                     value: ahead ? 0 : count,
-                    tooltip: `${date.toLocaleDateString(Qt.locale(), "d MMM")} · `
+                    tooltip: `${Translation.formatDate(date, "d MMM")} · `
                         + (count === 1
                             ? Translation.tr("1 note touched")
                             : Translation.tr("%1 notes touched").arg(count))

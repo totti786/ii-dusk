@@ -54,7 +54,7 @@ AbstractBackgroundWidget {
 
             StyledText {
                 Layout.alignment: Qt.AlignHCenter
-                text: Qt.locale().toString(DateTime.clock.date, "dddd")
+                text: Translation.formatDate(DateTime.clock.date, "dddd")
                 font {
                     pixelSize: 22
                     weight: Font.Medium
@@ -83,7 +83,7 @@ AbstractBackgroundWidget {
 
             StyledText {
                 Layout.alignment: Qt.AlignHCenter
-                text: Qt.locale().toString(DateTime.clock.date, "MMMM")
+                text: Translation.formatDate(DateTime.clock.date, "MMMM")
                 font {
                     pixelSize: 22
                     weight: Font.Medium

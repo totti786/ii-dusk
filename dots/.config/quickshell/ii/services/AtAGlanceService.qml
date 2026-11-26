@@ -228,13 +228,13 @@ Singleton {
     }
 
     function formatTime(date) {
-        return Qt.locale().toString(date, Config.options?.time?.format ?? "hh:mm");
+        return Translation.formatDate(date, Config.options?.time?.format ?? "hh:mm");
     }
 
     function formatDate(date, custom) {
         const fmt = String(custom ?? "").trim();
         // Smartspacer's automatic format is the "EEEMMMd" skeleton: "Thu, Nov 20".
-        return Qt.locale().toString(date, fmt.length > 0 ? fmt : "ddd, MMM d");
+        return Translation.formatDate(date, fmt.length > 0 ? fmt : "ddd, MMM d");
     }
 
     function formatDuration(seconds) {
@@ -582,7 +582,7 @@ Singleton {
         const fmt = String(root.settingOf(item, "timeFormat", "")).trim();
         return [root.page(item, {
             template: "date",
-            title: fmt ? Qt.locale().toString(root.now || new Date(), fmt) : root.formatTime(root.now || new Date()),
+            title: fmt ? Translation.formatDate(root.now || new Date(), fmt) : root.formatTime(root.now || new Date()),
             takesComplications: true
         })];
     }
@@ -600,7 +600,7 @@ Singleton {
         const f = root.formatTime(end);
         const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
         const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-        const dateOf = d => Qt.locale().toString(d, "ddd, MMM d");
+        const dateOf = d => Translation.formatDate(d, "ddd, MMM d");
         if (root.sameDay(start, now) && root.sameDay(end, now))
             return `${s} – ${f}`;
         if (root.sameDay(start, yesterday))
@@ -733,7 +733,7 @@ Singleton {
             const d = new Date();
             d.setHours(hour, 0, 0, 0);
             columns.push({
-                upper: root.use12h ? Qt.locale().toString(d, "h ap") : Qt.locale().toString(d, "HH:mm"),
+                upper: root.use12h ? Translation.formatDate(d, "h ap") : Qt.locale().toString(d, "HH:mm"),
                 icon: WeatherIcons.getWeatherIcon(h.code, hour < 6 || hour >= 19),
                 lower: (useF ? h.tempF : h.tempC) + "°"
             });
@@ -1037,7 +1037,7 @@ Singleton {
             return Object.assign(base, { icon: "today", text: root.formatDate(now, root.settingOf(item, "dateFormat", "")), action: { kind: "calendar" } });
         case "clock": {
             const fmt = String(root.settingOf(item, "timeFormat", "")).trim();
-            return Object.assign(base, { icon: "schedule", text: fmt ? Qt.locale().toString(now, fmt) : root.formatTime(now) });
+            return Object.assign(base, { icon: "schedule", text: fmt ? Translation.formatDate(now, fmt) : root.formatTime(now) });
         }
         case "alarm": {
             const limit = Math.max(1, root.settingOf(item, "hoursAhead", 12)) * 3600000;

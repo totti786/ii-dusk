@@ -274,13 +274,13 @@ Item {
         let timePart = "";
         if (format.includes("ap") || format.includes("AP")) {
             // 12h
-            timePart = Qt.formatDateTime(date, "h:mm ap");
+            timePart = Translation.formatDate(date, "h:mm ap");
         } else {
             // 24h
             timePart = Qt.formatDateTime(date, "hh:mm");
         }
 
-        return Qt.formatDateTime(date, "ddd") + ", at " + timePart;
+        return Translation.tr("%1, at %2").arg(Translation.formatDate(date, "ddd")).arg(timePart);
     }
 
     function monitoredLeagueEntries() {

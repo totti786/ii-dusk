@@ -1637,7 +1637,7 @@ Singleton {
         const rows = history.map((entry, index) => resultComp.createObject(null, {
             key: "math:history:" + String(entry?.time ?? index),
             name: String(entry?.result ?? ""),
-            comment: String(entry?.expression ?? "") + " · " + Qt.formatDateTime(new Date(Number(entry?.time ?? 0)), Qt.locale().dateTimeFormat(Locale.ShortFormat)),
+            comment: String(entry?.expression ?? "") + " · " + Translation.formatDate(new Date(Number(entry?.time ?? 0)), Translation.locale.dateTimeFormat(Locale.ShortFormat)),
             type: Translation.tr("Calculator history"),
             verb: Translation.tr("Copy"),
             iconName: "history",

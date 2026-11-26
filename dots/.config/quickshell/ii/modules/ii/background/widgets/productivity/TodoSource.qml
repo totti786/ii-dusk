@@ -90,6 +90,6 @@ QtObject {
             return Translation.tr("Tomorrow");
         if (diff === -1)
             return Translation.tr("Yesterday");
-        return Qt.locale().toString(due, "ddd d MMM").replace(/\./g, "");
+        return Translation.formatDate(due, "ddd d MMM").replace(/\./g, "");
     }
 }

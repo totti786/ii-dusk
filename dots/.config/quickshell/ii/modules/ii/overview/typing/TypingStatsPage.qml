@@ -271,7 +271,7 @@ Item {
                         Layout.fillWidth: true
                         text: activityMap.hoveredIndex >= 0
                             ? Translation.tr("%1 · %2 tests")
-                                .arg(Qt.formatDate(activityMap.dateAt(activityMap.hoveredIndex), "dd MMM yyyy"))
+                                .arg(Translation.formatDate(activityMap.dateAt(activityMap.hoveredIndex), "dd MMM yyyy"))
                                 .arg(String(activityMap.countAt(activityMap.hoveredIndex)))
                             : (activityMap.total > 0
                                 ? Translation.tr("%1 tests in the last year").arg(String(activityMap.total))

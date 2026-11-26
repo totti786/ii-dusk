@@ -49,8 +49,8 @@ GridLayout {
         return baseFormat + ":" + Config.options.time.secondsFormat;
     }
 
-    readonly property string clockText: Qt.locale().toString(root.effectiveDate, root.effectiveTimeFormat)
-    readonly property string dateText: Qt.locale().toString(root.effectiveDate, Config.options.time.dateFormat)
+    readonly property string clockText: Translation.formatDate(root.effectiveDate, root.effectiveTimeFormat)
+    readonly property string dateText: Translation.formatDate(root.effectiveDate, Config.options.time.dateFormat)
 
     SystemClock {
         id: previewClock

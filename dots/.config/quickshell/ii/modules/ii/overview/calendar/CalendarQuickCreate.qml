@@ -49,7 +49,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     text: root.parsed
-                        ? Qt.formatDateTime(root.parsed.start, "ddd dd MMM · hh:mm") + "–" + Qt.formatTime(root.parsed.end, "hh:mm")
+                        ? Translation.formatDate(root.parsed.start, "ddd dd MMM · hh:mm") + "–" + Qt.formatTime(root.parsed.end, "hh:mm")
                         : ""
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: Appearance.colors.colOnPrimaryContainer

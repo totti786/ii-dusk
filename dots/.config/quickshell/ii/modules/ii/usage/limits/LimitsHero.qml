@@ -93,7 +93,7 @@ Rectangle {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: Qt.locale().toString(new Date(ScreenTimeLimits.now), "dddd, d MMMM")
+                    text: Translation.formatDate(new Date(ScreenTimeLimits.now), "dddd, d MMMM")
                     font.pixelSize: ClockStyle.textSmall
                     color: root.colContent
                     opacity: 0.8

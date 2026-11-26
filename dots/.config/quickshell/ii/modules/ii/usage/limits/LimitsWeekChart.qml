@@ -135,7 +135,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     height: root.labelHeight
                     verticalAlignment: Text.AlignBottom
-                    text: Qt.locale().toString(new Date(root.dates[column.index] + "T12:00:00"), "ddd").slice(0, 3)
+                    text: Translation.clip(Translation.formatDate(new Date(root.dates[column.index] + "T12:00:00"), "ddd"), 3)
                     font.pixelSize: ClockStyle.textSmall
                     font.weight: column.isToday ? Font.Bold : Font.Medium
                     color: root.colContent
@@ -148,7 +148,7 @@ Item {
 
                 StyledToolTip {
                     extraVisibleCondition: barHover.hovered
-                    text: Qt.locale().toString(new Date(root.dates[column.index] + "T12:00:00"), "dddd") + " · "
+                    text: Translation.formatDate(new Date(root.dates[column.index] + "T12:00:00"), "dddd") + " · "
                         + (column.value > 0 ? ScreenTimeLimits.formatSeconds(column.value) : Translation.tr("No data"))
                         + (column.met ? " · " + Translation.tr("within the limit") : "")
                 }

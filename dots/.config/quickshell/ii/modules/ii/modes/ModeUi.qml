@@ -97,7 +97,7 @@ Singleton {
     function clock(epochMs) {
         if (!epochMs || epochMs <= 0)
             return "";
-        return new Date(epochMs).toLocaleTimeString(Qt.locale(), Locale.ShortFormat);
+        return Translation.westernDigits(new Date(epochMs).toLocaleTimeString(Translation.locale, Locale.ShortFormat));
     }
 
     readonly property var dayShort: [
@@ -672,7 +672,7 @@ Singleton {
             return Translation.tr("Today");
         if (day === today - 86400000)
             return Translation.tr("Yesterday");
-        return new Date(epochMs).toLocaleDateString(Qt.locale(), Locale.LongFormat);
+        return Translation.formatDate(new Date(epochMs), Locale.LongFormat);
     }
 
     // A time for today, a day and time for anything older.

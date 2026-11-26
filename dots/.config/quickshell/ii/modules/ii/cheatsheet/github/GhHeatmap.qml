@@ -39,7 +39,7 @@ Item {
         const dt = new Date(d + "T00:00:00");
         const prev = i > 0 && root.dates[i - 1] ? new Date(root.dates[i - 1][0] + "T00:00:00") : null;
         return (!prev || prev.getMonth() !== dt.getMonth()) && dt.getDate() <= 14 || i === 0
-            ? dt.toLocaleDateString(Qt.locale(), "MMM") : "";
+            ? Translation.formatDate(dt, "MMM") : "";
     }
 
     Row {
@@ -69,7 +69,10 @@ Item {
         y: 24
         spacing: root.gap
         Repeater {
-            model: ["", "Mon", "", "Wed", "", "Fri", ""]
+            model: {
+                const format = Translation.isArabic ? Locale.NarrowFormat : Locale.ShortFormat;
+                return ["", Translation.dayName(1, format), "", Translation.dayName(3, format), "", Translation.dayName(5, format), ""];
+            }
             delegate: Item {
                 required property string modelData
                 width: 28
@@ -116,7 +119,7 @@ Item {
                             onContainsMouseChanged: {
                                 if (!containsMouse) { root.hoverText = ""; return; }
                                 const d = root.dates[weekCol.index]?.[dayCell.index] ?? "";
-                                const when = d ? new Date(d + "T00:00:00").toLocaleDateString(Qt.locale(), "ddd d MMM yyyy") : "";
+                                const when = d ? Translation.formatDate(new Date(d + "T00:00:00"), "ddd d MMM yyyy") : "";
                                 root.hoverText = dayCell.modelData === 0
                                     ? Translation.tr("No contributions · %1").arg(when)
                                     : Translation.tr("%n contribution(s) · %1", "", dayCell.modelData).arg(when);

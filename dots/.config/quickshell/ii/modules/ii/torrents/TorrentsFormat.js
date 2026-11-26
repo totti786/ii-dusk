@@ -67,11 +67,11 @@ function isPaused(state) {
     return state.startsWith("stopped") || state.startsWith("paused");
 }
 
-function date(ts) {
+function date(ts, format) {
     if (!ts || ts <= 0)
         return "";
     const d = new Date(ts * 1000);
-    return Qt.formatDateTime(d, "d MMM yyyy, hh:mm");
+    return format(d, "d MMM yyyy, hh:mm");
 }
 
 function duration(seconds) {

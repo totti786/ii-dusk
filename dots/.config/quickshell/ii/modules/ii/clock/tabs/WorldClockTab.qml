@@ -116,7 +116,7 @@ Item {
 
                         StyledText {
                             visible: ClockFormat.use12Hour
-                            text: root.now.getHours() >= 12 ? Qt.locale().pmText : Qt.locale().amText
+                            text: root.now.getHours() >= 12 ? Translation.locale.pmText : Translation.locale.amText
                             font.pixelSize: hero.digitSize * 0.22
                             color: ClockStyle.colSubtext
                         }
@@ -134,7 +134,7 @@ Item {
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: Qt.locale().toString(root.now, "dddd, d MMMM")
+                    text: Translation.formatDate(root.now, "dddd, d MMMM")
                     font.pixelSize: ClockStyle.textLarge
                     color: ClockStyle.colSubtext
                 }

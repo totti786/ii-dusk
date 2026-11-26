@@ -25,7 +25,7 @@ Item {
 
     readonly property var nextAlarm: AlarmService.nextAlarm(DateTime.clock.date)
     readonly property string alarmText: root.nextAlarm
-        ? Qt.locale().toString(root.nextAlarm.at, Config.options?.time.format ?? "hh:mm") : ""
+        ? Translation.formatDate(root.nextAlarm.at, Config.options?.time.format ?? "hh:mm") : ""
     readonly property bool showWeather: (Config.options.lock.showWeather ?? true) && Weather.data !== null && Weather.data.wCode !== undefined
 
     // One icon per app with notifications, newest first.

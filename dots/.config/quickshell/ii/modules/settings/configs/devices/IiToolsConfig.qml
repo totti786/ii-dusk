@@ -1889,7 +1889,7 @@ fi`]
                         ? [IiLinkService.isTailnet(devRow.conn.addr)
                             ? Translation.tr("Connected via Tailscale · %1").arg(devRow.conn.addr)
                             : Translation.tr("Connected · %1").arg(devRow.conn.addr)].concat(devRow.statusParts).join(" · ")
-                        : Translation.tr("Last seen %1").arg(devRow.device?.lastSeen ? new Date(devRow.device.lastSeen).toLocaleString(Qt.locale(), Locale.ShortFormat) : "—")
+                        : Translation.tr("Last seen %1").arg(devRow.device?.lastSeen ? Translation.westernDigits(new Date(devRow.device.lastSeen).toLocaleString(Translation.locale, Locale.ShortFormat)) : "—")
                 }
             }
 
@@ -2074,7 +2074,7 @@ fi`]
                     color: Appearance.colors.colSubtext
                     text: pcRow.online
                         ? Translation.tr("Connected")
-                        : Translation.tr("Last seen %1").arg(pcRow.pc?.lastSeen ? new Date(pcRow.pc.lastSeen).toLocaleString(Qt.locale(), Locale.ShortFormat) : "—")
+                        : Translation.tr("Last seen %1").arg(pcRow.pc?.lastSeen ? Translation.westernDigits(new Date(pcRow.pc.lastSeen).toLocaleString(Translation.locale, Locale.ShortFormat)) : "—")
                 }
             }
 

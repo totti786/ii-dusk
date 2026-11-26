@@ -168,7 +168,7 @@ ExpressiveCardWidget {
                         font.variableAxes: ({ "wght": 650, "wdth": 100, "ROND": 100 })
                     }
                     StyledText {
-                        text: Qt.locale().toString(row.modelData.date, "d MMM yyyy")
+                        text: Translation.formatDate(row.modelData.date, "d MMM yyyy")
                         color: root.cardScheme.subtextColorOnBg
                         font.family: Appearance.font.family.main
                         font.pixelSize: 11

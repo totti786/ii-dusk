@@ -61,8 +61,8 @@ Item {
         if (event?.allDay === true)
             return Translation.tr("All Day");
         const format = Config.options?.time?.format ?? "hh:mm";
-        const start = Qt.locale().toString(new Date(event.startDate), format);
-        const end = Qt.locale().toString(new Date(event.endDate), format);
+        const start = Translation.formatDate(new Date(event.startDate), format);
+        const end = Translation.formatDate(new Date(event.endDate), format);
         return start + " - " + end;
     }
 

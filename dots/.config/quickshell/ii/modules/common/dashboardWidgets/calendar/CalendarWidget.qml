@@ -148,8 +148,7 @@ Item {
                              dayDate.getMonth() === today.getMonth() &&
                              dayDate.getDate() === today.getDate());
             const dayOfWeek = dayDate.getDay();
-            const shortName = Qt.locale().dayName(dayOfWeek, Locale.ShortFormat);
-            const letter = shortName ? shortName.charAt(0).toUpperCase() : "";
+            const letter = Translation.dayName(dayOfWeek, Locale.NarrowFormat).toUpperCase();
             list.push({
                 date: dayDate,
                 day: dayDate.getDate(),
@@ -278,7 +277,7 @@ Item {
                 id: todayButton
                 Accessible.name: Translation.tr("Today")
                 implicitHeight: root.headerHeight
-                buttonText: `${monthShift != 0 ? "• " : ""}${root.isCompact ? viewingDate.toLocaleDateString(Qt.locale(), "MMM yyyy") : viewingDate.toLocaleDateString(Qt.locale(), "MMMM yyyy")}`
+                buttonText: `${monthShift != 0 ? "• " : ""}${root.isCompact ? Translation.formatDate(viewingDate, "MMM yyyy") : Translation.formatDate(viewingDate, "MMMM yyyy")}`
                 tooltipText: Translation.tr("Today") + " (Ctrl+Home)"
                 onClicked: root.selectDate(new Date())
                 contentItem: TaskShortcutContent {
@@ -394,7 +393,7 @@ Item {
                                     && (root.activeFocus || activeFocus || root.hintVisible)
                                 showShortcutHint: root.hintVisible && selected && taskList.length > 0
                                 activeFocusOnTab: isToday !== -1
-                                Accessible.name: new Date(root.viewingDate.getFullYear(), root.viewingDate.getMonth(), Number(day)).toLocaleDateString(Qt.locale(), "dddd, d MMMM yyyy")
+                                Accessible.name: Translation.formatDate(new Date(root.viewingDate.getFullYear(), root.viewingDate.getMonth(), Number(day)), "dddd, d MMMM yyyy")
                                 onActiveFocusChanged: {
                                     if (activeFocus && isToday !== -1) {
                                         root.dismissPopups();
@@ -455,7 +454,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: root.selectedDate.toLocaleDateString(Qt.locale(), "ddd, d MMM")
+                    text: Translation.formatDate(root.selectedDate, "ddd, d MMM")
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.DemiBold
                     color: Appearance.colors.colOnSurface
@@ -586,7 +585,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: root.selectedDate.toLocaleDateString(Qt.locale(), "ddd, d MMM")
+                    text: Translation.formatDate(root.selectedDate, "ddd, d MMM")
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     font.weight: Font.DemiBold
                     color: Appearance.colors.colOnSurface
@@ -749,7 +748,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        text: root.selectedDate.toLocaleDateString(Qt.locale(), "MMMM yyyy")
+                        text: Translation.formatDate(root.selectedDate, "MMMM yyyy")
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.weight: Font.DemiBold
                         color: Appearance.colors.colOnLayer1
@@ -910,7 +909,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        text: root.selectedDate.toLocaleDateString(Qt.locale(), "MMM yyyy")
+                        text: Translation.formatDate(root.selectedDate, "MMM yyyy")
                         font.pixelSize: Appearance.font.pixelSize.small
                         font.weight: Font.DemiBold
                         color: Appearance.colors.colOnLayer1
@@ -999,7 +998,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         text: root.selectedDate.toDateString() === (new Date()).toDateString()
                             ? Translation.tr("Today")
-                            : root.selectedDate.toLocaleDateString(Qt.locale(), "d MMM")
+                            : Translation.formatDate(root.selectedDate, "d MMM")
                         font.pixelSize: Appearance.font.pixelSize.smallest * 0.9
                         font.weight: Font.Medium
                         color: Appearance.colors.colOnLayer2
@@ -1051,7 +1050,7 @@ Item {
 
                     StyledText {
                         Layout.fillWidth: true
-                        text: root.selectedDate.toLocaleDateString(Qt.locale(), "ddd, d MMM")
+                        text: Translation.formatDate(root.selectedDate, "ddd, d MMM")
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         font.weight: Font.DemiBold
                         color: Appearance.colors.colOnSurface

@@ -459,7 +459,7 @@ Singleton {
             return "";
         const term = root.highlightTerms[root.lang] ?? "highlights";
         const joiner = (root.lang === "pt" || root.lang === "es") ? "x" : "vs";
-        const date = match.date ? new Date(match.date).toLocaleDateString(Qt.locale(root.languageCode), Locale.ShortFormat) : "";
+        const date = match.date ? Translation.westernDigits(new Date(match.date).toLocaleDateString(Qt.locale(root.languageCode), Locale.ShortFormat)) : "";
         const query = `${match.home?.name ?? ""} ${joiner} ${match.away?.name ?? ""} ${term} ${date}`.replace(/\s+/g, " ").trim();
         return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
     }

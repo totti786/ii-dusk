@@ -73,7 +73,7 @@ AbstractBackgroundWidget {
                 x: root.padding
                 y: root.padding - 2
                 width: parent.width - root.padding * 2 - (weekBadge.visible ? weekBadge.width + 8 : 0)
-                text: cal.locale.toString(cal.today, "dddd")
+                text: Translation.formatDate(cal.today, "dddd")
                 color: WidgetColorScheme.textColorOnBg
                 font.family: Appearance.font.family.title
                 font.pixelSize: Appearance.font.pixelSize.larger
@@ -133,7 +133,7 @@ AbstractBackgroundWidget {
 
                     StyledText {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: cal.locale.toString(cal.today, "MMMM")
+                        text: Translation.formatDate(cal.today, "MMMM")
                         color: WidgetColorScheme.textColorOnPillFill
                         font.pixelSize: Appearance.font.pixelSize.normal
                         font.variableAxes: ({ "wght": 650, "wdth": 100, "ROND": 100 })

@@ -9,7 +9,7 @@ Item {
     property real targetSize: 0
     property alias text: bubbleText.text
 
-    text: Qt.locale().toString(DateTime.clock.date, root.isMonth ? "MM" : "d")
+    text: Translation.formatDate(DateTime.clock.date, root.isMonth ? "MM" : "d")
 
     MaterialShape {
         id: bubble

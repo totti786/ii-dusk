@@ -211,7 +211,7 @@ Rectangle {
                     visible: root.reminder.schedule !== null
                     symbol: root.reminder.snoozedUntil > 0 ? "snooze" : "schedule"
                     label: root.reminder.snoozedUntil > 0
-                        ? Translation.tr("Snoozed until %1").arg(Qt.locale().toString(new Date(root.reminder.snoozedUntil), Config.options?.time?.format ?? "hh:mm"))
+                        ? Translation.tr("Snoozed until %1").arg(Translation.formatDate(new Date(root.reminder.snoozedUntil), Config.options?.time?.format ?? "hh:mm"))
                         : RemindersService.whenText(root.reminder, root.now)
                     alert: root.overdue
                 }

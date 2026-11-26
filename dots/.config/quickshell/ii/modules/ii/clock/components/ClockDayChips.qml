@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.services
 
 /**
  * The seven repeat days of an alarm, starting on the week start the user chose.
@@ -51,7 +52,7 @@ RowLayout {
             contentItem: Item {
                 StyledText {
                     anchors.centerIn: parent
-                    text: Qt.locale().dayName(dayChip.day, Locale.NarrowFormat)
+                    text: Translation.dayName(dayChip.day, Locale.NarrowFormat)
                     font.pixelSize: ClockStyle.textNormal
                     font.weight: Font.DemiBold
                     color: dayChip.on ? root.colOnText : root.colOffText

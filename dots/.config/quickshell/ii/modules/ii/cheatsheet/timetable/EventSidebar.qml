@@ -291,8 +291,8 @@ Item {
         if (isNaN(date.getTime()))
             return String(occurrence?.recurrenceId ?? "");
         return root.eventAllDay
-            ? Qt.formatDate(date, "ddd, d MMM yyyy")
-            : Qt.formatDateTime(date, "ddd, d MMM yyyy · hh:mm");
+            ? Translation.formatDate(date, "ddd, d MMM yyyy")
+            : Translation.formatDate(date, "ddd, d MMM yyyy · hh:mm");
     }
 
     function restoreException(rawDate) {
@@ -372,7 +372,7 @@ Item {
         if (!event || event.sportEvent === true || root.eventNoteKey.length === 0)
             return;
         const title = String(event.content ?? Translation.tr("Event")).slice(0, 120);
-        let header = Qt.formatDateTime(event.startDate, "dddd, d MMM yyyy · hh:mm");
+        let header = Translation.formatDate(event.startDate, "dddd, d MMM yyyy · hh:mm");
         if (String(event.location ?? "").length > 0)
             header += "\n" + String(event.location);
         const created = NotesService.create(title, header, null);
@@ -401,7 +401,7 @@ Item {
 
     function exceptionLabel(value) {
         const date = root.localCalendarDate(value);
-        return isNaN(date.getTime()) ? String(value ?? "") : Qt.formatDate(date, "ddd, d MMM yyyy");
+        return isNaN(date.getTime()) ? String(value ?? "") : Translation.formatDate(date, "ddd, d MMM yyyy");
     }
 
     function startCreate(date) {
@@ -732,12 +732,12 @@ Item {
         case "sources":
             return Translation.tr("Calendar sources");
         default:
-            return root.sportsListOnly ? Translation.tr("Sports") : Qt.formatDate(root.day, "MMMM yyyy");
+            return root.sportsListOnly ? Translation.tr("Sports") : Translation.formatDate(root.day, "MMMM yyyy");
         }
     }
 
     function timeLabel(minutes) {
-        return H.minutesToTimeStr(minutes, Config.options?.time.format);
+        return Translation.dayMarks(H.minutesToTimeStr(minutes, Config.options?.time.format));
     }
 
     function durationLabel(minutes) {
@@ -939,7 +939,7 @@ Item {
 
                                     StyledText {
                                         Layout.alignment: Qt.AlignHCenter
-                                        text: Qt.formatDate(root.day, "ddd").toUpperCase()
+                                        text: Translation.formatDate(root.day, "ddd").toUpperCase()
                                         font.pixelSize: Appearance.font.pixelSize.smallest
                                         font.weight: Font.Bold
                                         color: root.isDayToday ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSurfaceVariant
@@ -973,7 +973,7 @@ Item {
 
                                 StyledText {
                                     Layout.fillWidth: true
-                                    text: Qt.formatDate(root.day, "dddd, d MMMM")
+                                    text: Translation.formatDate(root.day, "dddd, d MMMM")
                                     font.pixelSize: Appearance.font.pixelSize.smallie
                                     font.weight: Font.Medium
                                     color: Appearance.colors.colOnSurfaceVariant
@@ -1707,7 +1707,7 @@ Item {
                                     Layout.fillWidth: true
                                     symbol: "cake"
                                     caption: Translation.tr("Birthday")
-                                    value: Qt.formatDate(root.event?.startDate ?? root.day, "d MMMM")
+                                    value: Translation.formatDate(root.event?.startDate ?? root.day, "d MMMM")
                                 }
 
                                 InfoRow {
@@ -1777,7 +1777,7 @@ Item {
 
                                 InfoChip {
                                     symbol: "calendar_month"
-                                    label: Qt.formatDate(root.event?.startDate ?? root.day, "ddd, d MMM yyyy")
+                                    label: Translation.formatDate(root.event?.startDate ?? root.day, "ddd, d MMM yyyy")
                                 }
 
                                 InfoChip {
@@ -2182,7 +2182,7 @@ Item {
                                 symbol: "calendar_month"
                                 shapeKind: MaterialShape.Shape.Cookie12Sided
                                 caption: Translation.tr("Date")
-                                value: Qt.formatDate(root.formDate, "dddd, d MMMM yyyy")
+                                value: Translation.formatDate(root.formDate, "dddd, d MMMM yyyy")
                                 onTriggered: root.datePickerRequested("form", root.formDate)
                             }
 
@@ -2441,7 +2441,7 @@ Item {
                                 visible: root.createKind === "event" && root.formRepeat !== ""
                                 symbol: "event_upcoming"
                                 caption: Translation.tr("Repeats until")
-                                value: root.formRepeatUntil ? Qt.formatDate(new Date(root.formRepeatUntil + "T00:00:00"), "dd MMM yyyy") : Translation.tr("No end date")
+                                value: root.formRepeatUntil ? Translation.formatDate(new Date(root.formRepeatUntil + "T00:00:00"), "dd MMM yyyy") : Translation.tr("No end date")
                                 onTriggered: root.datePickerRequested("repeatUntil", root.formRepeatUntil ? new Date(root.formRepeatUntil + "T00:00:00") : root.formDate)
                             }
                             DurationChip {

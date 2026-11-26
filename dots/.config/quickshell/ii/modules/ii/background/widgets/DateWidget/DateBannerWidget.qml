@@ -50,7 +50,7 @@ AbstractBackgroundWidget {
     readonly property var facts: {
         const today = cal.today;
         const list = [
-            { label: Translation.tr("Date"), value: cal.locale.toString(today, "dd MMM yyyy") },
+            { label: Translation.tr("Date"), value: Translation.formatDate(today, "dd MMM yyyy") },
             { label: Translation.tr("Week"), value: String(cal.weekNumber(today)) },
             { label: Translation.tr("Day"), value: Translation.tr("%1 of %2").arg(cal.dayOfYear(today)).arg(cal.daysInYear(today)) }
         ];
@@ -93,7 +93,7 @@ AbstractBackgroundWidget {
                 anchors.bottom: factGrid.top
                 anchors.bottomMargin: 2
                 width: parent.width - root.padding * 2
-                text: cal.locale.toString(cal.today, "dddd").toUpperCase()
+                text: Translation.formatDate(cal.today, "dddd").toUpperCase()
                 color: WidgetColorScheme.accentColor
                 font.family: Appearance.font.family.main
                 font.pixelSize: root.headlineMaxSize

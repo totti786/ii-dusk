@@ -53,7 +53,7 @@ AppSettingsSection {
         if (!root.options.enable)
             return Translation.tr("Turn it on to see the phone's events in the Timetable.");
         if (IiLinkService.calendarDev !== "" && CalendarService.phoneLive) {
-            const when = Qt.formatTime(new Date(IiLinkService.calendarAt), Config.options?.time?.format ?? "hh:mm");
+            const when = Translation.formatDate(new Date(IiLinkService.calendarAt), Config.options?.time?.format ?? "hh:mm");
             const access = CalendarService.phoneCalendars.some(calendar => !calendar.readOnly)
                 ? Translation.tr("editable from this PC")
                 : Translation.tr("read-only");

@@ -144,7 +144,8 @@ Singleton {
 
     readonly property string hijriDate: {
         root.dataVersion;
-        return root._dayRecord(root.now)?.h ?? "";
+        const date = root._dayRecord(root.now)?.h ?? "";
+        return Translation.isArabic ? root._arabicHijri(date) : date;
     }
 
     // The prayer worth a glance on the island: the next one for the last 20 minutes before
@@ -165,7 +166,7 @@ Singleton {
     readonly property int minutesToNext: root.next ? Math.max(0, Math.ceil((root.next.time.getTime() - root.now.getTime()) / 60000)) : 0
 
     function formatTime(date) {
-        return Qt.locale().toString(date, Config.options?.time?.format ?? "hh:mm");
+        return Translation.formatDate(date, Config.options?.time?.format ?? "hh:mm");
     }
 
     // The clock and the AM/PM mark apart, for a place too narrow to hold "12:19 PM" on one line:
@@ -182,14 +183,29 @@ Singleton {
         return at < 0 ? full : full.slice(0, at).trim();
     }
     function formatSuffix(date) {
-        return root._suffixCode === "" ? "" : Qt.locale().toString(date, root._suffixCode);
+        return root._suffixCode === "" ? "" : Translation.formatDate(date, root._suffixCode);
+    }
+
+    // The API spells the months in Latin letters with accents ("Jumādá al-ākhirah").
+    readonly property var _hijriMonths: ({
+        "muharram": "محرم", "safar": "صفر", "rabi al-awwal": "ربيع الأول", "rabi al-thani": "ربيع الآخر",
+        "jumada al-ula": "جمادى الأولى", "jumada al-akhirah": "جمادى الآخرة", "rajab": "رجب", "shaban": "شعبان",
+        "ramadan": "رمضان", "shawwal": "شوال", "dhu al-qadah": "ذو القعدة", "dhu al-hijjah": "ذو الحجة"
+    })
+    function _arabicHijri(date) {
+        const parts = date.match(/^(\d+) (.+) (\d+)$/);
+        if (!parts)
+            return date;
+        const key = parts[2].normalize("NFD").replace(/[\u0300-\u036f\u02bf\u02be'’]/g, "").toLowerCase();
+        const month = root._hijriMonths[key];
+        return month ? `${parts[1]} ${month} ${parts[3]}` : date;
     }
 
     // "2h 14m" / "14m"
     function formatRemaining(minutes) {
         const h = Math.floor(minutes / 60);
         const m = minutes % 60;
-        return h > 0 ? `${h}h ${m}m` : `${m}m`;
+        return h > 0 ? Translation.tr("%1h %2m").arg(h).arg(m) : Translation.tr("%1m").arg(m);
     }
 
     // ── Fetching ──

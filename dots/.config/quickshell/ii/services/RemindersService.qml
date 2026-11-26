@@ -81,7 +81,7 @@ Singleton {
                 return;
             const due = Logic.dueAt(item, root.allDayTime);
             const label = item.schedule.time
-                ? Qt.locale().toString(due, Config.options?.time?.format ?? "hh:mm") + " " + (item.title || Translation.tr("Reminder"))
+                ? Translation.formatDate(due, Config.options?.time?.format ?? "hh:mm") + " " + (item.title || Translation.tr("Reminder"))
                 : (item.title || Translation.tr("Reminder"));
             (byDay[item.schedule.date] = byDay[item.schedule.date] ?? []).push({
                 id: "reminder:" + item.id,
@@ -161,10 +161,10 @@ Singleton {
         const dayText = diff === 0 ? Translation.tr("Today")
             : diff === 1 ? Translation.tr("Tomorrow")
             : diff === -1 ? Translation.tr("Yesterday")
-            : Qt.locale().toString(due, due.getFullYear() === base.getFullYear() ? "ddd, d MMM" : "d MMM yyyy");
+            : Translation.formatDate(due, due.getFullYear() === base.getFullYear() ? "ddd, d MMM" : "d MMM yyyy");
         if (!reminder.schedule.time)
             return dayText;
-        return dayText + " " + Qt.locale().toString(due, Config.options?.time?.format ?? "hh:mm");
+        return dayText + " " + Translation.formatDate(due, Config.options?.time?.format ?? "hh:mm");
     }
 
     /** "Every day", "Every 2 weeks on Tue, Thu", "Monthly on the 1st and 15th" … */
@@ -187,7 +187,7 @@ Singleton {
             for (let i = 0; i < 7; i++) {
                 const day = (root.firstDay + i) % 7;
                 if (repeat.weekdays[day])
-                    names.push(Qt.locale().dayName(day, Locale.ShortFormat));
+                    names.push(Translation.dayName(day, Locale.ShortFormat));
             }
             text += " · " + names.join(", ");
         } else if (repeat.unit === "month" && repeat.monthDays.length > 0) {
@@ -195,13 +195,13 @@ Singleton {
         } else if (repeat.unit === "year" && repeat.yearDates.length > 0) {
             text += " · " + repeat.yearDates.map(key => {
                 const parts = key.split("-").map(Number);
-                return Qt.locale().toString(new Date(2000, parts[0] - 1, parts[1]), "d MMM");
+                return Translation.formatDate(new Date(2000, parts[0] - 1, parts[1]), "d MMM");
             }).join(", ");
         }
         if (repeat.end.kind === "count")
             text += " · " + Translation.tr("%1 times").arg(String(repeat.end.count));
         else if (repeat.end.kind === "until")
-            text += " · " + Translation.tr("until %1").arg(Qt.locale().toString(Logic.parseDay(repeat.end.until), "d MMM yyyy"));
+            text += " · " + Translation.tr("until %1").arg(Translation.formatDate(Logic.parseDay(repeat.end.until), "d MMM yyyy"));
         return text;
     }
 

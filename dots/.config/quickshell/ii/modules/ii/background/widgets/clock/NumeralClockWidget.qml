@@ -119,7 +119,7 @@ AbstractBackgroundWidget {
                 readonly property bool handBelow: root.now.getMinutes() > 15 && root.now.getMinutes() < 45
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: handBelow ? frame.height / 2 - 26 - height : frame.height / 2 + 26
-                text: Qt.locale().toString(root.now, "ddd dd").replace(".", "").toUpperCase()
+                text: Translation.formatDate(root.now, "ddd dd").replace(".", "").toUpperCase()
                 color: WidgetColorScheme.subtextColorOnBg
                 font.family: Appearance.font.family.monospace
                 font.pixelSize: Appearance.font.pixelSize.smallest + 1

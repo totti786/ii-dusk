@@ -45,7 +45,7 @@ AbstractBackgroundWidget {
     }
 
     function formatDateDay(d) {
-        const s = Qt.locale().toString(d, "ddd");
+        const s = Translation.formatDate(d, "ddd");
         return s.charAt(0).toUpperCase() + s.slice(1);
     }
 

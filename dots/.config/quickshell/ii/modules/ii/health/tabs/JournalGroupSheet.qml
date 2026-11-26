@@ -91,7 +91,7 @@ ClockSheet {
         symbol: "schedule"
         shapeKind: MaterialShape.Shape.Sunny
         caption: Translation.tr("First seen")
-        value: root.group?.firstSeen ? Qt.formatDateTime(new Date(Number(root.group.firstSeen)), "d MMM yyyy, hh:mm") : "—"
+        value: root.group?.firstSeen ? Translation.formatDate(new Date(Number(root.group.firstSeen)), "d MMM yyyy, hh:mm") : "—"
         showChevron: false
     }
 

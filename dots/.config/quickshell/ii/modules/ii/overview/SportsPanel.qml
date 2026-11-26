@@ -189,7 +189,7 @@ Item {
                                 id: scoreText
                                 anchors.centerIn: parent
                                 text: modelData.state === "pre"
-                                    ? Qt.formatTime(new Date(modelData.date), Config.options.time.format)
+                                    ? Translation.formatDate(new Date(modelData.date), Config.options.time.format)
                                     : String(modelData.home?.score ?? "0") + "  ×  " + String(modelData.away?.score ?? "0")
                                 font.family: Appearance.font.family.monospace
                                 font.pixelSize: Appearance.font.pixelSize.large

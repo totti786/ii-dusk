@@ -273,7 +273,7 @@ ContentPage {
                         if (ShellBackup.lastBackupTime === "")
                             return Translation.tr("No backup yet.");
                         return Translation.tr("Last backup: %1")
-                            .arg(new Date(ShellBackup.lastBackupTime).toLocaleString(Qt.locale()));
+                            .arg(Translation.westernDigits(new Date(ShellBackup.lastBackupTime).toLocaleString(Translation.locale)));
                     }
                 }
             }

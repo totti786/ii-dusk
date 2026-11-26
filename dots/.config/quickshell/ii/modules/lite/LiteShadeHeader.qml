@@ -266,7 +266,7 @@ ColumnLayout {
                 spacing: 6
                 StyledText {
                     Layout.fillWidth: true
-                    text: month.unfolded ? Qt.formatDate(month.shown, "MMMM yyyy") : Qt.formatDate(month.today, "dddd, d MMMM")
+                    text: month.unfolded ? Translation.formatDate(month.shown, "MMMM yyyy") : Translation.formatDate(month.today, "dddd, d MMMM")
                     color: Appearance.colors.colOnLayer0
                     font.weight: Font.Medium
                     MouseArea {
@@ -326,7 +326,7 @@ ColumnLayout {
                             Layout.fillWidth: true
                             Layout.preferredWidth: 1
                             horizontalAlignment: Text.AlignHCenter
-                            text: Qt.locale().dayName((month.firstDay + index) % 7, Locale.NarrowFormat)
+                            text: Translation.dayName((month.firstDay + index) % 7, Locale.NarrowFormat)
                             color: Appearance.colors.colSubtext
                             font.pixelSize: Appearance.font.pixelSize.smaller
                         }

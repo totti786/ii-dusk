@@ -455,13 +455,13 @@ Item {
         // where in the year it sits.
         const first = (root.dates.length - 1) % root.dayStride;
         return root.dates.map((date, index) => Format.dayLabel(date,
-            index === first || index === root.dates.length - 1 || date.slice(-2) === "01"));
+            index === first || index === root.dates.length - 1 || date.slice(-2) === "01", (d, f) => Translation.formatDate(d, f)));
     }
 
     readonly property var bucketNames: {
         if (root.isSingleDay)
             return root.chartLabels;
-        return root.dates.map(date => new Date(date + "T12:00:00").toLocaleDateString(Qt.locale(), "ddd d MMM"));
+        return root.dates.map(date => Translation.formatDate(new Date(date + "T12:00:00"), "ddd d MMM"));
     }
 
     readonly property string scopeTitle: {

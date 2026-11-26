@@ -100,8 +100,8 @@ AbstractBackgroundWidget {
                             StyledText {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: chip.today
-                                    ? cal.locale.toString(chip.modelData, "ddd").toUpperCase()
-                                    : cal.locale.dayName(chip.modelData.getDay(), Locale.NarrowFormat)
+                                    ? Translation.formatDate(chip.modelData, "ddd").toUpperCase()
+                                    : Translation.dayName(chip.modelData.getDay(), Locale.NarrowFormat)
                                 color: chip.contentColor
                                 font.family: Appearance.font.family.monospace
                                 font.pixelSize: Appearance.font.pixelSize.smaller

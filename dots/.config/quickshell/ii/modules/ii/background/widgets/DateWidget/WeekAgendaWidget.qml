@@ -81,7 +81,7 @@ AbstractBackgroundWidget {
                     anchors.left: parent.left
                     anchors.top: parent.top
                     anchors.topMargin: -4
-                    text: cal.locale.toString(cal.today, "MMMM")
+                    text: Translation.formatDate(cal.today, "MMMM")
                     color: WidgetColorScheme.textColorOnBg
                     font.family: Appearance.font.family.title
                     font.pixelSize: 32
@@ -160,7 +160,7 @@ AbstractBackgroundWidget {
                                 }
                                 StyledText {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: cal.locale.dayName(dayRow.modelData.getDay(), Locale.NarrowFormat)
+                                    text: Translation.dayName(dayRow.modelData.getDay(), Locale.NarrowFormat)
                                     color: dayRow.today ? WidgetColorScheme.onAccentColor : WidgetColorScheme.subtextColorOnBg
                                     font.family: Appearance.font.family.monospace
                                     font.pixelSize: Appearance.font.pixelSize.smaller

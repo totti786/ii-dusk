@@ -67,7 +67,7 @@ RowLayout {
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: Qt.locale().dayName(cell.date.getDay(), Locale.ShortFormat).slice(0, 1)
+                    text: Translation.dayName(cell.date.getDay(), Locale.NarrowFormat)
                     font.pixelSize: Math.max(9, root.cellSize * 0.3)
                     font.weight: Font.DemiBold
                     color: cell.done

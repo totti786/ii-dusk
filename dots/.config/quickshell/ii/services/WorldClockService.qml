@@ -180,7 +180,7 @@ Singleton {
             return "--:--";
         const format = Config.options?.time?.format ?? "hh:mm";
         const withSecondsFormat = withSeconds ? format.replace(/mm/, "mm:ss") : format;
-        return Qt.locale().toString(wall, withSecondsFormat);
+        return Translation.formatDate(wall, withSecondsFormat);
     }
 
     function formatHourMinute(tz, date): string {
@@ -195,12 +195,12 @@ Singleton {
         const wall = root.wallClock(tz, date);
         if (!wall || !root.use12Hour)
             return "";
-        return wall.getHours() >= 12 ? Qt.locale().pmText : Qt.locale().amText;
+        return wall.getHours() >= 12 ? Translation.locale.pmText : Translation.locale.amText;
     }
 
     function formatDate(tz, date, format = "ddd, d MMM"): string {
         const wall = root.wallClock(tz, date);
-        return wall ? Qt.locale().toString(wall, format) : "";
+        return wall ? Translation.formatDate(wall, format) : "";
     }
 
     /** -1 yesterday, 0 today, 1 tomorrow — relative to the local calendar day. */

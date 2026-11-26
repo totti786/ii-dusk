@@ -100,17 +100,13 @@ function hourLabel(hour) {
     return `${hour < 10 ? "0" : ""}${hour}:00`;
 }
 
-/// Month abbreviations for the day axis. Hardcoded like `hourLabel`'s "HH:00":
-/// this file is a pragma library and has no QML locale to ask.
-var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
 /// Day of month for a "YYYY-MM-DD" key. `withMonth` spells the month out as well,
 /// for the days one starts and for the ends of the range — a bare number repeats
 /// every four weeks and never says which side of a boundary it falls on.
-function dayLabel(dateKey, withMonth) {
+function dayLabel(dateKey, withMonth, format) {
     const parts = dateKey.split("-");
     const day = parseInt(parts[2]);
     if (!withMonth)
         return `${day}`;
-    return `${day} ${MONTHS[parseInt(parts[1]) - 1] ?? ""}`;
+    return format(new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, day), "d MMM");
 }

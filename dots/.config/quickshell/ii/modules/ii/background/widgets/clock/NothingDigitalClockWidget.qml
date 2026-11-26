@@ -54,7 +54,7 @@ AbstractBackgroundWidget {
     readonly property string amPmString: rawHour >= 12 ? "PM" : "AM"
 
     // Date string (e.g., "SAT, 8 AUG")
-    readonly property string dateString: Qt.locale().toString(DateTime.clock.date, "ddd, d MMM").toUpperCase()
+    readonly property string dateString: Translation.formatDate(DateTime.clock.date, "ddd, d MMM").toUpperCase()
 
     // Shadow Effect
     StyledDropShadow {

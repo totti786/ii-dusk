@@ -79,7 +79,7 @@ AbstractBackgroundWidget {
                 y: root.padding - 22
                 width: root.contentWidth + 8
                 height: root.monthFigureSize + 16
-                text: cal.locale.toString(cal.today, "MMM").replace(".", "").toUpperCase()
+                text: Translation.formatDate(cal.today, "MMM").replace(".", "").toUpperCase()
                 color: WidgetColorScheme.accentColor
                 font.family: Appearance.font.family.main
                 font.pixelSize: root.monthFigureSize
@@ -96,7 +96,7 @@ AbstractBackgroundWidget {
                 anchors.top: monthName.bottom
                 anchors.topMargin: -6
                 width: root.contentWidth
-                text: cal.locale.toString(cal.today, "dddd d")
+                text: Translation.formatDate(cal.today, "dddd d")
                 color: WidgetColorScheme.textColorOnBg
                 font.family: Appearance.font.family.title
                 font.pixelSize: Appearance.font.pixelSize.huge

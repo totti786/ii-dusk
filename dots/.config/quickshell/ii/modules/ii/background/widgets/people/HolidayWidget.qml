@@ -59,7 +59,7 @@ ExpressiveCardWidget {
 
             StyledText {
                 anchors.centerIn: parent
-                text: root.next ? Qt.locale().toString(root.next.date, "MMM").replace(".", "").toUpperCase() : "—"
+                text: root.next ? Translation.formatDate(root.next.date, "MMM").replace(".", "").toUpperCase() : "—"
                 color: root.cardScheme.onAccentColor
                 font.family: Appearance.font.family.main
                 font.pixelSize: 15

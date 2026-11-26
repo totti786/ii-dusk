@@ -128,7 +128,7 @@ ExpressiveCardWidget {
         text: root.next === null
             ? Translation.tr("Add birthdays to your phone's contacts")
             : (root.next.age > 0 ? Translation.tr("Turns %1").arg(root.next.age) + " · " : "")
-              + Qt.locale().toString(root.next.date, "d MMMM")
+              + Translation.formatDate(root.next.date, "d MMMM")
         color: root.cardScheme.subtextColorOnBg
         font.family: Appearance.font.family.main
         font.pixelSize: Appearance.font.pixelSize.small

@@ -780,7 +780,7 @@ Singleton {
         if (!root.ready)
             return { ok: false, error: "notReady" };
         const noteTitle = String(title ?? "").trim()
-            || Translation.tr("Sketch %1").arg(Qt.formatDateTime(new Date(), "d MMM, HH:mm"));
+            || Translation.tr("Sketch %1").arg(Translation.formatDate(new Date(), "d MMM, HH:mm"));
         const noteId = root.createNote({ title: noteTitle.slice(0, 120), icon: "draw" });
         root.writeDocument(noteId, {
             id: noteId,

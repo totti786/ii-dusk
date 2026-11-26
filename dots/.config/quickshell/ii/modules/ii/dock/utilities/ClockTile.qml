@@ -32,7 +32,7 @@ UtilityTile {
     surfaceColor: ClockStyle.colSurfaceHigh
     contentColor: ClockStyle.colOnSurface
 
-    tooltipText: Qt.formatDate(tile.now, "dddd, d MMMM")
+    tooltipText: Translation.formatDate(tile.now, "dddd, d MMMM")
     panelSubtitle: ""
 
     function activate() {

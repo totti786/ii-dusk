@@ -60,7 +60,7 @@ ExpressiveCardWidget {
 
         // ── Date ──
         StyledText {
-            text: Qt.locale().toString(root.now, "dddd, d MMM")
+            text: Translation.formatDate(root.now, "dddd, d MMM")
             color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.title
             font.pixelSize: Appearance.font.pixelSize.larger
@@ -231,7 +231,7 @@ ExpressiveCardWidget {
             anchors.left: bedGlyph.right
             anchors.leftMargin: 8
             anchors.verticalCenter: parent.verticalCenter
-            text: Translation.tr("Bed at %1").arg(Qt.locale().toString(BedtimeService.targetFor(BedtimeService.nightKey(root.now)), Config.options?.time?.format ?? "hh:mm"))
+            text: Translation.tr("Bed at %1").arg(Translation.formatDate(BedtimeService.targetFor(BedtimeService.nightKey(root.now)), Config.options?.time?.format ?? "hh:mm"))
             color: root.cardScheme.textColorOnBg
             font.family: Appearance.font.family.main
             font.pixelSize: Appearance.font.pixelSize.small

@@ -505,7 +505,7 @@ Item {
 
                             StyledText {
                                 Layout.alignment: Qt.AlignHCenter
-                                text: Qt.locale().dayName(BedtimeService.parseKey(nightColumn.modelData.night).getDay(), Locale.NarrowFormat)
+                                text: Translation.dayName(BedtimeService.parseKey(nightColumn.modelData.night).getDay(), Locale.NarrowFormat)
                                 font.pixelSize: ClockStyle.textSmall
                                 font.weight: Font.DemiBold
                                 color: nightColumn.modelData.applies ? ClockStyle.colOnSurface : ClockStyle.colSubtext
@@ -523,7 +523,7 @@ Item {
 
                         StyledToolTip {
                             extraVisibleCondition: nightHover.hovered && (nightColumn.known || nightColumn.hasPhone)
-                            text: Qt.locale().toString(BedtimeService.parseKey(nightColumn.modelData.night), "dddd, d MMM") + " · "
+                            text: Translation.formatDate(BedtimeService.parseKey(nightColumn.modelData.night), "dddd, d MMM") + " · "
                                 + root.stopSummary(nightColumn.modelData)
                                 + (nightColumn.known ? " · " + root.lateLabel(nightColumn.modelData.lateMinutes) : "")
                                 + (nightColumn.modelData.estimated ? " · " + Translation.tr("estimated") : "")

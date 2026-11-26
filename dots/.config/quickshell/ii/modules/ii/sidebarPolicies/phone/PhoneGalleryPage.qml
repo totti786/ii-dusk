@@ -144,7 +144,7 @@ Rectangle {
             return Translation.tr("Today");
         if (diffDays === 1)
             return Translation.tr("Yesterday");
-        return Qt.formatDate(d, d.getFullYear() === now.getFullYear() ? "ddd, MMM d" : "MMM d, yyyy");
+        return Translation.formatDate(d, d.getFullYear() === now.getFullYear() ? "ddd, MMM d" : "MMM d, yyyy");
     }
 
     function formatBytes(bytes) {
@@ -168,7 +168,7 @@ Rectangle {
         if (taken > 0) {
             const d = new Date(taken);
             const sameYear = d.getFullYear() === new Date().getFullYear();
-            parts.push(Qt.formatDateTime(d, sameYear ? "MMM d, HH:mm" : "MMM d, yyyy, HH:mm"));
+            parts.push(Translation.formatDate(d, sameYear ? "MMM d, HH:mm" : "MMM d, yyyy, HH:mm"));
         }
         const sz = formatBytes(item.size);
         if (sz.length > 0)

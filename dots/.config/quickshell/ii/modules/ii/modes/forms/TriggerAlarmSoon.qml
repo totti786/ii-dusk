@@ -49,7 +49,7 @@ ColumnLayout {
 
     FormHint {
         text: PhoneAlarmService.nextAt
-            ? Translation.tr("Phone's next alarm: %1").arg(Qt.formatDateTime(PhoneAlarmService.nextAt, "ddd HH:mm"))
+            ? Translation.tr("Phone's next alarm: %1").arg(Translation.formatDate(PhoneAlarmService.nextAt, "ddd HH:mm"))
             : Translation.tr("The phone's alarm is read over ADB while the phone is connected.")
     }
 }

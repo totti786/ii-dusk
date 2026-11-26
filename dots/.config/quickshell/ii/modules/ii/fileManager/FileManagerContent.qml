@@ -229,13 +229,13 @@ FocusScope {
 
     function titleFor(p: string): string {
         if (p.startsWith("trash:"))
-            return qsTr("Trash");
+            return Translation.tr("Trash");
         if (p.startsWith("recent:"))
-            return qsTr("Recent");
+            return Translation.tr("Recent");
         if (p.startsWith("starred:"))
-            return qsTr("Starred");
+            return Translation.tr("Starred");
         if (p === backend.home)
-            return qsTr("Home");
+            return Translation.tr("Home");
         return p === "/" ? "/" : root.basename(p);
     }
 
@@ -443,7 +443,7 @@ FocusScope {
         const on = !paths.every(p => root.starredSet[p]);
         root.starred = on ? root.starred.concat(paths.filter(p => !root.starredSet[p])) : root.starred.filter(p => paths.indexOf(p) < 0);
         backend.request("meta_set", { kind: "star", paths: paths, on: on }, { done: () => { if (root.path.startsWith("starred:")) root.reload(true); } });
-        root.toast(on ? qsTr("Added to Starred") : qsTr("Removed from Starred"));
+        root.toast(on ? Translation.tr("Added to Starred") : Translation.tr("Removed from Starred"));
     }
 
     function setFolderColor(paths: var, color: string): void {
@@ -487,15 +487,15 @@ FocusScope {
 
     function connectServer(): void {
         root.openDialog(promptDialog, {
-            title: qsTr("Connect to server"),
-            message: qsTr("An address such as smb://nas/share, sftp://user@host/ or ftp://host/"),
-            label: qsTr("Address"), text: "smb://", confirmText: qsTr("Connect"), selectBase: false,
+            title: Translation.tr("Connect to server"),
+            message: Translation.tr("An address such as smb://nas/share, sftp://user@host/ or ftp://host/"),
+            label: Translation.tr("Address"), text: "smb://", confirmText: Translation.tr("Connect"), selectBase: false,
             onAcceptedFn: uri => root.mountNet(uri)
         });
     }
 
     function mountNet(uri: string): void {
-        root.toast(qsTr("Connecting…"));
+        root.toast(Translation.tr("Connecting…"));
         backend.request("net_mount", { uri: uri }, {
             done: m => { root.refreshNet(); root.go(m.path); },
             error: msg => root.toast(msg)
@@ -504,7 +504,7 @@ FocusScope {
 
     function unmountNet(mount: var): void {
         backend.request("net_unmount", { uri: mount.uri }, {
-            done: () => { root.refreshNet(); if (root.path.startsWith(mount.path)) root.go(backend.home); root.toast(qsTr("Disconnected")); },
+            done: () => { root.refreshNet(); if (root.path.startsWith(mount.path)) root.go(backend.home); root.toast(Translation.tr("Disconnected")); },
             error: msg => root.toast(msg)
         });
     }
@@ -515,9 +515,9 @@ FocusScope {
         const paths = root.selection.filter(e => e.kind === "image").map(e => e.path);
         if (paths.length === 0)
             return;
-        root.toast(qsTr("Working on %1 image(s)…").arg(paths.length));
+        root.toast(Translation.tr("Working on %1 image(s)…").arg(paths.length));
         backend.request("image_tool", Object.assign({ tool: tool, paths: paths }, extra), {
-            done: m => { root.toast(qsTr("Created %1 file(s)").arg(m.made.length)); root.reload(true); },
+            done: m => { root.toast(Translation.tr("Created %1 file(s)").arg(m.made.length)); root.reload(true); },
             error: msg => root.toast(msg)
         });
     }
@@ -530,13 +530,13 @@ FocusScope {
 
     function sendToPhone(dev: var, paths: var): void {
         backend.request("kdc_send", { device: dev.id, paths: paths }, {
-            done: m => root.toast(qsTr("Sent %1 to %2").arg(m.sent === 1 ? qsTr("1 file") : qsTr("%1 files").arg(m.sent)).arg(dev.name)),
+            done: m => root.toast(Translation.tr("Sent %1 to %2").arg(m.sent === 1 ? Translation.tr("1 file") : Translation.tr("%1 files").arg(m.sent)).arg(dev.name)),
             error: msg => root.toast(msg)
         });
     }
 
     function openPhone(dev: var): void {
-        root.toast(qsTr("Connecting to %1…").arg(dev.name));
+        root.toast(Translation.tr("Connecting to %1…").arg(dev.name));
         backend.request("kdc_mount", { device: dev.id }, {
             done: m => { if (m.mount) root.go(m.mount); },
             error: msg => root.toast(msg)
@@ -732,7 +732,7 @@ FocusScope {
 
     function setWallpaper(e: var): void {
         backend.request("wallpaper", { path: e.path }, { error: m => root.toast(m) });
-        root.toast(qsTr("Wallpaper set"));
+        root.toast(Translation.tr("Wallpaper set"));
     }
 
     function pickDestination(mode: string): void {
@@ -760,16 +760,16 @@ FocusScope {
     }
 
     function trashPaths(paths: var): void {
-        root.runSimple("trash", { paths: paths }, qsTr("Moving to the Trash"), m => {
+        root.runSimple("trash", { paths: paths }, Translation.tr("Moving to the Trash"), m => {
             if ((m.results ?? []).length > 0)
-                root.pushUndo({ kind: "trash", pairs: m.results, label: qsTr("move to Trash") });
-            root.toast(qsTr("Moved %1 to the Trash").arg(paths.length), (m.results ?? []).length > 0);
+                root.pushUndo({ kind: "trash", pairs: m.results, label: Translation.tr("move to Trash") });
+            root.toast(Translation.tr("Moved %1 to the Trash").arg(paths.length), (m.results ?? []).length > 0);
         });
     }
 
     function promptPassword(title: string, message: string, confirm: string, then: var): void {
         root.openDialog(promptDialog, {
-            title: title, message: message, label: qsTr("Password"), text: "", secret: true,
+            title: title, message: message, label: Translation.tr("Password"), text: "", secret: true,
             confirmText: confirm, selectBase: false, onAcceptedFn: t => then(t)
         });
     }
@@ -794,7 +794,7 @@ FocusScope {
                 return;
             root.go(e.path);
         } else if (root.isTrash) {
-            root.toast(qsTr("Restore it first to open it"));
+            root.toast(Translation.tr("Restore it first to open it"));
         } else if (e.kind === "image") {
             GlobalStates.openImageViewerApp(e.path);
         } else if (e.kind === "audio") {
@@ -830,9 +830,9 @@ FocusScope {
 
     function selectPatternPrompt(): void {
         root.openDialog(promptDialog, {
-            title: qsTr("Select by pattern"),
-            message: qsTr("* matches any text and ? one character, so *.png picks every PNG here. A name without them selects names containing it."),
-            label: qsTr("Pattern"), text: "*.", confirmText: qsTr("Select"), selectBase: false,
+            title: Translation.tr("Select by pattern"),
+            message: Translation.tr("* matches any text and ? one character, so *.png picks every PNG here. A name without them selects names containing it."),
+            label: Translation.tr("Pattern"), text: "*.", confirmText: Translation.tr("Select"), selectBase: false,
             onAcceptedFn: t => root.selectPattern(t)
         });
     }
@@ -846,13 +846,13 @@ FocusScope {
         const re = new RegExp(wild ? "^" + p.split("").map(c => c === "*" ? ".*" : (c === "?" ? "." : esc(c))).join("") + "$" : esc(p), "i");
         const hits = root.shown.filter(e => re.test(e.name)).map(e => e.path);
         root.setSelection(hits);
-        root.toast(hits.length === 0 ? qsTr("Nothing matches") : qsTr("%1 selected").arg(hits.length));
+        root.toast(hits.length === 0 ? Translation.tr("Nothing matches") : Translation.tr("%1 selected").arg(hits.length));
         root.forceActiveFocus();
     }
 
     function showChecksums(e: var): void {
         if (!e || e.isDir) {
-            root.toast(qsTr("Checksums are for files"));
+            root.toast(Translation.tr("Checksums are for files"));
             return;
         }
         root.openDialog(checksumComp, { backend: backend, path: e.path });
@@ -868,10 +868,10 @@ FocusScope {
 
     function comparePrompt(): void {
         root.openDialog(promptDialog, {
-            title: qsTr("Compare folders"),
-            message: qsTr("Compare this folder (%1) with another folder.").arg(root.basename(root.path) || "/"),
-            label: qsTr("Other folder"), text: root.otherPanePath.length > 0 ? root.otherPanePath : root.path.replace(/\/[^/]*$/, "") + "/",
-            confirmText: qsTr("Compare"), selectBase: false,
+            title: Translation.tr("Compare folders"),
+            message: Translation.tr("Compare this folder (%1) with another folder.").arg(root.basename(root.path) || "/"),
+            label: Translation.tr("Other folder"), text: root.otherPanePath.length > 0 ? root.otherPanePath : root.path.replace(/\/[^/]*$/, "") + "/",
+            confirmText: Translation.tr("Compare"), selectBase: false,
             onAcceptedFn: t => root.compareFolders(root.path, root.normalize(t))
         });
     }
@@ -928,8 +928,8 @@ FocusScope {
     function startTransfer(mode: string, srcs: var, dest: string): void {
         if (srcs.length === 0)
             return;
-        const label = mode === "copy" ? qsTr("Copying") : qsTr("Moving");
-        const title = srcs.length === 1 ? qsTr("%1 “%2”").arg(label).arg(root.basename(srcs[0])) : qsTr("%1 %2 items").arg(label).arg(srcs.length);
+        const label = mode === "copy" ? Translation.tr("Copying") : Translation.tr("Moving");
+        const title = srcs.length === 1 ? Translation.tr("%1 “%2”").arg(label).arg(root.basename(srcs[0])) : Translation.tr("%1 %2 items").arg(label).arg(srcs.length);
         let jid = -1;
         jid = backend.request("transfer", { mode: mode, srcs: srcs, dest: dest }, {
             progress: m => root.patchJob(jid, { done: m.done, total: m.total, speed: m.speed, current: m.current }),
@@ -940,13 +940,13 @@ FocusScope {
             done: m => {
                 const pairs = m.results ?? [];
                 if (pairs.length > 0)
-                    root.pushUndo({ kind: mode, pairs: pairs, replaced: m.replaced ?? [], label: mode === "copy" ? qsTr("copy") : qsTr("move") });
+                    root.pushUndo({ kind: mode, pairs: pairs, replaced: m.replaced ?? [], label: mode === "copy" ? Translation.tr("copy") : Translation.tr("move") });
                 if (m.cancelled)
-                    root.finishJob(jid, false, qsTr("Cancelled"));
+                    root.finishJob(jid, false, Translation.tr("Cancelled"));
                 else if (!m.ok)
                     root.finishJob(jid, false, (m.errors ?? []).join("; "));
                 else
-                    root.finishJob(jid, true, mode === "copy" ? qsTr("Copied") : qsTr("Moved"));
+                    root.finishJob(jid, true, mode === "copy" ? Translation.tr("Copied") : Translation.tr("Moved"));
                 root.reload(true);
                 root.refreshSide();
             },
@@ -973,7 +973,7 @@ FocusScope {
             done: m => {
                 root.dismissJob(jid);
                 if (m.cancelled) {
-                    root.toast(qsTr("Cancelled"));
+                    root.toast(Translation.tr("Cancelled"));
                 } else {
                     if (m.ok === false && (m.errors ?? []).length > 0)
                         root.toast(m.errors.join("; "));
@@ -999,7 +999,7 @@ FocusScope {
         root.clipPaths = root.selectionPaths;
         root.clipCut = cut;
         backend.request("clipSet", { paths: root.clipPaths, cut: cut }, null);
-        root.toast(cut ? qsTr("Cut %1 — paste to move").arg(root.selCount) : qsTr("Copied %1").arg(root.selCount));
+        root.toast(cut ? Translation.tr("Cut %1 — paste to move").arg(root.selCount) : Translation.tr("Copied %1").arg(root.selCount));
     }
 
     function paste(destDir = ""): void {
@@ -1013,7 +1013,7 @@ FocusScope {
                 cut = root.clipCut;
             }
             if (paths.length === 0) {
-                root.toast(qsTr("Nothing to paste"));
+                root.toast(Translation.tr("Nothing to paste"));
                 return;
             }
             root.startTransfer(cut ? "move" : "copy", paths, dest);
@@ -1032,10 +1032,10 @@ FocusScope {
             root.confirmDelete(paths);
             return;
         }
-        root.runSimple("trash", { paths: paths }, qsTr("Moving to the Trash"), m => {
+        root.runSimple("trash", { paths: paths }, Translation.tr("Moving to the Trash"), m => {
             if ((m.results ?? []).length > 0)
-                root.pushUndo({ kind: "trash", pairs: m.results, label: qsTr("move to Trash") });
-            root.toast(paths.length === 1 ? qsTr("Moved “%1” to the Trash").arg(root.basename(paths[0])) : qsTr("Moved %1 items to the Trash").arg(paths.length), (m.results ?? []).length > 0);
+                root.pushUndo({ kind: "trash", pairs: m.results, label: Translation.tr("move to Trash") });
+            root.toast(paths.length === 1 ? Translation.tr("Moved “%1” to the Trash").arg(root.basename(paths[0])) : Translation.tr("Moved %1 items to the Trash").arg(paths.length), (m.results ?? []).length > 0);
         });
     }
 
@@ -1043,25 +1043,25 @@ FocusScope {
         if (paths.length === 0)
             return;
         root.openDialog(promptDialog, {
-            title: qsTr("Delete permanently?"),
-            message: paths.length === 1 ? qsTr("“%1” will be deleted for good. This can’t be undone.").arg(root.basename(paths[0]))
-                : qsTr("%1 items will be deleted for good. This can’t be undone.").arg(paths.length),
-            input: false, danger: true, confirmText: qsTr("Delete"),
-            onAcceptedFn: () => root.runSimple("delete", { paths: paths }, qsTr("Deleting"), null)
+            title: Translation.tr("Delete permanently?"),
+            message: paths.length === 1 ? Translation.tr("“%1” will be deleted for good. This can’t be undone.").arg(root.basename(paths[0]))
+                : Translation.tr("%1 items will be deleted for good. This can’t be undone.").arg(paths.length),
+            input: false, danger: true, confirmText: Translation.tr("Delete"),
+            onAcceptedFn: () => root.runSimple("delete", { paths: paths }, Translation.tr("Deleting"), null)
         });
     }
 
     function restoreSelection(): void {
         if (root.selCount === 0)
             return;
-        root.runSimple("restore", { paths: root.selectionPaths }, qsTr("Restoring"), m => root.toast(qsTr("Restored")));
+        root.runSimple("restore", { paths: root.selectionPaths }, Translation.tr("Restoring"), m => root.toast(Translation.tr("Restored")));
     }
 
     function emptyTrash(): void {
         root.openDialog(promptDialog, {
-            title: qsTr("Empty the Trash?"), message: qsTr("Everything in the Trash will be deleted for good."),
-            input: false, danger: true, confirmText: qsTr("Empty Trash"),
-            onAcceptedFn: () => root.runSimple("emptyTrash", {}, qsTr("Emptying the Trash"), null)
+            title: Translation.tr("Empty the Trash?"), message: Translation.tr("Everything in the Trash will be deleted for good."),
+            input: false, danger: true, confirmText: Translation.tr("Empty Trash"),
+            onAcceptedFn: () => root.runSimple("emptyTrash", {}, Translation.tr("Emptying the Trash"), null)
         });
     }
 
@@ -1079,7 +1079,7 @@ FocusScope {
             return;
         backend.request("rename", { path: path, name: name }, {
             done: m => {
-                root.pushUndo({ kind: "rename", pairs: [{ src: m.src, dst: m.dst }], label: qsTr("rename") });
+                root.pushUndo({ kind: "rename", pairs: [{ src: m.src, dst: m.dst }], label: Translation.tr("rename") });
                 root.pendingReveal = { path: m.dst, rename: false };
                 root.reload(true);
             },
@@ -1102,10 +1102,10 @@ FocusScope {
     function newFolder(): void {
         if (root.isTrash)
             return;
-        const name = root.uniqueIn(root.path, qsTr("New Folder"));
+        const name = root.uniqueIn(root.path, Translation.tr("New Folder"));
         backend.request("mkdir", { dir: root.path, name: name }, {
             done: m => {
-                root.pushUndo({ kind: "create", pairs: [{ dst: m.dst }], label: qsTr("new folder") });
+                root.pushUndo({ kind: "create", pairs: [{ dst: m.dst }], label: Translation.tr("new folder") });
                 root.pendingReveal = { path: m.dst, rename: true };
                 root.reload(true);
             },
@@ -1116,10 +1116,10 @@ FocusScope {
     function newFile(): void {
         if (root.isTrash)
             return;
-        const name = root.uniqueIn(root.path, qsTr("New File.txt"));
+        const name = root.uniqueIn(root.path, Translation.tr("New File.txt"));
         backend.request("newfile", { dir: root.path, name: name }, {
             done: m => {
-                root.pushUndo({ kind: "create", pairs: [{ dst: m.dst }], label: qsTr("new file") });
+                root.pushUndo({ kind: "create", pairs: [{ dst: m.dst }], label: Translation.tr("new file") });
                 root.pendingReveal = { path: m.dst, rename: true };
                 root.reload(true);
             },
@@ -1142,14 +1142,14 @@ FocusScope {
         if (root.selCount === 0)
             return;
         const paths = root.selectionPaths;
-        root.runSimple("compress", { paths: paths, format: fmt, password: password }, qsTr("Compressing"), m => {
+        root.runSimple("compress", { paths: paths, format: fmt, password: password }, Translation.tr("Compressing"), m => {
             root.pendingReveal = { path: m.dst, rename: false };
-            root.toast(qsTr("Created “%1”").arg(root.basename(m.dst)));
+            root.toast(Translation.tr("Created “%1”").arg(root.basename(m.dst)));
         });
     }
 
     function compressEncrypted(fmt: string): void {
-        root.promptPassword(qsTr("Protect with a password"), qsTr("Anyone opening the .%1 will need it. There is no way to recover it.").arg(fmt), qsTr("Compress"), pw => {
+        root.promptPassword(Translation.tr("Protect with a password"), Translation.tr("Anyone opening the .%1 will need it. There is no way to recover it.").arg(fmt), Translation.tr("Compress"), pw => {
             if (pw.length > 0)
                 root.compress(fmt, pw);
         });
@@ -1161,24 +1161,24 @@ FocusScope {
     }
 
     function extractOne(e: var, here: bool, password: string): void {
-        root.runSimple("extract", { path: e.path, here: here, password: password }, qsTr("Extracting “%1”").arg(e.name), m => {
+        root.runSimple("extract", { path: e.path, here: here, password: password }, Translation.tr("Extracting “%1”").arg(e.name), m => {
             if (m.password) {
-                root.promptPassword(qsTr("Password needed"),
-                    m.wrong ? qsTr("That password did not work for “%1”.").arg(e.name) : qsTr("“%1” is protected.").arg(e.name),
-                    qsTr("Extract"), pw => { if (pw.length > 0) root.extractOne(e, here, pw); });
+                root.promptPassword(Translation.tr("Password needed"),
+                    m.wrong ? Translation.tr("That password did not work for “%1”.").arg(e.name) : Translation.tr("“%1” is protected.").arg(e.name),
+                    Translation.tr("Extract"), pw => { if (pw.length > 0) root.extractOne(e, here, pw); });
                 return;
             }
             if (m.ok === false)
                 return;
             root.pendingReveal = { path: m.dst, rename: false };
-            root.toast(qsTr("Extracted"));
+            root.toast(Translation.tr("Extracted"));
         });
     }
 
     function copyPathText(): void {
         const paths = root.selCount > 0 ? root.selectionPaths : [root.path];
         Quickshell.execDetached(["wl-copy", "--", paths.join("\n")]);
-        root.toast(qsTr("Path copied"));
+        root.toast(Translation.tr("Path copied"));
     }
 
     function handleDrop(urls: var, folder: string, action: int): void {
@@ -1187,7 +1187,7 @@ FocusScope {
         if (paths.length === 0 || root.isTrash && folder.length === 0)
             return;
         if (dest.startsWith("trash:")) {
-            root.runSimple("trash", { paths: paths }, qsTr("Moving to the Trash"), null);
+            root.runSimple("trash", { paths: paths }, Translation.tr("Moving to the Trash"), null);
             return;
         }
         const copy = action === Qt.CopyAction;
@@ -1204,7 +1204,7 @@ FocusScope {
 
     function undo(): void {
         if (root.undoStack.length === 0) {
-            root.toast(qsTr("Nothing to undo"));
+            root.toast(Translation.tr("Nothing to undo"));
             return;
         }
         const step = root.undoStack[root.undoStack.length - 1];
@@ -1212,7 +1212,7 @@ FocusScope {
         const finish = () => {
             // Anything a "replace" moved to the Trash comes back last, once its place is free again
             const rep = step.replaced ?? [];
-            const done = () => { root.reload(true); root.refreshSide(); root.toast(qsTr("Undid %1").arg(step.label)); };
+            const done = () => { root.reload(true); root.refreshSide(); root.toast(Translation.tr("Undid %1").arg(step.label)); };
             if (rep.length === 0)
                 done();
             else
@@ -1298,7 +1298,7 @@ FocusScope {
     }
 
     function previewInfo(e: var): string {
-        const parts = [e.mime, root.bytes(e.size), Qt.formatDateTime(new Date(e.mtime * 1000), "d MMM yyyy, HH:mm")];
+        const parts = [e.mime, root.bytes(e.size), Translation.formatDate(new Date(e.mtime * 1000), "d MMM yyyy, HH:mm")];
         return parts.filter(x => x).join("  ·  ");
     }
 
@@ -1369,7 +1369,7 @@ FocusScope {
 
     function unmountDevice(dev: var): void {
         backend.request("unmount", { dev: dev.dev, eject: dev.removable }, {
-            done: () => { root.refreshSide(); root.toast(qsTr("“%1” can be removed").arg(dev.name)); },
+            done: () => { root.refreshSide(); root.toast(Translation.tr("“%1” can be removed").arg(dev.name)); },
             error: msg => root.toast(msg)
         });
     }
@@ -1387,15 +1387,15 @@ FocusScope {
 
     function filterMenu(which: string): var {
         if (which === "kind") {
-            return [["", qsTr("Any type")], ["image", qsTr("Images")], ["video", qsTr("Videos")], ["audio", qsTr("Audio")],
-                ["document", qsTr("Documents")], ["archive", qsTr("Archives")], ["code", qsTr("Code")], ["folder", qsTr("Folders")]]
+            return [["", Translation.tr("Any type")], ["image", Translation.tr("Images")], ["video", Translation.tr("Videos")], ["audio", Translation.tr("Audio")],
+                ["document", Translation.tr("Documents")], ["archive", Translation.tr("Archives")], ["code", Translation.tr("Code")], ["folder", Translation.tr("Folders")]]
                 .map(([v, t]) => ({ id: "sf:kind:" + v, text: t, checked: root.searchKind === v ? true : undefined }));
         }
         if (which === "days") {
-            return [[0, qsTr("Any time")], [1, qsTr("Last 24 hours")], [7, qsTr("Last 7 days")], [30, qsTr("Last 30 days")], [365, qsTr("Last year")]]
+            return [[0, Translation.tr("Any time")], [1, Translation.tr("Last 24 hours")], [7, Translation.tr("Last 7 days")], [30, Translation.tr("Last 30 days")], [365, Translation.tr("Last year")]]
                 .map(([v, t]) => ({ id: "sf:days:" + v, text: t, checked: root.searchDays === v ? true : undefined }));
         }
-        return [[0, qsTr("Any size")], [10, qsTr("Over 10 MB")], [100, qsTr("Over 100 MB")], [1000, qsTr("Over 1 GB")]]
+        return [[0, Translation.tr("Any size")], [10, Translation.tr("Over 10 MB")], [100, Translation.tr("Over 100 MB")], [1000, Translation.tr("Over 1 GB")]]
             .map(([v, t]) => ({ id: "sf:size:" + v, text: t, checked: root.searchMinMb === v ? true : undefined }));
     }
 
@@ -1495,9 +1495,9 @@ FocusScope {
         backend.request("runAction", { actionId: act.id, paths: paths, dir: root.isTrash ? backend.home : root.path }, {
             done: m => {
                 if (!m.ok)
-                    root.toast(qsTr("%1 failed (exit %2)%3").arg(m.name).arg(m.code).arg(m.stderr ? ": " + m.stderr.split("\n").pop() : ""));
+                    root.toast(Translation.tr("%1 failed (exit %2)%3").arg(m.name).arg(m.code).arg(m.stderr ? ": " + m.stderr.split("\n").pop() : ""));
                 else
-                    root.toast(m.background ? qsTr("%1 is running").arg(m.name) : qsTr("%1 done").arg(m.name));
+                    root.toast(m.background ? Translation.tr("%1 is running").arg(m.name) : Translation.tr("%1 done").arg(m.name));
                 root.reload(true);
             },
             error: msg => root.toast(msg)
@@ -1580,134 +1580,134 @@ FocusScope {
         const n = root.selCount;
         if (root.isTrash) {
             if (entry) {
-                m.push({ id: "restore", text: qsTr("Restore"), icon: "restore_from_trash" });
-                m.push({ id: "delete", text: qsTr("Delete permanently"), icon: "delete_forever", danger: true, shortcut: "Shift+Del" });
+                m.push({ id: "restore", text: Translation.tr("Restore"), icon: "restore_from_trash" });
+                m.push({ id: "delete", text: Translation.tr("Delete permanently"), icon: "delete_forever", danger: true, shortcut: "Shift+Del" });
                 m.push(sep);
-                m.push({ id: "properties", text: qsTr("Properties"), icon: "info" });
+                m.push({ id: "properties", text: Translation.tr("Properties"), icon: "info" });
             } else {
-                m.push({ id: "emptyTrash", text: qsTr("Empty Trash"), icon: "delete_forever", danger: true, disabled: root.entries.length === 0 });
-                m.push({ id: "selectAll", text: qsTr("Select all"), icon: "select_all", shortcut: "Ctrl+A" });
+                m.push({ id: "emptyTrash", text: Translation.tr("Empty Trash"), icon: "delete_forever", danger: true, disabled: root.entries.length === 0 });
+                m.push({ id: "selectAll", text: Translation.tr("Select all"), icon: "select_all", shortcut: "Ctrl+A" });
             }
             return m;
         }
         if (entry) {
             const single = n === 1;
             if (single && entry.isDir) {
-                m.push({ id: "open", text: qsTr("Open"), icon: "folder_open", shortcut: "Enter" });
-                m.push({ id: "newTab", text: qsTr("Open in new tab"), icon: "tab_new_right", shortcut: "Ctrl+T" });
+                m.push({ id: "open", text: Translation.tr("Open"), icon: "folder_open", shortcut: "Enter" });
+                m.push({ id: "newTab", text: Translation.tr("Open in new tab"), icon: "tab_new_right", shortcut: "Ctrl+T" });
             } else {
-                m.push({ id: "open", text: qsTr("Open"), icon: "open_in_new", shortcut: "Enter" });
+                m.push({ id: "open", text: Translation.tr("Open"), icon: "open_in_new", shortcut: "Enter" });
             }
             if (single && !entry.isDir) {
-                const sub = apps.map(a => ({ id: "app:" + a.id, text: a.name + (a.default ? qsTr("  (default)") : ""), icon: "" }));
+                const sub = apps.map(a => ({ id: "app:" + a.id, text: a.name + (a.default ? Translation.tr("  (default)") : ""), icon: "" }));
                 if (sub.length > 0)
                     sub.push(sep);
-                sub.push({ id: "openWith", text: qsTr("Other application…"), icon: "" });
-                m.push({ text: qsTr("Open with"), icon: "apps", submenu: sub });
+                sub.push({ id: "openWith", text: Translation.tr("Other application…"), icon: "" });
+                m.push({ text: Translation.tr("Open with"), icon: "apps", submenu: sub });
             }
             if (root.phones.length > 0 && root.selectionPaths.length > 0 && !root.isTrash) {
-                m.push({ text: qsTr("Send to phone"), icon: "send_to_mobile",
+                m.push({ text: Translation.tr("Send to phone"), icon: "send_to_mobile",
                     submenu: root.phones.map(d => ({ id: "kdcSend:" + d.id, text: d.name, icon: "smartphone" })) });
             }
             if (root.selection.length > 0 && root.selection.every(e => !e.isDir) && !root.isTrash)
-                m.push({ id: "quickShare", text: qsTr("Share with Quick Share"), icon: "send_to_mobile" });
+                m.push({ id: "quickShare", text: Translation.tr("Share with Quick Share"), icon: "send_to_mobile" });
             m.push(sep);
-            m.push({ id: "cut", text: qsTr("Cut"), icon: "content_cut", shortcut: "Ctrl+X" });
-            m.push({ id: "copy", text: qsTr("Copy"), icon: "content_copy", shortcut: "Ctrl+C" });
+            m.push({ id: "cut", text: Translation.tr("Cut"), icon: "content_cut", shortcut: "Ctrl+X" });
+            m.push({ id: "copy", text: Translation.tr("Copy"), icon: "content_copy", shortcut: "Ctrl+C" });
             if (single && entry.isDir)
-                m.push({ id: "pasteInto", text: qsTr("Paste into folder"), icon: "content_paste", shortcut: "Ctrl+V" });
+                m.push({ id: "pasteInto", text: Translation.tr("Paste into folder"), icon: "content_paste", shortcut: "Ctrl+V" });
             m.push(sep);
             if (single)
-                m.push({ id: "rename", text: qsTr("Rename"), icon: "edit", shortcut: "F2" });
+                m.push({ id: "rename", text: Translation.tr("Rename"), icon: "edit", shortcut: "F2" });
             else
-                m.push({ id: "bulkRename", text: qsTr("Rename %1 items…").arg(n), icon: "edit_note" });
-            m.push({ id: "trash", text: qsTr("Move to Trash"), icon: "delete", shortcut: "Del", danger: true });
+                m.push({ id: "bulkRename", text: Translation.tr("Rename %1 items…").arg(n), icon: "edit_note" });
+            m.push({ id: "trash", text: Translation.tr("Move to Trash"), icon: "delete", shortcut: "Del", danger: true });
             m.push(sep);
             const fmts = ["zip", "7z", "tar.gz", "tar.xz", "tar.zst"];
             const csub = fmts.map(f => ({ id: "compress:" + f, text: "." + f, icon: "" }));
             csub.push(sep);
-            csub.push({ id: "compress:zip:enc", text: qsTr(".zip with a password…"), icon: "lock" });
-            csub.push({ id: "compress:7z:enc", text: qsTr(".7z with a password…"), icon: "lock" });
-            m.push({ text: qsTr("Compress"), icon: "folder_zip", submenu: csub });
+            csub.push({ id: "compress:zip:enc", text: Translation.tr(".zip with a password…"), icon: "lock" });
+            csub.push({ id: "compress:7z:enc", text: Translation.tr(".7z with a password…"), icon: "lock" });
+            m.push({ text: Translation.tr("Compress"), icon: "folder_zip", submenu: csub });
             if (root.selection.some(e => e.kind === "archive")) {
-                m.push({ id: "extractHere", text: qsTr("Extract here"), icon: "unarchive" });
-                m.push({ id: "extractTo", text: qsTr("Extract to folder"), icon: "drive_folder_upload" });
+                m.push({ id: "extractHere", text: Translation.tr("Extract here"), icon: "unarchive" });
+                m.push({ id: "extractTo", text: Translation.tr("Extract to folder"), icon: "drive_folder_upload" });
             }
 
             // Everything less common sits one level down so the menu stays short
             const more = [];
-            more.push({ id: "copyPath", text: qsTr("Copy path"), icon: "link", shortcut: "Ctrl+Shift+C" });
-            more.push({ id: "duplicate", text: qsTr("Duplicate"), icon: "difference" });
-            more.push({ id: "link", text: qsTr("Create link"), icon: "add_link" });
+            more.push({ id: "copyPath", text: Translation.tr("Copy path"), icon: "link", shortcut: "Ctrl+Shift+C" });
+            more.push({ id: "duplicate", text: Translation.tr("Duplicate"), icon: "difference" });
+            more.push({ id: "link", text: Translation.tr("Create link"), icon: "add_link" });
             if (root.searchMode)
-                more.push({ id: "showInFolder", text: qsTr("Show in folder"), icon: "folder_open" });
+                more.push({ id: "showInFolder", text: Translation.tr("Show in folder"), icon: "folder_open" });
             more.push(sep);
-            more.push({ id: "copyTo", text: qsTr("Copy to…"), icon: "file_copy" });
-            more.push({ id: "moveTo", text: qsTr("Move to…"), icon: "drive_file_move" });
+            more.push({ id: "copyTo", text: Translation.tr("Copy to…"), icon: "file_copy" });
+            more.push({ id: "moveTo", text: Translation.tr("Move to…"), icon: "drive_file_move" });
             if (root.peerReady) {
-                more.push({ id: "toPaneCopy", text: qsTr("Copy to the other pane"), icon: "keyboard_double_arrow_right", shortcut: "Shift+F5" });
-                more.push({ id: "toPaneMove", text: qsTr("Move to the other pane"), icon: "drive_file_move", shortcut: "Shift+F6" });
+                more.push({ id: "toPaneCopy", text: Translation.tr("Copy to the other pane"), icon: "keyboard_double_arrow_right", shortcut: "Shift+F5" });
+                more.push({ id: "toPaneMove", text: Translation.tr("Move to the other pane"), icon: "drive_file_move", shortcut: "Shift+F6" });
             }
             const allStarred = root.selectionPaths.every(p => root.starredSet[p]);
             more.push(sep);
-            more.push({ id: "star", text: allStarred ? qsTr("Remove from Starred") : qsTr("Add to Starred"), icon: allStarred ? "star_off" : "star" });
+            more.push({ id: "star", text: allStarred ? Translation.tr("Remove from Starred") : Translation.tr("Add to Starred"), icon: allStarred ? "star_off" : "star" });
             if (single && entry.isDir)
-                more.push({ id: "bookmark", text: root.bookmarks.some(b => b.path === entry.path) ? qsTr("Remove bookmark") : qsTr("Add to bookmarks"), icon: "bookmark_add", shortcut: "Ctrl+D" });
+                more.push({ id: "bookmark", text: root.bookmarks.some(b => b.path === entry.path) ? Translation.tr("Remove bookmark") : Translation.tr("Add to bookmarks"), icon: "bookmark_add", shortcut: "Ctrl+D" });
             if (single && entry.kind === "image" && entry.mime !== "image/svg+xml")
-                more.push({ id: "wallpaper", text: qsTr("Set as wallpaper"), icon: "wallpaper" });
+                more.push({ id: "wallpaper", text: Translation.tr("Set as wallpaper"), icon: "wallpaper" });
             if (single && !entry.isDir)
-                more.push({ id: "checksums", text: qsTr("Checksums…"), icon: "fingerprint" });
+                more.push({ id: "checksums", text: Translation.tr("Checksums…"), icon: "fingerprint" });
             if (single && entry.isDir) {
                 more.push(sep);
-                more.push({ id: "terminal", text: qsTr("Open in terminal"), icon: "terminal", shortcut: "F4" });
-                more.push({ id: "newWindow", text: qsTr("Open in new window"), icon: "open_in_new", shortcut: "Ctrl+Alt+N" });
-                more.push({ id: "diskUsage", text: qsTr("Disk usage…"), icon: "pie_chart" });
-                more.push({ id: "duplicates", text: qsTr("Find duplicate files…"), icon: "content_copy" });
+                more.push({ id: "terminal", text: Translation.tr("Open in terminal"), icon: "terminal", shortcut: "F4" });
+                more.push({ id: "newWindow", text: Translation.tr("Open in new window"), icon: "open_in_new", shortcut: "Ctrl+Alt+N" });
+                more.push({ id: "diskUsage", text: Translation.tr("Disk usage…"), icon: "pie_chart" });
+                more.push({ id: "duplicates", text: Translation.tr("Find duplicate files…"), icon: "content_copy" });
             }
             if (n === 2 && root.selection.every(e => e.isDir))
-                more.push({ id: "compareSel", text: qsTr("Compare these folders…"), icon: "compare_arrows" });
-            m.push({ text: qsTr("More"), icon: "more_horiz", submenu: more });
+                more.push({ id: "compareSel", text: Translation.tr("Compare these folders…"), icon: "compare_arrows" });
+            m.push({ text: Translation.tr("More"), icon: "more_horiz", submenu: more });
 
             if (root.selection.every(e => e.isDir)) {
-                const colors = [["red", qsTr("Red")], ["orange", qsTr("Orange")], ["yellow", qsTr("Yellow")], ["green", qsTr("Green")], ["teal", qsTr("Teal")],
-                    ["cyan", qsTr("Cyan")], ["blue", qsTr("Blue")], ["violet", qsTr("Violet")], ["pink", qsTr("Pink")], ["brown", qsTr("Brown")], ["grey", qsTr("Grey")]];
+                const colors = [["red", Translation.tr("Red")], ["orange", Translation.tr("Orange")], ["yellow", Translation.tr("Yellow")], ["green", Translation.tr("Green")], ["teal", Translation.tr("Teal")],
+                    ["cyan", Translation.tr("Cyan")], ["blue", Translation.tr("Blue")], ["violet", Translation.tr("Violet")], ["pink", Translation.tr("Pink")], ["brown", Translation.tr("Brown")], ["grey", Translation.tr("Grey")]];
                 const cs = colors.map(([c, t]) => ({ id: "fcolor:" + c, text: t, icon: "", checked: root.selection.every(e => root.folderColors[e.path] === c) ? true : undefined }));
                 cs.push(sep);
-                cs.push({ id: "fcolor:", text: qsTr("Default"), icon: "" });
-                m.push({ text: qsTr("Folder colour"), icon: "palette", submenu: cs });
+                cs.push({ id: "fcolor:", text: Translation.tr("Default"), icon: "" });
+                m.push({ text: Translation.tr("Folder colour"), icon: "palette", submenu: cs });
             }
             if (root.selection.some(e => e.kind === "image")) {
                 const img = [];
                 for (const pct of [75, 50, 25])
-                    img.push({ id: "img:resize:" + pct, text: qsTr("Resize to %1%").arg(pct), icon: "" });
+                    img.push({ id: "img:resize:" + pct, text: Translation.tr("Resize to %1%").arg(pct), icon: "" });
                 img.push(sep);
                 for (const f of ["png", "jpg", "webp"])
-                    img.push({ id: "img:convert:" + f, text: qsTr("Convert to %1").arg(f.toUpperCase()), icon: "" });
+                    img.push({ id: "img:convert:" + f, text: Translation.tr("Convert to %1").arg(f.toUpperCase()), icon: "" });
                 img.push(sep);
-                img.push({ id: "img:rotate:90", text: qsTr("Rotate right"), icon: "" });
-                img.push({ id: "img:rotate:-90", text: qsTr("Rotate left"), icon: "" });
-                m.push({ text: qsTr("Image tools"), icon: "image", submenu: img });
+                img.push({ id: "img:rotate:90", text: Translation.tr("Rotate right"), icon: "" });
+                img.push({ id: "img:rotate:-90", text: Translation.tr("Rotate left"), icon: "" });
+                m.push({ text: Translation.tr("Image tools"), icon: "image", submenu: img });
             }
         } else {
-            m.push({ id: "newFolder", text: qsTr("New folder"), icon: "create_new_folder", shortcut: "Ctrl+Shift+N", disabled: !root.writable });
-            m.push({ id: "newFile", text: qsTr("New empty file"), icon: "note_add", disabled: !root.writable });
+            m.push({ id: "newFolder", text: Translation.tr("New folder"), icon: "create_new_folder", shortcut: "Ctrl+Shift+N", disabled: !root.writable });
+            m.push({ id: "newFile", text: Translation.tr("New empty file"), icon: "note_add", disabled: !root.writable });
             m.push(sep);
-            m.push({ id: "paste", text: qsTr("Paste"), icon: "content_paste", shortcut: "Ctrl+V", disabled: !root.writable });
-            m.push({ id: "selectAll", text: qsTr("Select all"), icon: "select_all", shortcut: "Ctrl+A" });
+            m.push({ id: "paste", text: Translation.tr("Paste"), icon: "content_paste", shortcut: "Ctrl+V", disabled: !root.writable });
+            m.push({ id: "selectAll", text: Translation.tr("Select all"), icon: "select_all", shortcut: "Ctrl+A" });
             m.push(sep);
-            m.push({ id: "terminal", text: qsTr("Open terminal here"), icon: "terminal", shortcut: "F4" });
-            m.push({ text: qsTr("Sort by"), icon: "sort", submenu: root.sortItems() });
-            m.push({ id: "view", text: root.viewMode === "grid" ? qsTr("List view") : qsTr("Icon view"), icon: root.viewMode === "grid" ? "view_list" : "grid_view" });
-            m.push({ id: "hidden", text: qsTr("Show hidden files"), checked: root.showHidden, shortcut: "Ctrl+H" });
+            m.push({ id: "terminal", text: Translation.tr("Open terminal here"), icon: "terminal", shortcut: "F4" });
+            m.push({ text: Translation.tr("Sort by"), icon: "sort", submenu: root.sortItems() });
+            m.push({ id: "view", text: root.viewMode === "grid" ? Translation.tr("List view") : Translation.tr("Icon view"), icon: root.viewMode === "grid" ? "view_list" : "grid_view" });
+            m.push({ id: "hidden", text: Translation.tr("Show hidden files"), checked: root.showHidden, shortcut: "Ctrl+H" });
             const more = [];
-            more.push({ id: "selectPattern", text: qsTr("Select by pattern…"), icon: "filter_alt", shortcut: "Ctrl+S" });
-            more.push({ id: "invertSel", text: qsTr("Invert selection"), icon: "flip", shortcut: "Ctrl+I" });
+            more.push({ id: "selectPattern", text: Translation.tr("Select by pattern…"), icon: "filter_alt", shortcut: "Ctrl+S" });
+            more.push({ id: "invertSel", text: Translation.tr("Invert selection"), icon: "flip", shortcut: "Ctrl+I" });
             more.push(sep);
-            more.push({ id: "copyPath", text: qsTr("Copy folder path"), icon: "link" });
-            more.push({ id: "bookmark", text: root.bookmarks.some(b => b.path === root.path) ? qsTr("Remove bookmark") : qsTr("Bookmark this folder"), icon: "bookmark_add", shortcut: "Ctrl+D" });
+            more.push({ id: "copyPath", text: Translation.tr("Copy folder path"), icon: "link" });
+            more.push({ id: "bookmark", text: root.bookmarks.some(b => b.path === root.path) ? Translation.tr("Remove bookmark") : Translation.tr("Bookmark this folder"), icon: "bookmark_add", shortcut: "Ctrl+D" });
             if (root.viewPref)
-                more.push({ id: "forgetView", text: qsTr("Use the default view here"), icon: "restart_alt" });
-            m.push({ text: qsTr("More"), icon: "more_horiz", submenu: more });
+                more.push({ id: "forgetView", text: Translation.tr("Use the default view here"), icon: "restart_alt" });
+            m.push({ text: Translation.tr("More"), icon: "more_horiz", submenu: more });
         }
         if (actions.length > 0) {
             m.push(sep);
@@ -1715,82 +1715,82 @@ FocusScope {
                 m.push(it);
         }
         m.push(sep);
-        m.push({ id: "properties", text: qsTr("Properties"), icon: "info", shortcut: "Alt+Enter" });
+        m.push({ id: "properties", text: Translation.tr("Properties"), icon: "info", shortcut: "Alt+Enter" });
         return m;
     }
 
     function sortItems(): var {
-        const items = [["name", qsTr("Name")], ["size", qsTr("Size")], ["mtime", qsTr("Modified")], ["type", qsTr("Type")]]
+        const items = [["name", Translation.tr("Name")], ["size", Translation.tr("Size")], ["mtime", Translation.tr("Modified")], ["type", Translation.tr("Type")]]
             .map(([k, t]) => ({ id: "sort:" + k, text: t, checked: root.sortKey === k }));
         items.push({ separator: true });
-        items.push({ id: "sortDir", text: root.sortDesc ? qsTr("Descending") : qsTr("Ascending"), icon: root.sortDesc ? "arrow_downward" : "arrow_upward" });
+        items.push({ id: "sortDir", text: root.sortDesc ? Translation.tr("Descending") : Translation.tr("Ascending"), icon: root.sortDesc ? "arrow_downward" : "arrow_upward" });
         return items;
     }
 
     function moreMenu(): var {
         const m = [];
-        m.push({ id: "newFolder", text: qsTr("New folder"), icon: "create_new_folder", shortcut: "Ctrl+Shift+N", disabled: root.isTrash });
-        m.push({ id: "newTab", text: qsTr("New tab"), icon: "tab_new_right", shortcut: "Ctrl+T" });
-        m.push({ id: "split", text: qsTr("Split view"), icon: "vertical_split", checked: root.split, shortcut: "F3" });
+        m.push({ id: "newFolder", text: Translation.tr("New folder"), icon: "create_new_folder", shortcut: "Ctrl+Shift+N", disabled: root.isTrash });
+        m.push({ id: "newTab", text: Translation.tr("New tab"), icon: "tab_new_right", shortcut: "Ctrl+T" });
+        m.push({ id: "split", text: Translation.tr("Split view"), icon: "vertical_split", checked: root.split, shortcut: "F3" });
         if (root.peerReady)
-            m.push({ id: "comparePanes", text: qsTr("Compare the two panes"), icon: "compare_arrows" });
+            m.push({ id: "comparePanes", text: Translation.tr("Compare the two panes"), icon: "compare_arrows" });
         m.push({ separator: true });
-        m.push({ id: "hidden", text: qsTr("Show hidden files"), checked: root.showHidden, shortcut: "Ctrl+H" });
-        m.push({ text: qsTr("Sort by"), icon: "sort", submenu: root.sortItems() });
+        m.push({ id: "hidden", text: Translation.tr("Show hidden files"), checked: root.showHidden, shortcut: "Ctrl+H" });
+        m.push({ text: Translation.tr("Sort by"), icon: "sort", submenu: root.sortItems() });
         if (root.viewMode === "grid") {
-            m.push({ id: "zoomIn", text: qsTr("Larger icons"), icon: "zoom_in", shortcut: "Ctrl++" });
-            m.push({ id: "zoomOut", text: qsTr("Smaller icons"), icon: "zoom_out", shortcut: "Ctrl+-" });
+            m.push({ id: "zoomIn", text: Translation.tr("Larger icons"), icon: "zoom_in", shortcut: "Ctrl++" });
+            m.push({ id: "zoomOut", text: Translation.tr("Smaller icons"), icon: "zoom_out", shortcut: "Ctrl+-" });
         }
         m.push({ separator: true });
-        m.push({ id: "bookmark", text: qsTr("Bookmark this folder"), icon: "bookmark_add", shortcut: "Ctrl+D", disabled: root.isTrash });
-        m.push({ id: "connect", text: qsTr("Connect to server…"), icon: "lan" });
+        m.push({ id: "bookmark", text: Translation.tr("Bookmark this folder"), icon: "bookmark_add", shortcut: "Ctrl+D", disabled: root.isTrash });
+        m.push({ id: "connect", text: Translation.tr("Connect to server…"), icon: "lan" });
         m.push({ separator: true });
-        m.push({ id: "selectPattern", text: qsTr("Select by pattern…"), icon: "filter_alt", shortcut: "Ctrl+S" });
-        m.push({ id: "invertSel", text: qsTr("Invert selection"), icon: "flip", shortcut: "Ctrl+I" });
-        m.push({ id: "diskUsageHere", text: qsTr("Disk usage of this folder…"), icon: "pie_chart", disabled: root.isVirtual || root.isTrash });
-        m.push({ id: "duplicates", text: qsTr("Find duplicate files…"), icon: "content_copy", disabled: root.isVirtual || root.isTrash });
-        m.push({ id: "folderSizes", text: qsTr("Show folder sizes"), icon: "straighten", checked: root.cfg.fmFolderSizes });
-        m.push({ id: "terminal", text: qsTr("Open terminal here"), icon: "terminal", shortcut: "F4" });
-        m.push({ id: "newWindow", text: qsTr("New window"), icon: "open_in_new", shortcut: "Ctrl+Alt+N" });
-        m.push({ id: "compareHere", text: qsTr("Compare with another folder…"), icon: "compare_arrows", disabled: root.isVirtual || root.isTrash });
+        m.push({ id: "selectPattern", text: Translation.tr("Select by pattern…"), icon: "filter_alt", shortcut: "Ctrl+S" });
+        m.push({ id: "invertSel", text: Translation.tr("Invert selection"), icon: "flip", shortcut: "Ctrl+I" });
+        m.push({ id: "diskUsageHere", text: Translation.tr("Disk usage of this folder…"), icon: "pie_chart", disabled: root.isVirtual || root.isTrash });
+        m.push({ id: "duplicates", text: Translation.tr("Find duplicate files…"), icon: "content_copy", disabled: root.isVirtual || root.isTrash });
+        m.push({ id: "folderSizes", text: Translation.tr("Show folder sizes"), icon: "straighten", checked: root.cfg.fmFolderSizes });
+        m.push({ id: "terminal", text: Translation.tr("Open terminal here"), icon: "terminal", shortcut: "F4" });
+        m.push({ id: "newWindow", text: Translation.tr("New window"), icon: "open_in_new", shortcut: "Ctrl+Alt+N" });
+        m.push({ id: "compareHere", text: Translation.tr("Compare with another folder…"), icon: "compare_arrows", disabled: root.isVirtual || root.isTrash });
         m.push({ separator: true });
         if (root.viewPref)
-            m.push({ id: "forgetView", text: qsTr("Use the default view here"), icon: "restart_alt" });
-        m.push({ id: "actionsEditor", text: qsTr("Custom actions…"), icon: "bolt" });
-        m.push({ id: "shortcuts", text: qsTr("Keyboard shortcuts"), icon: "keyboard" });
+            m.push({ id: "forgetView", text: Translation.tr("Use the default view here"), icon: "restart_alt" });
+        m.push({ id: "actionsEditor", text: Translation.tr("Custom actions…"), icon: "bolt" });
+        m.push({ id: "shortcuts", text: Translation.tr("Keyboard shortcuts"), icon: "keyboard" });
         return m;
     }
 
     function sideMenu(item: var): var {
         const m = [];
         if (item.kind === "trash") {
-            m.push({ id: "emptyTrash", text: qsTr("Empty Trash"), icon: "delete_forever", danger: true });
+            m.push({ id: "emptyTrash", text: Translation.tr("Empty Trash"), icon: "delete_forever", danger: true });
             return m;
         }
         if (item.kind !== "phone" && item.path.length > 0 && item.kind !== "connect") {
-            m.push({ id: "open", text: qsTr("Open"), icon: "folder_open" });
-            m.push({ id: "newTab", text: qsTr("Open in new tab"), icon: "tab_new_right" });
+            m.push({ id: "open", text: Translation.tr("Open"), icon: "folder_open" });
+            m.push({ id: "newTab", text: Translation.tr("Open in new tab"), icon: "tab_new_right" });
         }
         if (item.kind === "bookmark")
-            m.push({ id: "removeBookmark", text: qsTr("Remove bookmark"), icon: "bookmark_remove" });
+            m.push({ id: "removeBookmark", text: Translation.tr("Remove bookmark"), icon: "bookmark_remove" });
         if (item.kind === "net") {
             if (item.mount.mounted === false) {
-                m.push({ id: "netMount", text: qsTr("Connect"), icon: "link" });
+                m.push({ id: "netMount", text: Translation.tr("Connect"), icon: "link" });
                 return m;
             }
-            m.push({ id: "open", text: qsTr("Open"), icon: "folder_open" });
-            m.push({ id: "netUnmount", text: qsTr("Disconnect"), icon: "eject" });
+            m.push({ id: "open", text: Translation.tr("Open"), icon: "folder_open" });
+            m.push({ id: "netUnmount", text: Translation.tr("Disconnect"), icon: "eject" });
             return m;
         }
         if (item.kind === "connect")
-            return [{ id: "connect", text: qsTr("Connect to server…"), icon: "add_link" }];
+            return [{ id: "connect", text: Translation.tr("Connect to server…"), icon: "add_link" }];
         if (item.kind === "phone") {
-            m.push({ id: "kdcBrowse", text: qsTr("Browse files"), icon: "folder_open" });
-            m.push({ id: "kdcPing", text: qsTr("Send a ping"), icon: "notifications_active" });
+            m.push({ id: "kdcBrowse", text: Translation.tr("Browse files"), icon: "folder_open" });
+            m.push({ id: "kdcPing", text: Translation.tr("Send a ping"), icon: "notifications_active" });
             return m;
         }
         if (item.kind === "device") {
-            m.push(item.path.length > 0 ? { id: "unmount", text: qsTr("Unmount"), icon: "eject" } : { id: "mount", text: qsTr("Mount"), icon: "play_circle" });
+            m.push(item.path.length > 0 ? { id: "unmount", text: Translation.tr("Unmount"), icon: "eject" } : { id: "mount", text: Translation.tr("Mount"), icon: "play_circle" });
         }
         return m;
     }
@@ -1836,7 +1836,7 @@ FocusScope {
         case "paste": root.paste(); break;
         case "pasteInto": root.paste(root.selection[0].path); break;
         case "copyPath": root.copyPathText(); break;
-        case "quickShare": QuickShareService.stage(root.selectionPaths); root.toast(qsTr("Pick a phone on the island")); break;
+        case "quickShare": QuickShareService.stage(root.selectionPaths); root.toast(Translation.tr("Pick a phone on the island")); break;
         case "rename": root.beginRename(); break;
         case "bulkRename": root.bulkRename(); break;
         case "duplicate": root.duplicateSelection(); break;
@@ -1859,7 +1859,7 @@ FocusScope {
         case "netMount": root.mountNet(target.mount.uri); break;
         case "netUnmount": root.unmountNet(target.mount); break;
         case "kdcBrowse": root.openPhone(target.phone); break;
-        case "kdcPing": backend.request("kdc_ping", { device: target.phone.id }, {}); root.toast(qsTr("Pinged %1").arg(target.phone.name)); break;
+        case "kdcPing": backend.request("kdc_ping", { device: target.phone.id }, {}); root.toast(Translation.tr("Pinged %1").arg(target.phone.name)); break;
         case "mount": root.mountDevice(target.dev); break;
         case "unmount": root.unmountDevice(target.dev); break;
         case "newFolder": root.newFolder(); break;
@@ -2288,7 +2288,7 @@ FocusScope {
                     }
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
-                        text: root.loadError.length > 0 ? root.loadError : (root.isTrash ? qsTr("The Trash is empty") : (root.query.length > 0 ? qsTr("No matches") : (root.path.startsWith("recent:") ? qsTr("Nothing opened recently") : (root.path.startsWith("starred:") ? qsTr("Star files from the right-click menu to find them here") : qsTr("This folder is empty")))))
+                        text: root.loadError.length > 0 ? root.loadError : (root.isTrash ? Translation.tr("The Trash is empty") : (root.query.length > 0 ? Translation.tr("No matches") : (root.path.startsWith("recent:") ? Translation.tr("Nothing opened recently") : (root.path.startsWith("starred:") ? Translation.tr("Star files from the right-click menu to find them here") : Translation.tr("This folder is empty")))))
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: ClockStyle.colSubtext
                     }
@@ -2296,7 +2296,7 @@ FocusScope {
                 StyledText {
                     anchors.centerIn: parent
                     visible: root.searchRunning && root.shown.length === 0
-                    text: qsTr("Searching…")
+                    text: Translation.tr("Searching…")
                     font.pixelSize: Appearance.font.pixelSize.small
                     color: ClockStyle.colSubtext
                 }
@@ -2338,7 +2338,7 @@ FocusScope {
                     visible: root.typeBuffer.length > 0
                     Layout.maximumWidth: 360
                     elide: Text.ElideLeft
-                    text: qsTr("Find: %1").arg(root.typeBuffer)
+                    text: Translation.tr("Find: %1").arg(root.typeBuffer)
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     font.weight: Font.DemiBold
                     color: root.typeMiss ? ClockStyle.colError : ClockStyle.colPrimary
@@ -2346,27 +2346,27 @@ FocusScope {
                 StyledText {
                     visible: root.typeBuffer.length === 0
                     text: root.selCount > 0
-                        ? qsTr("%1 selected").arg(root.selCount) + (root.selectionSize > 0 ? "  ·  " + root.bytes(root.selectionSize) : "")
-                        : (root.searchMode ? qsTr("%1 results").arg(root.shown.length) : qsTr("%1 items").arg(root.shown.length))
+                        ? Translation.tr("%1 selected").arg(root.selCount) + (root.selectionSize > 0 ? "  ·  " + root.bytes(root.selectionSize) : "")
+                        : (root.searchMode ? Translation.tr("%1 results").arg(root.shown.length) : Translation.tr("%1 items").arg(root.shown.length))
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: ClockStyle.colOnSurfaceVariant
                 }
                 StyledText {
                     visible: root.loading || root.searchRunning
-                    text: qsTr("Loading…")
+                    text: Translation.tr("Loading…")
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: ClockStyle.colSubtext
                 }
                 Item { Layout.fillWidth: true }
                 StyledText {
                     visible: root.freeSpace > 0 && !root.isTrash
-                    text: qsTr("%1 free").arg(root.bytes(root.freeSpace))
+                    text: Translation.tr("%1 free").arg(root.bytes(root.freeSpace))
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: ClockStyle.colSubtext
                 }
                 StyledText {
                     visible: !root.writable && !root.isTrash && root.path.length > 0
-                    text: qsTr("Read-only")
+                    text: Translation.tr("Read-only")
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: ClockStyle.colError
                 }
@@ -2408,7 +2408,7 @@ FocusScope {
             }
             StyledText {
                 visible: root.toastUndo
-                text: qsTr("Undo")
+                text: Translation.tr("Undo")
                 font.pixelSize: Appearance.font.pixelSize.small
                 font.weight: Font.DemiBold
                 color: ClockStyle.colPrimary
@@ -2479,7 +2479,7 @@ FocusScope {
             onAccepted: pairs => {
                 backend.request("bulkRename", { pairs: pairs }, {
                     done: m => {
-                        root.pushUndo({ kind: "move", pairs: m.results, label: qsTr("rename") });
+                        root.pushUndo({ kind: "move", pairs: m.results, label: Translation.tr("rename") });
                         root.reload(true);
                     },
                     error: msg => root.toast(msg)
@@ -2491,16 +2491,16 @@ FocusScope {
     Component {
         id: helpDialog
         FmDialog {
-            title: qsTr("Keyboard shortcuts")
+            title: Translation.tr("Keyboard shortcuts")
             cardWidth: 560
             readonly property var rows: [
-                ["Enter", qsTr("Open")], ["Space", qsTr("Quick look")], ["F2", qsTr("Rename")], ["Delete", qsTr("Move to Trash")],
-                ["Shift+Delete", qsTr("Delete permanently")], ["Ctrl+C / X / V", qsTr("Copy / cut / paste")], ["Ctrl+Z", qsTr("Undo")],
-                ["F5 / Ctrl+R", qsTr("Refresh")], ["F3", qsTr("Split view; Tab switches pane")], ["Shift+F5 / F6", qsTr("Copy / move to the other pane")], ["Ctrl+A", qsTr("Select all")], ["Ctrl+S", qsTr("Select by pattern")], ["Ctrl+I", qsTr("Invert selection")], ["Middle click", qsTr("Open a folder in a new tab")], ["Ctrl+Shift+N", qsTr("New folder")], ["Ctrl+T / W", qsTr("New tab / close tab")],
-                ["Ctrl+L", qsTr("Edit the path")], ["Ctrl+F", qsTr("Search")], ["Ctrl+H", qsTr("Show hidden files")],
-                ["Ctrl+1 / 2", qsTr("Icon / list view")], ["Alt+← → ↑", qsTr("Back, forward, up")], ["Alt+Enter", qsTr("Properties")],
-                ["F4 / Ctrl+Alt+T", qsTr("Open a terminal here")], ["Ctrl+Alt+N", qsTr("New window")], ["Menu / Shift+F10", qsTr("Context menu")],
-                ["Ctrl+D", qsTr("Bookmark")], ["Ctrl++ / −", qsTr("Zoom icons")], ["Type a name", qsTr("Jump to a file")]
+                ["Enter", Translation.tr("Open")], ["Space", Translation.tr("Quick look")], ["F2", Translation.tr("Rename")], ["Delete", Translation.tr("Move to Trash")],
+                ["Shift+Delete", Translation.tr("Delete permanently")], ["Ctrl+C / X / V", Translation.tr("Copy / cut / paste")], ["Ctrl+Z", Translation.tr("Undo")],
+                ["F5 / Ctrl+R", Translation.tr("Refresh")], ["F3", Translation.tr("Split view; Tab switches pane")], ["Shift+F5 / F6", Translation.tr("Copy / move to the other pane")], ["Ctrl+A", Translation.tr("Select all")], ["Ctrl+S", Translation.tr("Select by pattern")], ["Ctrl+I", Translation.tr("Invert selection")], ["Middle click", Translation.tr("Open a folder in a new tab")], ["Ctrl+Shift+N", Translation.tr("New folder")], ["Ctrl+T / W", Translation.tr("New tab / close tab")],
+                ["Ctrl+L", Translation.tr("Edit the path")], ["Ctrl+F", Translation.tr("Search")], ["Ctrl+H", Translation.tr("Show hidden files")],
+                ["Ctrl+1 / 2", Translation.tr("Icon / list view")], ["Alt+← → ↑", Translation.tr("Back, forward, up")], ["Alt+Enter", Translation.tr("Properties")],
+                ["F4 / Ctrl+Alt+T", Translation.tr("Open a terminal here")], ["Ctrl+Alt+N", Translation.tr("New window")], ["Menu / Shift+F10", Translation.tr("Context menu")],
+                ["Ctrl+D", Translation.tr("Bookmark")], ["Ctrl++ / −", Translation.tr("Zoom icons")], ["Type a name", Translation.tr("Jump to a file")]
             ]
             Repeater {
                 model: rows
@@ -2511,7 +2511,7 @@ FocusScope {
                     StyledText { Layout.fillWidth: true; text: modelData[1]; font.pixelSize: Appearance.font.pixelSize.smallie; color: ClockStyle.colOnSurface }
                 }
             }
-            actions: [FmButton { text: qsTr("Close"); kind: "tonal"; onClicked: close() }]
+            actions: [FmButton { text: Translation.tr("Close"); kind: "tonal"; onClicked: close() }]
         }
     }
 }
