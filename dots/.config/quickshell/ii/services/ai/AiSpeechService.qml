@@ -22,7 +22,7 @@ QtObject {
     property bool streamReady: false
     property bool streamEnded: false
     readonly property real speechSpeed: Math.max(0.5, Math.min(2, Number(Config.options.ai.voice.speechSpeed ?? 1.25)))
-    readonly property int speechGapMs: Math.max(0, Math.min(600, Number(Config.options.ai.voice.speechGapMs ?? 130)))
+    readonly property int speechGapMs: Math.max(0, Math.min(600, Number(Config.options.ai.voice.speechGapMs ?? 100)))
     property string phase: ""
     property real level: 0
     signal finished(bool ok)
