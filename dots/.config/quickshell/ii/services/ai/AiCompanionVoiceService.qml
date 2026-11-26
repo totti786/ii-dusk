@@ -812,19 +812,34 @@ Scope {
             next[key] = item.status;
             const before = root.sessionStates[key];
             if (!root.sessionBaseline || before === undefined || before === item.status) continue;
-            const who = root.toolLabel(item.tool) + " \"" + String(item.name).slice(0, 50) + "\"";
+            const name = String(item.name).slice(0, 50);
+            const who = root.toolLabel(item.tool) + " \"" + name + "\"";
             if (item.status === "waiting")
-                root.raiseSessionAlert("question", who + " " + (item.why || "needs you") + ".");
+                root.raiseSessionAlert("question", who + " " + (item.why || "needs you") + ".",
+                    root.sessionWaitingText(item.why).arg(root.toolLabel(item.tool)).arg(name));
             else if (item.status === "idle" && before === "working")
-                root.raiseSessionAlert("done", who + " finished.");
+                root.raiseSessionAlert("done", who + " finished.",
+                    Translation.tr("%1 \"%2\" finished.").arg(root.toolLabel(item.tool)).arg(name));
         }
         root.sessionStates = next;
         root.sessionBaseline = true;
     }
-    function raiseSessionAlert(kind, text) {
+    // `why` comes from agent_sessions.py as an English phrase.
+    function sessionWaitingText(why) {
+        switch (why) {
+        case "asked a question": return Translation.tr("%1 \"%2\" asked a question.");
+        case "has a question": return Translation.tr("%1 \"%2\" has a question.");
+        case "has a plan for you to approve": return Translation.tr("%1 \"%2\" has a plan for you to approve.");
+        case "needs your approval": return Translation.tr("%1 \"%2\" needs your approval.");
+        default: return Translation.tr("%1 \"%2\" needs you.");
+        }
+    }
+    // `text` stays English for the voice; `body` is what the popup shows. The icons are Material Symbols.
+    function raiseSessionAlert(kind, text, body) {
         console.log("[voice] session alert:", text);
-        Quickshell.execDetached(["notify-send", "-a", "Coding sessions", "-i", kind === "done" ? "emblem-ok-symbolic" : "dialog-question-symbolic",
-                                 kind === "done" ? "Session finished" : "Session needs you", text]);
+        Quickshell.execDetached(["notify-send", "-a", Translation.tr("Coding sessions"),
+                                 "-i", kind === "done" ? "check_circle" : "contact_support",
+                                 kind === "done" ? Translation.tr("Session finished") : Translation.tr("Session needs you"), body]);
         root.sessionAlertQueue = root.sessionAlertQueue.concat([text]).slice(-4);
         sessionSpeakTimer.restart();
     }

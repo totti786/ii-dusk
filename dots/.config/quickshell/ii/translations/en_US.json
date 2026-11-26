@@ -16804,5 +16804,13 @@
     "Remove PIN": "Remove PIN",
     "Hide on empty workspace": "Hide on empty workspace",
     "Keep the dock hidden on the desktop as well instead of showing it automatically when a workspace has no windows": "Keep the dock hidden on the desktop as well instead of showing it automatically when a workspace has no windows",
-    "Keep the dock hidden on the desktop too": "Keep the dock hidden on the desktop too"
+    "Keep the dock hidden on the desktop too": "Keep the dock hidden on the desktop too",
+  "Session finished": "Session finished",
+  "Session needs you": "Session needs you",
+  "%1 \"%2\" finished.": "%1 \"%2\" finished.",
+  "%1 \"%2\" needs you.": "%1 \"%2\" needs you.",
+  "%1 \"%2\" asked a question.": "%1 \"%2\" asked a question.",
+  "%1 \"%2\" has a question.": "%1 \"%2\" has a question.",
+  "%1 \"%2\" has a plan for you to approve.": "%1 \"%2\" has a plan for you to approve.",
+  "%1 \"%2\" needs your approval.": "%1 \"%2\" needs your approval."
 }
