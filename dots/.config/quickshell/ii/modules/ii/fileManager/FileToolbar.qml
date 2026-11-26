@@ -62,6 +62,9 @@ Item {
             RowLayout {
                 id: navRow
                 anchors.centerIn: parent
+                // History arrows keep their usual order and direction: back is on the left.
+                LayoutMirroring.enabled: false
+                LayoutMirroring.childrenInherit: true
                 spacing: 2
                 FmIconButton { symbol: "arrow_back"; tip: Translation.tr("Back  (Alt+←)"); enabled2: root.canBack; onClicked: root.back() }
                 FmIconButton { symbol: "arrow_forward"; tip: Translation.tr("Forward  (Alt+→)"); enabled2: root.canForward; onClicked: root.forward() }

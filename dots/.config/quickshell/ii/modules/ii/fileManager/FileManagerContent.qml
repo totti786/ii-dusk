@@ -1914,7 +1914,12 @@ FocusScope {
     Keys.onPressed: ev => {
         const ctrl = ev.modifiers & Qt.ControlModifier, alt = ev.modifiers & Qt.AltModifier, shift = ev.modifiers & Qt.ShiftModifier;
         ev.accepted = true;
-        switch (ev.key) {
+        // A mirrored window lays items out from the right, so Left and Right trade places.
+        // Alt+arrows follow the history buttons, which are not mirrored.
+        let key = ev.key;
+        if (root.LayoutMirroring.enabled && !alt && (key === Qt.Key_Left || key === Qt.Key_Right))
+            key = key === Qt.Key_Left ? Qt.Key_Right : Qt.Key_Left;
+        switch (key) {
         case Qt.Key_Up: alt ? root.goUp() : root.moveCursor(root.viewMode === "grid" ? -(gridView.columns) : -1, ev.modifiers); break;
         case Qt.Key_Down: root.moveCursor(root.viewMode === "grid" ? gridView.columns : 1, ev.modifiers); break;
         case Qt.Key_Left: alt ? root.goBack() : root.moveCursor(root.viewMode === "grid" ? -1 : 0, ev.modifiers); break;

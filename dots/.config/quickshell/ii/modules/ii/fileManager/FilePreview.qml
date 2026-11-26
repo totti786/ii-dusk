@@ -84,8 +84,13 @@ FocusScope {
                         elide: Text.ElideRight
                     }
                 }
-                FmIconButton { symbol: "chevron_left"; tip: Translation.tr("Previous  (←)"); onClicked: root.stepRequested(-1) }
-                FmIconButton { symbol: "chevron_right"; tip: Translation.tr("Next  (→)"); onClicked: root.stepRequested(1) }
+                Row {
+                    // Previous stays on the left, like the history arrows in the toolbar.
+                    LayoutMirroring.enabled: false
+                    LayoutMirroring.childrenInherit: true
+                    FmIconButton { symbol: "chevron_left"; tip: Translation.tr("Previous  (←)"); onClicked: root.stepRequested(-1) }
+                    FmIconButton { symbol: "chevron_right"; tip: Translation.tr("Next  (→)"); onClicked: root.stepRequested(1) }
+                }
                 FmIconButton { symbol: "close"; onClicked: root.closed() }
             }
             Item {

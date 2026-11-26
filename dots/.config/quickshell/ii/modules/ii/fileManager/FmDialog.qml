@@ -57,9 +57,12 @@ FocusScope {
     }
     Keys.onPressed: event => {
         const k = event.key;
-        if (k === Qt.Key_Left || k === Qt.Key_Up || k === Qt.Key_Backtab) {
+        // The action row is mirrored with the window.
+        const previous = root.LayoutMirroring.enabled ? Qt.Key_Right : Qt.Key_Left;
+        const next = root.LayoutMirroring.enabled ? Qt.Key_Left : Qt.Key_Right;
+        if (k === previous || k === Qt.Key_Up || k === Qt.Key_Backtab) {
             root.stepAction(-1);
-        } else if (k === Qt.Key_Right || k === Qt.Key_Down || k === Qt.Key_Tab) {
+        } else if (k === next || k === Qt.Key_Down || k === Qt.Key_Tab) {
             root.stepAction(1);
         } else if (k === Qt.Key_Return || k === Qt.Key_Enter || k === Qt.Key_Space) {
             const b = root.actionButtons[root.actionIndex];
