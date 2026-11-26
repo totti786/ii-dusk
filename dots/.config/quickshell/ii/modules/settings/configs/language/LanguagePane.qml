@@ -70,6 +70,9 @@ Rectangle {
                 }
                 StyledText {
                     Layout.fillWidth: true
+                    // Fallback fonts for other scripts are a few pixels taller, and a height
+                    // that follows the hovered name moves the grid out from under the pointer.
+                    Layout.preferredHeight: Math.ceil(font.pixelSize * 1.8)
                     text: root.describe(root.hoveredIndex >= 0 ? root.options[root.hoveredIndex] : root.current)
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: Appearance.colors.colSubtext
