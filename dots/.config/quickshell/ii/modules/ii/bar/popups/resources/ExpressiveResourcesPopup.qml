@@ -900,7 +900,7 @@ StyledPopup {
 
                         StyledText {
                             id: cpuLabel
-                            text: "CPU Usage"
+                            text: Translation.tr("CPU Usage")
                             font.pixelSize: Appearance.font.pixelSize.smaller
                             font.weight: Font.DemiBold
                             color: Appearance.colors.colOnLayer1
@@ -1148,7 +1148,7 @@ StyledPopup {
 
                         StyledText {
                             id: gpuLabel
-                            text: "GPU Usage"
+                            text: Translation.tr("GPU Usage")
                             font.pixelSize: Appearance.font.pixelSize.smaller
                             font.weight: Font.DemiBold
                             color: Appearance.colors.colOnLayer1
@@ -1430,7 +1430,7 @@ StyledPopup {
                     spacing: -2
                     StyledText {
                         id: ramLabel
-                        text: "RAM"
+                        text: Translation.tr("RAM")
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         font.weight: Font.Bold
                         color: Appearance.colors.colOnSecondaryContainer
@@ -1716,7 +1716,7 @@ StyledPopup {
                     spacing: -2
                     StyledText {
                         id: swapLabel
-                        text: "SWAP"
+                        text: Translation.tr("SWAP")
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         font.weight: Font.Bold
                         color: Appearance.colors.colOnSecondaryContainer
@@ -2001,7 +2001,7 @@ StyledPopup {
                     spacing: -2
                     StyledText {
                         id: diskLabel
-                        text: "DISK · " + (Config.options?.resources?.diskMount ?? "/")
+                        text: Translation.tr("DISK · %1").arg(Config.options?.resources?.diskMount ?? "/")
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         font.weight: Font.Bold
                         color: Appearance.colors.colOnSecondaryContainer
@@ -2151,7 +2151,7 @@ StyledPopup {
                         opacity: 0.35
                     }
                     StyledText {
-                        text: "Containers"
+                        text: Translation.tr("Containers")
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         font.weight: Font.Medium
                         color: Appearance.colors.colOnLayer1

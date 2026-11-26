@@ -1,6 +1,6 @@
 {
   "Free": "المتاح",
-  "GPU Usage": "استخدام وحدة معالجة الرسوميات",
+  "GPU Usage": "استخدام معالج الرسوميات",
   "Graphics": "الرسوميات",
   "Hold the pointer on the island to open the dashboard": "أبقِ المؤشر على الجزيرة لفتح لوحة المعلومات",
   "Hold time (ms)": "مدة الإبقاء (ملّي ثانية)",
@@ -22539,5 +22539,24 @@
   "%1 \"%2\" asked a question.": "طرح %1 سؤالًا في جلسة «%2».",
   "%1 \"%2\" has a question.": "لدى %1 سؤال في جلسة «%2».",
   "%1 \"%2\" has a plan for you to approve.": "لدى %1 خطة تنتظر موافقتك في جلسة «%2».",
-  "%1 \"%2\" needs your approval.": "يحتاج %1 إلى موافقتك في جلسة «%2»."
+  "%1 \"%2\" needs your approval.": "يحتاج %1 إلى موافقتك في جلسة «%2».",
+  "SWAP": "ذاكرة التبديل",
+  "DISK · %1": "القرص · %1",
+  "Containers": "الحاويات",
+  "stopped": "متوقف",
+  "loading...": "جارٍ التحميل...",
+  "Fetching container states...": "جارٍ جلب حالة الحاويات...",
+  "No active containers": "لا حاويات نشطة",
+  "Docker service offline": "خدمة Docker متوقفة",
+  "Spin up some containers to manage them here.": "شغّل حاويات لإدارتها هنا.",
+  "Click the power button to start the system daemon.": "اضغط زر التشغيل لبدء خدمة النظام.",
+  "Collapse actions": "طي الإجراءات",
+  "Stop container": "إيقاف الحاوية",
+  "Open shell": "فتح الطرفية",
+  "Start container": "تشغيل الحاوية",
+  "Open logs": "فتح السجلات",
+  "Open in browser (http://localhost:%1)": "فتح في المتصفح (http://localhost:%1)",
+  "Open http://localhost:%1 in browser": "فتح http://localhost:%1 في المتصفح",
+  "Manage actions": "إدارة الإجراءات",
+  "RAM: %1": "الذاكرة: %1"
 }

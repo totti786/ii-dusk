@@ -37,10 +37,10 @@ Item {
 
     function stateLabel(c) {
         if (c.isPaused)
-            return "Paused";
+            return Translation.tr("Paused");
         if (c.isRunning)
-            return "Running";
-        return "Stopped";
+            return Translation.tr("Running");
+        return Translation.tr("Stopped");
     }
 
     function uptimeShort(startedAt) {
@@ -51,10 +51,10 @@ Item {
             return "—";
         const s = Math.floor(ms / 1000);
         if (s < 60)
-            return s + "s";
+            return Translation.tr("%1s").arg(s);
         if (s < 3600)
-            return Math.floor(s / 60) + "m";
-        return Math.floor(s / 3600) + "h";
+            return Translation.tr("%1m").arg(Math.floor(s / 60));
+        return Translation.tr("%1h").arg(Math.floor(s / 3600));
     }
 
     // ── Layout ────────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ Item {
                         color: Appearance.colors.colOnLayer1
                     }
                     StyledText {
-                        text: DockerService.dockerAvailable ? DockerService.runningCount + " running" : (DockerService.dockerRunning ? "loading..." : "stopped")
+                        text: DockerService.dockerAvailable ? Translation.tr("%1 running").arg(DockerService.runningCount) : (DockerService.dockerRunning ? Translation.tr("loading...") : Translation.tr("stopped"))
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         color: Appearance.colors.colOnLayer1
                         opacity: 0.6
@@ -162,7 +162,7 @@ Item {
                         color: DockerService.dockerRunning ? Appearance.m3colors.m3onPrimary : Qt.rgba(Appearance.colors.colOnLayer1.r, Appearance.colors.colOnLayer1.g, Appearance.colors.colOnLayer1.b, 0.6)
                     }
                     StyledText {
-                        text: DockerService.dockerRunning ? "On" : "Off"
+                        text: DockerService.dockerRunning ? Translation.tr("On") : Translation.tr("Off")
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         font.weight: Font.Bold
                         color: DockerService.dockerRunning ? Appearance.m3colors.m3onPrimary : Qt.rgba(Appearance.colors.colOnLayer1.r, Appearance.colors.colOnLayer1.g, Appearance.colors.colOnLayer1.b, 0.6)
@@ -199,7 +199,7 @@ Item {
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: "Fetching container states..."
+                    text: Translation.tr("Fetching container states...")
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: Appearance.colors.colOnLayer1
                     opacity: 0.6
@@ -243,14 +243,14 @@ Item {
                         spacing: 2
 
                         StyledText {
-                            text: DockerService.dockerRunning ? "No active containers" : "Docker service offline"
+                            text: DockerService.dockerRunning ? Translation.tr("No active containers") : Translation.tr("Docker service offline")
                             font.pixelSize: Appearance.font.pixelSize.normal
                             font.weight: Font.DemiBold
                             color: Appearance.colors.colOnLayer1
                         }
 
                         StyledText {
-                            text: DockerService.dockerRunning ? "Spin up some containers to manage them here." : "Click the power button to start the system daemon."
+                            text: DockerService.dockerRunning ? Translation.tr("Spin up some containers to manage them here.") : Translation.tr("Click the power button to start the system daemon.")
                             font.pixelSize: Appearance.font.pixelSize.smaller
                             color: Appearance.colors.colOnLayer1
                             opacity: 0.5
@@ -329,7 +329,7 @@ Item {
             items.push({
                 icon: "arrow_back",
                 isCollapse: true,
-                tooltip: "Collapse actions",
+                tooltip: Translation.tr("Collapse actions"),
                 color: Appearance.colors.colOnSurfaceVariant,
                 execute: () => {
                     card.actionPanelOpen = false;
@@ -339,7 +339,7 @@ Item {
                 // Stop Container
                 items.push({
                     icon: "stop",
-                    tooltip: "Stop container",
+                    tooltip: Translation.tr("Stop container"),
                     color: Appearance.colors.colError,
                     execute: () => {
                         DockerService.containerAction(card.containerData.id, "stop");
@@ -349,7 +349,7 @@ Item {
                 items.push({
                     icon: "terminal",
                     isSecondaryContainer: true,
-                    tooltip: "Open shell",
+                    tooltip: Translation.tr("Open shell"),
                     color: Appearance.colors.colOnSecondaryContainer,
                     execute: () => {
                         DockerService.openShell(card.containerData.id);
@@ -359,7 +359,7 @@ Item {
                 // Start Container
                 items.push({
                     icon: "play_arrow",
-                    tooltip: "Start container",
+                    tooltip: Translation.tr("Start container"),
                     color: Appearance.colors.colSuccess,
                     execute: () => {
                         DockerService.containerAction(card.containerData.id, "start");
@@ -370,7 +370,7 @@ Item {
             items.push({
                 icon: "description",
                 isSecondaryContainer: true,
-                tooltip: "Open logs",
+                tooltip: Translation.tr("Open logs"),
                 color: Appearance.colors.colOnSecondaryContainer,
                 execute: () => {
                     DockerService.openLogs(card.containerData.id);
@@ -380,7 +380,7 @@ Item {
                 items.push({
                     icon: "open_in_new",
                     isSecondaryContainer: true,
-                    tooltip: "Open in browser (http://localhost:" + card.containerData.ports[0].hostPort + ")",
+                    tooltip: Translation.tr("Open in browser (http://localhost:%1)").arg(card.containerData.ports[0].hostPort),
                     color: Appearance.colors.colOnSecondaryContainer,
                     execute: () => {
                         DockerService.openInBrowser(card.containerData.ports[0].hostPort);
@@ -391,7 +391,7 @@ Item {
                 // RAM Gauge quick button (moved to the end)
                 items.push({
                     isRamGauge: true,
-                    tooltip: "RAM: " + (card.containerData?.memMb >= 1024 ? (card.containerData.memMb / 1024).toFixed(2) + " GB" : (card.containerData?.memMb ?? 0).toFixed(1) + " MB"),
+                    tooltip: Translation.tr("RAM: %1").arg(card.containerData?.memMb >= 1024 ? (card.containerData.memMb / 1024).toFixed(2) + " GB" : (card.containerData?.memMb ?? 0).toFixed(1) + " MB"),
                     memMb: card.containerData?.memMb ?? 0,
                     execute: () => {}
                 });
@@ -573,7 +573,7 @@ Item {
                                         StyledToolTip {
                                             alternativeVisibleCondition: portMouseArea.containsMouse
                                             extraVisibleCondition: false
-                                            text: "Open http://localhost:" + modelData.hostPort + " in browser"
+                                            text: Translation.tr("Open http://localhost:%1 in browser").arg(modelData.hostPort)
                                         }
                                     }
                                 }
@@ -598,7 +598,7 @@ Item {
                             }
 
                             StyledToolTip {
-                                text: "Manage actions"
+                                text: Translation.tr("Manage actions")
                             }
                         }
                     }
