@@ -110,6 +110,7 @@ PREFERENCE_PATHS = {
     "dock.enableMagnification",
     "dock.iconSpacing",
     "dock.pinnedOnStartup",
+    "dock.hideOnEmptyWorkspace",
     "dock.hoverToReveal",
     "dock.smartGrouping",
     # The dock's widgets and buttons, written as `dock[key]`.

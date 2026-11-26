@@ -7196,6 +7196,7 @@ Singleton {
                 property real height: 56
                 property real hoverRegionHeight: 2
                 property bool pinnedOnStartup: false
+                property bool hideOnEmptyWorkspace: false
                 property bool enablePreview: true
                 property bool enableAppTooltip: false
                 property bool hoverToReveal: true
