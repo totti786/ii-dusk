@@ -45,14 +45,22 @@ Item {
             view.positionViewAtIndex(i, GridView.Contain);
     }
 
+    // A mirrored grid fills its rows from the right edge of the view. Pointer positions stay
+    // physical, so columns are counted from whichever edge the first one sits on.
+    readonly property bool mirrored: view.effectiveLayoutDirection === Qt.RightToLeft
+    function fromFirstColumn(x: real): real {
+        return root.mirrored ? view.width - x : x + view.contentX;
+    }
+
     function cellRect(i: int): rect {
         const col = i % root.columns;
         const row = Math.floor(i / root.columns);
-        return Qt.rect(col * view.cellWidth - view.contentX, row * view.cellHeight - view.contentY, view.cellWidth, view.cellHeight);
+        const x = root.mirrored ? view.width - (col + 1) * view.cellWidth : col * view.cellWidth - view.contentX;
+        return Qt.rect(x, row * view.cellHeight - view.contentY, view.cellWidth, view.cellHeight);
     }
 
     function indexAtPoint(x: real, y: real): int {
-        const col = Math.floor((x + view.contentX) / view.cellWidth);
+        const col = Math.floor(root.fromFirstColumn(x) / view.cellWidth);
         const row = Math.floor((y + view.contentY) / view.cellHeight);
         if (col < 0 || col >= root.columns || row < 0)
             return -1;
@@ -273,8 +281,9 @@ Item {
                 band.visible = true;
                 const hits = [];
                 const cw = view.cellWidth, ch = view.cellHeight;
-                const c0 = Math.max(0, Math.floor((x0 - view.x + view.contentX) / cw));
-                const c1 = Math.min(root.columns - 1, Math.floor((x0 + band.width - view.x + view.contentX) / cw));
+                const a = root.fromFirstColumn(x0 - view.x), b = root.fromFirstColumn(x0 + band.width - view.x);
+                const c0 = Math.max(0, Math.floor(Math.min(a, b) / cw));
+                const c1 = Math.min(root.columns - 1, Math.floor(Math.max(a, b) / cw));
                 const r0 = Math.max(0, Math.floor((y0 - view.y + view.contentY) / ch));
                 const r1 = Math.floor((y0 + band.height - view.y + view.contentY) / ch);
                 for (let r = r0; r <= r1; ++r)
