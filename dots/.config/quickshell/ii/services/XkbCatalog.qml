@@ -19,6 +19,9 @@ Singleton {
 
     readonly property string source: "/usr/share/X11/xkb/rules/base.lst"
 
+    /// Layouts left out of the catalogue, along with their variants.
+    readonly property var hiddenLayouts: ["il"]
+
     /// [{ code, name }] - "fr", "French"
     property var layouts: []
     /// layout code -> [{ code, name }] - "fr" -> [{ code: "latin9", name: "French (legacy, alt.)" }]
@@ -54,7 +57,6 @@ Singleton {
         { "code": "dk", "label": "Dansk" },
         { "code": "fi", "label": "Suomi" },
         { "code": "gr", "label": "Ελληνικά" },
-        { "code": "il", "label": "עברית" },
         { "code": "jp", "label": "日本語" },
         { "code": "kr", "label": "한국어" },
         { "code": "cn", "label": "简体中文" },
@@ -118,7 +120,7 @@ Singleton {
             if (section === "variant") {
                 // "  latin9          fr: French (legacy, alt.)"
                 const match = line.match(/^\s+(\S+)\s+(\S+):\s*(.*)$/);
-                if (!match) continue;
+                if (!match || root.hiddenLayouts.includes(match[2])) continue;
                 if (variants[match[2]] === undefined) variants[match[2]] = [];
                 variants[match[2]].push({ "code": match[1], "name": match[3] });
                 continue;
@@ -126,7 +128,9 @@ Singleton {
             const match = line.match(/^\s+(\S+)\s+(.*)$/);
             if (!match) continue;
             const entry = { "code": match[1], "name": match[2].trim() };
-            if (section === "layout") layouts.push(entry);
+            if (section === "layout") {
+                if (!root.hiddenLayouts.includes(entry.code)) layouts.push(entry);
+            }
             else if (section === "model") models.push(entry);
             else if (section === "option") options.push(Object.assign({
                 "group": entry.code.split(":")[0]

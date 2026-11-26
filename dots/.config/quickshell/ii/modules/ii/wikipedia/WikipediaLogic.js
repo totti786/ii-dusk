@@ -24,7 +24,6 @@ var _languageCatalog = [
     { "code": "da", "nativeName": "Dansk", "englishName": "Danish" },
     { "code": "no", "nativeName": "Norsk bokmål", "englishName": "Norwegian" },
     { "code": "fi", "nativeName": "Suomi", "englishName": "Finnish" },
-    { "code": "he", "nativeName": "עברית", "englishName": "Hebrew" },
     { "code": "fa", "nativeName": "فارسی", "englishName": "Persian" },
     { "code": "hi", "nativeName": "हिन्दी", "englishName": "Hindi" },
     { "code": "id", "nativeName": "Bahasa Indonesia", "englishName": "Indonesian" },
