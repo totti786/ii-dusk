@@ -219,6 +219,9 @@ Item {
             x: (visualButton.width - width) / 2
             y: (visualButton.height - height) / 2
             rotation: -90 * root.verticalProgress
+            // Mirrored and then rotated, the slider would fill from the top.
+            LayoutMirroring.enabled: root.LayoutMirroring.enabled && root.verticalProgress < 0.5
+            LayoutMirroring.childrenInherit: true
 
             StyledSlider {
                 id: quickSliderHorizontal

@@ -222,6 +222,7 @@ ColumnLayout {
             onTextEdited: root.noteTyping()
 
             StyledText {
+                width: parent.width
                 anchors.verticalCenter: parent.verticalCenter
                 visible: searchInput.text.length === 0
                 text: Translation.tr("Search %1").arg(PasswordManager.providerName)

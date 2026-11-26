@@ -242,11 +242,11 @@ ColumnLayout {
                     "value": "inverted"
                 }, {
                     "displayName": Translation.tr("Left"),
-                    "icon": "keyboard_arrow_left",
+                    "icon": "west",
                     "value": "left"
                 }, {
                     "displayName": Translation.tr("Right"),
-                    "icon": "keyboard_arrow_right",
+                    "icon": "east",
                     "value": "right"
                 }]
             }

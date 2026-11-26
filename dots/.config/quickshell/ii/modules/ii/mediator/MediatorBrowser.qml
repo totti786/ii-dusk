@@ -23,6 +23,10 @@ FocusScope {
     signal closeRequested()
     signal windowRequested()
 
+    // The step the Right arrow takes through mirrored rows and grids, where the next item
+    // is on the left. The carousel is laid out by x, so it keeps its own direction.
+    readonly property int rightStep: root.LayoutMirroring.enabled ? -1 : 1
+
     /// The room lives in an ordinary window, which would open behind the full-screen overlay,
     /// so the overlay steps aside first. Watch Together stays on; reopen Mediator any time.
     function openRoom(): void {
@@ -36,11 +40,11 @@ FocusScope {
     property bool overlay: true
 
     readonly property var tabs: [
-        { key: "", label: "All", icon: "grid_view" },
-        { key: "anime", label: "Anime", icon: "animation" },
-        { key: "shows", label: "Shows", icon: "tv" },
-        { key: "movies", label: "Movies", icon: "movie" },
-        { key: "stream", label: "Streaming", icon: "live_tv" }
+        { key: "", label: Translation.tr("All"), icon: "grid_view" },
+        { key: "anime", label: Translation.tr("Anime"), icon: "animation" },
+        { key: "shows", label: Translation.tr("Shows"), icon: "tv" },
+        { key: "movies", label: Translation.tr("Movies"), icon: "movie" },
+        { key: "stream", label: Translation.tr("Streaming"), icon: "live_tv" }
     ]
     property string tab: ""
     /// Online mode covers both the anime provider search and the Stremio catalog.
@@ -583,7 +587,7 @@ FocusScope {
                 return;
             }
             if (ctrl && (event.key === Qt.Key_Left || event.key === Qt.Key_Right)) {
-                toolbar.stepBrowse(event.key === Qt.Key_Left ? -1 : 1);
+                toolbar.stepBrowse(event.key === Qt.Key_Left ? -root.rightStep : root.rightStep);
                 return;
             }
             if (ctrl && event.key === Qt.Key_R) {
@@ -648,9 +652,9 @@ FocusScope {
                 return;
             if (event.key === Qt.Key_Up && root.streamMove(page, 0, -1))
                 return;
-            if (event.key === Qt.Key_Right && atEdgeRight && root.streamMove(page, 1, 0))
+            if (event.key === Qt.Key_Right && atEdgeRight && root.streamMove(page, root.rightStep, 0))
                 return;
-            if (event.key === Qt.Key_Left && atEdgeLeft && root.streamMove(page, -1, 0))
+            if (event.key === Qt.Key_Left && atEdgeLeft && root.streamMove(page, -root.rightStep, 0))
                 return;
             if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && ctrl && page?.chooseCursor) {
                 // Ctrl+Enter: choose the stream by hand for the episode under the cursor
@@ -754,13 +758,13 @@ FocusScope {
             return;
         case Qt.Key_Right:
             if (search.cursorPosition >= search.text.length) {
-                root.moveCursor(1, 0);
+                root.moveCursor(root.zone === "row" ? 1 : root.rightStep, 0);
                 return;
             }
             break;
         case Qt.Key_Left:
             if (search.cursorPosition === 0 || search.text === "") {
-                root.moveCursor(-1, 0);
+                root.moveCursor(root.zone === "row" ? -1 : -root.rightStep, 0);
                 return;
             }
             break;
@@ -814,6 +818,7 @@ FocusScope {
                         MaterialSymbol { text: "search"; iconSize: 22; color: Appearance.colors.colSubtext }
                         TextInput {
                             id: search
+                            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                             Layout.fillWidth: true
                             color: Appearance.colors.colOnLayer0
                             font.family: Appearance.font.family.main
@@ -828,8 +833,9 @@ FocusScope {
                                 StremioService.clearSearch()
                             Keys.onPressed: event => root.handleKey(event)
                             StyledText {
+                                width: parent.width
                                 visible: search.text === ""
-                                text: root.stremio ? "Search movies and series" : root.streaming ? "Search anime" : "Search your library"
+                                text: root.stremio ? Translation.tr("Search movies and series") : root.streaming ? Translation.tr("Search anime") : Translation.tr("Search your library")
                                 color: Appearance.colors.colSubtext
                                 font.pixelSize: Appearance.font.pixelSize.normal
                             }
@@ -921,7 +927,7 @@ FocusScope {
                     }
                     StyledToolTip {
                         extraVisibleCondition: streamArea.containsMouse
-                        text: root.stremio ? "Search Stremio" : root.streaming ? "Search anime online" : "Open the streaming section"
+                        text: root.stremio ? Translation.tr("Search Stremio") : root.streaming ? Translation.tr("Search anime online") : Translation.tr("Open the streaming section")
                     }
                 }
 
@@ -1054,21 +1060,21 @@ FocusScope {
                     }
                     StyledToolTip {
                         extraVisibleCondition: jfArea.containsMouse
-                        text: jfToggle.on ? "Showing Jellyfin titles. Click to hide them" : "Click to add your Jellyfin titles to the library"
+                        text: jfToggle.on ? Translation.tr("Showing Jellyfin titles. Click to hide them") : Translation.tr("Click to add your Jellyfin titles to the library")
                     }
                 }
 
                 StyledText {
-                    text: root.stremio ? (StremioService.busy ? "Loading…" : StremioService.heading)
+                    text: root.stremio ? (StremioService.busy ? Translation.tr("Loading…") : StremioService.heading)
                         : root.streaming
-                        ? (MediatorService.anilistWatchingBusy ? "Loading AniList…"
+                        ? (MediatorService.anilistWatchingBusy ? Translation.tr("Loading AniList…")
                             : (MediatorService.anilistStatus?.ok
-                                ? `${MediatorService.anilistWatching.length} watching`
-                                : "AniList not connected"))
-                        : MediatorService.enrich.running ? `Fetching info ${MediatorService.enrich.done}/${MediatorService.enrich.total}…`
-                            : MediatorService.loading ? "Scanning…"
-                            : `${root.localItems.length} ${root.localItems.length === 1 ? "title" : "titles"}`
-                                + (onlineSearch.busy ? " · searching online…" : root.onlineItems.length > 0 ? ` · ${root.onlineItems.length} online` : "")
+                                ? Translation.tr("%1 watching").arg(MediatorService.anilistWatching.length)
+                                : Translation.tr("AniList not connected")))
+                        : MediatorService.enrich.running ? Translation.tr("Fetching info %1/%2…").arg(MediatorService.enrich.done).arg(MediatorService.enrich.total)
+                            : MediatorService.loading ? Translation.tr("Scanning…")
+                            : (root.localItems.length === 1 ? Translation.tr("%1 title") : Translation.tr("%1 titles")).arg(root.localItems.length)
+                                + (onlineSearch.busy ? " · " + Translation.tr("searching online…") : root.onlineItems.length > 0 ? " · " + Translation.tr("%1 online").arg(root.onlineItems.length) : "")
                     color: Appearance.colors.colSubtext
                     font.pixelSize: Appearance.font.pixelSize.smaller
                 }
@@ -1135,7 +1141,7 @@ FocusScope {
                         Layout.fillHeight: true
                         spacing: 6
                         StyledText {
-                            text: "CONTINUE WATCHING"
+                            text: Translation.tr("CONTINUE WATCHING")
                             color: "#ccffffff"
                             font.pixelSize: Appearance.font.pixelSize.smaller
                             font.letterSpacing: 1.5
@@ -1154,7 +1160,7 @@ FocusScope {
                                 const n = hero.n;
                                 if (!n)
                                     return "";
-                                return n.reason === "resume" && n.position > 0 ? `${n.label} · stopped at ${MediatorService.clock(n.position)}` : n.label;
+                                return n.reason === "resume" && n.position > 0 ? Translation.tr("%1 · stopped at %2").arg(n.label).arg(MediatorService.clock(n.position)) : n.label;
                             }
                             elide: Text.ElideRight
                             color: "#ddffffff"
@@ -1198,7 +1204,7 @@ FocusScope {
                                     anchors.centerIn: parent
                                     spacing: 6
                                     MaterialSymbol { text: "play_arrow"; fill: 1; iconSize: 24; color: Appearance.colors.colOnPrimary }
-                                    StyledText { text: "Resume"; color: Appearance.colors.colOnPrimary; font.weight: Font.Medium }
+                                    StyledText { text: Translation.tr("Resume"); color: Appearance.colors.colOnPrimary; font.weight: Font.Medium }
                                 }
                                 MouseArea {
                                     anchors.fill: parent
@@ -1294,7 +1300,7 @@ FocusScope {
                     StyledText {
                         anchors.centerIn: parent
                         visible: root.items.length === 0 && !MediatorService.loading
-                        text: MediatorService.error !== "" ? MediatorService.error : onlineSearch.busy ? "Searching online…" : "Nothing matches"
+                        text: MediatorService.error !== "" ? MediatorService.error : onlineSearch.busy ? Translation.tr("Searching online…") : Translation.tr("Nothing matches")
                         color: Appearance.colors.colSubtext
                         font.pixelSize: Appearance.font.pixelSize.large
                     }
@@ -1447,13 +1453,13 @@ FocusScope {
                 Layout.topMargin: -14
                 Layout.preferredHeight: 16
                 verticalAlignment: Text.AlignVCenter
-                text: root.settingsOpen ? "Esc back  ·  Tab next field  ·  Changes apply when you press Save"
-                    : root.streaming ? (root.stremio ? "Type to search movies and series" : "Type to search anime")
-                        + "  ·  ←↑↓→ move  ·  Enter opens  ·  Shift+Enter library copy  ·  Ctrl+←→ browse  ·  Ctrl+↑↓ source  ·  Ctrl+R random  ·  Esc back"
-                    : root.inDetail && detail.isMovie ? "Esc back  ·  Enter play  ·  W mark watched  ·  P change poster"
-                    : root.inDetail ? "Esc back  ·  ↑↓ episode  ·  ←→ season  ·  Enter play  ·  W mark watched  ·  P change poster"
-                                    : root.overlay ? "Type to search  ·  ←↑↓→ move  ·  Tab section  ·  Enter opens or resumes  ·  Shift+Enter the other  ·  Ctrl+R random  ·  Ctrl+, settings  ·  Ctrl+W window  ·  Esc closes"
-                    : "Type to search  ·  ←↑↓→ move  ·  Tab section  ·  Enter opens or resumes  ·  Shift+Enter the other  ·  Ctrl+R random  ·  Ctrl+, settings  ·  Ctrl+Q closes"
+                text: root.settingsOpen ? Translation.tr("Esc back  ·  Tab next field  ·  Changes apply when you press Save")
+                    : root.streaming ? (root.stremio ? Translation.tr("Type to search movies and series") : Translation.tr("Type to search anime"))
+                        + Translation.tr("  ·  ←↑↓→ move  ·  Enter opens  ·  Shift+Enter library copy  ·  Ctrl+←→ browse  ·  Ctrl+↑↓ source  ·  Ctrl+R random  ·  Esc back")
+                    : root.inDetail && detail.isMovie ? Translation.tr("Esc back  ·  Enter play  ·  W mark watched  ·  P change poster")
+                    : root.inDetail ? Translation.tr("Esc back  ·  ↑↓ episode  ·  ←→ season  ·  Enter play  ·  W mark watched  ·  P change poster")
+                                    : root.overlay ? Translation.tr("Type to search  ·  ←↑↓→ move  ·  Tab section  ·  Enter opens or resumes  ·  Shift+Enter the other  ·  Ctrl+R random  ·  Ctrl+, settings  ·  Ctrl+W window  ·  Esc closes")
+                    : Translation.tr("Type to search  ·  ←↑↓→ move  ·  Tab section  ·  Enter opens or resumes  ·  Shift+Enter the other  ·  Ctrl+R random  ·  Ctrl+, settings  ·  Ctrl+Q closes")
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
             }

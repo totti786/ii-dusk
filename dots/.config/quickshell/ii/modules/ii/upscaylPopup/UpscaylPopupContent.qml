@@ -247,9 +247,9 @@ Item {
                             enabled: !root.locked
                             toggled: current
                             // One shape for the group; the chosen segment becomes a pill.
-                            topLeftRadius: current ? height / 2 : (index === 0 ? outer : join)
+                            topLeftRadius: LayoutMirroring.enabled ? (current ? height / 2 : (index === 2 ? outer : join)) : (current ? height / 2 : (index === 0 ? outer : join))
                             bottomLeftRadius: topLeftRadius
-                            topRightRadius: current ? height / 2 : (index === 2 ? outer : join)
+                            topRightRadius: LayoutMirroring.enabled ? (current ? height / 2 : (index === 0 ? outer : join)) : (current ? height / 2 : (index === 2 ? outer : join))
                             bottomRightRadius: topRightRadius
                             colBackground: Appearance.colors.colLayer2
                             colBackgroundHover: Appearance.colors.colLayer2Hover

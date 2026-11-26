@@ -27,8 +27,9 @@ GroupButton {
     
     readonly property bool sharpModeEnabled: Config.options.appearance.sharpMode
     readonly property int fullRadius: sharpModeEnabled ? Appearance.rounding.full : height / 2
-    leftRadius: root.isPressed ? root.buttonRadiusPressed : ((toggled || leftmost) ? fullRadius : Appearance.rounding.unsharpenmore)
-    rightRadius: root.isPressed ? root.buttonRadiusPressed : ((toggled || rightmost) ? fullRadius : Appearance.rounding.unsharpenmore)
+    // leftmost/rightmost mean first/last: a mirrored row puts the first one on the right.
+    leftRadius: root.isPressed ? root.buttonRadiusPressed : ((toggled || (LayoutMirroring.enabled ? rightmost : leftmost)) ? fullRadius : Appearance.rounding.unsharpenmore)
+    rightRadius: root.isPressed ? root.buttonRadiusPressed : ((toggled || (LayoutMirroring.enabled ? leftmost : rightmost)) ? fullRadius : Appearance.rounding.unsharpenmore)
     colBackground: Appearance.colors.colSecondaryContainer
     colBackgroundHover: Appearance.colors.colSecondaryContainerHover
     colBackgroundActive: Appearance.colors.colSecondaryContainerActive

@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// Back/forward/up, the path bar, search and the view controls.
 Item {
@@ -62,10 +63,10 @@ Item {
                 id: navRow
                 anchors.centerIn: parent
                 spacing: 2
-                FmIconButton { symbol: "arrow_back"; tip: qsTr("Back  (Alt+←)"); enabled2: root.canBack; onClicked: root.back() }
-                FmIconButton { symbol: "arrow_forward"; tip: qsTr("Forward  (Alt+→)"); enabled2: root.canForward; onClicked: root.forward() }
-                FmIconButton { symbol: "arrow_upward"; tip: qsTr("Up  (Alt+↑)"); enabled2: root.canUp; onClicked: root.up() }
-                FmIconButton { symbol: "refresh"; tip: qsTr("Refresh  (F5)"); onClicked: root.refresh() }
+                FmIconButton { symbol: "arrow_back"; tip: Translation.tr("Back  (Alt+←)"); enabled2: root.canBack; onClicked: root.back() }
+                FmIconButton { symbol: "arrow_forward"; tip: Translation.tr("Forward  (Alt+→)"); enabled2: root.canForward; onClicked: root.forward() }
+                FmIconButton { symbol: "arrow_upward"; tip: Translation.tr("Up  (Alt+↑)"); enabled2: root.canUp; onClicked: root.up() }
+                FmIconButton { symbol: "refresh"; tip: Translation.tr("Refresh  (F5)"); onClicked: root.refresh() }
             }
         }
 
@@ -97,6 +98,7 @@ Item {
                 MaterialSymbol { text: "search"; iconSize: 20; color: ClockStyle.colSubtext }
                 TextInput {
                     id: searchField
+                    horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
                     color: ClockStyle.colOnSurface
@@ -108,15 +110,16 @@ Item {
                     Keys.onEscapePressed: root.searchClosed()
                     Keys.onReturnPressed: root.searchSubmitted()
                     StyledText {
+                        width: parent.width
                         anchors.verticalCenter: parent.verticalCenter
                         visible: searchField.text.length === 0
-                        text: root.deepSearch ? qsTr("Search here and in subfolders  (* and ? work)") : qsTr("Filter this folder only")
+                        text: root.deepSearch ? Translation.tr("Search here and in subfolders  (* and ? work)") : Translation.tr("Filter this folder only")
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: ClockStyle.colSubtext
                     }
                 }
                 FmChip {
-                    text: qsTr("Subfolders")
+                    text: Translation.tr("Subfolders")
                     checked: root.deepSearch
                     onClicked: root.deepToggled()
                 }
@@ -136,18 +139,18 @@ Item {
                 FmIconButton {
                     visible: !root.searching
                     symbol: "search"
-                    tip: qsTr("Search  (Ctrl+F)")
+                    tip: Translation.tr("Search  (Ctrl+F)")
                     onClicked: root.searchOpened()
                 }
                 FmIconButton {
                     symbol: root.viewMode === "grid" ? "view_list" : "grid_view"
-                    tip: root.viewMode === "grid" ? qsTr("List view  (Ctrl+2)") : qsTr("Icon view  (Ctrl+1)")
+                    tip: root.viewMode === "grid" ? Translation.tr("List view  (Ctrl+2)") : Translation.tr("Icon view  (Ctrl+1)")
                     onClicked: root.viewChanged(root.viewMode === "grid" ? "list" : "grid")
                 }
                 FmIconButton {
                     id: more
                     symbol: "more_vert"
-                    tip: qsTr("More")
+                    tip: Translation.tr("More")
                     onClicked: {
                         const p = more.mapToItem(null, 0, more.height + 4);
                         root.moreRequested(p.x - 200, p.y);

@@ -64,6 +64,7 @@ Item {
         radius: Appearance.rounding.normal
         color: Appearance.colors.colLayer2
         TextInput {
+            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
             anchors.fill: parent
             anchors.margins: 12
             verticalAlignment: TextInput.AlignVCenter

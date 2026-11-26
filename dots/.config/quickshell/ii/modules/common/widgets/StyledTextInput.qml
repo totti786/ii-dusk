@@ -7,6 +7,7 @@ import QtQuick.Controls
  */
 TextInput {
     id: root
+    horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
 
     color: Appearance.colors.colOnLayer1
     renderType: Text.NativeRendering

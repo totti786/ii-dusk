@@ -222,6 +222,9 @@ Item { // Player instance
                         text: `${StringUtils.friendlyTimeForSeconds(root.trackPosition)} / ${root.trackLength > 0 ? StringUtils.friendlyTimeForSeconds(root.trackLength) : "\u2013\u2013:\u2013\u2013"}`
                     }
                     RowLayout {
+                        // Media controls and the seek bar read left to right in every language.
+                        LayoutMirroring.enabled: false
+                        LayoutMirroring.childrenInherit: true
                         id: sliderRow
                         anchors {
                             bottom: parent.bottom

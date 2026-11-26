@@ -266,6 +266,7 @@ Item {
                     }
 
                     StyledText {
+                        width: parent.width
                         anchors.verticalCenter: parent.verticalCenter
                         visible: searchInput.text.length === 0
                         text: Translation.tr("Search OpenRouter models")

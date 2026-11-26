@@ -368,6 +368,9 @@ ClippingRectangle {
         // seek slider while the player can seek, the wavy progress bar otherwise
         // — so a tile never grows a second progress language.
         QuickToggleMorphLayer {
+            // Media controls and the seek bar read left to right in every language.
+            LayoutMirroring.enabled: false
+            LayoutMirroring.childrenInherit: true
             id: seekBar
             objectName: "quickToggleSharedSeekBar"
             x: root.pad

@@ -308,10 +308,10 @@ Item {
                             readonly property int n: phaseBar.parent.phases.length
                             width: Math.max(4, (phaseBar.width - 2 * (n - 1)) * modelData.ms / phaseBar.parent.total)
                             height: 14
-                            topLeftRadius: index === 0 ? 7 : 2
-                            bottomLeftRadius: index === 0 ? 7 : 2
-                            topRightRadius: index === n - 1 ? 7 : 2
-                            bottomRightRadius: index === n - 1 ? 7 : 2
+                            topLeftRadius: LayoutMirroring.enabled ? (index === n - 1 ? 7 : 2) : (index === 0 ? 7 : 2)
+                            bottomLeftRadius: LayoutMirroring.enabled ? (index === n - 1 ? 7 : 2) : (index === 0 ? 7 : 2)
+                            topRightRadius: LayoutMirroring.enabled ? (index === 0 ? 7 : 2) : (index === n - 1 ? 7 : 2)
+                            bottomRightRadius: LayoutMirroring.enabled ? (index === 0 ? 7 : 2) : (index === n - 1 ? 7 : 2)
                             color: Qt.rgba(ClockStyle.colPrimary.r, ClockStyle.colPrimary.g, ClockStyle.colPrimary.b, 1 - index * 0.14)
                         }
                     }
@@ -347,10 +347,10 @@ Item {
                         readonly property bool reached: index < Number(root.fw?.hsiLevel ?? 0)
                         Layout.fillWidth: true
                         implicitHeight: 30
-                        topLeftRadius: index === 0 ? 15 : 6
-                        bottomLeftRadius: index === 0 ? 15 : 6
-                        topRightRadius: index === 3 ? 15 : 6
-                        bottomRightRadius: index === 3 ? 15 : 6
+                        topLeftRadius: LayoutMirroring.enabled ? (index === 3 ? 15 : 6) : (index === 0 ? 15 : 6)
+                        bottomLeftRadius: LayoutMirroring.enabled ? (index === 3 ? 15 : 6) : (index === 0 ? 15 : 6)
+                        topRightRadius: LayoutMirroring.enabled ? (index === 0 ? 15 : 6) : (index === 3 ? 15 : 6)
+                        bottomRightRadius: LayoutMirroring.enabled ? (index === 0 ? 15 : 6) : (index === 3 ? 15 : 6)
                         color: reached ? ClockStyle.colTertiary : ClockStyle.colRailRow
 
                         StyledText {

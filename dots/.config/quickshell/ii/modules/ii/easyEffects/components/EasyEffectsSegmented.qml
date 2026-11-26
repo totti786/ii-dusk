@@ -43,9 +43,9 @@ RowLayout {
             colBackgroundToggledHover: EasyEffectsStyle.colPrimaryHover
             colBackgroundToggledActive: EasyEffectsStyle.colPrimaryActive
             colRipple: EasyEffectsStyle.colPrimaryActive
-            topLeftRadius: segment.picked || segment.first ? segment.full : EasyEffectsStyle.radiusJoin
+            topLeftRadius: LayoutMirroring.enabled ? (segment.picked || segment.last ? segment.full : EasyEffectsStyle.radiusJoin) : (segment.picked || segment.first ? segment.full : EasyEffectsStyle.radiusJoin)
             bottomLeftRadius: segment.topLeftRadius
-            topRightRadius: segment.picked || segment.last ? segment.full : EasyEffectsStyle.radiusJoin
+            topRightRadius: LayoutMirroring.enabled ? (segment.picked || segment.first ? segment.full : EasyEffectsStyle.radiusJoin) : (segment.picked || segment.last ? segment.full : EasyEffectsStyle.radiusJoin)
             bottomRightRadius: segment.topRightRadius
             onClicked: root.chosen(segment.modelData.id)
 

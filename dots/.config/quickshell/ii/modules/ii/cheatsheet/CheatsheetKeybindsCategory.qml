@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.services
 import QtQuick
 import QtQuick.Layouts
 
@@ -119,6 +120,8 @@ Rectangle {
         required property var modelData
         readonly property bool matches: root.bypassFilter || cheatsheetRoot.bindMatches(bindRow.modelData, root.sectionData.name)
 
+        // A column never mirrors its rows, so each one holds the leading edge itself.
+        anchors.left: parent ? parent.left : undefined
         spacing: 12
         height: matches ? implicitHeight : 0
         opacity: matches ? 1.0 : 0.0
@@ -142,6 +145,9 @@ Rectangle {
 
         Row {
             spacing: 4
+            // A shortcut reads left to right in every language, as on the keyboard.
+            LayoutMirroring.enabled: false
+            LayoutMirroring.childrenInherit: true
             Repeater {
                 model: bindRow.modelData.mods
                 delegate: Row {
@@ -188,7 +194,7 @@ Rectangle {
             color: Appearance.colors.colOnSurface
             opacity: 0.7
             // The section title already names the category; drop the "Utilities: " prefix.
-            text: (bindRow.modelData.comment || "").replace(/^[A-Z][A-Za-z]*: /, "")
+            text: Translation.tr((bindRow.modelData.comment || "").replace(/^[A-Z][A-Za-z]*: /, ""))
         }
     }
 
@@ -229,7 +235,7 @@ Rectangle {
                     weight: Font.Bold
                 }
                 color: Appearance.colors.colOnSurface
-                text: root.sectionData.name || "Keybinds"
+                text: Translation.tr(root.sectionData.name || "Keybinds")
             }
         }
 

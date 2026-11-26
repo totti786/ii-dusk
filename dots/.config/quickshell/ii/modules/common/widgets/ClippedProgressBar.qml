@@ -53,7 +53,7 @@ ProgressBar {
                 left: parent.left
                 right: undefined
             }
-            width: parent.width * root.visualPosition
+            width: parent.width * root.position
             height: parent.height
 
             states: State {
@@ -71,7 +71,7 @@ ProgressBar {
                 PropertyChanges {
                     target: progressFill
                     width: parent.width
-                    height: parent.height * root.visualPosition
+                    height: parent.height * root.position
                 }
             }
 

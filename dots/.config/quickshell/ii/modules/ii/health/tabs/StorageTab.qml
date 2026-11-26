@@ -241,10 +241,10 @@ Item {
                     width: seg.wUsed
                     height: seg.height
                     color: pane.colUsed
-                    topLeftRadius: 13
-                    bottomLeftRadius: 13
-                    topRightRadius: 6
-                    bottomRightRadius: 6
+                    topLeftRadius: LayoutMirroring.enabled ? 6 : 13
+                    bottomLeftRadius: LayoutMirroring.enabled ? 6 : 13
+                    topRightRadius: LayoutMirroring.enabled ? 13 : 6
+                    bottomRightRadius: LayoutMirroring.enabled ? 13 : 6
 
                     Behavior on width {
                         animation: ClockStyle.motionDefault.numberAnimation.createObject(this)
@@ -261,10 +261,10 @@ Item {
                     width: seg.wFree
                     height: seg.height
                     color: ClockStyle.colField
-                    topRightRadius: 13
-                    bottomRightRadius: 13
-                    topLeftRadius: 6
-                    bottomLeftRadius: 6
+                    topRightRadius: LayoutMirroring.enabled ? 6 : 13
+                    bottomRightRadius: LayoutMirroring.enabled ? 6 : 13
+                    topLeftRadius: LayoutMirroring.enabled ? 13 : 6
+                    bottomLeftRadius: LayoutMirroring.enabled ? 13 : 6
                 }
             }
 

@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /**
  * Breadcrumbs for the current folder; clicking the empty end (or Ctrl+L) turns it into a text
@@ -31,7 +32,7 @@ Rectangle {
 
     readonly property var crumbs: {
         if (root.path.startsWith("trash:"))
-            return [{ name: qsTr("Trash"), path: "trash:///", icon: "delete" }];
+            return [{ name: Translation.tr("Trash"), path: "trash:///", icon: "delete" }];
         const out = [{ name: "/", path: "/", icon: "" }];
         let acc = "";
         const parts = root.path.split("/").filter(p => p.length > 0);
@@ -39,7 +40,7 @@ Rectangle {
         const underHome = root.home.length > 0 && (root.path === root.home || root.path.startsWith(root.home + "/"));
         if (underHome) {
             out.length = 0;
-            out.push({ name: qsTr("Home"), path: root.home, icon: "home" });
+            out.push({ name: Translation.tr("Home"), path: root.home, icon: "home" });
             acc = root.home;
             for (const p of parts.slice(homeParts.length)) {
                 acc += "/" + p;
@@ -70,11 +71,17 @@ Rectangle {
         clip: true
         interactive: false
         flickableDirection: Flickable.HorizontalFlick
-        onContentWidthChanged: contentX = Math.max(0, contentWidth - width)
-        onWidthChanged: contentX = Math.max(0, contentWidth - width)
+        // The current folder stays in view: at the right end, or the left one when mirrored.
+        function showCurrent(): void {
+            contentX = LayoutMirroring.enabled ? 0 : Math.max(0, contentWidth - width);
+        }
+        onContentWidthChanged: showCurrent()
+        onWidthChanged: showCurrent()
 
         Row {
             id: crumbRow
+            // A flickable does not mirror its content, so a short path is moved over by hand.
+            x: LayoutMirroring.enabled ? Math.max(0, flick.width - width) : 0
             height: flick.height
             spacing: 0
             Repeater {

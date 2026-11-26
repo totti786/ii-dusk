@@ -233,7 +233,7 @@ Item {
             visible: materialSymbol.length > 0
             anchors.verticalCenter: quickSlider.verticalCenter
 
-            property bool nearLeft: quickSlider.visualPosition <= 0.20
+            property bool nearLeft: quickSlider.position <= 0.20
             anchors.left: nearLeft ? quickSlider.handle.right : quickSlider.left
             anchors.leftMargin: nearLeft ? 6 : 4
 
@@ -253,7 +253,7 @@ Item {
             id: rightValue
             visible: root.minimal
             anchors.verticalCenter: quickSlider.verticalCenter
-            property bool nearRight: quickSlider.visualPosition >= 0.78
+            property bool nearRight: quickSlider.position >= 0.78
             anchors.right: nearRight ? quickSlider.handle.right : quickSlider.right
             anchors.rightMargin: nearRight ? 10 : 8
 

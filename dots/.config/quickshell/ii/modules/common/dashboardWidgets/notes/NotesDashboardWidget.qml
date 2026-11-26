@@ -242,6 +242,7 @@ Item {
 
                         TextInput {
                             id: wideQuickInput
+                            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                             Layout.fillWidth: true
                             clip: true
                             color: Appearance.colors.colOnLayer1
@@ -419,6 +420,7 @@ Item {
 
                 TextInput {
                     id: quickInput
+                    horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                     objectName: "notesSearchInput"
                     Layout.fillWidth: true
                     clip: true

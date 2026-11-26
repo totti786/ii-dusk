@@ -66,6 +66,7 @@ Rectangle {
 
     TextInput {
         id: field
+        horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
         anchors.left: badge.right
         anchors.leftMargin: 10
         anchors.right: parent.right
@@ -95,6 +96,7 @@ Rectangle {
         }
 
         StyledText {
+            width: parent.width
             anchors.verticalCenter: parent.verticalCenter
             visible: field.text.length === 0
             text: root.typing ? Translation.tr("Type, then Enter") : Translation.tr("Add a task")

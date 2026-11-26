@@ -176,10 +176,10 @@ Rectangle {
                 id: addComponentButton
                 implicitHeight: componentSelector.implicitHeight
 
-                topLeftRadius: Appearance.rounding.verysmall
-                bottomLeftRadius: Appearance.rounding.verysmall
-                topRightRadius: Appearance.rounding.full
-                bottomRightRadius: Appearance.rounding.full
+                topLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.verysmall
+                bottomLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.verysmall
+                topRightRadius: LayoutMirroring.enabled ? Appearance.rounding.verysmall : Appearance.rounding.full
+                bottomRightRadius: LayoutMirroring.enabled ? Appearance.rounding.verysmall : Appearance.rounding.full
 
                 buttonText: root.addButtonText
                 enabled: root.availableComponents.length >= 1

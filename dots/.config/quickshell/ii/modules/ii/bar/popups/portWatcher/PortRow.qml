@@ -129,6 +129,7 @@ Item {
         Row {
             height: flick.height
             spacing: 8
+            LayoutMirroring.enabled: false // pages are scrolled to by contentX
 
             // ── PAGE 1: the port ─────────────────────────────────────────────
             Rectangle {

@@ -128,6 +128,7 @@ ColumnLayout {
                 }
                 TextInput {
                     id: pass
+                    horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                     anchors.fill: parent
                     anchors.leftMargin: 14
                     anchors.rightMargin: 14

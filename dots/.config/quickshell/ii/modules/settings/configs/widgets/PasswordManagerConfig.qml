@@ -272,6 +272,7 @@ ContentPage {
                         }
 
                         StyledText {
+                            width: parent.width
                             anchors.verticalCenter: parent.verticalCenter
                             visible: pinInput.text.length === 0
                             text: PasswordManager.pinConfigured

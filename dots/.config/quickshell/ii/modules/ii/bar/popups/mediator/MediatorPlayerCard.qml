@@ -421,6 +421,9 @@ Item {
                 height: 78
 
                 RowLayout {
+                    // Media controls and the seek bar read left to right in every language.
+                    LayoutMirroring.enabled: false
+                    LayoutMirroring.childrenInherit: true
                     id: progressRow
                     anchors.left: parent.left
                     anchors.right: parent.right
@@ -466,6 +469,9 @@ Item {
                 }
 
                 RowLayout {
+                    // Media controls and the seek bar read left to right in every language.
+                    LayoutMirroring.enabled: false
+                    LayoutMirroring.childrenInherit: true
                     id: controlRow
                     anchors.left: parent.left
                     anchors.right: parent.right

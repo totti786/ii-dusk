@@ -46,6 +46,9 @@ WindowDialog {
     // handle, tooltip and interaction while displaying gradients across the track)
     // ──────────────────────────────────────────────────────────────────────────
     component GradientStyledSlider: StyledSlider {
+        // The colour gradient is laid out from the left.
+        LayoutMirroring.enabled: false
+        LayoutMirroring.childrenInherit: true
         id: gSlider
         required property Gradient trackGradient
         configuration: StyledSlider.Configuration.L

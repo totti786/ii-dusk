@@ -45,12 +45,12 @@ FocusScope {
 
     function search(): void {
         if (root.busy) {
-            MediatorService.providerSearchError = "Wait for the current anime request to finish.";
+            MediatorService.providerSearchError = Translation.tr("Wait for the current anime request to finish.");
             return;
         }
         const text = String(queryField.text ?? "").trim();
         if (text === "") {
-            MediatorService.providerSearchError = "Enter an anime title to search.";
+            MediatorService.providerSearchError = Translation.tr("Enter an anime title to search.");
             return;
         }
         if (root.initialQuery !== "" && text !== root.initialQuery.trim()) {
@@ -179,7 +179,7 @@ FocusScope {
                     Layout.fillWidth: true
                     StyledText {
                         Layout.fillWidth: true
-                        text: root.screen === "episodes" ? "Choose an episode" : "Stream anime"
+                        text: root.screen === "episodes" ? Translation.tr("Choose an episode") : Translation.tr("Stream anime")
                         color: Appearance.colors.colOnLayer0
                         font.pixelSize: Appearance.font.pixelSize.large
                         font.weight: Font.DemiBold
@@ -208,8 +208,8 @@ FocusScope {
                     SettingsField {
                         id: queryField
                         Layout.fillWidth: true
-                        label: "Anime search"
-                        placeholder: "e.g. Frieren or Naruto"
+                        label: Translation.tr("Anime search")
+                        placeholder: Translation.tr("e.g. Frieren or Naruto")
                         onAccepted: root.search()
                         input.Keys.onDownPressed: event => {
                             if (root.results.length > 0) {
@@ -230,7 +230,7 @@ FocusScope {
                             anchors.centerIn: parent
                             spacing: 5
                             MaterialSymbol { text: "search"; iconSize: 19; color: Appearance.colors.colOnPrimary }
-                            StyledText { text: "Search"; color: Appearance.colors.colOnPrimary; font.weight: Font.Medium }
+                            StyledText { text: Translation.tr("Search"); color: Appearance.colors.colOnPrimary; font.weight: Font.Medium }
                         }
                         MouseArea {
                             anchors.fill: parent
@@ -245,7 +245,7 @@ FocusScope {
                     Layout.fillWidth: true
                     Layout.topMargin: -8
                     visible: root.screen === "search"
-                    text: "Search the online provider; results are selected before playback."
+                    text: Translation.tr("Search the online provider; results are selected before playback.")
                     wrapMode: Text.Wrap
                     color: Appearance.colors.colSubtext
                     font.pixelSize: Appearance.font.pixelSize.smaller
@@ -254,7 +254,7 @@ FocusScope {
                 StyledText {
                     Layout.fillWidth: true
                     visible: root.screen === "search" && root.searchMode === false
-                    text: `Searching online for “${root.titleLabel}” — choose the exact result before playback.`
+                    text: Translation.tr("Searching online for “%1” — choose the exact result before playback.").arg(root.titleLabel)
                     wrapMode: Text.Wrap
                     color: Appearance.colors.colSubtext
                     font.pixelSize: Appearance.font.pixelSize.smaller
@@ -263,7 +263,7 @@ FocusScope {
                 StyledText {
                     Layout.fillWidth: true
                     visible: root.screen === "search" && MediatorService.providerSearchBusy
-                    text: "Searching provider…"
+                    text: Translation.tr("Searching provider…")
                     color: Appearance.colors.colSubtext
                 }
                 StyledText {
@@ -373,7 +373,7 @@ FocusScope {
                     }
                     StyledText {
                         Layout.fillWidth: true
-                        text: root.selectedShow.title ?? "Selected anime"
+                        text: root.selectedShow.title ?? Translation.tr("Selected anime")
                         color: Appearance.colors.colOnLayer0
                         font.weight: Font.Medium
                         elide: Text.ElideRight
@@ -385,7 +385,7 @@ FocusScope {
                     visible: root.screen === "episodes"
                     spacing: 6
                     StyledText {
-                        text: "Quality"
+                        text: Translation.tr("Quality")
                         color: Appearance.colors.colSubtext
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         Layout.alignment: Qt.AlignVCenter
@@ -407,6 +407,7 @@ FocusScope {
                         }
                         TextInput {
                             id: qualityInput
+                            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                             anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
                             verticalAlignment: TextInput.AlignVCenter
                             text: root.quality
@@ -430,7 +431,7 @@ FocusScope {
                         opacity: root.busy ? 0.6 : 1
                         StyledText {
                             anchors.centerIn: parent
-                            text: root.dub ? "Audio: Dub" : "Audio: Sub"
+                            text: root.dub ? Translation.tr("Audio: Dub") : Translation.tr("Audio: Sub")
                             color: Appearance.colors.colOnLayer0
                             font.pixelSize: Appearance.font.pixelSize.smaller
                             font.weight: Font.Medium
@@ -447,14 +448,14 @@ FocusScope {
                 StyledText {
                     Layout.fillWidth: true
                     visible: root.screen === "episodes"
-                    text: "Online playback · AniList sync and intro skipping are unavailable"
+                    text: Translation.tr("Online playback · AniList sync and intro skipping are unavailable")
                     color: Appearance.colors.colOutlineVariant
                     font.pixelSize: Appearance.font.pixelSize.smallest
                 }
                 StyledText {
                     Layout.fillWidth: true
                     visible: root.screen === "episodes" && MediatorService.providerEpisodesBusy
-                    text: "Loading episodes…"
+                    text: Translation.tr("Loading episodes…")
                     color: Appearance.colors.colSubtext
                 }
                 StyledText {
@@ -468,7 +469,7 @@ FocusScope {
                 StyledText {
                     Layout.fillWidth: true
                     visible: root.screen === "episodes" && MediatorService.streamResolving
-                    text: MediatorService.streamMessage || "Opening episode…"
+                    text: MediatorService.streamMessage || Translation.tr("Opening episode…")
                     color: Appearance.colors.colPrimary
                     wrapMode: Text.Wrap
                 }
@@ -517,14 +518,14 @@ FocusScope {
                             spacing: 10
                             StyledText {
                                 Layout.preferredWidth: 58
-                                text: `EP ${episodeRow.modelData.number}`
+                                text: Translation.tr("EP %1").arg(episodeRow.modelData.number)
                                 color: Appearance.colors.colPrimary
                                 font.weight: Font.Medium
                             }
                             StyledText {
                                 Layout.fillWidth: true
-                                text: episodeRow.opening ? "Opening…"
-                                    : (episodeRow.modelData.title || "Episode")
+                                text: episodeRow.opening ? Translation.tr("Opening…")
+                                    : (episodeRow.modelData.title || Translation.tr("Episode"))
                                 color: Appearance.colors.colOnLayer0
                                 elide: Text.ElideRight
                             }

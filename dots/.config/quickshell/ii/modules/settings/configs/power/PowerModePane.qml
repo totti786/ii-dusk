@@ -104,10 +104,10 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
                     implicitHeight: 112
-                    topLeftRadius: segment.first ? segment.outer : segment.inner
-                    bottomLeftRadius: segment.first ? segment.outer : segment.inner
-                    topRightRadius: segment.last ? segment.outer : segment.inner
-                    bottomRightRadius: segment.last ? segment.outer : segment.inner
+                    topLeftRadius: LayoutMirroring.enabled ? (segment.last ? segment.outer : segment.inner) : (segment.first ? segment.outer : segment.inner)
+                    bottomLeftRadius: LayoutMirroring.enabled ? (segment.last ? segment.outer : segment.inner) : (segment.first ? segment.outer : segment.inner)
+                    topRightRadius: LayoutMirroring.enabled ? (segment.first ? segment.outer : segment.inner) : (segment.last ? segment.outer : segment.inner)
+                    bottomRightRadius: LayoutMirroring.enabled ? (segment.first ? segment.outer : segment.inner) : (segment.last ? segment.outer : segment.inner)
 
                     toggled: segment.currentMode
                     colBackground: Appearance.colors.colSecondaryContainer

@@ -847,6 +847,7 @@ Item {
                                     }
 
                                     StyledText {
+                                        width: parent.width
                                         anchors.verticalCenter: parent.verticalCenter
                                         text: Translation.tr("Style name (e.g. Corporate Voice)")
                                         font.pixelSize: Appearance.font.pixelSize.small
@@ -866,6 +867,7 @@ Item {
                                     }
 
                                     StyledText {
+                                        width: parent.width
                                         anchors.verticalCenter: parent.verticalCenter
                                         text: Translation.tr("Instructions (e.g. Rewrite concisely without jargon)")
                                         font.pixelSize: Appearance.font.pixelSize.small

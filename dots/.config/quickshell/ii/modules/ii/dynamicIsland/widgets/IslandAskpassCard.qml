@@ -236,6 +236,7 @@ Item {
 
     TextInput {
         id: input
+        horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
         // Off screen: the characters are drawn by PasswordChars, or by `echoText` when
         // the answer is not a secret or the user asked to see it.
         x: -10000

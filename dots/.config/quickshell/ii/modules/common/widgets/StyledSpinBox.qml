@@ -57,10 +57,10 @@ SpinBox {
         }
         implicitHeight: root.baseHeight
         implicitWidth: root.baseHeight
-        topLeftRadius: root.outerRadius
-        bottomLeftRadius: root.outerRadius
-        topRightRadius: root.innerRadius
-        bottomRightRadius: root.innerRadius
+        topLeftRadius: LayoutMirroring.enabled ? root.innerRadius : root.outerRadius
+        bottomLeftRadius: LayoutMirroring.enabled ? root.innerRadius : root.outerRadius
+        topRightRadius: LayoutMirroring.enabled ? root.outerRadius : root.innerRadius
+        bottomRightRadius: LayoutMirroring.enabled ? root.outerRadius : root.innerRadius
 
         color: root.down.pressed ? Appearance.colors.colSurfaceContainerHighestActive : (root.down.hovered ? Appearance.colors.colSurfaceContainerHighestHover : Appearance.colors.colSurfaceContainerHigh)
 
@@ -93,10 +93,10 @@ SpinBox {
         }
         implicitHeight: root.baseHeight
         implicitWidth: root.baseHeight
-        topRightRadius: root.outerRadius
-        bottomRightRadius: root.outerRadius
-        topLeftRadius: root.innerRadius
-        bottomLeftRadius: root.innerRadius
+        topRightRadius: LayoutMirroring.enabled ? root.innerRadius : root.outerRadius
+        bottomRightRadius: LayoutMirroring.enabled ? root.innerRadius : root.outerRadius
+        topLeftRadius: LayoutMirroring.enabled ? root.outerRadius : root.innerRadius
+        bottomLeftRadius: LayoutMirroring.enabled ? root.outerRadius : root.innerRadius
 
         color: root.up.pressed ? Appearance.colors.colSurfaceContainerHighestActive : (root.up.hovered ? Appearance.colors.colSurfaceContainerHighestHover : Appearance.colors.colSurfaceContainerHigh)
 

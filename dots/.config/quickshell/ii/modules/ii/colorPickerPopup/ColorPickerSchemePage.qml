@@ -170,9 +170,9 @@ ColumnLayout {
                     readonly property bool current: root.dark === modeButton.modelData.dark
                     implicitWidth: 40
                     implicitHeight: 36
-                    topLeftRadius: modeButton.index === 0 || modeButton.current ? height / 2 : Appearance.rounding.verysmall
+                    topLeftRadius: LayoutMirroring.enabled ? (modeButton.index === 1 || modeButton.current ? height / 2 : Appearance.rounding.verysmall) : (modeButton.index === 0 || modeButton.current ? height / 2 : Appearance.rounding.verysmall)
                     bottomLeftRadius: topLeftRadius
-                    topRightRadius: modeButton.index === 1 || modeButton.current ? height / 2 : Appearance.rounding.verysmall
+                    topRightRadius: LayoutMirroring.enabled ? (modeButton.index === 0 || modeButton.current ? height / 2 : Appearance.rounding.verysmall) : (modeButton.index === 1 || modeButton.current ? height / 2 : Appearance.rounding.verysmall)
                     bottomRightRadius: topRightRadius
                     colBackground: modeButton.current ? Appearance.colors.colPrimary : Appearance.colors.colLayer2
                     colBackgroundHover: modeButton.current ? Appearance.colors.colPrimaryHover : Appearance.colors.colLayer2Hover

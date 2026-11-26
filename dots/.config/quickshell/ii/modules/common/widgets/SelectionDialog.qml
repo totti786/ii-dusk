@@ -94,6 +94,7 @@ Item {
 
                     TextField {
                         id: searchField
+                        horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                         Layout.fillWidth: true
                         Layout.preferredHeight: 40
                         placeholderText: Translation.tr("Search...")

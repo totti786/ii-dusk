@@ -409,6 +409,7 @@ Item {
                             font.pixelSize: Appearance.font.pixelSize.small
                             onTextChanged: startupConfigRoot.query = text
                             StyledText {
+                                width: parent.width
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: searchInput.text.length === 0
                                 text: Translation.tr("Search units")

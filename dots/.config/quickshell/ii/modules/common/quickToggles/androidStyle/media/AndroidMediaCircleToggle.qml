@@ -204,6 +204,9 @@ AndroidWidgetTileBase {
                 right: parent.right
             }
             sourceComponent: Rectangle {
+                // Media controls and the seek bar read left to right in every language.
+                LayoutMirroring.enabled: false
+                LayoutMirroring.childrenInherit: true
                 anchors {
                     top: parent.top
                     right: parent.right

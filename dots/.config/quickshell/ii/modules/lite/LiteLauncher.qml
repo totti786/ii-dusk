@@ -157,6 +157,7 @@ Scope {
                         }
                         TextInput {
                             id: field
+                            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                             Layout.fillWidth: true
                             color: Appearance.colors.colOnLayer0
                             font.pixelSize: Appearance.font.pixelSize.large

@@ -231,6 +231,8 @@ FocusScope {
 
                     Row {
                         id: deviceRow
+                        // Scrolled by contentX from the left, so the row itself is not mirrored.
+                        LayoutMirroring.enabled: false
                         height: deviceScroll.height
                         spacing: EasyEffectsStyle.gapSmall
 

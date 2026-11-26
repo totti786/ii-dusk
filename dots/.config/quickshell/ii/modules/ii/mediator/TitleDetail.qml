@@ -60,8 +60,8 @@ Item {
         if (!when)
             return "";
         const days = Math.round((when.getTime() - Date.now()) / 86400000);
-        const rel = days <= 0 ? "today" : days === 1 ? "tomorrow" : `in ${days} days`;
-        return `Episode ${n.episode} airs ${rel}`;
+        const rel = days <= 0 ? Translation.tr("today") : days === 1 ? Translation.tr("tomorrow") : Translation.tr("in %1 days").arg(days);
+        return Translation.tr("Episode %1 airs %2").arg(n.episode).arg(rel);
     }
     readonly property bool isMovie: root.title.lib === "movies" || root.title.episodes === 0
     readonly property real rating: root.m.rating ?? 0
@@ -103,13 +103,13 @@ Item {
         if (year)
             out.push(String(year));
         if (root.m.runtime)
-            out.push(root.durationText(root.m.runtime) + (root.isMovie ? "" : " per episode"));
+            out.push(root.isMovie ? root.durationText(root.m.runtime) : Translation.tr("%1 per episode").arg(root.durationText(root.m.runtime)));
         if (!root.isMovie) {
             const t = root.title;
             if (t.seasons > 0)
-                out.push(`${t.seasons} season${t.seasons === 1 ? "" : "s"}`);
+                out.push((t.seasons === 1 ? Translation.tr("%1 season") : Translation.tr("%1 seasons")).arg(t.seasons));
             if (t.episodes > 0)
-                out.push(`${t.episodes} episode${t.episodes === 1 ? "" : "s"}`);
+                out.push((t.episodes === 1 ? Translation.tr("%1 episode") : Translation.tr("%1 episodes")).arg(t.episodes));
         }
         if (root.m.studio)
             out.push(root.m.studio);
@@ -120,9 +120,9 @@ Item {
     readonly property string credits: {
         const parts = [];
         if (root.m.director)
-            parts.push(`Directed by ${root.m.director}`);
+            parts.push(Translation.tr("Directed by %1").arg(root.m.director));
         if ((root.m.cast ?? []).length > 0)
-            parts.push(`Starring ${root.m.cast.join(", ")}`);
+            parts.push(Translation.tr("Starring %1").arg(root.m.cast.join(", ")));
         return parts.join("   ·   ");
     }
 
@@ -136,7 +136,7 @@ Item {
     }
     readonly property string movieProgressText: {
         const p = root.movieEntry?.progress;
-        return p ? `Stopped at ${MediatorService.clock(p.position)} of ${MediatorService.clock(p.duration)}` : "";
+        return p ? Translation.tr("Stopped at %1 of %2").arg(MediatorService.clock(p.position)).arg(MediatorService.clock(p.duration)) : "";
     }
 
     property string group: ""
@@ -164,8 +164,8 @@ Item {
 
     function groupLabel(e): string {
         if (e.kind === "episode")
-            return e.season ? `Season ${e.season}` : "Episodes";
-        return ({ special: "Specials", movie: "Movies", extra: "Extras" })[e.kind] ?? e.kind;
+            return e.season ? Translation.tr("Season %1").arg(e.season) : Translation.tr("Episodes");
+        return ({ special: Translation.tr("Specials"), movie: Translation.tr("Movies"), extra: Translation.tr("Extras") })[e.kind] ?? e.kind;
     }
 
     function stremioId(): string {
@@ -194,21 +194,21 @@ Item {
     }
 
     function durationText(min): string {
-        return min >= 60 ? `${Math.floor(min / 60)}h ${min % 60}m` : `${min} min`;
+        return min >= 60 ? Translation.tr("%1h %2m").arg(Math.floor(min / 60)).arg(min % 60) : Translation.tr("%1 min").arg(min);
     }
 
     readonly property string continueLabel: {
         const n = root.detail?.next ?? root.title.next;
         if (!n)
-            return "Play";
+            return Translation.tr("Play");
         const at = n.code ? ` ${n.code}` : "";
         if (n.reason === "resume")
-            return root.isMovie ? `Resume from ${MediatorService.clock(n.position)}` : `Resume${at} · ${MediatorService.clock(n.position)}`;
+            return root.isMovie ? Translation.tr("Resume from %1").arg(MediatorService.clock(n.position)) : Translation.tr("Resume") + at + " · " + MediatorService.clock(n.position);
         if (n.reason === "replay")
-            return root.isMovie ? "Watch again" : `Watch again${at}`;
+            return root.isMovie ? Translation.tr("Watch again") : Translation.tr("Watch again") + at;
         if (n.reason === "next")
-            return `Next${at}`;
-        return root.isMovie ? "Play movie" : `Play${at}`;
+            return Translation.tr("Next") + at;
+        return root.isMovie ? Translation.tr("Play movie") : Translation.tr("Play") + at;
     }
 
     // Land on the group that holds what plays next
@@ -288,10 +288,10 @@ Item {
             root.move(-1);
             return true;
         case Qt.Key_Left:
-            root.moveGroup(-1);
+            root.moveGroup(root.LayoutMirroring.enabled ? 1 : -1);
             return true;
         case Qt.Key_Right:
-            root.moveGroup(1);
+            root.moveGroup(root.LayoutMirroring.enabled ? -1 : 1);
             return true;
         case Qt.Key_Return:
         case Qt.Key_Enter:
@@ -383,7 +383,7 @@ Item {
                                 anchors.centerIn: parent
                                 spacing: 4
                                 MaterialSymbol { text: "arrow_back"; iconSize: 17; color: "white" }
-                                StyledText { text: "Back"; color: "white"; font.pixelSize: Appearance.font.pixelSize.smaller }
+                                StyledText { text: Translation.tr("Back"); color: "white"; font.pixelSize: Appearance.font.pixelSize.smaller }
                             }
                             MouseArea {
                                 id: backArea
@@ -394,7 +394,7 @@ Item {
                             }
                         }
                         StyledText {
-                            text: root.isMovie ? "MOVIE" : (root.title.lib ?? "")
+                            text: root.isMovie ? Translation.tr("MOVIE") : (root.title.lib ?? "")
                             color: "#bbffffff"
                             font.capitalization: Font.AllUppercase
                             font.letterSpacing: 1.4
@@ -529,7 +529,7 @@ Item {
                                 anchors.centerIn: parent
                                 spacing: 7
                                 MaterialSymbol { text: root.movieDone ? "check_circle" : "radio_button_unchecked"; fill: root.movieDone ? 1 : 0; iconSize: 21; color: "white" }
-                                StyledText { text: root.movieDone ? "Watched" : "Mark watched"; color: "white" }
+                                StyledText { text: root.movieDone ? Translation.tr("Watched") : Translation.tr("Mark watched"); color: "white" }
                             }
                             MouseArea {
                                 id: markArea
@@ -550,7 +550,7 @@ Item {
                                 anchors.centerIn: parent
                                 spacing: 6
                                 MaterialSymbol { text: "smart_display"; iconSize: 21; color: "white" }
-                                StyledText { text: "Trailer"; color: "white" }
+                                StyledText { text: Translation.tr("Trailer"); color: "white" }
                             }
                             MouseArea {
                                 id: trailerArea
@@ -592,7 +592,7 @@ Item {
                                 anchors.centerIn: parent
                                 spacing: 6
                                 MaterialSymbol { text: "live_tv"; iconSize: 21; color: "white" }
-                                StyledText { text: "Stream"; color: "white" }
+                                StyledText { text: Translation.tr("Stream"); color: "white" }
                             }
                             MouseArea {
                                 id: streamArea
@@ -615,7 +615,7 @@ Item {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.togglePosterEditor()
                             }
-                            StyledToolTip { text: "Change poster (P)" }
+                            StyledToolTip { text: Translation.tr("Change poster (P)") }
                         }
                         Rectangle {
                             visible: !root.isMovie && root.entries.length > 0 && root.entries[0].media === undefined
@@ -629,7 +629,7 @@ Item {
                                 spacing: 6
                                 MaterialSymbol { text: "info"; iconSize: 20; color: "white" }
                                 StyledText {
-                                    text: MediatorService.probingId === root.title.id ? "Reading files…" : "Read file info"
+                                    text: MediatorService.probingId === root.title.id ? Translation.tr("Reading files…") : Translation.tr("Read file info")
                                     color: "white"
                                     font.pixelSize: Appearance.font.pixelSize.smaller
                                 }
@@ -655,7 +655,7 @@ Item {
                 spacing: 8
                 SettingsField {
                     id: posterField
-                    label: "Image file or URL"
+                    label: Translation.tr("Image file or URL")
                     placeholder: "~/Pictures/poster.jpg or https://…"
                     onAccepted: applyPoster.clicked()
                     input.Keys.onEscapePressed: {
@@ -680,7 +680,7 @@ Item {
                         StyledText {
                             id: applyText
                             anchors.centerIn: parent
-                            text: MediatorService.posterBusy ? "Fetching…" : "Use this"
+                            text: MediatorService.posterBusy ? Translation.tr("Fetching…") : Translation.tr("Use this")
                             color: Appearance.colors.colOnPrimary
                             font.weight: Font.Medium
                         }
@@ -707,7 +707,7 @@ Item {
             visible: root.title.lib === "anime"
             spacing: 8
             StyledText {
-                text: "ANILIST"
+                text: Translation.tr("ANILIST")
                 color: Appearance.colors.colPrimary
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.letterSpacing: 1.3
@@ -718,15 +718,15 @@ Item {
                 SettingsField {
                     id: scoreValue
                     Layout.fillWidth: true
-                    label: "Score"
-                    placeholder: "0–100 (your AniList format)"
+                    label: Translation.tr("Score")
+                    placeholder: Translation.tr("0–100 (your AniList format)")
                     onAccepted: MediatorService.scoreAniListTitle(root.title.id, scoreValue.text, scoreSeason.text)
                 }
                 SettingsField {
                     id: scoreSeason
                     Layout.preferredWidth: 150
-                    label: "Season"
-                    placeholder: "Optional"
+                    label: Translation.tr("Season")
+                    placeholder: Translation.tr("Optional")
                 }
                 Rectangle {
                     implicitWidth: syncAniText.implicitWidth + 28
@@ -738,7 +738,7 @@ Item {
                         id: syncAniText
                         anchors.centerIn: parent
                         text: MediatorService.anilistBusy && MediatorService.anilistAction === "sync-title"
-                            ? "Syncing…" : "Sync"
+                            ? Translation.tr("Syncing…") : Translation.tr("Sync")
                         color: Appearance.colors.colOnLayer0
                     }
                     MouseArea {
@@ -759,7 +759,7 @@ Item {
                     StyledText {
                         id: scoreText
                         anchors.centerIn: parent
-                        text: MediatorService.anilistBusy && MediatorService.anilistAction === "score" ? "Saving…" : "Set score"
+                        text: MediatorService.anilistBusy && MediatorService.anilistAction === "score" ? Translation.tr("Saving…") : Translation.tr("Set score")
                         color: Appearance.colors.colOnPrimary
                         font.weight: Font.Medium
                     }
@@ -800,13 +800,13 @@ Item {
                     Layout.fillWidth: true
                     spacing: 10
                     StyledText {
-                        text: "Episodes"
+                        text: Translation.tr("Episodes")
                         color: Appearance.colors.colOnLayer0
                         font.pixelSize: Appearance.font.pixelSize.larger
                         font.weight: Font.Medium
                     }
                     StyledText {
-                        text: `${root.title.watched} of ${root.title.total} watched`
+                        text: Translation.tr("%1 of %2 watched").arg(root.title.watched).arg(root.title.total)
                         color: Appearance.colors.colSubtext
                         font.pixelSize: Appearance.font.pixelSize.smaller
                     }
@@ -822,7 +822,7 @@ Item {
                             spacing: 6
                             MaterialSymbol { text: "download"; iconSize: 16; color: Appearance.colors.colOnLayer1 }
                             StyledText {
-                                text: `Download ${root.missingHere.length} not in library`
+                                text: Translation.tr("Download %1 not in library").arg(root.missingHere.length)
                                 color: Appearance.colors.colOnLayer1
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                             }
@@ -891,7 +891,7 @@ Item {
                     StyledText {
                         anchors.centerIn: parent
                         visible: root.detail === null
-                        text: "Loading episodes…"
+                        text: Translation.tr("Loading episodes…")
                         color: Appearance.colors.colSubtext
                     }
 
@@ -921,7 +921,7 @@ Item {
                             if (e.name)
                                 return e.name;
                             if (e.kind === "episode" && e.episode)
-                                return `Episode ${e.episode}`;
+                                return Translation.tr("Episode %1").arg(e.episode);
                             return e.label || e.code || "";
                         }
                         readonly property string meta: {
@@ -929,9 +929,9 @@ Item {
                             if (row.ep?.airdate)
                                 bits.push(row.ep.airdate);
                             if (row.ep?.runtime)
-                                bits.push(`${row.ep.runtime} min`);
+                                bits.push(Translation.tr("%1 min").arg(row.ep.runtime));
                             if (row.ep?.filler)
-                                bits.push("Filler");
+                                bits.push(Translation.tr("Filler"));
                             if (row.modelData.media?.summary)
                                 bits.push(row.modelData.media.summary);
                             return bits.join("  ·  ");
@@ -1013,7 +1013,7 @@ Item {
                                             spacing: 4
                                             MaterialSymbol { text: "cloud"; iconSize: 13; color: Appearance.colors.colOnSecondaryContainer }
                                             StyledText {
-                                                text: row.stateLabel !== "" ? row.stateLabel : "Not in library"
+                                                text: row.stateLabel !== "" ? row.stateLabel : Translation.tr("Not in library")
                                                 color: Appearance.colors.colOnSecondaryContainer
                                                 font.pixelSize: Appearance.font.pixelSize.smallest
                                                 font.weight: Font.DemiBold
@@ -1025,6 +1025,8 @@ Item {
                                     Layout.fillWidth: true
                                     visible: (row.ep?.summary ?? "") !== ""
                                     text: row.ep?.summary ?? ""
+                                    // Lines up with the episode name above, which is on the leading edge.
+                                    horizontalAlignment: Text.AlignLeft
                                     wrapMode: Text.Wrap
                                     maximumLineCount: 2
                                     elide: Text.ElideRight
@@ -1042,8 +1044,8 @@ Item {
                             }
                             Repeater {
                                 model: row.gone ? [
-                                    { icon: "play_arrow", tip: "Stream this episode", act: "stream" },
-                                    { icon: "download", tip: "Download this episode", act: "download" }
+                                    { icon: "play_arrow", tip: Translation.tr("Stream this episode"), act: "stream" },
+                                    { icon: "download", tip: Translation.tr("Download this episode"), act: "download" }
                                 ] : []
                                 delegate: Rectangle {
                                     id: act
@@ -1125,7 +1127,7 @@ Item {
                     spacing: 14
 
                     StyledText {
-                        text: "About"
+                        text: Translation.tr("About")
                         color: Appearance.colors.colOnLayer0
                         font.pixelSize: Appearance.font.pixelSize.larger
                         font.weight: Font.Medium
@@ -1202,7 +1204,7 @@ Item {
 
                     StyledText {
                         visible: root.castPeople.some(c => c.image)
-                        text: "Cast"
+                        text: Translation.tr("Cast")
                         color: Appearance.colors.colSubtext
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         font.letterSpacing: 1
@@ -1257,7 +1259,7 @@ Item {
 
                     StyledText {
                         visible: (root.inf.related ?? []).length > 0
-                        text: "Related"
+                        text: Translation.tr("Related")
                         color: Appearance.colors.colSubtext
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         font.letterSpacing: 1

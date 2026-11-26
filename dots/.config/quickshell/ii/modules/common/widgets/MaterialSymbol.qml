@@ -48,7 +48,9 @@ StyledText {
         "undo": 1, "redo": 1, "reply": 1, "subdirectory_arrow_right": 1, "subdirectory_arrow_left": 1,
         "arrow_circle_left": 1, "arrow_circle_right": 1, "line_start": 1, "line_end": 1
     })
-    readonly property bool flipForRtl: Translation.isRtl && root.directionalIcons[root.text] === 1
+    /** False where the layout around the glyph stays left-to-right, such as a pager. */
+    property bool mirrorInRtl: true
+    readonly property bool flipForRtl: root.mirrorInRtl && root.LayoutMirroring.enabled && root.directionalIcons[root.text] === 1
     transform: Scale {
         xScale: root.flipForRtl ? -1 : 1
         origin.x: root.width / 2

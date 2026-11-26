@@ -74,10 +74,10 @@ RowLayout {
         implicitWidth: segmentRow.implicitWidth + 36
         implicitHeight: root.segmentHeight
 
-        topLeftRadius: segment.first ? segment.outer : segment.inner
-        bottomLeftRadius: segment.first ? segment.outer : segment.inner
-        topRightRadius: segment.first ? segment.inner : segment.outer
-        bottomRightRadius: segment.first ? segment.inner : segment.outer
+        topLeftRadius: LayoutMirroring.enabled ? (segment.first ? segment.inner : segment.outer) : (segment.first ? segment.outer : segment.inner)
+        bottomLeftRadius: LayoutMirroring.enabled ? (segment.first ? segment.inner : segment.outer) : (segment.first ? segment.outer : segment.inner)
+        topRightRadius: LayoutMirroring.enabled ? (segment.first ? segment.outer : segment.inner) : (segment.first ? segment.inner : segment.outer)
+        bottomRightRadius: LayoutMirroring.enabled ? (segment.first ? segment.outer : segment.inner) : (segment.first ? segment.inner : segment.outer)
 
         toggled: segment.current
         colBackground: Appearance.colors.colSecondaryContainer

@@ -18,6 +18,11 @@ Item {
 
     visible: radius > 0
 
+    // Each piece is turned to fit its own corner, so none of them may swap sides
+    // in a right-to-left layout.
+    LayoutMirroring.enabled: false
+    LayoutMirroring.childrenInherit: true
+
     component Corner: Shape {
         id: corner
         readonly property real r: root.radius

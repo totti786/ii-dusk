@@ -461,6 +461,9 @@ Item {
             }
 
             RowLayout {
+                // Media controls and the seek bar read left to right in every language.
+                LayoutMirroring.enabled: false
+                LayoutMirroring.childrenInherit: true
                 visible: root.showBottomControls
                 Layout.fillWidth: true
                 Layout.preferredHeight: root.showBottomControls ? 24 : 0

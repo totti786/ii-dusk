@@ -43,6 +43,7 @@ ColumnLayout {
 
         TextInput {
             id: field
+            horizontalAlignment: LayoutMirroring.enabled && length === 0 ? TextInput.AlignLeft : undefined
             anchors { fill: parent; leftMargin: 14; rightMargin: 14 }
             verticalAlignment: TextInput.AlignVCenter
             color: Appearance.colors.colOnLayer0
@@ -58,6 +59,7 @@ ColumnLayout {
             onAccepted: root.accepted()
 
             StyledText {
+                width: parent.width
                 visible: field.text === ""
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.placeholder

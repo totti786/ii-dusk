@@ -3,6 +3,9 @@ import qs.modules.common
 import qs.modules.common.widgets
 
 ButtonGroup {
+    // Media controls and the seek bar read left to right in every language.
+    LayoutMirroring.enabled: false
+    LayoutMirroring.childrenInherit: true
     id: root
     property int baseButtonWidth: 50
     property int baseButtonHeight: 50

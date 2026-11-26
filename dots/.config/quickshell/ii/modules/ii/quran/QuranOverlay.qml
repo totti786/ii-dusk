@@ -11,8 +11,6 @@ import qs.services
 
 /// The Quran reader as a full-screen overlay on the focused monitor.
 PanelWindow {
-    contentItem.LayoutMirroring.enabled: Translation.isRtl
-    contentItem.LayoutMirroring.childrenInherit: true
     id: root
 
     signal closeRequested()

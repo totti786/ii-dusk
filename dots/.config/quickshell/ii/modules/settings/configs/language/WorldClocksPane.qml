@@ -184,6 +184,7 @@ Rectangle {
                                     }
                                 }
                                 StyledText {
+                                    width: parent.width
                                     anchors.verticalCenter: nameInput.verticalCenter
                                     visible: nameInput.text.length === 0
                                     text: WorldClockService.cityFromZone(row.tz)

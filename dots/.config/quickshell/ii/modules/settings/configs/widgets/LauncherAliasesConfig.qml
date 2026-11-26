@@ -458,10 +458,10 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
                         color: Appearance.colors.colSecondaryContainer
-                        topLeftRadius: Appearance.rounding.full
-                        bottomLeftRadius: Appearance.rounding.full
-                        topRightRadius: Appearance.rounding.verysmall
-                        bottomRightRadius: Appearance.rounding.verysmall
+                        topLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.verysmall : Appearance.rounding.full
+                        bottomLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.verysmall : Appearance.rounding.full
+                        topRightRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.verysmall
+                        bottomRightRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.verysmall
 
                         RowLayout {
                             anchors.fill: parent
@@ -470,6 +470,7 @@ Item {
 
                             TextField {
                                 id: newAliasInput
+                                horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
 
                                 Layout.fillWidth: true
                                 placeholderText: Translation.tr("Alias (e.g. i)")
@@ -511,6 +512,7 @@ Item {
 
                             TextField {
                                 id: newTargetInput
+                                horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
 
                                 Layout.fillWidth: true
                                 placeholderText: addAliasArea.selectedType === "builtin" ? Translation.tr("Select target below...") : Translation.tr("Target (e.g. app-id, path)")
@@ -543,10 +545,10 @@ Item {
                     RippleButton {
                         Layout.preferredWidth: 64
                         Layout.preferredHeight: 48
-                        topLeftRadius: Appearance.rounding.verysmall
-                        bottomLeftRadius: Appearance.rounding.verysmall
-                        topRightRadius: Appearance.rounding.full
-                        bottomRightRadius: Appearance.rounding.full
+                        topLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.verysmall
+                        bottomLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.verysmall
+                        topRightRadius: LayoutMirroring.enabled ? Appearance.rounding.verysmall : Appearance.rounding.full
+                        bottomRightRadius: LayoutMirroring.enabled ? Appearance.rounding.verysmall : Appearance.rounding.full
                         colBackground: Appearance.colors.colSecondaryContainer
                         colBackgroundHover: Appearance.colors.colSecondaryContainerHover
                         rippleColor: Appearance.colors.colSecondaryContainerActive
@@ -625,6 +627,7 @@ Item {
 
                                     TextField {
                                         id: appFilterInput
+                                        horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
 
                                         Layout.fillWidth: true
                                         placeholderText: Translation.tr("Type application name...")

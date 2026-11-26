@@ -47,10 +47,10 @@ Row {
 
             height: root.segmentHeight
             width: segment.chosen ? content.implicitWidth + 28 : 40
-            topLeftRadius: segment.firstSegment ? root.outerRadius : segment.joinRadius
-            bottomLeftRadius: segment.firstSegment ? root.outerRadius : segment.joinRadius
-            topRightRadius: segment.lastSegment ? root.outerRadius : segment.joinRadius
-            bottomRightRadius: segment.lastSegment ? root.outerRadius : segment.joinRadius
+            topLeftRadius: LayoutMirroring.enabled ? (segment.lastSegment ? root.outerRadius : segment.joinRadius) : (segment.firstSegment ? root.outerRadius : segment.joinRadius)
+            bottomLeftRadius: LayoutMirroring.enabled ? (segment.lastSegment ? root.outerRadius : segment.joinRadius) : (segment.firstSegment ? root.outerRadius : segment.joinRadius)
+            topRightRadius: LayoutMirroring.enabled ? (segment.firstSegment ? root.outerRadius : segment.joinRadius) : (segment.lastSegment ? root.outerRadius : segment.joinRadius)
+            bottomRightRadius: LayoutMirroring.enabled ? (segment.firstSegment ? root.outerRadius : segment.joinRadius) : (segment.lastSegment ? root.outerRadius : segment.joinRadius)
             // The chosen order is THE state of the block: primary, so it reads
             // under a scheme whose containers are all one grey.
             color: segment.chosen

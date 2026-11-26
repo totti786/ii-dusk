@@ -231,6 +231,7 @@ Rectangle {
 
                 TextField {
                     id: searchInput
+                    horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                     Layout.fillWidth: true
                     placeholderText: Translation.tr("Search Android apps…")
                     placeholderTextColor: Appearance.colors.colSubtext

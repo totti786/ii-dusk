@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// Places, bookmarks, devices and the trash. Rows accept dropped files.
 Rectangle {
@@ -37,15 +38,15 @@ Rectangle {
 
     readonly property var rows: {
         const out = [];
-        out.push({ kind: "place", name: qsTr("Recent"), path: "recent:///", icon: "schedule" });
-        out.push({ kind: "place", name: qsTr("Starred"), path: "starred:///", icon: "star" });
+        out.push({ kind: "place", name: Translation.tr("Recent"), path: "recent:///", icon: "schedule" });
+        out.push({ kind: "place", name: Translation.tr("Starred"), path: "starred:///", icon: "star" });
         for (const p of root.places)
-            out.push({ kind: "place", name: p.name, path: p.path, icon: p.icon });
+            out.push({ kind: "place", name: Translation.tr(p.name), path: p.path, icon: p.icon });
         // The standard folders are already in Places; bookmarks only add what is not there
         const have = new Set(root.places.map(p => p.path));
         const marks = root.bookmarks.filter(b => !have.has(b.path));
         if (marks.length > 0) {
-            out.push({ kind: "header", name: qsTr("Bookmarks") });
+            out.push({ kind: "header", name: Translation.tr("Bookmarks") });
             for (const b of marks)
                 out.push({ kind: "bookmark", name: b.name, path: b.path, icon: "bookmark" });
         }
@@ -56,27 +57,27 @@ Rectangle {
         const cabled = root.netMounts.filter(usbScheme);
         const shares = root.netMounts.filter(n => !usbScheme(n));
         const netRow = n => ({ kind: "net", name: n.name, path: n.path, icon: usbScheme(n) ? "smartphone" : "lan", mount: n,
-            detail: n.mounted === false ? qsTr("Click to connect") : (usbScheme(n) ? qsTr("USB") : n.scheme.toUpperCase()) });
+            detail: n.mounted === false ? Translation.tr("Click to connect") : (usbScheme(n) ? Translation.tr("USB") : n.scheme.toUpperCase()) });
         if (devs.length > 0 || cabled.length > 0) {
-            out.push({ kind: "header", name: qsTr("Devices") });
+            out.push({ kind: "header", name: Translation.tr("Devices") });
             for (const d of devs)
-                out.push({ kind: "device", name: d.name, path: d.mount, icon: d.removable ? "usb" : (d.mount === "/" ? "computer" : "hard_drive"), dev: d, detail: d.detail ?? "", usage: d.mount.length > 0 && d.size > 0 ? d.used / d.size : -1 });
+                out.push({ kind: "device", name: d.mount === "/" ? Translation.tr(d.name) : d.name, path: d.mount, icon: d.removable ? "usb" : (d.mount === "/" ? "computer" : "hard_drive"), dev: d, detail: d.detail ?? "", usage: d.mount.length > 0 && d.size > 0 ? d.used / d.size : -1 });
             for (const n of cabled)
                 out.push(netRow(n));
         }
         // The Network section only exists while something is connected; "Connect to server…" is in the ⋮ menu
         if (shares.length > 0)
-            out.push({ kind: "header", name: qsTr("Network"), action: "connect" });
+            out.push({ kind: "header", name: Translation.tr("Network"), action: "connect" });
         for (const n of shares)
             out.push(netRow(n));
         if (root.phones.length > 0) {
-            out.push({ kind: "header", name: qsTr("Phone") });
+            out.push({ kind: "header", name: Translation.tr("Phone") });
             for (const ph of root.phones)
                 out.push({ kind: "phone", name: ph.name, path: "kdc:" + ph.id, icon: ph.type === "tablet" ? "tablet_android" : "smartphone", phone: ph,
-                    detail: ph.battery >= 0 ? (ph.charging ? qsTr("Charging · %1%") : qsTr("Battery %1%")).arg(ph.battery) : qsTr("Connected") });
+                    detail: ph.battery >= 0 ? (ph.charging ? Translation.tr("Charging · %1%") : Translation.tr("Battery %1%")).arg(ph.battery) : Translation.tr("Connected") });
         }
         out.push({ kind: "header", name: "" });
-        out.push({ kind: "trash", name: qsTr("Trash"), path: "trash:///", icon: root.trashCount > 0 ? "delete" : "delete_outline" });
+        out.push({ kind: "trash", name: Translation.tr("Trash"), path: "trash:///", icon: root.trashCount > 0 ? "delete" : "delete_outline" });
         return out;
     }
 
@@ -91,7 +92,8 @@ Rectangle {
             height: 68
             Rectangle {
                 id: badge
-                x: 4
+                anchors.left: parent.left
+                anchors.leftMargin: 4
                 anchors.verticalCenter: parent.verticalCenter
                 width: 40
                 height: 40
@@ -112,7 +114,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 StyledText {
                     width: parent.width
-                    text: qsTr("Files")
+                    text: Translation.tr("Files")
                     font.pixelSize: Appearance.font.pixelSize.large
                     font.weight: Font.DemiBold
                     color: ClockStyle.colOnSurface
@@ -201,6 +203,7 @@ Rectangle {
                         spacing: 1
                         StyledText {
                             Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignLeft
                             text: row.modelData.name
                             font.pixelSize: Appearance.font.pixelSize.smallie
                             font.weight: row.current ? Font.DemiBold : Font.Normal
@@ -210,6 +213,7 @@ Rectangle {
                         StyledText {
                             visible: row.modelData.kind === "device" || row.modelData.kind === "phone" || row.modelData.kind === "net"
                             Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignLeft
                             text: row.modelData.detail ?? ""
                             font.pixelSize: 11
                             color: row.current ? ClockStyle.colOnSecondaryContainer : ClockStyle.colSubtext
@@ -224,6 +228,7 @@ Rectangle {
                             radius: 2
                             color: ClockStyle.colSurfaceHighest
                             Rectangle {
+                                anchors.left: parent.left
                                 width: parent.width * Math.min(1, Math.max(0, row.modelData.usage ?? 0))
                                 height: parent.height
                                 radius: 2

@@ -188,6 +188,7 @@ Item {
                     }
 
                     StyledText {
+                        width: parent.width
                         anchors.verticalCenter: parent.verticalCenter
                         visible: customModelInput.text.length === 0
                         text: Translation.tr("Find a model or enter a library tag")

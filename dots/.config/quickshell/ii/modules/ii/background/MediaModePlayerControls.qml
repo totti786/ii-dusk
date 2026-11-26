@@ -187,6 +187,7 @@ ColumnLayout {
                 selectByMouse: true
                 Accessible.name: Translation.tr("Media URI")
                 StyledText {
+                    width: parent.width
                     visible: uriInput.text.length === 0
                     text: Translation.tr("Media URI…")
                     color: ColorUtils.applyAlpha(root.foreground, 0.6)

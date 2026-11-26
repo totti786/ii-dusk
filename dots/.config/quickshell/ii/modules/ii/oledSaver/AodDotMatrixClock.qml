@@ -71,7 +71,8 @@ Item {
     }
 
     readonly property string timeText: DateTime.hours + ":" + DateTime.minutes
-    readonly property string dateText: root.toGlyphText(DateTime.dayNameShort + " " + DateTime.dayOfMonth + " " + DateTime.monthNameShort)
+    // The dot font only has Latin letters.
+    readonly property string dateText: root.toGlyphText(Qt.locale("en_US").toString(DateTime.clock.date, "ddd d MMM"))
 
     // Time: 4 digits (5 columns), the colon (1), and a column between each glyph.
     readonly property int timeColumns: 4 * 5 + 1 + 4

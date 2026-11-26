@@ -15,6 +15,8 @@ Row {
     property real pixelSize: 9
 
     spacing: 2
+    // Keys keep their left-to-right order; the hint's own anchors still mirror.
+    layoutDirection: LayoutMirroring.enabled ? Qt.RightToLeft : Qt.LeftToRight
 
     readonly property color keyFace: ColorUtils.mix(root.surface, root.onSurface, 0.86)
     readonly property color keyText: ColorUtils.getContrastingTextColor(root.keyFace)

@@ -112,6 +112,9 @@ Rectangle {
             }
 
             ColumnLayout {
+                // Media controls and the seek bar read left to right in every language.
+                LayoutMirroring.enabled: false
+                LayoutMirroring.childrenInherit: true
                 Layout.fillWidth: true
                 Layout.leftMargin: Math.max(0, (leftCol.width - cover.side) / 2)
                 Layout.rightMargin: Layout.leftMargin
@@ -143,6 +146,9 @@ Rectangle {
             }
 
             RowLayout {
+                // Media controls and the seek bar read left to right in every language.
+                LayoutMirroring.enabled: false
+                LayoutMirroring.childrenInherit: true
                 Layout.alignment: Qt.AlignHCenter
                 spacing: 10
                 ClockIconButton {

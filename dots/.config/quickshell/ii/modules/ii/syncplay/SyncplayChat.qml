@@ -119,6 +119,7 @@ SyncplayPane {
                 onAccepted: root.send()
 
                 StyledText {
+                    width: parent.width
                     anchors.verticalCenter: parent.verticalCenter
                     visible: input.text.length === 0
                     text: Translation.tr("Message the room")

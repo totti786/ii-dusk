@@ -88,10 +88,10 @@ Item {
             Layout.fillHeight: true
 
             buttonRadius: 0
-            topLeftRadius: root.outerRadius
-            bottomLeftRadius: root.outerRadius
-            topRightRadius: root.innerRadius
-            bottomRightRadius: root.innerRadius
+            topLeftRadius: LayoutMirroring.enabled ? root.innerRadius : root.outerRadius
+            bottomLeftRadius: LayoutMirroring.enabled ? root.innerRadius : root.outerRadius
+            topRightRadius: LayoutMirroring.enabled ? root.outerRadius : root.innerRadius
+            bottomRightRadius: LayoutMirroring.enabled ? root.outerRadius : root.innerRadius
 
             colBackground: root.colBackground
             colBackgroundHover: root.colBackgroundHover
@@ -137,10 +137,10 @@ Item {
             Layout.fillHeight: true
 
             buttonRadius: 0
-            topLeftRadius: root.innerRadius
-            bottomLeftRadius: root.innerRadius
-            topRightRadius: root.outerRadius
-            bottomRightRadius: root.outerRadius
+            topLeftRadius: LayoutMirroring.enabled ? root.outerRadius : root.innerRadius
+            bottomLeftRadius: LayoutMirroring.enabled ? root.outerRadius : root.innerRadius
+            topRightRadius: LayoutMirroring.enabled ? root.innerRadius : root.outerRadius
+            bottomRightRadius: LayoutMirroring.enabled ? root.innerRadius : root.outerRadius
 
             toggled: menuPopup.visible
             colBackground: menuPopup.visible ? root.colBackgroundActive : root.colBackground

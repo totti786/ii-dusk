@@ -60,6 +60,7 @@ Item {
                         color: ClockStyle.colField
                         TextInput {
                             id: pathInput
+                            horizontalAlignment: LayoutMirroring.enabled && length === 0 ? TextInput.AlignLeft : undefined
                             anchors {
                                 fill: parent
                                 leftMargin: ClockStyle.gapLarge

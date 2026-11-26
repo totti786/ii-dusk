@@ -191,6 +191,7 @@ StyledFlickable {
                 Row {
                     height: connectedFlick.height
                     spacing: 8
+                    LayoutMirroring.enabled: false // pages are scrolled to by contentX
 
                     // PAGE 1: Connected Info & Action toggle
                     RowLayout {
@@ -435,6 +436,7 @@ StyledFlickable {
 
                             RowLayout {
                                 id: actionsRow
+                                LayoutMirroring.enabled: false // the strip starts at contentX 0
                                 width: Math.max(actionsFlick.width, implicitWidth)
                                 height: actionsFlick.height
                                 spacing: 8

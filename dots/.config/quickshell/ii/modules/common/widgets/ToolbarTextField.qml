@@ -6,6 +6,7 @@ import qs.modules.common.widgets
 
 TextField {
     id: filterField
+    horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
 
     property alias colBackground: background.color
 

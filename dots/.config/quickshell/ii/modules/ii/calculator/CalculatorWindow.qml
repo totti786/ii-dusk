@@ -630,6 +630,9 @@ FloatingWindow {
                     spacing: ClockStyle.gap
 
                     CalculatorDisplay {
+                        // Sums are written left to right, so the display and keys keep their order.
+                        LayoutMirroring.enabled: false
+                        LayoutMirroring.childrenInherit: true
                         Layout.fillWidth: true
                         Layout.preferredHeight: Math.max(150, Math.min(210, root.height * 0.24))
                         topLine: root.topLine
@@ -644,6 +647,9 @@ FloatingWindow {
                     }
 
                     RowLayout {
+                        // Sums are written left to right, so the display and keys keep their order.
+                        LayoutMirroring.enabled: false
+                        LayoutMirroring.childrenInherit: true
                         Layout.fillWidth: true
                         Layout.maximumWidth: pad.maxWidth
                         Layout.alignment: Qt.AlignHCenter
@@ -668,6 +674,9 @@ FloatingWindow {
                     }
 
                     RowLayout {
+                        // Sums are written left to right, so the display and keys keep their order.
+                        LayoutMirroring.enabled: false
+                        LayoutMirroring.childrenInherit: true
                         id: pad
                         Layout.fillWidth: true
                         Layout.fillHeight: true

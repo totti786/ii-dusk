@@ -660,6 +660,11 @@ AbstractQuickPanel {
                 Row {
                     id: pagesRow
                     height: parent.height
+                    // Page 0 sits at contentX 0 in every language. Mirrored, an RTL layout
+                    // would show the last page while the panel is sized for the first.
+                    // Tiles are placed by x, so their order stays left-to-right; text and
+                    // icons inside each tile still mirror.
+                    LayoutMirroring.enabled: false
 
                     Repeater {
                         id: pagesRepeater
@@ -738,6 +743,7 @@ AbstractQuickPanel {
             id: pageIndicators
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 6
+            LayoutMirroring.enabled: false // same order as the pages
             visible: root.pagingEnabled && root.displayPages.length > 1
 
             Repeater {
@@ -796,6 +802,7 @@ AbstractQuickPanel {
             }
             sourceComponent: RowLayout {
                 spacing: 6
+                LayoutMirroring.enabled: false // same order as the pages
 
                 // Previous page button
                 RippleButton {
@@ -809,6 +816,7 @@ AbstractQuickPanel {
                     onClicked: root.goToPage(root.currentPage - 1)
                     contentItem: MaterialSymbol {
                         text: "chevron_left"
+                        mirrorInRtl: false
                         iconSize: Appearance.font.pixelSize.large
                         color: Appearance.colors.colOnSurface
                         horizontalAlignment: Text.AlignHCenter
@@ -856,6 +864,7 @@ AbstractQuickPanel {
                     onClicked: root.goToPage(root.currentPage + 1)
                     contentItem: MaterialSymbol {
                         text: "chevron_right"
+                        mirrorInRtl: false
                         iconSize: Appearance.font.pixelSize.large
                         color: Appearance.colors.colOnSurface
                         horizontalAlignment: Text.AlignHCenter

@@ -219,9 +219,9 @@ Item {
                         visible: modelData.section === 0 || !sectionButton.alone
                         Layout.fillWidth: true
                         implicitHeight: 58
-                        topLeftRadius: sectionButton.index === 0 || sectionButton.alone ? sectionButton.outer : sectionButton.inner
+                        topLeftRadius: LayoutMirroring.enabled ? (sectionButton.index === 1 || sectionButton.alone ? sectionButton.outer : sectionButton.inner) : (sectionButton.index === 0 || sectionButton.alone ? sectionButton.outer : sectionButton.inner)
                         bottomLeftRadius: sectionButton.topLeftRadius
-                        topRightRadius: sectionButton.index === 1 || sectionButton.alone ? sectionButton.outer : sectionButton.inner
+                        topRightRadius: LayoutMirroring.enabled ? (sectionButton.index === 0 || sectionButton.alone ? sectionButton.outer : sectionButton.inner) : (sectionButton.index === 1 || sectionButton.alone ? sectionButton.outer : sectionButton.inner)
                         bottomRightRadius: sectionButton.topRightRadius
                         toggled: selected
                         colBackground: ClockStyle.colSurfaceHigh

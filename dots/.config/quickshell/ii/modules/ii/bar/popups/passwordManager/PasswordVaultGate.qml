@@ -235,6 +235,7 @@ ColumnLayout {
             Keys.onEnterPressed: root.submit()
 
             StyledText {
+                width: parent.width
                 anchors.verticalCenter: parent.verticalCenter
                 visible: passwordInput.text.length === 0
                 text: root.softLocked

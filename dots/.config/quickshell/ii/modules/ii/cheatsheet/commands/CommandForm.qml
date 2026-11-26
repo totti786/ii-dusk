@@ -198,6 +198,7 @@ Item {
 
             TextInput {
                 id: input
+                horizontalAlignment: LayoutMirroring.enabled && length === 0 ? TextInput.AlignLeft : undefined
                 anchors.fill: parent
                 anchors.leftMargin: 16; anchors.rightMargin: 16
                 verticalAlignment: TextInput.AlignVCenter
@@ -210,6 +211,7 @@ Item {
                 Keys.onEscapePressed: root.startClose()
 
                 StyledText {
+                    width: parent.width
                     anchors.verticalCenter: parent.verticalCenter
                     text: fieldRoot.placeholder
                     color: root.colFieldPlaceholder

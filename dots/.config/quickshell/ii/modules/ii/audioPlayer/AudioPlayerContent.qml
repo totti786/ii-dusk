@@ -873,6 +873,7 @@ FocusScope {
                                 MaterialSymbol { text: "search"; iconSize: 20; color: ClockStyle.colSubtext }
                                 TextInput {
                                     id: searchInput
+                                    horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                                     Layout.fillWidth: true
                                     Layout.alignment: Qt.AlignVCenter
                                     text: root.query
@@ -884,6 +885,7 @@ FocusScope {
                                     clip: true
                                     Keys.onReturnPressed: root.playList(root.shown, 0)
                                     StyledText {
+                                        width: parent.width
                                         anchors.verticalCenter: parent.verticalCenter
                                         visible: searchInput.text.length === 0
                                         text: Translation.tr("Search songs, artists, albums")
@@ -1275,6 +1277,7 @@ FocusScope {
                             border.color: ClockStyle.colPrimary
                             TextInput {
                                 id: pathInput
+                                horizontalAlignment: LayoutMirroring.enabled && length === 0 ? TextInput.AlignLeft : undefined
                                 anchors.fill: parent
                                 anchors.leftMargin: 18
                                 anchors.rightMargin: 18
@@ -1286,6 +1289,7 @@ FocusScope {
                                 clip: true
                                 Keys.onReturnPressed: { root.addDir(text); text = ""; }
                                 StyledText {
+                                    width: parent.width
                                     anchors.verticalCenter: parent.verticalCenter
                                     visible: pathInput.text.length === 0
                                     text: Translation.tr("Type or paste a folder path")
@@ -1484,6 +1488,9 @@ FocusScope {
 
                 // Controls and seek
                 ColumnLayout {
+                    // Media controls and the seek bar read left to right in every language.
+                    LayoutMirroring.enabled: false
+                    LayoutMirroring.childrenInherit: true
                     Layout.fillWidth: true
                     spacing: 2
 

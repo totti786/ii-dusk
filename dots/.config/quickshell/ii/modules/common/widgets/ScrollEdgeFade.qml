@@ -37,6 +37,10 @@ Item {
 
     anchors.fill: target
 
+    // "Start" is contentX/contentY 0, which is the left or top edge in every language.
+    LayoutMirroring.enabled: false
+    LayoutMirroring.childrenInherit: true
+
     /** Whether the view has anything to scroll at all. */
     readonly property bool overflowing: {
         const view = root.target;

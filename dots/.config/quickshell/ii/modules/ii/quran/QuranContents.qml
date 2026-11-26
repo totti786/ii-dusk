@@ -119,6 +119,7 @@ Rectangle {
                 MaterialSymbol { text: "search"; iconSize: 20; color: Appearance.colors.colSubtext }
                 TextInput {
                     id: filter
+                    horizontalAlignment: Translation.isRtl ? TextInput.AlignRight : TextInput.AlignLeft
                     Layout.fillWidth: true
                     color: Appearance.colors.colOnLayer0
                     selectByMouse: true
@@ -133,6 +134,7 @@ Rectangle {
                         }
                     }
                     StyledText {
+                        width: parent.width
                         visible: !filter.text
                         anchors.verticalCenter: parent.verticalCenter
                         text: Translation.tr("Filter")

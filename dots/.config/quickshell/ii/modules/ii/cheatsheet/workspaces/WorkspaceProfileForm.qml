@@ -311,6 +311,7 @@ Item {
 
             TextInput {
                 id: input
+                horizontalAlignment: LayoutMirroring.enabled && length === 0 ? TextInput.AlignLeft : undefined
                 anchors.fill: parent
                 anchors.leftMargin: 16; anchors.rightMargin: 16
                 verticalAlignment: TextInput.AlignVCenter
@@ -323,6 +324,7 @@ Item {
                 Keys.onEscapePressed: root.startClose()
 
                 StyledText {
+                    width: parent.width
                     anchors.verticalCenter: parent.verticalCenter
                     text: fieldRoot.placeholder
                     color: root.colFieldPlaceholder
@@ -533,6 +535,7 @@ Item {
 
                                                     TextInput {
                                                         id: emojiSearchInput
+                                                        horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                                                         Layout.fillWidth: true
                                                         verticalAlignment: TextInput.AlignVCenter
                                                         font.family: Appearance.font.family.main
@@ -545,6 +548,7 @@ Item {
                                                         Keys.onEscapePressed: root.startClose()
 
                                                         StyledText {
+                                                            width: parent.width
                                                             anchors.verticalCenter: parent.verticalCenter
                                                             text: qsTr("Search emojis...")
                                                             color: root.colFieldPlaceholder
@@ -1012,6 +1016,7 @@ Item {
 
                                                     TextInput {
                                                         id: cmdField
+                                                        horizontalAlignment: LayoutMirroring.enabled && length === 0 ? TextInput.AlignLeft : undefined
                                                         anchors.fill: parent
                                                         anchors.leftMargin: 8; anchors.rightMargin: 8
                                                         verticalAlignment: TextInput.AlignVCenter
@@ -1125,6 +1130,7 @@ Item {
 
                                                 TextInput {
                                                     id: newClassInput
+                                                    horizontalAlignment: LayoutMirroring.enabled && length === 0 ? TextInput.AlignLeft : undefined
                                                     anchors.fill: parent
                                                     anchors.leftMargin: 8; anchors.rightMargin: 8
                                                     verticalAlignment: TextInput.AlignVCenter
@@ -1213,6 +1219,7 @@ Item {
 
                                                 TextInput {
                                                     id: newCmdInput
+                                                    horizontalAlignment: LayoutMirroring.enabled && length === 0 ? TextInput.AlignLeft : undefined
                                                     anchors.fill: parent
                                                     anchors.leftMargin: 8; anchors.rightMargin: 8
                                                     verticalAlignment: TextInput.AlignVCenter

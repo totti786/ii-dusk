@@ -233,6 +233,9 @@ Item {
             }
 
             RowLayout {
+                // Media controls and the seek bar read left to right in every language.
+                LayoutMirroring.enabled: false
+                LayoutMirroring.childrenInherit: true
                 Layout.fillWidth: true
                 spacing: 4
 

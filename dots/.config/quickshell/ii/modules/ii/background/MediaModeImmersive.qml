@@ -773,6 +773,8 @@ Item {
                     Layout.topMargin: Appearance.sizes.elevationMargin / 2
                     spacing: Appearance.sizes.elevationMargin
                     visible: Config.options.background.mediaMode.showSeekBar
+                    LayoutMirroring.enabled: false
+                    LayoutMirroring.childrenInherit: true
                     StyledText {
                         Layout.minimumWidth: remainingLabel.implicitWidth
                         horizontalAlignment: Text.AlignRight
@@ -949,6 +951,8 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Appearance.sizes.elevationMargin / 2
+                    LayoutMirroring.enabled: false
+                    LayoutMirroring.childrenInherit: true
 
                     MediaModeImmersiveButton {
                         symbol: "shuffle"

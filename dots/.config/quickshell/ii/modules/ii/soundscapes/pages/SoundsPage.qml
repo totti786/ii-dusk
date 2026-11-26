@@ -98,6 +98,7 @@ Item {
                         }
                         TextInput {
                             id: search
+                            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                             Layout.fillWidth: true
                             text: root.query
                             onTextChanged: root.query = text
@@ -117,6 +118,7 @@ Item {
                                 }
                             }
                             StyledText {
+                                width: parent.width
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: search.text.length === 0
                                 text: Translation.tr("Search sounds, places, animals…")

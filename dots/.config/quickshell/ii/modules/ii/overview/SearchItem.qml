@@ -1170,9 +1170,9 @@ RippleButton {
                     width: 36 + 24 + labelProgress * (8 + labelWidth)
                     height: slideRow.height
                     y: 0
-                    topLeftRadius: hIdx === root.activeHIndex || (hIdx - 1) === root.activeHIndex ? root.pillRadius : Appearance.rounding.small
+                    topLeftRadius: LayoutMirroring.enabled ? (hIdx === root.allActionItems.length ? root.pillRadius : (hIdx === root.activeHIndex || (hIdx + 1) === root.activeHIndex ? root.pillRadius : Appearance.rounding.small)) : (hIdx === root.activeHIndex || (hIdx - 1) === root.activeHIndex ? root.pillRadius : Appearance.rounding.small)
                     bottomLeftRadius: topLeftRadius
-                    topRightRadius: hIdx === root.allActionItems.length ? root.pillRadius : (hIdx === root.activeHIndex || (hIdx + 1) === root.activeHIndex ? root.pillRadius : Appearance.rounding.small)
+                    topRightRadius: LayoutMirroring.enabled ? (hIdx === root.activeHIndex || (hIdx - 1) === root.activeHIndex ? root.pillRadius : Appearance.rounding.small) : (hIdx === root.allActionItems.length ? root.pillRadius : (hIdx === root.activeHIndex || (hIdx + 1) === root.activeHIndex ? root.pillRadius : Appearance.rounding.small))
                     bottomRightRadius: topRightRadius
 
                     color: isBtnActive ? Appearance.colors.colPrimaryContainer : (root.isSelected && actionBtnMa.containsMouse ? Appearance.colors.colPrimaryContainerHover : Appearance.colors.colSurfaceContainerHighest)
@@ -1371,6 +1371,7 @@ RippleButton {
 
                         TextInput {
                             id: aliasInput
+                            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                             anchors.fill: parent
                             anchors.leftMargin: Appearance.sizes.elevationMargin * 0.7
                             anchors.rightMargin: Appearance.sizes.elevationMargin * 0.7

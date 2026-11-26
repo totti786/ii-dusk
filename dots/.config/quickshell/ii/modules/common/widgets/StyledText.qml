@@ -15,6 +15,10 @@ Text {
     // enlarged. QtRendering keeps glyphs transformable at the final scale.
     renderType: Text.QtRendering
     verticalAlignment: Text.AlignVCenter
+    // In a mirrored window a single line starts from the right whatever its script, so a Latin
+    // name lines up with the Arabic around it. AlignLeft is flipped by the mirroring itself.
+    // Wrapped paragraphs keep following their own text.
+    horizontalAlignment: root.LayoutMirroring.enabled && root.wrapMode === Text.NoWrap ? Text.AlignLeft : undefined
     property bool shouldUseNumberFont: /^[0-9\s.,]+$/.test(root.text.trim())
     property var defaultFont: shouldUseNumberFont ? Appearance.font.family.numbers : Appearance.font.family.main
     

@@ -312,8 +312,8 @@ ContentPage {
                     from: 1
                     to: 10
                     stepSize: 1
-                    topLeftRadius: Appearance.rounding.verysmall
-                    topRightRadius: Appearance.rounding.large
+                    topLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.large : Appearance.rounding.verysmall
+                    topRightRadius: LayoutMirroring.enabled ? Appearance.rounding.verysmall : Appearance.rounding.large
                     bottomLeftRadius: Appearance.rounding.verysmall
                     bottomRightRadius: Appearance.rounding.verysmall
                     onValueChanged: {

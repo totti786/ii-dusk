@@ -62,8 +62,13 @@ Item {
     // Two rings that swell out of the badge and fade, offset by half a cycle
     Item {
         id: badgeSlot
-        x: 14
-        y: 14
+        // Anchored, not placed by x/y: it has to change corners when the card is mirrored.
+        anchors {
+            left: parent.left
+            top: parent.top
+            leftMargin: 14
+            topMargin: 14
+        }
         width: 60
         height: 60
 

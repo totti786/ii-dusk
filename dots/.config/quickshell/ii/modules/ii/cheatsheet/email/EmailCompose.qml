@@ -415,6 +415,7 @@ Item {
 
                         TextInput {
                             id: toInput
+                            horizontalAlignment: LayoutMirroring.enabled && length === 0 ? TextInput.AlignLeft : undefined
                             anchors.fill: parent
                             anchors.leftMargin: 18
                             anchors.rightMargin: 18
@@ -425,6 +426,7 @@ Item {
                             clip: true
 
                             StyledText {
+                                width: parent.width
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: qsTr("Add recipients")
                                 color: Appearance.colors.colOnSurfaceVariant
@@ -480,6 +482,7 @@ Item {
 
                         TextInput {
                             id: subjectInput
+                            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                             anchors.fill: parent
                             anchors.leftMargin: 18
                             anchors.rightMargin: 18
@@ -490,6 +493,7 @@ Item {
                             clip: true
 
                             StyledText {
+                                width: parent.width
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: qsTr("Subject...")
                                 color: Appearance.colors.colOnSurfaceVariant
@@ -1327,6 +1331,7 @@ Item {
                         border.width: textInput.activeFocus ? 2 : 1
                         TextInput {
                             id: textInput
+                            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                             anchors.fill: parent
                             anchors.leftMargin: 8
                             anchors.rightMargin: 8
@@ -1355,6 +1360,7 @@ Item {
                         border.width: urlInput.activeFocus ? 2 : 1
                         TextInput {
                             id: urlInput
+                            horizontalAlignment: LayoutMirroring.enabled && length === 0 ? TextInput.AlignLeft : undefined
                             anchors.fill: parent
                             anchors.leftMargin: 8
                             anchors.rightMargin: 8

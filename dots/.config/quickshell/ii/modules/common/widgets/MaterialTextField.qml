@@ -11,6 +11,7 @@ import QtQuick.Controls
  */
 TextField {
     id: root
+    horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
 
     // Set to show the M3 error state (red outline + red caret/selection accent)
     property bool error: false
@@ -71,7 +72,10 @@ TextField {
         // border is drawn straight through the label. Painted in the fill colour
         // over the top border only, and faded with the label that raised it.
         Rectangle {
-            x: (root.floatingLabel?.x ?? 0) - 4
+            // A right-aligned label shrinks towards the right end of its box.
+            x: (root.floatingLabel?.effectiveHorizontalAlignment === Text.AlignRight
+                ? root.floatingLabel.x + root.floatingLabel.width - root.floatingLabelWidth
+                : (root.floatingLabel?.x ?? 0)) - 4
             y: -1
             implicitWidth: root.floatingLabelWidth + 8
             implicitHeight: parent.border.width + 2

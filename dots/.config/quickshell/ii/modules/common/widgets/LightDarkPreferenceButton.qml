@@ -118,10 +118,10 @@ RippleButton {
                             implicitHeight: 30
                         }
                         Rectangle {
-                            topLeftRadius: Appearance.rounding.unsharpenmore
-                            bottomLeftRadius: Appearance.rounding.unsharpenmore
-                            topRightRadius: Appearance.rounding.full
-                            bottomRightRadius: Appearance.rounding.full
+                            topLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.unsharpenmore
+                            bottomLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.unsharpenmore
+                            topRightRadius: LayoutMirroring.enabled ? Appearance.rounding.unsharpenmore : Appearance.rounding.full
+                            bottomRightRadius: LayoutMirroring.enabled ? Appearance.rounding.unsharpenmore : Appearance.rounding.full
                             color: lightDarkButtonRoot.toggled ? Appearance.m3colors.m3secondaryContainer : lightDarkButtonRoot.previewFg
                             Layout.fillWidth: true
                             implicitHeight: 30

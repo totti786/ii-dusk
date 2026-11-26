@@ -871,6 +871,7 @@ Item {
 
                 TextField {
                     id: searchField
+                    horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     verticalAlignment: Text.AlignVCenter

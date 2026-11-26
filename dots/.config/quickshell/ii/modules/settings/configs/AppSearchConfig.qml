@@ -679,10 +679,10 @@ ContentPage {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 48
                     color: Appearance.colors.colSecondaryContainer
-                    topLeftRadius: Appearance.rounding.full
-                    bottomLeftRadius: Appearance.rounding.full
-                    topRightRadius: Appearance.rounding.verysmall
-                    bottomRightRadius: Appearance.rounding.verysmall
+                    topLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.verysmall : Appearance.rounding.full
+                    bottomLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.verysmall : Appearance.rounding.full
+                    topRightRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.verysmall
+                    bottomRightRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.verysmall
 
                     RowLayout {
                         anchors.fill: parent
@@ -691,6 +691,7 @@ ContentPage {
 
                         TextField {
                             id: newAliasInput
+                            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                             Layout.fillWidth: true
                             placeholderText: Translation.tr("Alias (e.g. i)")
                             placeholderTextColor: Qt.rgba(Appearance.colors.colOnSecondaryContainer.r, Appearance.colors.colOnSecondaryContainer.g, Appearance.colors.colOnSecondaryContainer.b, 0.5)
@@ -731,6 +732,7 @@ ContentPage {
 
                         TextField {
                             id: newTargetInput
+                            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                             Layout.fillWidth: true
                             placeholderText: addAliasArea.selectedType === "builtin" ? Translation.tr("Select target below...") : Translation.tr("Target (e.g. app-id, path)")
                             enabled: addAliasArea.selectedType !== "builtin"
@@ -762,10 +764,10 @@ ContentPage {
                 RippleButton {
                     Layout.preferredWidth: 64
                     Layout.preferredHeight: 48
-                    topLeftRadius: Appearance.rounding.verysmall
-                    bottomLeftRadius: Appearance.rounding.verysmall
-                    topRightRadius: Appearance.rounding.full
-                    bottomRightRadius: Appearance.rounding.full
+                    topLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.verysmall
+                    bottomLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.verysmall
+                    topRightRadius: LayoutMirroring.enabled ? Appearance.rounding.verysmall : Appearance.rounding.full
+                    bottomRightRadius: LayoutMirroring.enabled ? Appearance.rounding.verysmall : Appearance.rounding.full
                     colBackground: Appearance.colors.colSecondaryContainer
                     colBackgroundHover: Appearance.colors.colSecondaryContainerHover
                     rippleColor: Appearance.colors.colSecondaryContainerActive
@@ -841,6 +843,7 @@ ContentPage {
 
                                 TextField {
                                     id: appFilterInput
+                                    horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                                     Layout.fillWidth: true
                                     placeholderText: Translation.tr("Type application name...")
                                     placeholderTextColor: Appearance.colors.colOnSurfaceVariant

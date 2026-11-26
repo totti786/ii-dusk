@@ -865,6 +865,7 @@ PanelWindow {
             }
             TextInput {
                 id: searchInput
+                horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                 anchors.fill: parent
                 anchors.leftMargin: 40 * win.u
                 anchors.rightMargin: 14 * win.u
@@ -878,6 +879,7 @@ PanelWindow {
                 Keys.onEscapePressed: { win.searching = false; keys.forceActiveFocus(); }
                 onActiveFocusChanged: win.searching = activeFocus
                 StyledText {
+                    width: parent.width
                     visible: searchInput.text.length === 0
                     anchors.verticalCenter: parent.verticalCenter
                     text: Translation.tr("Search Wallhaven   ( / )   ·   S sort: %1").arg(WallpaperBrowser.currentSortType)

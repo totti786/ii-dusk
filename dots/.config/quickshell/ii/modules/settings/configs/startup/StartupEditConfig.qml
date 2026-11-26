@@ -215,6 +215,7 @@ ContentPage {
                             font.pixelSize: Appearance.font.pixelSize.small
                             onTextChanged: root.appQuery = text
                             StyledText {
+                                width: parent.width
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: appSearch.text.length === 0
                                 text: Translation.tr("Search apps")

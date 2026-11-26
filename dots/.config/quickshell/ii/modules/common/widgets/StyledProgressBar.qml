@@ -51,7 +51,7 @@ ProgressBar {
                 color: root.highlightColor
                 amplitudeMultiplier: root.waveAmplitudeMultiplier
                 height: contentItem.height * 6
-                width: contentItem.width * root.visualPosition
+                width: contentItem.width * root.position
                 lineWidth: contentItem.height
                 fullLength: root.width
                 animateWave: root.animateWave
@@ -59,10 +59,10 @@ ProgressBar {
         }
 
         Loader {
+            anchors.left: parent.left
             active: !root.wavy
             sourceComponent: Rectangle {
-                anchors.left: parent.left
-                width: contentItem.width * root.visualPosition
+                width: contentItem.width * root.position
                 height: contentItem.height
                 radius: Appearance.rounding.full
                 color: root.highlightColor
@@ -70,7 +70,7 @@ ProgressBar {
         }
 
         Rectangle { // Right remaining part fill
-            readonly property real remainingSpace: (1 - root.visualPosition) * contentItem.width
+            readonly property real remainingSpace: (1 - root.position) * contentItem.width
             readonly property real computedWidth: remainingSpace - root.valueBarGap
             visible: computedWidth > 1
             anchors.right: parent.right
@@ -81,7 +81,7 @@ ProgressBar {
         }
 
         Rectangle { // Stop point
-            readonly property real remainingTrackWidth: (1 - root.visualPosition) * contentItem.width - root.valueBarGap
+            readonly property real remainingTrackWidth: (1 - root.position) * contentItem.width - root.valueBarGap
             readonly property real availableSize: remainingTrackWidth - 2 * root.stopPointMargin
             readonly property int trackGap: Math.max(1, Math.round((parent.height - root.stopPointSize) / 2))
             readonly property real alignedStopPointSize: parent.height - (trackGap * 2)

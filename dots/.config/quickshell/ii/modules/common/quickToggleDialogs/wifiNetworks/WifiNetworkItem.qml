@@ -128,6 +128,7 @@ Item {
         Row {
             height: flick.height
             spacing: 8
+            LayoutMirroring.enabled: false // pages are scrolled to by contentX
 
             // PAGE 1: Normal wifi network card (mainRow)
             Rectangle {
@@ -494,6 +495,7 @@ Item {
                     // Invisible TextInput for input handling (rendered on top = receives events)
                     TextInput {
                         id: passwordInput
+                        horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                         anchors {
                             fill: parent
                             leftMargin: 16

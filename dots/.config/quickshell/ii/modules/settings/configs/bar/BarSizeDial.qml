@@ -135,10 +135,10 @@ Rectangle {
                         implicitHeight: root.stepperSize
                         enabled: !stepper.atLimit
                         opacity: enabled ? 1 : 0.4
-                        topLeftRadius: stepper.first || stepper.down ? height / 2 : Appearance.rounding.verysmall
-                        bottomLeftRadius: stepper.first || stepper.down ? height / 2 : Appearance.rounding.verysmall
-                        topRightRadius: !stepper.first || stepper.down ? height / 2 : Appearance.rounding.verysmall
-                        bottomRightRadius: !stepper.first || stepper.down ? height / 2 : Appearance.rounding.verysmall
+                        topLeftRadius: LayoutMirroring.enabled ? (!stepper.first || stepper.down ? height / 2 : Appearance.rounding.verysmall) : (stepper.first || stepper.down ? height / 2 : Appearance.rounding.verysmall)
+                        bottomLeftRadius: LayoutMirroring.enabled ? (!stepper.first || stepper.down ? height / 2 : Appearance.rounding.verysmall) : (stepper.first || stepper.down ? height / 2 : Appearance.rounding.verysmall)
+                        topRightRadius: LayoutMirroring.enabled ? (stepper.first || stepper.down ? height / 2 : Appearance.rounding.verysmall) : (!stepper.first || stepper.down ? height / 2 : Appearance.rounding.verysmall)
+                        bottomRightRadius: LayoutMirroring.enabled ? (stepper.first || stepper.down ? height / 2 : Appearance.rounding.verysmall) : (!stepper.first || stepper.down ? height / 2 : Appearance.rounding.verysmall)
                         colBackground: Appearance.colors.colSecondaryContainer
                         colBackgroundHover: Appearance.colors.colSecondaryContainerHover
                         colRipple: Appearance.colors.colSecondaryContainerActive

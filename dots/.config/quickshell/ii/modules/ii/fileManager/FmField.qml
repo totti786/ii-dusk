@@ -36,6 +36,7 @@ ColumnLayout {
         border.color: ClockStyle.colPrimary
         TextInput {
             id: input
+            horizontalAlignment: LayoutMirroring.enabled && (!root.mono || length === 0) ? TextInput.AlignLeft : undefined
             anchors.fill: parent
             anchors.leftMargin: 14
             anchors.rightMargin: 14
@@ -49,6 +50,7 @@ ColumnLayout {
             onAccepted: root.accepted()
             onTextEdited: root.edited()
             StyledText {
+                width: parent.width
                 anchors.verticalCenter: parent.verticalCenter
                 visible: input.text.length === 0
                 text: root.placeholder

@@ -85,6 +85,9 @@ Rectangle {
 
         RowLayout {
             spacing: 6
+            // A shortcut reads left to right in every language, as on the keyboard.
+            LayoutMirroring.enabled: false
+            LayoutMirroring.childrenInherit: true
             Repeater {
                 model: root.keys
                 delegate: RowLayout {

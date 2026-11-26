@@ -15,6 +15,9 @@ MouseArea {
     property bool isMaterial: Config.options.bar.styles.battery === "material"
     property bool vertical: Config.options.bar.vertical
     visible: Battery.available
+    // Battery glyphs are rotated or placed by x, so they keep one direction.
+    LayoutMirroring.enabled: false
+    LayoutMirroring.childrenInherit: true
 
     Component.onCompleted: {
         if (typeof rootItem !== "undefined") {

@@ -168,9 +168,9 @@ Item {
                             const locked = ShellModePolicy.barPositionLocked || barConfigRoot.tablet;
                             return [
                                 { "displayName": Translation.tr("Top"), "icon": "arrow_upward", "value": 0 },
-                                { "displayName": Translation.tr("Left"), "icon": "arrow_back", "value": 2, "enabled": !locked },
+                                { "displayName": Translation.tr("Left"), "icon": "west", "value": 2, "enabled": !locked },
                                 { "displayName": Translation.tr("Bottom"), "icon": "arrow_downward", "value": 1, "enabled": !locked },
-                                { "displayName": Translation.tr("Right"), "icon": "arrow_forward", "value": 3, "enabled": !locked }
+                                { "displayName": Translation.tr("Right"), "icon": "east", "value": 3, "enabled": !locked }
                             ];
                         }
                         onSelected: value => barConfigRoot.setPosition(value)
@@ -440,6 +440,8 @@ Item {
                         // Three sections, each as wide as its share of the widgets.
                         Row {
                             id: split
+                            // A picture of the bar, which keeps left on the left in every language.
+                            LayoutMirroring.enabled: false
                             visible: !layoutCard.compact
                             anchors.verticalCenter: parent.verticalCenter
                             x: countDigits.width + 14

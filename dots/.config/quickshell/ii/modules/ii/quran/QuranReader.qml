@@ -702,7 +702,7 @@ FocusScope {
                     QuranPill {
                         implicitHeight: 32
                         icon: "auto_stories"
-                        text: root.barLevel >= 2 ? "" : Translation.tr("Reading")
+                        text: root.barLevel >= 2 ? "" : Translation.isEnglish ? "Reading" : Translation.tr("Mushaf")
                         active: root.reading
                         onClicked: root.setMode("reading")
                     }
@@ -729,6 +729,7 @@ FocusScope {
                     MaterialSymbol { text: "search"; iconSize: 17; color: Appearance.colors.colSubtext }
                     TextInput {
                         id: jumpField
+                        horizontalAlignment: Translation.isRtl ? TextInput.AlignRight : TextInput.AlignLeft
                         Layout.fillWidth: true
                         color: Appearance.colors.colOnLayer0
                         selectByMouse: true
@@ -757,6 +758,7 @@ FocusScope {
                             root.forceActiveFocus();
                         }
                         StyledText {
+                            width: parent.width
                             visible: !jumpField.text && !jumpField.activeFocus
                             anchors.verticalCenter: parent.verticalCenter
                             text: Translation.tr("Search · 2:255")
@@ -1214,6 +1216,7 @@ FocusScope {
                             MaterialSymbol { text: "search"; iconSize: 20; color: Appearance.colors.colSubtext }
                             TextInput {
                                 id: recFilter
+                                horizontalAlignment: Translation.isRtl ? TextInput.AlignRight : TextInput.AlignLeft
                                 Layout.fillWidth: true
                                 color: Appearance.colors.colOnLayer0
                                 selectByMouse: true
@@ -1232,6 +1235,7 @@ FocusScope {
                                         reciterList.itemAtIndex(0)?.choose();
                                 }
                                 StyledText {
+                                    width: parent.width
                                     visible: !recFilter.text
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: Translation.tr("Find a reciter")

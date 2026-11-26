@@ -102,7 +102,8 @@ Item {
         const row = root.rows[at.row];
         const list = root.booksOf(row);
         // A right-to-left shelf is laid out mirrored, so left there is the next book.
-        const step = row.rtl ? -dx : dx;
+        const mirrored = row.kind === "reading" && root.readingList?.effectiveLayoutDirection === Qt.RightToLeft;
+        const step = row.rtl || mirrored ? -dx : dx;
         if (dy !== 0) {
             const target = root.nextRow(at.row, dy);
             if (target >= 0) {
@@ -148,7 +149,11 @@ Item {
         const view = root.readingList;
         if (!view)
             return;
-        const target = Math.max(0, Math.min(view.contentWidth - view.width, view.contentX + direction * view.width * 0.8));
+        // A mirrored row starts on the right, and its contentX runs from originX.
+        const sign = view.effectiveLayoutDirection === Qt.RightToLeft ? -1 : 1;
+        const min = view.originX - view.leftMargin;
+        const max = view.originX + view.contentWidth - view.width + view.rightMargin;
+        const target = Math.max(min, Math.min(max, view.contentX + sign * direction * view.width * 0.8));
         readingScroll.target = view;
         readingScroll.from = view.contentX;
         readingScroll.to = target;
@@ -238,7 +243,8 @@ Item {
                 anchors.fill: parent
 
                 Row {
-                    x: root.sidePad
+                    anchors.left: parent.left
+                    anchors.leftMargin: root.sidePad
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: 8
                     spacing: 12
@@ -307,6 +313,8 @@ Item {
             // ---- A row of covers ----
             Row {
                 visible: row.kind === "shelf"
+                // A shelf's direction follows the language of its books, not of the interface.
+                LayoutMirroring.enabled: false
                 spacing: root.gap
                 layoutDirection: row.kind === "shelf" && row.modelData.rtl ? Qt.RightToLeft : Qt.LeftToRight
                 x: row.kind === "shelf" && row.modelData.rtl ? parent.width - root.sidePad - width : root.sidePad
@@ -354,19 +362,19 @@ Item {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
                 onWheel: event => {
                     const angle = event.angleDelta.y;
-                    const direction = angle < 0 ? 1 : -1;
                     const from = readingScroll.running ? readingScroll.to : cards.contentX;
-                    const max = cards.contentWidth - cards.width + cards.rightMargin;
-                    const min = -cards.leftMargin;
+                    const max = cards.originX + cards.contentWidth - cards.width + cards.rightMargin;
+                    const min = cards.originX - cards.leftMargin;
+                    const step = (cards.effectiveLayoutDirection === Qt.RightToLeft ? 1 : -1) * angle / 120 * 240;
                     if (angle === 0 || !ScrollWheel.isNotch(angle, Config.options?.interactions?.scrolling, event.phase)
-                            || (direction > 0 && from >= max - 1) || (direction < 0 && from <= min + 1)) {
+                            || (step > 0 && from >= max - 1) || (step < 0 && from <= min + 1)) {
                         event.accepted = false;
                         return;
                     }
                     event.accepted = true;
                     readingScroll.target = cards;
                     readingScroll.from = cards.contentX;
-                    readingScroll.to = Math.max(min, Math.min(max, from - angle / 120 * 240));
+                    readingScroll.to = Math.max(min, Math.min(max, from + step));
                     readingScroll.restart();
                 }
             }
@@ -435,8 +443,10 @@ Item {
 
                 BookCover {
                     id: cardCover
-                    x: 16
-                    y: 16
+                    anchors.left: parent.left
+                    anchors.leftMargin: 16
+                    anchors.top: parent.top
+                    anchors.topMargin: 16
                     height: card.height - 32
                     width: height * 0.68
                     source: BooksService.coverFor(card.modelData)
@@ -516,6 +526,7 @@ Item {
                             color: Qt.alpha(card.onCard, 0.16)
 
                             Rectangle {
+                                anchors.left: parent.left
                                 width: Math.max(8, parent.width * card.progress)
                                 height: parent.height
                                 radius: 4

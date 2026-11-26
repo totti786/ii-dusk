@@ -133,6 +133,9 @@ MouseArea {
                     anchors.centerIn: parent
                     width: 29
                     height: 14
+                    // A battery glyph, split at the fill edge by x: it reads left to right.
+                    LayoutMirroring.enabled: false
+                    LayoutMirroring.childrenInherit: true
 
                     // Two-tone percentage: the part over the fill reads against the fill, the part over
                     // the track against the track. The track is trackColor over the backdrop, so it is

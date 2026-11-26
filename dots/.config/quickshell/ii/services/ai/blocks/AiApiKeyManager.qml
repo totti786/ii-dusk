@@ -148,6 +148,7 @@ Item {
                         onAccepted: Ai.setApiKeyFor(card.keyId, keyInput.text)
 
                         StyledText {
+                            width: parent.width
                             anchors.verticalCenter: parent.verticalCenter
                             visible: keyInput.text.length === 0
                             text: Translation.tr("Paste the key here")

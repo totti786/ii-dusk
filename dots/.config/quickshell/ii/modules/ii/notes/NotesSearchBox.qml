@@ -94,6 +94,7 @@ Rectangle {
 
             TextInput {
                 id: input
+                horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                 anchors.fill: parent
                 verticalAlignment: TextInput.AlignVCenter
                 font.family: Appearance.font.family.main
@@ -107,6 +108,7 @@ Rectangle {
             }
 
             StyledText {
+                width: parent.width
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.placeholder
                 font.pixelSize: Appearance.font.pixelSize.normal

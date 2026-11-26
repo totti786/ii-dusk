@@ -268,6 +268,9 @@ AndroidWidgetTileBase {
 
                         // Progress Slider
                         Item {
+                            // Media controls and the seek bar read left to right in every language.
+                            LayoutMirroring.enabled: false
+                            LayoutMirroring.childrenInherit: true
                             visible: root.showProgressSlider
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignTop
@@ -321,6 +324,9 @@ AndroidWidgetTileBase {
 
                         // Transport Buttons Row
                         RowLayout {
+                            // Media controls and the seek bar read left to right in every language.
+                            LayoutMirroring.enabled: false
+                            LayoutMirroring.childrenInherit: true
                             Layout.fillWidth: true
                             Layout.preferredHeight: Math.max(30, Math.min(38, Math.round(root.surface.height * 0.30)))
                             Layout.maximumHeight: Math.max(30, Math.min(38, Math.round(root.surface.height * 0.30)))

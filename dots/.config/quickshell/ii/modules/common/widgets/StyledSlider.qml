@@ -98,7 +98,7 @@ Slider {
         width: root.trackDotSize
         height: root.trackDotSize
         radius: Appearance.rounding.full
-        color: normalizedValue > root.visualPosition ? root.dotColor : root.dotColorHighlighted
+        color: normalizedValue > root.position ? root.dotColor : root.dotColorHighlighted
 
         Behavior on color {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
@@ -117,10 +117,16 @@ Slider {
         anchors.horizontalCenter: parent?.horizontalCenter
         width: root.width
         implicitHeight: trackWidth
+        // The track is drawn from the left; a right-to-left layout flips the whole drawing.
+        // The handle below needs nothing: visualPosition is already mirrored.
+        transform: Scale {
+            origin.x: background.width / 2
+            xScale: root.mirrored ? -1 : 1
+        }
         property var normalized: root.dividerValues.map(v => (v - root.from) / (root.to - root.from))
-        property var filtered: normalized.filter(v => Math.abs(v - root.visualPosition) * effectiveDraggingWidth > handleMargins + handleWidth / 2 - dividerMargins)
-        property var leftValues: [0, ...filtered.filter(v => v < root.visualPosition), root.visualPosition]
-        property var rightValues: [root.visualPosition, ...filtered.filter(v => v > root.visualPosition), 1]
+        property var filtered: normalized.filter(v => Math.abs(v - root.position) * effectiveDraggingWidth > handleMargins + handleWidth / 2 - dividerMargins)
+        property var leftValues: [0, ...filtered.filter(v => v < root.position), root.position]
+        property var rightValues: [root.position, ...filtered.filter(v => v > root.position), 1]
         property var leftWidths: leftValues.map((v, i, a) => a[i + 1] - v).slice(0, -1)
         property var rightWidths: rightValues.map((v, i, a) => a[i + 1] - v).slice(0, -1)
 

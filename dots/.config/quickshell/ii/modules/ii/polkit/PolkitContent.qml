@@ -151,6 +151,7 @@ Item {
                     }
 
                     StyledText {
+                        width: parent.width
                         text: PolkitService.cleanPrompt || "Enter password..."
                         color: Appearance.colors.colSubtext
                         visible: !inputField.text && !inputField.activeFocus
@@ -160,6 +161,7 @@ Item {
 
                     TextInput {
                         id: inputField
+                        horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                         anchors.fill: parent
                         verticalAlignment: TextInput.AlignVCenter
                         focus: true

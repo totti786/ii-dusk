@@ -135,10 +135,10 @@ ColumnLayout {
         RippleButtonWithIcon {
             materialIcon: "save"
             mainText: Translation.tr("Save")
-            topLeftRadius: Appearance.rounding.full
-            topRightRadius: Appearance.rounding.small
-            bottomLeftRadius: Appearance.rounding.full
-            bottomRightRadius: Appearance.rounding.small
+            topLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.small : Appearance.rounding.full
+            topRightRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.small
+            bottomLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.small : Appearance.rounding.full
+            bottomRightRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.small
             Layout.fillHeight: true
             enabled: presetNameInput.text.length > 0
             onClicked: {
@@ -151,10 +151,10 @@ ColumnLayout {
         RippleButtonWithIcon {
             materialIcon: "file_upload"
             mainText: Translation.tr("Import")
-            topLeftRadius: Appearance.rounding.small
-            topRightRadius: Appearance.rounding.full
-            bottomLeftRadius: Appearance.rounding.small
-            bottomRightRadius: Appearance.rounding.full
+            topLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.small
+            topRightRadius: LayoutMirroring.enabled ? Appearance.rounding.small : Appearance.rounding.full
+            bottomLeftRadius: LayoutMirroring.enabled ? Appearance.rounding.full : Appearance.rounding.small
+            bottomRightRadius: LayoutMirroring.enabled ? Appearance.rounding.small : Appearance.rounding.full
             Layout.fillHeight: true
             onClicked: {
                 importPresetProc.running = false;

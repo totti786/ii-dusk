@@ -65,13 +65,14 @@ ScrollBar {
             width: root.hovered || root.pressed ? root.barWidth * 4 : root.barWidth
             color: root.thumbColor
 
-            // Keep right side small
-            topRightRadius: root.barWidth / 2
-            bottomRightRadius: root.barWidth / 2
-
-            // expand left side
-            topLeftRadius: root.hovered || root.pressed ? Appearance.rounding.large : root.barWidth / 2
-            bottomLeftRadius: root.hovered || root.pressed ? Appearance.rounding.large : root.barWidth / 2
+            // The side against the edge stays small and the side facing the content
+            // grows. In a mirrored layout the bar is on the left, so they trade places.
+            readonly property real edgeRadius: root.barWidth / 2
+            property real innerRadius: root.hovered || root.pressed ? Appearance.rounding.large : root.barWidth / 2
+            topRightRadius: LayoutMirroring.enabled ? innerRadius : edgeRadius
+            bottomRightRadius: LayoutMirroring.enabled ? innerRadius : edgeRadius
+            topLeftRadius: LayoutMirroring.enabled ? edgeRadius : innerRadius
+            bottomLeftRadius: LayoutMirroring.enabled ? edgeRadius : innerRadius
 
             Behavior on width {
                 NumberAnimation {
@@ -79,13 +80,7 @@ ScrollBar {
                     easing.type: Easing.OutCubic
                 }
             }
-            Behavior on topLeftRadius {
-                NumberAnimation {
-                    duration: Appearance.dur(250)
-                    easing.type: Easing.OutCubic
-                }
-            }
-            Behavior on bottomLeftRadius {
+            Behavior on innerRadius {
                 NumberAnimation {
                     duration: Appearance.dur(250)
                     easing.type: Easing.OutCubic

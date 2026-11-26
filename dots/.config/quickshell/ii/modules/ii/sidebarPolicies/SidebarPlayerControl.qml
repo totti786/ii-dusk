@@ -442,6 +442,9 @@ Item {
 
             // ── Progress ──
             RowLayout {
+                // Media controls and the seek bar read left to right in every language.
+                LayoutMirroring.enabled: false
+                LayoutMirroring.childrenInherit: true
                 id: progressRow
                 Layout.fillWidth: true
                 Layout.topMargin: parent.height * 0.01
@@ -516,6 +519,9 @@ Item {
 
             // ── Controls ──
             RowLayout {
+                // Media controls and the seek bar read left to right in every language.
+                LayoutMirroring.enabled: false
+                LayoutMirroring.childrenInherit: true
                 id: controlsRow
                 Layout.fillWidth: true
                 Layout.topMargin: parent.height * 0.02
