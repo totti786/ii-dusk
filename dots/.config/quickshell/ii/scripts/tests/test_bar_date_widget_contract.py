@@ -209,7 +209,7 @@ class BarDateWidgetContractTest(unittest.TestCase):
 
     def test_locale_abbreviations_shorter_than_three_letters_still_render(self):
         body = self.widget("NeuralDateWidget.qml")
-        head = body.split("readonly property string glyphHead:", 1)[1].split("\n", 1)[0]
+        head = body.split("readonly property string glyphHead:", 1)[1].split("readonly property", 1)[0]
         self.assertIn("length > 0", head)
         self.assertIn('visible: root.glyphHead !== ""', body)
         self.assertIn('visible: root.glyphTail !== ""', body)
