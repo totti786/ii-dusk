@@ -470,12 +470,24 @@ Item {
                 color: Appearance.colors.colPrimary
 
                 StyledText {
+                    id: glanceLabel
                     anchors.centerIn: parent
+                    // Centre on the digit's ink, not the line box (digits have no descenders).
+                    anchors.verticalCenterOffset: height / 2 - (-glanceMetrics.boundingRect.y
+                        + glanceMetrics.tightBoundingRect.y + glanceMetrics.tightBoundingRect.height / 2)
+                    anchors.horizontalCenterOffset: width / 2 - (glanceMetrics.tightBoundingRect.x
+                        + glanceMetrics.tightBoundingRect.width / 2)
                     text: Numerals.label(parent.parent.workspaceId, parent.parent.numberMap)
                     font.pixelSize: Math.max(10, Math.round(parent.height * 0.5))
                     font.weight: Font.Bold
                     font.family: Appearance.font.family.numbers
                     color: Appearance.colors.colOnPrimary
+
+                    TextMetrics {
+                        id: glanceMetrics
+                        font: glanceLabel.font
+                        text: glanceLabel.text
+                    }
                 }
             }
         }

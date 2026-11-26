@@ -777,10 +777,24 @@ Item {
         }
 
         StyledText {
+            id: numberLabel
             anchors.centerIn: parent
+            // Digits have no descenders, so centre on the glyph, not the line box.
+            anchors.verticalCenterOffset: {
+                const r = glyphMetrics.boundingRect;
+                const t = glyphMetrics.tightBoundingRect;
+                return height / 2 - (-r.y + t.y + t.height / 2);
+            }
             opacity: parent.showNumbers ? 1 : 0
             text: wsModel.labelFor(parent.workspaceValue)
+            font.family: Appearance.font.family.numbers
             font.weight: Font.Black
+
+            TextMetrics {
+                id: glyphMetrics
+                font: numberLabel.font
+                text: numberLabel.text
+            }
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
