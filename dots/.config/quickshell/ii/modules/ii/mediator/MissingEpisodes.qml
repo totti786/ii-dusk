@@ -75,8 +75,8 @@ Item {
         if (root.isAnime) {
             const p = root.providerFor(e);
             if (!p) {
-                root.localError = root.finding ? "Still finding the episodes online, try again in a moment"
-                    : "That episode isn't on the online source yet";
+                root.localError = root.finding ? Translation.tr("Still finding the episodes online, try again in a moment")
+                    : Translation.tr("That episode isn't on the online source yet");
                 return;
             }
             MediatorService.streamError = "";
@@ -85,7 +85,7 @@ Item {
             return;
         }
         if (!/^tt[0-9]+$/.test(root.imdbId)) {
-            root.localError = "Looking up this show on Stremio, try again in a moment";
+            root.localError = Translation.tr("Looking up this show on Stremio, try again in a moment");
             MediatorService.startEnrich("missing", false, false);
             return;
         }
@@ -116,8 +116,8 @@ Item {
             if (p)
                 AnimeBrowseService.downloadEpisode(p);
             else
-                root.localError = root.finding ? "Still finding the episodes online, try again in a moment"
-                    : "That episode isn't on the online source yet";
+                root.localError = root.finding ? Translation.tr("Still finding the episodes online, try again in a moment")
+                    : Translation.tr("That episode isn't on the online source yet");
             return;
         }
         root.enqueue([e]);
@@ -136,7 +136,7 @@ Item {
     property var queue: []
     function enqueue(list): void {
         if (!/^tt[0-9]+$/.test(root.imdbId)) {
-            root.localError = "Looking up this show on Stremio, try again in a moment";
+            root.localError = Translation.tr("Looking up this show on Stremio, try again in a moment");
             MediatorService.startEnrich("missing", false, false);
             return;
         }
@@ -168,22 +168,22 @@ Item {
             const st = p ? AnimeBrowseService.downloadState(String(p.id)) : null;
             if (!st)
                 return "";
-            return st.state === "done" ? "Downloaded" : st.state === "running" ? `Downloading ${Math.round(st.percent ?? 0)}%` : String(st.state);
+            return st.state === "done" ? Translation.tr("Downloaded") : st.state === "running" ? Translation.tr("Downloading %1%").arg(Math.round(st.percent ?? 0)) : String(st.state);
         }
         const st = StremioService.downloadState(root.card, root.videoId(e));
         if (st)
-            return `Downloading ${Math.round((st.progress ?? 0) * 100)}%`;
-        return root.queue.includes(e) ? "Queued" : "";
+            return Translation.tr("Downloading %1%").arg(Math.round((st.progress ?? 0) * 100));
+        return root.queue.includes(e) ? Translation.tr("Queued") : "";
     }
 
     /// One line for whatever is going on: starting, a failure, or what the source says
-    readonly property string note: root.starting ? `Starting ${root.startingCode}… this can take a few seconds`
+    readonly property string note: root.starting ? Translation.tr("Starting %1… this can take a few seconds").arg(root.startingCode)
         : root.localError !== "" ? root.localError
         : root.streamError !== "" ? root.streamError
         : root.isAnime
-        ? (root.finding ? "Finding the episodes online…"
+        ? (root.finding ? Translation.tr("Finding the episodes online…")
             : root.providerEpisodes.length === 0 && root.shown.length > 0
-                ? (AnimeBrowseService.episodesError || "No online source found for this season")
+                ? (AnimeBrowseService.episodesError || Translation.tr("No online source found for this season"))
                 : AnimeBrowseService.downloadNotice)
         : (StremioService.view === "streams" ? "" : StremioService.notice)
 }

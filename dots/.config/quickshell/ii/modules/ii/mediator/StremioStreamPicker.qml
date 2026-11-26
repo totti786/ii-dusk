@@ -62,13 +62,13 @@ FocusScope {
                     Layout.fillWidth: true
                     spacing: 2
                     StyledText {
-                        text: `Streams for ${StremioService.pickedLabel}`
+                        text: Translation.tr("Streams for %1").arg(StremioService.pickedLabel)
                         color: Appearance.colors.colOnLayer1
                         font.pixelSize: Appearance.font.pixelSize.larger
                         font.weight: Font.Medium
                     }
                     StyledText {
-                        text: StremioService.busy ? "Looking for streams…" : root.streamingSettings.hls === false ? "Most seeders first. ↑↓ to choose, Enter to play" : root.streamingSettings.prefer_stremio ? "Torrents first for quality, direct as the fallback" : "Direct stream first. Pick a torrent for higher quality"
+                        text: StremioService.busy ? Translation.tr("Looking for streams…") : root.streamingSettings.hls === false ? Translation.tr("Most seeders first. ↑↓ to choose, Enter to play") : root.streamingSettings.prefer_stremio ? Translation.tr("Torrents first for quality, direct as the fallback") : Translation.tr("Direct stream first. Pick a torrent for higher quality")
                         color: Appearance.colors.colSubtext
                         font.pixelSize: Appearance.font.pixelSize.smaller
                     }
@@ -77,7 +77,7 @@ FocusScope {
                     iconOnly: true
                     variant: "text"
                     symbol: "close"
-                    label: "Close"
+                    label: Translation.tr("Close")
                     onClicked: root.closeRequested()
                 }
             }
@@ -86,7 +86,7 @@ FocusScope {
                 Layout.fillWidth: true
                 visible: text.length > 0
                 wrapMode: Text.Wrap
-                text: StremioService.starting ? "Starting…" : StremioService.notice
+                text: StremioService.starting ? Translation.tr("Starting…") : StremioService.notice
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
             }
@@ -96,7 +96,7 @@ FocusScope {
                 visible: StremioService.qualityOptions.length > 1 && root.streamingSettings.stremio !== false
                 spacing: 6
                 FilterChip {
-                    label: "All"
+                    label: Translation.tr("All")
                     selected: StremioService.streamFilter === "all"
                     onClicked: StremioService.streamFilter = "all"
                 }
@@ -135,7 +135,7 @@ FocusScope {
                 StyledText {
                     anchors.centerIn: parent
                     visible: !StremioService.busy && list.count === 0
-                    text: "No streams found. Try another quality or check Settings."
+                    text: Translation.tr("No streams found. Try another quality or check Settings.")
                     color: Appearance.colors.colSubtext
                 }
             }

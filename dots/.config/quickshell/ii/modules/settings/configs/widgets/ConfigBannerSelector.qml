@@ -11,7 +11,7 @@ import qs.modules.common.functions
 Item {
     id: bannerSelectorRoot
     property string text: ""
-    property string placeholderText: "Click to select banner image"
+    property string placeholderText: Translation.tr("Click to select banner image")
     property var nameFilters: ["Image files (*.png *.jpg *.jpeg *.webp *.bmp *.gif)"]
 
     implicitWidth: 360

@@ -88,7 +88,7 @@ Rectangle {
             color: root.direct ? Appearance.colors.colPrimary : root.qualityColor(root.quality)
             StyledText {
                 anchors.centerIn: parent
-                text: root.direct ? "DIRECT" : root.quality ? root.quality.toUpperCase() : "?"
+                text: root.direct ? Translation.tr("DIRECT") : root.quality ? root.quality.toUpperCase() : "?"
                 color: root.direct ? Appearance.colors.colOnPrimary : root.qualityOn(root.quality)
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.weight: Font.DemiBold
@@ -115,15 +115,15 @@ Rectangle {
                     model: {
                         const t = root.tags.slice();
                         if (root.recommended)
-                            t.unshift("Recommended");
+                            t.unshift(Translation.tr("Recommended"));
                         if (root.direct)
-                            t.push("No torrent needed");
+                            t.push(Translation.tr("No torrent needed"));
                         return t;
                     }
                     delegate: Rectangle {
                         id: tag
                         required property string modelData
-                        readonly property bool strong: modelData === "Recommended"
+                        readonly property bool strong: modelData === Translation.tr("Recommended")
                         implicitWidth: tagText.implicitWidth + 12
                         implicitHeight: 18
                         radius: Appearance.rounding.full
@@ -182,7 +182,7 @@ Rectangle {
             iconOnly: true
             variant: "text"
             symbol: "download"
-            label: "Download this stream"
+            label: Translation.tr("Download this stream")
             enabled: root.direct || String(root.stream?.infoHash ?? "") !== ""
             onClicked: root.downloadRequested()
         }

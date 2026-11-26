@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// What takes the space in a folder: each child with its share of the folder, largest first.
 /// Click a folder to look inside it. Sizes are blocks in use, one filesystem, links not followed.
@@ -25,7 +26,7 @@ FmDialog {
 
     signal openFolder(string path)
 
-    title: qsTr("Disk usage")
+    title: Translation.tr("Disk usage")
     cardWidth: 640
 
     function bytes(s: real): string {
@@ -89,7 +90,7 @@ FmDialog {
             elide: Text.ElideMiddle
         }
         StyledText {
-            text: root.busy ? qsTr("Counting… %1").arg(root.bytes(root.items.reduce((s, i) => s + i.size, 0))) : qsTr("%1 in use").arg(root.bytes(root.total))
+            text: root.busy ? Translation.tr("Counting… %1").arg(root.bytes(root.items.reduce((s, i) => s + i.size, 0))) : Translation.tr("%1 in use").arg(root.bytes(root.total))
             font.pixelSize: Appearance.font.pixelSize.smallie
             font.weight: Font.DemiBold
             color: ClockStyle.colOnSurface
@@ -169,7 +170,7 @@ FmDialog {
         StyledText {
             anchors.centerIn: parent
             visible: !root.busy && root.items.length === 0
-            text: qsTr("Empty")
+            text: Translation.tr("Empty")
             color: ClockStyle.colSubtext
         }
     }
@@ -177,13 +178,13 @@ FmDialog {
     StyledText {
         Layout.fillWidth: true
         visible: root.fsTotal > 0
-        text: qsTr("%1 free of %2 on this drive").arg(root.bytes(root.free)).arg(root.bytes(root.fsTotal))
+        text: Translation.tr("%1 free of %2 on this drive").arg(root.bytes(root.free)).arg(root.bytes(root.fsTotal))
         font.pixelSize: Appearance.font.pixelSize.smaller
         color: ClockStyle.colSubtext
     }
 
     actions: [
-        FmButton { text: qsTr("Open this folder"); onClicked: { root.openFolder(root.path); root.close(); } },
-        FmButton { text: qsTr("Close"); kind: "tonal"; onClicked: root.close() }
+        FmButton { text: Translation.tr("Open this folder"); onClicked: { root.openFolder(root.path); root.close(); } },
+        FmButton { text: Translation.tr("Close"); kind: "tonal"; onClicked: root.close() }
     ]
 }

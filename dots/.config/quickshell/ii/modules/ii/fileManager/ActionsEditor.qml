@@ -7,6 +7,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /**
  * Manage custom actions. They live in Thunar's own ~/.config/Thunar/uca.xml, so the two file
@@ -22,13 +23,13 @@ FmDialog {
 
     signal saved()
 
-    title: qsTr("Custom actions")
+    title: Translation.tr("Custom actions")
     cardWidth: 900
 
     readonly property var flagList: [
-        { k: "directories", t: qsTr("Folders") }, { k: "image-files", t: qsTr("Images") },
-        { k: "audio-files", t: qsTr("Audio") }, { k: "video-files", t: qsTr("Video") },
-        { k: "text-files", t: qsTr("Text") }, { k: "other-files", t: qsTr("Other") }
+        { k: "directories", t: Translation.tr("Folders") }, { k: "image-files", t: Translation.tr("Images") },
+        { k: "audio-files", t: Translation.tr("Audio") }, { k: "video-files", t: Translation.tr("Video") },
+        { k: "text-files", t: Translation.tr("Text") }, { k: "other-files", t: Translation.tr("Other") }
     ]
     readonly property var cur: root.current >= 0 && root.current < root.items.length ? root.items[root.current] : null
 
@@ -61,7 +62,7 @@ FmDialog {
 
     function addAction(): void {
         const next = root.items.slice();
-        next.push({ id: Date.now() + "-1", name: qsTr("New action"), submenu: "", icon: "", description: "", command: "",
+        next.push({ id: Date.now() + "-1", name: Translation.tr("New action"), submenu: "", icon: "", description: "", command: "",
             patterns: "*", range: "", flags: ["directories", "image-files", "audio-files", "video-files", "text-files", "other-files"],
             startupNotify: false, shortcut: "" });
         root.items = next;
@@ -150,9 +151,9 @@ FmDialog {
             }
             RowLayout {
                 Layout.fillWidth: true
-                FmButton { text: qsTr("Add"); icon: "add"; kind: "tonal"; onClicked: root.addAction() }
+                FmButton { text: Translation.tr("Add"); icon: "add"; kind: "tonal"; onClicked: root.addAction() }
                 Item { Layout.fillWidth: true }
-                FmButton { text: qsTr("Delete"); icon: "delete"; enabled2: root.cur !== null; onClicked: root.removeAction() }
+                FmButton { text: Translation.tr("Delete"); icon: "delete"; enabled2: root.cur !== null; onClicked: root.removeAction() }
             }
         }
 
@@ -169,19 +170,19 @@ FmDialog {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 10
-                    FmField { Layout.fillWidth: true; label: qsTr("Name"); text: root.cur?.name ?? ""; onEdited: root.patch("name", text) }
-                    FmField { Layout.fillWidth: true; label: qsTr("Submenu"); placeholder: qsTr("(none)"); text: root.cur?.submenu ?? ""; onEdited: root.patch("submenu", text) }
+                    FmField { Layout.fillWidth: true; label: Translation.tr("Name"); text: root.cur?.name ?? ""; onEdited: root.patch("name", text) }
+                    FmField { Layout.fillWidth: true; label: Translation.tr("Submenu"); placeholder: Translation.tr("(none)"); text: root.cur?.submenu ?? ""; onEdited: root.patch("submenu", text) }
                 }
                 FmField {
                     Layout.fillWidth: true
-                    label: qsTr("Command")
+                    label: Translation.tr("Command")
                     mono: true
                     text: root.cur?.command ?? ""
                     onEdited: root.patch("command", text)
                 }
                 StyledText {
                     Layout.fillWidth: true
-                    text: qsTr("%f first file · %F all files · %n name · %N names · %d folder · %D folders · %u / %U as URIs. Runs in the file’s folder, through sh.")
+                    text: Translation.tr("%f first file · %F all files · %n name · %N names · %d folder · %D folders · %u / %U as URIs. Runs in the file’s folder, through sh.")
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     color: ClockStyle.colSubtext
                     wrapMode: Text.WordWrap
@@ -189,11 +190,11 @@ FmDialog {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 10
-                    FmField { Layout.fillWidth: true; label: qsTr("File patterns"); placeholder: "*"; text: root.cur?.patterns ?? ""; onEdited: root.patch("patterns", text) }
-                    FmField { Layout.preferredWidth: 130; label: qsTr("How many files"); placeholder: "*  or  1-1"; text: root.cur?.range ?? ""; onEdited: root.patch("range", text) }
+                    FmField { Layout.fillWidth: true; label: Translation.tr("File patterns"); placeholder: "*"; text: root.cur?.patterns ?? ""; onEdited: root.patch("patterns", text) }
+                    FmField { Layout.preferredWidth: 130; label: Translation.tr("How many files"); placeholder: "*  or  1-1"; text: root.cur?.range ?? ""; onEdited: root.patch("range", text) }
                 }
-                FmField { Layout.fillWidth: true; label: qsTr("Description"); text: root.cur?.description ?? ""; onEdited: root.patch("description", text) }
-                StyledText { text: qsTr("Shown for"); font.pixelSize: Appearance.font.pixelSize.smaller; color: ClockStyle.colSubtext }
+                FmField { Layout.fillWidth: true; label: Translation.tr("Description"); text: root.cur?.description ?? ""; onEdited: root.patch("description", text) }
+                StyledText { text: Translation.tr("Shown for"); font.pixelSize: Appearance.font.pixelSize.smaller; color: ClockStyle.colSubtext }
                 Flow {
                     Layout.fillWidth: true
                     spacing: 8
@@ -212,7 +213,7 @@ FmDialog {
     }
 
     actions: [
-        FmButton { text: qsTr("Cancel"); onClicked: root.close() },
-        FmButton { text: qsTr("Save"); kind: "filled"; enabled2: root.dirty; onClicked: root.save() }
+        FmButton { text: Translation.tr("Cancel"); onClicked: root.close() },
+        FmButton { text: Translation.tr("Save"); kind: "filled"; enabled2: root.dirty; onClicked: root.save() }
     ]
 }

@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// What differs between two folders, by relative path: only on one side, or on both with another
 /// size or content. Copying fills in what is missing; changed files are left for you to decide.
@@ -23,7 +24,7 @@ FmDialog {
 
     signal transferRequested(var srcs, string dest)
 
-    title: qsTr("Compare folders")
+    title: Translation.tr("Compare folders")
     cardWidth: 700
 
     readonly property var rows: {
@@ -57,11 +58,11 @@ FmDialog {
 
     function detail(e: var): string {
         if (e.side !== "d")
-            return e.isDir ? qsTr("folder") : root.bytes(e.size);
+            return e.isDir ? Translation.tr("folder") : root.bytes(e.size);
         if (e.why === "type")
-            return qsTr("file on one side, folder on the other");
-        const newer = Math.abs(e.mtimeA - e.mtimeB) <= 2 ? "" : (e.mtimeA > e.mtimeB ? qsTr("  ·  A is newer") : qsTr("  ·  B is newer"));
-        return qsTr("A %1  ·  B %2").arg(root.bytes(e.sizeA)).arg(root.bytes(e.sizeB)) + newer;
+            return Translation.tr("file on one side, folder on the other");
+        const newer = Math.abs(e.mtimeA - e.mtimeB) <= 2 ? "" : (e.mtimeA > e.mtimeB ? Translation.tr("  ·  A is newer") : Translation.tr("  ·  B is newer"));
+        return Translation.tr("A %1  ·  B %2").arg(root.bytes(e.sizeA)).arg(root.bytes(e.sizeB)) + newer;
     }
 
     /// Copy what one side lacks into the same place on the other side, one transfer per target folder
@@ -96,14 +97,14 @@ FmDialog {
 
     StyledText {
         Layout.fillWidth: true
-        text: qsTr("A  %1").arg(root.a)
+        text: Translation.tr("A  %1").arg(root.a)
         font.pixelSize: Appearance.font.pixelSize.smaller
         color: ClockStyle.colSubtext
         elide: Text.ElideMiddle
     }
     StyledText {
         Layout.fillWidth: true
-        text: qsTr("B  %1").arg(root.b)
+        text: Translation.tr("B  %1").arg(root.b)
         font.pixelSize: Appearance.font.pixelSize.smaller
         color: ClockStyle.colSubtext
         elide: Text.ElideMiddle
@@ -112,7 +113,7 @@ FmDialog {
     StyledText {
         Layout.fillWidth: true
         visible: root.busy || root.failure.length > 0
-        text: root.failure.length > 0 ? root.failure : qsTr("Comparing…")
+        text: root.failure.length > 0 ? root.failure : Translation.tr("Comparing…")
         color: root.failure.length > 0 ? ClockStyle.colError : ClockStyle.colSubtext
         font.pixelSize: Appearance.font.pixelSize.small
     }
@@ -121,10 +122,10 @@ FmDialog {
         Layout.fillWidth: true
         visible: root.result !== null
         spacing: 8
-        FmChip { text: qsTr("All"); checked: root.filter === "all"; onClicked: root.filter = "all" }
-        FmChip { text: qsTr("Only in A  (%1)").arg(root.result?.onlyA.length ?? 0); checked: root.filter === "a"; onClicked: root.filter = "a" }
-        FmChip { text: qsTr("Only in B  (%1)").arg(root.result?.onlyB.length ?? 0); checked: root.filter === "b"; onClicked: root.filter = "b" }
-        FmChip { text: qsTr("Different  (%1)").arg(root.result?.differ.length ?? 0); checked: root.filter === "d"; onClicked: root.filter = "d" }
+        FmChip { text: Translation.tr("All"); checked: root.filter === "all"; onClicked: root.filter = "all" }
+        FmChip { text: Translation.tr("Only in A  (%1)").arg(root.result?.onlyA.length ?? 0); checked: root.filter === "a"; onClicked: root.filter = "a" }
+        FmChip { text: Translation.tr("Only in B  (%1)").arg(root.result?.onlyB.length ?? 0); checked: root.filter === "b"; onClicked: root.filter = "b" }
+        FmChip { text: Translation.tr("Different  (%1)").arg(root.result?.differ.length ?? 0); checked: root.filter === "d"; onClicked: root.filter = "d" }
     }
 
     ListView {
@@ -164,8 +165,8 @@ FmDialog {
                     }
                     StyledText {
                         Layout.fillWidth: true
-                        text: row.modelData.side === "a" ? qsTr("Only in A  ·  %1").arg(root.detail(row.modelData))
-                            : (row.modelData.side === "b" ? qsTr("Only in B  ·  %1").arg(root.detail(row.modelData)) : root.detail(row.modelData))
+                        text: row.modelData.side === "a" ? Translation.tr("Only in A  ·  %1").arg(root.detail(row.modelData))
+                            : (row.modelData.side === "b" ? Translation.tr("Only in B  ·  %1").arg(root.detail(row.modelData)) : root.detail(row.modelData))
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         color: ClockStyle.colSubtext
                         elide: Text.ElideRight
@@ -178,21 +179,21 @@ FmDialog {
             anchors.centerIn: parent
             visible: root.result !== null && root.rows.length === 0
             text: root.result && root.result.onlyA.length + root.result.onlyB.length + root.result.differ.length === 0
-                ? qsTr("The folders are identical") : qsTr("Nothing in this list")
+                ? Translation.tr("The folders are identical") : Translation.tr("Nothing in this list")
             color: ClockStyle.colSubtext
         }
     }
     StyledText {
         Layout.fillWidth: true
         visible: root.result !== null
-        text: qsTr("%1 files and folders are the same on both sides").arg(root.result?.same ?? 0)
+        text: Translation.tr("%1 files and folders are the same on both sides").arg(root.result?.same ?? 0)
         font.pixelSize: Appearance.font.pixelSize.smaller
         color: ClockStyle.colSubtext
     }
 
     actions: [
-        FmButton { text: qsTr("Copy A's extras to B"); visible: (root.result?.onlyA.length ?? 0) > 0; onClicked: root.copyMissing("a") },
-        FmButton { text: qsTr("Copy B's extras to A"); visible: (root.result?.onlyB.length ?? 0) > 0; onClicked: root.copyMissing("b") },
-        FmButton { text: qsTr("Close"); kind: "tonal"; onClicked: root.close() }
+        FmButton { text: Translation.tr("Copy A's extras to B"); visible: (root.result?.onlyA.length ?? 0) > 0; onClicked: root.copyMissing("a") },
+        FmButton { text: Translation.tr("Copy B's extras to A"); visible: (root.result?.onlyB.length ?? 0) > 0; onClicked: root.copyMissing("b") },
+        FmButton { text: Translation.tr("Close"); kind: "tonal"; onClicked: root.close() }
     ]
 }

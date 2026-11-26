@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// Asks for a name, or (with `input: false`) just confirms. `danger` colours the button.
 FmDialog {
@@ -12,7 +13,7 @@ FmDialog {
     property string message: ""
     property string label: ""
     property string text: ""
-    property string confirmText: qsTr("OK")
+    property string confirmText: Translation.tr("OK")
     property bool input: true
     property bool danger: false
     property bool selectBase: true
@@ -56,7 +57,7 @@ FmDialog {
     }
 
     actions: [
-        FmButton { text: qsTr("Cancel"); onClicked: root.close() },
+        FmButton { text: Translation.tr("Cancel"); onClicked: root.close() },
         FmButton {
             text: root.confirmText
             kind: root.danger ? "danger" : "filled"

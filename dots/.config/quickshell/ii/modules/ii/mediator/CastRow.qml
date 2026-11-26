@@ -5,12 +5,13 @@ import QtQuick.Layouts
 
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.services
 
 /// People as pills with an initials badge (the catalog has names, not photos)
 ColumnLayout {
     id: root
 
-    property string heading: "Cast"
+    property string heading: Translation.tr("Cast")
     property var names: []
 
     visible: root.names.length > 0

@@ -7,6 +7,7 @@ import Quickshell.Io
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// Quick look (Space): a big picture or the start of a text file, over the folder.
 FocusScope {
@@ -83,8 +84,8 @@ FocusScope {
                         elide: Text.ElideRight
                     }
                 }
-                FmIconButton { symbol: "chevron_left"; tip: qsTr("Previous  (←)"); onClicked: root.stepRequested(-1) }
-                FmIconButton { symbol: "chevron_right"; tip: qsTr("Next  (→)"); onClicked: root.stepRequested(1) }
+                FmIconButton { symbol: "chevron_left"; tip: Translation.tr("Previous  (←)"); onClicked: root.stepRequested(-1) }
+                FmIconButton { symbol: "chevron_right"; tip: Translation.tr("Next  (→)"); onClicked: root.stepRequested(1) }
                 FmIconButton { symbol: "close"; onClicked: root.closed() }
             }
             Item {
@@ -111,7 +112,7 @@ FocusScope {
                     StyledText {
                         id: body
                         width: parent.width
-                        text: root.text.length > 0 ? root.text : qsTr("(empty or too large to preview)")
+                        text: root.text.length > 0 ? root.text : Translation.tr("(empty or too large to preview)")
                         font.family: "monospace"
                         font.pixelSize: Appearance.font.pixelSize.smallie
                         wrapMode: Text.WrapAnywhere
@@ -133,7 +134,7 @@ FocusScope {
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         visible: root.thumb.length === 0
-                        text: qsTr("No preview for this type")
+                        text: Translation.tr("No preview for this type")
                         color: ClockStyle.colSubtext
                         font.pixelSize: Appearance.font.pixelSize.small
                     }

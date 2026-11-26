@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// The tab strip; hidden by its owner while there is a single tab.
 Item {
@@ -78,7 +79,7 @@ Item {
             size: 32
             iconSize: 20
             symbol: "add"
-            tip: qsTr("New tab")
+            tip: Translation.tr("New tab")
             onClicked: root.added()
         }
         Item { Layout.fillWidth: true }

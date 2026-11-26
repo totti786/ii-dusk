@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// Pick a destination folder for Copy to… / Move to…: type a path, click through the folders, or
 /// jump to a place or bookmark. Folders can be made on the spot.
@@ -24,7 +25,7 @@ FmDialog {
 
     signal destinationPicked(string dest)
 
-    title: root.mode === "copy" ? qsTr("Copy to…") : qsTr("Move to…")
+    title: root.mode === "copy" ? Translation.tr("Copy to…") : Translation.tr("Move to…")
     cardWidth: 580
 
     function parentOf(p: string): string {
@@ -93,7 +94,7 @@ FmDialog {
 
     StyledText {
         Layout.fillWidth: true
-        text: root.srcs.length === 1 ? qsTr("“%1”").arg(root.srcs[0].replace(/^.*\//, "")) : qsTr("%1 items").arg(root.srcs.length)
+        text: root.srcs.length === 1 ? Translation.tr("“%1”").arg(root.srcs[0].replace(/^.*\//, "")) : Translation.tr("%1 items").arg(root.srcs.length)
         font.pixelSize: Appearance.font.pixelSize.smallie
         color: ClockStyle.colOnSurfaceVariant
         elide: Text.ElideMiddle
@@ -121,7 +122,7 @@ FmDialog {
             size: 36
             iconSize: 20
             symbol: "arrow_upward"
-            tip: qsTr("Up")
+            tip: Translation.tr("Up")
             enabled2: root.path !== "/"
             onClicked: root.go(root.parentOf(root.path))
         }
@@ -184,7 +185,7 @@ FmDialog {
             StyledText {
                 anchors.centerIn: parent
                 visible: !root.busy && root.folders.length === 0
-                text: root.error.length > 0 ? root.error : qsTr("No folders here")
+                text: root.error.length > 0 ? root.error : Translation.tr("No folders here")
                 color: root.error.length > 0 ? ClockStyle.colError : ClockStyle.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smallie
             }
@@ -197,23 +198,23 @@ FmDialog {
         FmField {
             id: newName
             Layout.fillWidth: true
-            placeholder: qsTr("New folder here")
+            placeholder: Translation.tr("New folder here")
             onAccepted: root.makeFolder()
         }
         FmIconButton {
             size: 36
             iconSize: 20
             symbol: "create_new_folder"
-            tip: qsTr("Create")
+            tip: Translation.tr("Create")
             enabled2: newName.text.trim().length > 0
             onClicked: root.makeFolder()
         }
     }
 
     actions: [
-        FmButton { text: qsTr("Cancel"); onClicked: root.close() },
+        FmButton { text: Translation.tr("Cancel"); onClicked: root.close() },
         FmButton {
-            text: root.mode === "copy" ? qsTr("Copy here") : qsTr("Move here")
+            text: root.mode === "copy" ? Translation.tr("Copy here") : Translation.tr("Move here")
             kind: "filled"
             enabled2: root.path.length > 0 && !root.busy
             onClicked: root.destinationPicked(root.path)

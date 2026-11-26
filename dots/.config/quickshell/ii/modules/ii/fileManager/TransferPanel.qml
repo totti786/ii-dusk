@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// Running and just-finished operations, bottom right, each with progress and a cancel button.
 Item {
@@ -69,7 +70,7 @@ Item {
                             size: 26
                             iconSize: 17
                             symbol: "close"
-                            tip: job.finished ? qsTr("Dismiss") : qsTr("Cancel")
+                            tip: job.finished ? Translation.tr("Dismiss") : Translation.tr("Cancel")
                             onClicked: job.finished ? root.dismissRequested(job.modelData.id) : root.cancelRequested(job.modelData.id)
                         }
                     }

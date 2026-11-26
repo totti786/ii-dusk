@@ -69,10 +69,13 @@ Item {
     function bindMatches(keybind, sectionName) {
         if (root.filter === "") return true;
         let blob = keybind.__searchBlob;
-        if (blob === undefined) {
+        if (blob === undefined || keybind.__searchLanguage !== Translation.languageCode) {
             const modsStr = keybind.mods ? keybind.mods.join(" ") : "";
-            blob = `${sectionName} ${modsStr} ${keybind.key} ${keybind.comment}`.toLowerCase();
+            const shown = (keybind.comment || "").replace(/^[A-Z][A-Za-z]*: /, "");
+            // Both the shown and the English wording can be typed into the filter.
+            blob = `${sectionName} ${Translation.tr(sectionName)} ${modsStr} ${keybind.key} ${keybind.comment} ${Translation.tr(shown)}`.toLowerCase();
             keybind.__searchBlob = blob;
+            keybind.__searchLanguage = Translation.languageCode;
         }
         return blob.includes(root.filter.toLowerCase());
     }

@@ -25,18 +25,18 @@ Item {
 
     readonly property bool stremio: root.onlineKind === "stremio"
     readonly property var animeModes: [
-        { mode: "trending", label: "Trending" },
-        { mode: "season", label: "This season" },
-        { mode: "popular", label: "Popular" },
-        { mode: "top", label: "Top rated" }
+        { mode: "trending", label: Translation.tr("Trending") },
+        { mode: "season", label: Translation.tr("This season") },
+        { mode: "popular", label: Translation.tr("Popular") },
+        { mode: "top", label: Translation.tr("Top rated") }
     ]
     readonly property var stremioKinds: [
-        { kind: "movie", label: "Movies", icon: "movie" },
-        { kind: "series", label: "Series", icon: "tv" }
+        { kind: "movie", label: Translation.tr("Movies"), icon: "movie" },
+        { kind: "series", label: Translation.isEnglish ? "Series" : Translation.tr("TV series"), icon: "tv" }
     ]
     /// A search can show both kinds at once; browsing is one catalog at a time
     readonly property var kindChips: StremioService.searching
-        ? [{ kind: "all", label: "All", icon: "apps" }].concat(root.stremioKinds) : root.stremioKinds
+        ? [{ kind: "all", label: Translation.tr("All"), icon: "apps" }].concat(root.stremioKinds) : root.stremioKinds
     readonly property var anilist: MediatorService.anilistStatus ?? ({})
     readonly property bool anilistOk: Boolean(root.anilist?.ok)
     readonly property string anilistUser: String(root.anilist?.username ?? "")
@@ -83,8 +83,8 @@ Item {
         // Source
         Repeater {
             model: [
-                { kind: "anime", label: "Anime", icon: "animation", key: "Ctrl+↑" },
-                { kind: "stremio", label: "Movies & Shows", icon: "movie", key: "Ctrl+↓" }
+                { kind: "anime", label: Translation.tr("Anime"), icon: "animation", key: "Ctrl+↑" },
+                { kind: "stremio", label: Translation.tr("Movies & Shows"), icon: "movie", key: "Ctrl+↓" }
             ]
             delegate: Rectangle {
                 id: kindPill
@@ -176,7 +176,7 @@ Item {
                     color: root.anilistOk ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
                 }
                 StyledText {
-                    text: root.anilistOk ? `AniList · ${root.anilistUser}` : "Connect AniList"
+                    text: root.anilistOk ? `AniList · ${root.anilistUser}` : Translation.tr("Connect AniList")
                     color: Appearance.colors.colOnLayer0
                     font.pixelSize: Appearance.font.pixelSize.smaller
                 }
@@ -205,8 +205,8 @@ Item {
             }
             StyledToolTip {
                 extraVisibleCondition: anilistArea.containsMouse
-                text: root.anilistOk ? "AniList is connected; open settings to manage sync"
-                                     : "Open settings to log in to AniList"
+                text: root.anilistOk ? Translation.tr("AniList is connected; open settings to manage sync")
+                                     : Translation.tr("Open settings to log in to AniList")
             }
         }
 
@@ -231,7 +231,7 @@ Item {
             }
             StyledToolTip {
                 extraVisibleCondition: refreshArea.containsMouse
-                text: "Refresh"
+                text: Translation.tr("Refresh")
             }
         }
     }

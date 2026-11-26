@@ -59,7 +59,7 @@ Item {
                 "rating": Number(c.rating) || 0,
                 "lib": c.type === "movie" ? "movies" : "shows",
                 "online": true,
-                "statusText": [c.type === "movie" ? "Movie" : "Series", c.year].filter(x => x).join(" · "),
+                "statusText": [c.type === "movie" ? Translation.tr("Movie") : Translation.tr("Series"), c.year].filter(x => x).join(" · "),
                 "stremio": c
             });
         }
@@ -72,7 +72,7 @@ Item {
                 "rating": Number(a.rating) || 0,
                 "lib": "anime",
                 "online": true,
-                "statusText": ["Anime", a.year].filter(x => x).join(" · "),
+                "statusText": [Translation.tr("Anime"), a.year].filter(x => x).join(" · "),
                 "anime": a
             });
         }

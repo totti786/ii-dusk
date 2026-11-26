@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// Renames several files at once: find/replace, case, prefix/suffix and numbering, with a live preview.
 FmDialog {
@@ -18,7 +19,7 @@ FmDialog {
 
     signal accepted(var pairs)
 
-    title: qsTr("Rename %1 items").arg(root.entries.length)
+    title: Translation.tr("Rename %1 items").arg(root.entries.length)
     cardWidth: 620
 
     function transform(name: string, i: int): string {
@@ -60,16 +61,16 @@ FmDialog {
         columns: 2
         columnSpacing: 12
         rowSpacing: 8
-        FmField { id: find; Layout.fillWidth: true; label: qsTr("Find"); placeholder: qsTr("text to replace") }
-        FmField { id: repl; Layout.fillWidth: true; label: qsTr("Replace with") }
-        FmField { id: prefix; Layout.fillWidth: true; label: qsTr("Add before") }
-        FmField { id: suffix; Layout.fillWidth: true; label: qsTr("Add after") }
+        FmField { id: find; Layout.fillWidth: true; label: Translation.tr("Find"); placeholder: Translation.tr("text to replace") }
+        FmField { id: repl; Layout.fillWidth: true; label: Translation.tr("Replace with") }
+        FmField { id: prefix; Layout.fillWidth: true; label: Translation.tr("Add before") }
+        FmField { id: suffix; Layout.fillWidth: true; label: Translation.tr("Add after") }
     }
     RowLayout {
         Layout.fillWidth: true
         spacing: 8
         Repeater {
-            model: [{ k: "keep", t: qsTr("Keep case") }, { k: "lower", t: "lowercase" }, { k: "upper", t: "UPPERCASE" }, { k: "title", t: "Title Case" }]
+            model: [{ k: "keep", t: Translation.tr("Keep case") }, { k: "lower", t: "lowercase" }, { k: "upper", t: "UPPERCASE" }, { k: "title", t: "Title Case" }]
             delegate: FmChip {
                 required property var modelData
                 text: modelData.t
@@ -78,14 +79,14 @@ FmDialog {
             }
         }
         Item { Layout.fillWidth: true }
-        FmChip { text: qsTr("Keep extension"); checked: root.keepExt; onClicked: root.keepExt = !root.keepExt }
+        FmChip { text: Translation.tr("Keep extension"); checked: root.keepExt; onClicked: root.keepExt = !root.keepExt }
     }
     RowLayout {
         Layout.fillWidth: true
         spacing: 12
-        FmChip { text: qsTr("Number them"); checked: root.numbering; onClicked: root.numbering = !root.numbering }
-        FmField { id: start; visible: root.numbering; Layout.preferredWidth: 100; label: qsTr("Start at"); text: "1" }
-        FmField { id: digits; visible: root.numbering; Layout.preferredWidth: 100; label: qsTr("Digits"); text: "2" }
+        FmChip { text: Translation.tr("Number them"); checked: root.numbering; onClicked: root.numbering = !root.numbering }
+        FmField { id: start; visible: root.numbering; Layout.preferredWidth: 100; label: Translation.tr("Start at"); text: "1" }
+        FmField { id: digits; visible: root.numbering; Layout.preferredWidth: 100; label: Translation.tr("Digits"); text: "2" }
         Item { Layout.fillWidth: true }
     }
 
@@ -129,15 +130,15 @@ FmDialog {
     }
     StyledText {
         visible: !root.valid
-        text: qsTr("Some names would clash or be empty.")
+        text: Translation.tr("Some names would clash or be empty.")
         font.pixelSize: Appearance.font.pixelSize.smaller
         color: ClockStyle.colError
     }
 
     actions: [
-        FmButton { text: qsTr("Cancel"); onClicked: root.close() },
+        FmButton { text: Translation.tr("Cancel"); onClicked: root.close() },
         FmButton {
-            text: qsTr("Rename")
+            text: Translation.tr("Rename")
             kind: "filled"
             enabled2: root.valid && root.changes
             onClicked: root.accepted(root.pairs.filter(p => p.from !== p.to).map(p => [p.path, p.to]))

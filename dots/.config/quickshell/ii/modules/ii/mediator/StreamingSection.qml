@@ -359,7 +359,7 @@ Item {
                     font.weight: Font.Medium
                 }
                 StyledText {
-                    text: "Esc for trending"
+                    text: Translation.tr("Esc for trending")
                     color: Appearance.colors.colSubtext
                     font.pixelSize: Appearance.font.pixelSize.smaller
                 }
@@ -374,8 +374,8 @@ Item {
                 poster: f?.poster ?? ""
                 description: f?.description ?? ""
                 rating: f?.rating ?? ""
-                facts: [f?.format === "MOVIE" ? "Movie" : "Series", f?.year,
-                    f?.episodes > 0 ? f.episodes + " episodes" : "", f?.runtime].concat((f?.genres ?? []).slice(0, 3))
+                facts: [f?.format === "MOVIE" ? Translation.tr("Movie") : Translation.tr("Series"), f?.year,
+                    f?.episodes > 0 ? Translation.tr("%1 episodes").arg(f.episodes) : "", f?.runtime].concat((f?.genres ?? []).slice(0, 3))
                 dots: root.featured.length
                 dotIndex: root.featuredIndex
                 focused: root.heroFocus
@@ -383,7 +383,7 @@ Item {
 
                 ClockButton {
                     symbol: "play_arrow"
-                    label: "Open"
+                    label: Translation.tr("Open")
                     variant: "filled"
                     onClicked: AnimeBrowseService.openTitle(billboard.f)
                 }
@@ -392,7 +392,7 @@ Item {
                         ? MediatorService.ownedFor([billboard.f.title, billboard.f.search], billboard.f.year) : null
                     visible: local !== null
                     symbol: "video_library"
-                    label: "In your library"
+                    label: Translation.tr("In your library")
                     variant: "tonal"
                     onClicked: root.localRequested(local.id)
                 }
@@ -444,8 +444,8 @@ Item {
                         poster: modelData.poster
                         name: modelData.title
                         rating: modelData.rating
-                        subtitle: [modelData.format === "MOVIE" ? "Movie" : modelData.episodes > 0
-                            ? modelData.episodes + " eps" : "Anime", modelData.year].filter(x => x).join(" · ")
+                        subtitle: [modelData.format === "MOVIE" ? Translation.tr("Movie") : modelData.episodes > 0
+                            ? Translation.tr("%1 eps").arg(modelData.episodes) : Translation.tr("Anime"), modelData.year].filter(x => x).join(" · ")
                         onActivated: AnimeBrowseService.openTitle(modelData)
                     }
                 }
@@ -468,7 +468,7 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     StyledText {
-                        text: root.anilistOk ? "AniList · Watching" : "AniList"
+                        text: root.anilistOk ? Translation.tr("AniList · Watching") : "AniList"
                         color: Appearance.colors.colOnLayer0
                         font.pixelSize: Appearance.font.pixelSize.larger
                         font.weight: Font.Medium
@@ -476,8 +476,8 @@ Item {
                     Item { Layout.fillWidth: true }
                     StyledText {
                         visible: root.anilistOk
-                        text: MediatorService.anilistWatchingBusy ? "Loading…"
-                            : `${root.watching.length} watching`
+                        text: MediatorService.anilistWatchingBusy ? Translation.tr("Loading…")
+                            : Translation.tr("%1 watching").arg(root.watching.length)
                         color: Appearance.colors.colSubtext
                         font.pixelSize: Appearance.font.pixelSize.smaller
                     }
@@ -524,19 +524,19 @@ Item {
                             Layout.fillWidth: true
                             spacing: 1
                             StyledText {
-                                text: "Connect AniList to see your Watching queue"
+                                text: Translation.tr("Connect AniList to see your Watching queue")
                                 color: Appearance.colors.colOnLayer0
                                 font.pixelSize: Appearance.font.pixelSize.smaller
                                 font.weight: Font.Medium
                             }
                             StyledText {
-                                text: "Progress from native streams syncs back automatically."
+                                text: Translation.tr("Progress from native streams syncs back automatically.")
                                 color: Appearance.colors.colSubtext
                                 font.pixelSize: Appearance.font.pixelSize.smallest
                             }
                         }
                         StyledText {
-                            text: "Settings"
+                            text: Translation.tr("Settings")
                             color: Appearance.colors.colPrimary
                             font.pixelSize: Appearance.font.pixelSize.smaller
                             font.weight: Font.Medium
@@ -579,11 +579,11 @@ Item {
                         poster: String(modelData?.poster ?? "")
                         title: String(modelData?.title ?? "")
                         subtitle: `${String(modelData?.status ?? "CURRENT") === "REPEATING"
-                            ? "Rewatching" : "Watching"}${String(modelData?.format ?? "") !== ""
-                                ? ` · ${modelData.format}` : ""}${linkedState ? " · resume" : " · find online"}`
+                            ? Translation.tr("Rewatching") : Translation.tr("Watching")}${String(modelData?.format ?? "") !== ""
+                                ? ` · ${modelData.format}` : ""}${" · " + (linkedState ? Translation.tr("resume") : Translation.tr("find online"))}`
                         meta: `${modelData?.progress ?? 0} / ${Number(modelData?.total ?? 0) > 0
                             ? modelData.total : "?"}`
-                        badge: "ANILIST"
+                        badge: Translation.tr("ANILIST")
                         actionIcon: linkedState ? "play_arrow" : "travel_explore"
                         fraction: Number(modelData?.total ?? 0) > 0
                             ? Number(modelData?.progress ?? 0) / Number(modelData.total) : 0
@@ -600,7 +600,7 @@ Item {
                 StyledText {
                     visible: root.anilistOk && !MediatorService.anilistWatchingBusy
                         && root.watching.length === 0 && MediatorService.anilistWatchingError === ""
-                    text: "Nothing in Watching right now."
+                    text: Translation.tr("Nothing in Watching right now.")
                     color: Appearance.colors.colSubtext
                     font.pixelSize: Appearance.font.pixelSize.smaller
                 }

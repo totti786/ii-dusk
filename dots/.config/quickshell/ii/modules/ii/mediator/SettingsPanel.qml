@@ -23,8 +23,14 @@ Item {
                                         speed, autoFetch, alClientId, alAuto, alAddMissing,
                                         alRewatch, alComplete, alDates, streamHls, streamStremio, streamPrefer, streamAsk].some(f => f.changed)
 
+    // A Jellyfin status line that reports something wrong, shown in the error colour.
+    function jellyfinProblem(line: string): bool {
+        return line === Translation.tr("Turned on, but the server URL or API key is missing, so nothing is listed.")
+            || line === Translation.tr("Nothing came back from the server. Test the connection, and check the library names there are Anime, Shows and Movies.");
+    }
+
     readonly property string statusLine: MediatorService.saveError !== "" ? MediatorService.saveError
-        : root.hasChanges ? "Unsaved changes" : "Saved to " + (root.s.path ?? "")
+        : root.hasChanges ? Translation.tr("Unsaved changes") : Translation.tr("Saved to %1").arg(root.s.path ?? "")
 
     // Fill the fields from what the CLI reports
     function load(): void {
@@ -32,7 +38,7 @@ Item {
         jfUrl.original = jfUrl.text = jf.url ?? "";
         jfUser.original = jfUser.text = jf.username ?? "";
         jfKey.original = jfKey.text = "";
-        jfKey.placeholder = jf.token_set ? "Saved. Type to replace it" : "Paste an API key from the Jellyfin dashboard";
+        jfKey.placeholder = jf.token_set ? Translation.tr("Saved. Type to replace it") : Translation.tr("Paste an API key from the Jellyfin dashboard");
         jfInclude.original = jfInclude.checked = jf.include ?? false;
         const lib = root.s.libraries ?? {};
         pathAnime.original = pathAnime.text = lib.anime ?? "";
@@ -51,8 +57,8 @@ Item {
         const al = root.s.anilist ?? {};
         alClientId.original = alClientId.text = al.client_id ?? "";
         alToken.original = alToken.text = "";
-        alToken.placeholder = al.token_set ? "Saved. Paste a new token or redirected URL to replace it"
-            : "Paste token or the full redirected URL";
+        alToken.placeholder = al.token_set ? Translation.tr("Saved. Paste a new token or redirected URL to replace it")
+            : Translation.tr("Paste token or the full redirected URL");
         alAuto.original = alAuto.checked = al.auto ?? true;
         alAddMissing.original = alAddMissing.checked = al.add_missing ?? false;
         alRewatch.original = alRewatch.checked = al.rewatch ?? false;
@@ -128,7 +134,7 @@ Item {
                         anchors.centerIn: parent
                         spacing: 4
                         MaterialSymbol { text: "arrow_back"; iconSize: 18; color: Appearance.colors.colOnLayer0 }
-                        StyledText { text: "Back"; color: Appearance.colors.colOnLayer0 }
+                        StyledText { text: Translation.tr("Back"); color: Appearance.colors.colOnLayer0 }
                     }
                     MouseArea {
                         id: backArea
@@ -139,7 +145,7 @@ Item {
                     }
                 }
                 StyledText {
-                    text: "Settings"
+                    text: Translation.tr("Settings")
                     color: Appearance.colors.colOnLayer0
                     font.pixelSize: 30
                     font.weight: Font.DemiBold
@@ -147,7 +153,7 @@ Item {
             }
 
             StyledText {
-                text: "JELLYFIN"
+                text: Translation.tr("JELLYFIN")
                 color: Appearance.colors.colPrimary
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.letterSpacing: 1.4
@@ -155,26 +161,26 @@ Item {
             }
             SettingsField {
                 id: jfUrl
-                label: "Server URL"
+                label: Translation.tr("Server URL")
                 placeholder: "https://jellyfin.example.com"
-                hint: "Include the port if it is not 80 or 443."
+                hint: Translation.tr("Include the port if it is not 80 or 443.")
             }
             SettingsField {
                 id: jfUser
-                label: "Username"
-                placeholder: "Your Jellyfin user"
-                hint: "Used to find your account when you paste an API key."
+                label: Translation.tr("Username")
+                placeholder: Translation.tr("Your Jellyfin user")
+                hint: Translation.tr("Used to find your account when you paste an API key.")
             }
             SettingsField {
                 id: jfKey
-                label: "API key"
+                label: Translation.tr("API key")
                 secret: true
-                hint: "Dashboard → API Keys → +. It is stored in mediator's config, readable only by you."
+                hint: Translation.tr("Dashboard → API Keys → +. It is stored in mediator's config, readable only by you.")
             }
             SettingsToggle {
                 id: jfInclude
-                label: "Show Jellyfin in the library"
-                hint: "Adds the server's Anime, Shows and Movies next to your local files, tagged Jellyfin."
+                label: Translation.tr("Show Jellyfin in the library")
+                hint: Translation.tr("Adds the server's Anime, Shows and Movies next to your local files, tagged Jellyfin.")
             }
             StyledText {
                 Layout.fillWidth: true
@@ -185,16 +191,16 @@ Item {
                     if (root.hasChanges)
                         return "";
                     if (jfInclude.original && !(root.s.jellyfin?.configured ?? false))
-                        return "Turned on, but the server URL or API key is missing, so nothing is listed.";
+                        return Translation.tr("Turned on, but the server URL or API key is missing, so nothing is listed.");
                     if (jfInclude.original)
-                        return loaded > 0 ? `${loaded} titles from Jellyfin are in your library.`
-                            : MediatorService.loading ? "Loading the server's titles…"
-                            : "Nothing came back from the server. Test the connection, and check the library names there are Anime, Shows and Movies.";
+                        return loaded > 0 ? Translation.tr("%1 titles from Jellyfin are in your library.").arg(loaded)
+                            : MediatorService.loading ? Translation.tr("Loading the server's titles…")
+                            : Translation.tr("Nothing came back from the server. Test the connection, and check the library names there are Anime, Shows and Movies.");
                     if (MediatorService.jellyfinState === "ok")
-                        return "Connected. Turn this on to list the server's titles.";
+                        return Translation.tr("Connected. Turn this on to list the server's titles.");
                     return "";
                 }
-                color: text.startsWith("Nothing") || text.startsWith("Turned on") ? Appearance.m3colors.m3error : Appearance.colors.colSubtext
+                color: root.jellyfinProblem(text) ? Appearance.m3colors.m3error : Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
             }
             RowLayout {
@@ -209,7 +215,7 @@ Item {
                     StyledText {
                         id: testText
                         anchors.centerIn: parent
-                        text: "Test connection"
+                        text: Translation.tr("Test connection")
                         color: Appearance.colors.colOnLayer0
                     }
                     MouseArea {
@@ -224,7 +230,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     elide: Text.ElideRight
-                    text: root.hasChanges && MediatorService.jellyfinState === "" ? "Save first, then test."
+                    text: root.hasChanges && MediatorService.jellyfinState === "" ? Translation.tr("Save first, then test.")
                         : MediatorService.jellyfinMessage
                     color: MediatorService.jellyfinState === "ok" ? Appearance.colors.colPrimary
                          : MediatorService.jellyfinState === "failed" ? Appearance.m3colors.m3error
@@ -233,18 +239,18 @@ Item {
             }
 
             StyledText {
-                text: "LIBRARIES"
+                text: Translation.tr("LIBRARIES")
                 color: Appearance.colors.colPrimary
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.letterSpacing: 1.4
                 Layout.topMargin: 18
             }
-            SettingsField { id: pathAnime; label: "Anime folder"; placeholder: "~/Videos/Anime" }
-            SettingsField { id: pathShows; label: "Shows folder"; placeholder: "~/Videos/Shows" }
-            SettingsField { id: pathMovies; label: "Movies folder"; placeholder: "~/Videos/Movies" }
+            SettingsField { id: pathAnime; label: Translation.tr("Anime folder"); placeholder: "~/Videos/Anime" }
+            SettingsField { id: pathShows; label: Translation.tr("Shows folder"); placeholder: "~/Videos/Shows" }
+            SettingsField { id: pathMovies; label: Translation.tr("Movies folder"); placeholder: "~/Videos/Movies" }
 
             StyledText {
-                text: "PLAYBACK AND POSTERS"
+                text: Translation.tr("PLAYBACK AND POSTERS")
                 color: Appearance.colors.colPrimary
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.letterSpacing: 1.4
@@ -252,18 +258,18 @@ Item {
             }
             SettingsField {
                 id: speed
-                label: "Default speed"
+                label: Translation.tr("Default speed")
                 placeholder: "1.0"
-                hint: "Per-library speeds in the config file still win."
+                hint: Translation.tr("Per-library speeds in the config file still win.")
             }
             SettingsToggle {
                 id: autoFetch
-                label: "Fetch missing posters automatically"
-                hint: "Looks them up online while the browser is open."
+                label: Translation.tr("Fetch missing posters automatically")
+                hint: Translation.tr("Looks them up online while the browser is open.")
             }
 
             StyledText {
-                text: "MOVIE AND SERIES STREAMING"
+                text: Translation.tr("MOVIE AND SERIES STREAMING")
                 color: Appearance.colors.colPrimary
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.letterSpacing: 1.4
@@ -271,31 +277,31 @@ Item {
             }
             SettingsToggle {
                 id: streamHls
-                label: "Direct streams (main source)"
-                hint: "Plays an HLS stream straight in mpv: fast, no torrent. Tried first."
+                label: Translation.tr("Direct streams (main source)")
+                hint: Translation.tr("Plays an HLS stream straight in mpv: fast, no torrent. Tried first.")
             }
             SettingsToggle {
                 id: streamStremio
-                label: "Stremio torrents"
-                hint: "Used when direct streams fail, or on their own if those are off. A stream you pick by hand always wins."
+                label: Translation.tr("Stremio torrents")
+                hint: Translation.tr("Used when direct streams fail, or on their own if those are off. A stream you pick by hand always wins.")
             }
             SettingsToggle {
                 id: streamPrefer
                 enabled: streamStremio.checked
                 opacity: streamStremio.checked ? 1 : 0.45
-                label: "Prefer Stremio for higher quality"
-                hint: "Tries torrents first and picks the highest resolution with healthy seeders. Slower to start; direct streams become the fallback. Applies to playing and downloading."
+                label: Translation.tr("Prefer Stremio for higher quality")
+                hint: Translation.tr("Tries torrents first and picks the highest resolution with healthy seeders. Slower to start; direct streams become the fallback. Applies to playing and downloading.")
             }
             SettingsToggle {
                 id: streamAsk
                 enabled: streamHls.checked && streamStremio.checked
                 opacity: streamHls.checked && streamStremio.checked ? 1 : 0.45
-                label: "Ask before switching to a torrent"
-                hint: "When a direct stream fails, say so and let you choose a torrent instead of switching on its own."
+                label: Translation.tr("Ask before switching to a torrent")
+                hint: Translation.tr("When a direct stream fails, say so and let you choose a torrent instead of switching on its own.")
             }
 
             StyledText {
-                text: "SESSION"
+                text: Translation.tr("SESSION")
                 color: Appearance.colors.colPrimary
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.letterSpacing: 1.4
@@ -303,8 +309,8 @@ Item {
             }
             SettingsToggle {
                 id: together
-                label: "Watch Together (Syncplay)"
-                hint: "Plays through Syncplay for this shell session: local files, and streamed movies, shows and anime (at normal speed). A friend needs the same stream to join: local files by name, streams by link."
+                label: Translation.tr("Watch Together (Syncplay)")
+                hint: Translation.tr("Plays through Syncplay for this shell session: local files, and streamed movies, shows and anime (at normal speed). A friend needs the same stream to join: local files by name, streams by link.")
                 checked: MediatorService.watchTogether
                 original: MediatorService.watchTogether
                 onCheckedChanged: {
@@ -314,7 +320,7 @@ Item {
             }
 
             StyledText {
-                text: "ANILIST"
+                text: Translation.tr("ANILIST")
                 color: Appearance.colors.colPrimary
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.letterSpacing: 1.4
@@ -323,10 +329,10 @@ Item {
             StyledText {
                 Layout.fillWidth: true
                 text: MediatorService.anilistStatus.ok
-                    ? `Connected as ${MediatorService.anilistStatus.username || "AniList user"}`
+                    ? Translation.tr("Connected as %1").arg(MediatorService.anilistStatus.username || Translation.tr("AniList user"))
                     : MediatorService.anilistStatus.configured
-                        ? "Saved account needs attention"
-                        : "Connect an AniList account to sync anime progress and scores."
+                        ? Translation.tr("Saved account needs attention")
+                        : Translation.tr("Connect an AniList account to sync anime progress and scores.")
                 color: MediatorService.anilistStatus.ok ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
                 wrapMode: Text.Wrap
             }
@@ -341,7 +347,7 @@ Item {
                     StyledText {
                         id: consentText
                         anchors.centerIn: parent
-                        text: "Open AniList consent"
+                        text: Translation.tr("Open AniList consent")
                         color: Appearance.colors.colOnLayer0
                     }
                     MouseArea {
@@ -356,7 +362,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     text: MediatorService.anilistBusy && MediatorService.anilistAction === "status"
-                        ? "Checking…" : "The browser opens AniList's official authorization page."
+                        ? Translation.tr("Checking…") : Translation.tr("The browser opens AniList's official authorization page.")
                     color: Appearance.colors.colSubtext
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     wrapMode: Text.Wrap
@@ -364,15 +370,15 @@ Item {
             }
             SettingsField {
                 id: alClientId
-                label: "Public client ID (optional)"
-                placeholder: "Leave empty to use Mediator's built-in app"
-                hint: "Only the public numeric id is needed; the app secret is not used."
+                label: Translation.tr("Public client ID (optional)")
+                placeholder: Translation.tr("Leave empty to use Mediator's built-in app")
+                hint: Translation.tr("Only the public numeric id is needed; the app secret is not used.")
             }
             SettingsField {
                 id: alToken
-                label: "Token or redirected URL"
+                label: Translation.tr("Token or redirected URL")
                 secret: true
-                hint: "Paste the token or the full URL after consent. It is sent to mediator through stdin and never appears in arguments."
+                hint: Translation.tr("Paste the token or the full URL after consent. It is sent to mediator through stdin and never appears in arguments.")
             }
             RowLayout {
                 Layout.fillWidth: true
@@ -386,7 +392,7 @@ Item {
                     StyledText {
                         id: connectText
                         anchors.centerIn: parent
-                        text: MediatorService.anilistBusy && MediatorService.anilistAction === "login" ? "Connecting…" : "Connect"
+                        text: MediatorService.anilistBusy && MediatorService.anilistAction === "login" ? Translation.tr("Connecting…") : Translation.tr("Connect")
                         color: Appearance.colors.colOnPrimary
                         font.weight: Font.Medium
                     }
@@ -408,7 +414,7 @@ Item {
                     radius: Appearance.rounding.full
                     visible: MediatorService.anilistStatus.token_set || MediatorService.anilistStatus.configured
                     color: logoutArea.containsMouse ? Appearance.colors.colLayer2 : Appearance.colors.colLayer1
-                    StyledText { id: logoutText; anchors.centerIn: parent; text: "Disconnect"; color: Appearance.colors.colOnLayer0 }
+                    StyledText { id: logoutText; anchors.centerIn: parent; text: Translation.tr("Disconnect"); color: Appearance.colors.colOnLayer0 }
                     MouseArea {
                         id: logoutArea
                         anchors.fill: parent
@@ -439,7 +445,7 @@ Item {
                     StyledText {
                         id: syncText
                         anchors.centerIn: parent
-                        text: MediatorService.anilistBusy && MediatorService.anilistAction === "sync-all" ? "Syncing…" : "Sync library"
+                        text: MediatorService.anilistBusy && MediatorService.anilistAction === "sync-all" ? Translation.tr("Syncing…") : Translation.tr("Sync library")
                         color: Appearance.colors.colOnPrimary
                         font.weight: Font.Medium
                     }
@@ -461,7 +467,7 @@ Item {
                     StyledText {
                         id: retryText
                         anchors.centerIn: parent
-                        text: MediatorService.anilistBusy && MediatorService.anilistAction === "sync-pending" ? "Retrying…" : "Retry pending"
+                        text: MediatorService.anilistBusy && MediatorService.anilistAction === "sync-pending" ? Translation.tr("Retrying…") : Translation.tr("Retry pending")
                         color: Appearance.colors.colOnLayer0
                     }
                     MouseArea {
@@ -476,7 +482,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     text: MediatorService.anilistStatus.pending > 0
-                        ? `${MediatorService.anilistStatus.pending} pending update${MediatorService.anilistStatus.pending === 1 ? "" : "s"}`
+                        ? (MediatorService.anilistStatus.pending === 1 ? Translation.tr("%1 pending update") : Translation.tr("%1 pending updates")).arg(MediatorService.anilistStatus.pending)
                         : ""
                     color: Appearance.colors.colSubtext
                     font.pixelSize: Appearance.font.pixelSize.smaller
@@ -484,26 +490,26 @@ Item {
             }
             SettingsToggle {
                 id: alAuto
-                label: "Sync automatically when anime is marked watched"
-                hint: "Failed pushes remain pending so Retry pending can send them later."
+                label: Translation.tr("Sync automatically when anime is marked watched")
+                hint: Translation.tr("Failed pushes remain pending so Retry pending can send them later.")
             }
             SettingsToggle {
                 id: alAddMissing
-                label: "Add anime missing from my AniList"
-                hint: "When off, only entries already on your list are updated."
+                label: Translation.tr("Add anime missing from my AniList")
+                hint: Translation.tr("When off, only entries already on your list are updated.")
             }
             SettingsToggle {
                 id: alRewatch
-                label: "Track rewatches"
-                hint: "Allow a completed entry to start again from episode one."
+                label: Translation.tr("Track rewatches")
+                hint: Translation.tr("Allow a completed entry to start again from episode one.")
             }
             SettingsToggle {
                 id: alComplete
-                label: "Mark entries completed at the final episode"
+                label: Translation.tr("Mark entries completed at the final episode")
             }
             SettingsToggle {
                 id: alDates
-                label: "Set started and completed dates"
+                label: Translation.tr("Set started and completed dates")
             }
 
             Item { Layout.preferredHeight: 20 }
@@ -544,7 +550,7 @@ Item {
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                     text: MediatorService.saveError !== "" ? MediatorService.saveError
-                        : root.hasChanges ? "Unsaved changes" : "All changes saved"
+                        : root.hasChanges ? Translation.tr("Unsaved changes") : Translation.tr("All changes saved")
                     color: MediatorService.saveError !== "" ? Appearance.m3colors.m3error : Appearance.colors.colOnLayer1
                     font.pixelSize: Appearance.font.pixelSize.small
                 }
@@ -560,7 +566,7 @@ Item {
                     StyledText {
                         id: saveText
                         anchors.centerIn: parent
-                        text: MediatorService.saving ? "Saving…" : "Save"
+                        text: MediatorService.saving ? Translation.tr("Saving…") : Translation.tr("Save")
                         color: root.hasChanges ? Appearance.colors.colOnPrimary : Appearance.colors.colSubtext
                         font.weight: Font.Medium
                     }

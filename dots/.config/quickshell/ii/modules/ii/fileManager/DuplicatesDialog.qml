@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// Files with identical content under a folder. In each group the oldest is kept and the rest are
 /// ticked for the Trash; untick any to keep it too.
@@ -34,7 +35,7 @@ FmDialog {
     signal trashRequested(var paths)
     signal revealRequested(string path)
 
-    title: qsTr("Duplicate files")
+    title: Translation.tr("Duplicate files")
     cardWidth: 680
 
     function bytes(s: real): string {
@@ -55,14 +56,14 @@ FmDialog {
         root.busy = true;
         root.groups = [];
         root.marked = ({});
-        root.status = qsTr("Looking for files…");
+        root.status = Translation.tr("Looking for files…");
         let jid = -1;
         jid = root.backend.request("dupes", { path: root.path, hidden: root.hidden }, {
             progress: m => {
                 if (jid !== root.jobId)
                     return;
-                root.status = m.stage === "scan" ? qsTr("Looking at %1 files…").arg(m.files)
-                    : qsTr("Comparing… %1 of %2").arg(root.bytes(m.done)).arg(root.bytes(m.total));
+                root.status = m.stage === "scan" ? Translation.tr("Looking at %1 files…").arg(m.files)
+                    : Translation.tr("Comparing… %1 of %2").arg(root.bytes(m.done)).arg(root.bytes(m.total));
             },
             done: m => {
                 if (jid !== root.jobId || m.cancelled)
@@ -75,7 +76,7 @@ FmDialog {
                     for (let i = 1; i < g.paths.length; i++)
                         mk[g.paths[i]] = true;
                 root.marked = mk;
-                root.status = m.groups.length === 0 ? qsTr("No duplicates among %1 files").arg(m.scanned) : "";
+                root.status = m.groups.length === 0 ? Translation.tr("No duplicates among %1 files").arg(m.scanned) : "";
             },
             error: e => { if (jid === root.jobId) { root.busy = false; root.status = e; } }
         });
@@ -105,7 +106,7 @@ FmDialog {
             elide: Text.ElideMiddle
         }
         FmChip {
-            text: qsTr("Hidden files")
+            text: Translation.tr("Hidden files")
             checked: root.hidden
             onClicked: { root.hidden = !root.hidden; root.scan(); }
         }
@@ -115,7 +116,7 @@ FmDialog {
         Layout.fillWidth: true
         visible: root.busy || root.groups.length > 0 || root.status.length > 0
         text: root.busy || root.groups.length === 0 ? root.status
-            : qsTr("%1 groups, %2 could be freed").arg(root.groups.length).arg(root.bytes(root.wasted))
+            : Translation.tr("%1 groups, %2 could be freed").arg(root.groups.length).arg(root.bytes(root.wasted))
         font.pixelSize: Appearance.font.pixelSize.smallie
         font.weight: Font.DemiBold
         color: ClockStyle.colOnSurface
@@ -149,7 +150,7 @@ FmDialog {
                     Layout.leftMargin: 6
                     StyledText {
                         Layout.fillWidth: true
-                        text: qsTr("%1 copies · %2 each").arg(card.modelData.paths.length).arg(root.bytes(card.modelData.size))
+                        text: Translation.tr("%1 copies · %2 each").arg(card.modelData.paths.length).arg(root.bytes(card.modelData.size))
                         font.pixelSize: Appearance.font.pixelSize.smaller
                         font.weight: Font.DemiBold
                         color: ClockStyle.colSubtext
@@ -201,7 +202,7 @@ FmDialog {
                                 }
                                 StyledText {
                                     visible: !frow.on
-                                    text: qsTr("keep")
+                                    text: Translation.tr("keep")
                                     font.pixelSize: 11
                                     color: ClockStyle.colSubtext
                                 }
@@ -209,7 +210,7 @@ FmDialog {
                                     size: 28
                                     iconSize: 16
                                     symbol: "folder_open"
-                                    tip: qsTr("Show in folder")
+                                    tip: Translation.tr("Show in folder")
                                     onClicked: root.revealRequested(frow.modelData)
                                 }
                             }
@@ -229,9 +230,9 @@ FmDialog {
     }
 
     actions: [
-        FmButton { text: qsTr("Close"); onClicked: root.close() },
+        FmButton { text: Translation.tr("Close"); onClicked: root.close() },
         FmButton {
-            text: root.markedPaths.length > 0 ? qsTr("Move %1 to Trash (%2)").arg(root.markedPaths.length).arg(root.bytes(root.markedBytes)) : qsTr("Move to Trash")
+            text: root.markedPaths.length > 0 ? Translation.tr("Move %1 to Trash (%2)").arg(root.markedPaths.length).arg(root.bytes(root.markedBytes)) : Translation.tr("Move to Trash")
             kind: "danger"
             enabled2: root.markedPaths.length > 0 && !root.busy
             onClicked: root.trashRequested(root.markedPaths)

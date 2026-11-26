@@ -7,6 +7,7 @@ import Quickshell
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// MD5, SHA-1, SHA-256 and SHA-512 of one file, read once, with a field to paste the published hash into.
 FmDialog {
@@ -33,7 +34,7 @@ FmDialog {
         return [32, 40, 64, 128].includes(root.typed.length) ? "no" : "";
     }
 
-    title: qsTr("Checksums")
+    title: Translation.tr("Checksums")
     cardWidth: 620
 
     Component.onCompleted: {
@@ -111,7 +112,7 @@ FmDialog {
             }
             StyledText {
                 Layout.fillWidth: true
-                text: line.value.length > 0 ? line.value : (root.busy ? qsTr("Reading…") : "—")
+                text: line.value.length > 0 ? line.value : (root.busy ? Translation.tr("Reading…") : "—")
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.family: "monospace"
                 color: ClockStyle.colOnSurface
@@ -123,8 +124,8 @@ FmDialog {
     FmField {
         id: verify
         Layout.fillWidth: true
-        label: qsTr("Compare with a published checksum")
-        placeholder: qsTr("Paste it here")
+        label: Translation.tr("Compare with a published checksum")
+        placeholder: Translation.tr("Paste it here")
         mono: true
     }
     RowLayout {
@@ -138,11 +139,11 @@ FmDialog {
         }
         StyledText {
             Layout.fillWidth: true
-            text: root.verdict === "no" ? qsTr("It does not match this file") : qsTr("Matches the %1 checksum").arg(root.verdict)
+            text: root.verdict === "no" ? Translation.tr("It does not match this file") : Translation.tr("Matches the %1 checksum").arg(root.verdict)
             font.pixelSize: Appearance.font.pixelSize.small
             color: root.verdict === "no" ? ClockStyle.colError : ClockStyle.colPrimary
         }
     }
 
-    actions: [FmButton { text: qsTr("Close"); kind: "tonal"; onClicked: root.close() }]
+    actions: [FmButton { text: Translation.tr("Close"); kind: "tonal"; onClicked: root.close() }]
 }

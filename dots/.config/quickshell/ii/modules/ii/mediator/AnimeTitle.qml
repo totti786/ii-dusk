@@ -42,13 +42,13 @@ ColumnLayout {
         if (!d)
             return "";
         if (d.state === "done")
-            return "Saved";
+            return Translation.tr("Saved");
         if (d.state === "queued")
-            return "Queued";
+            return Translation.tr("Queued");
         if (d.state === "processing")
-            return d.phase ? d.phase + " " + Math.round(d.percent) + "%" : "Finishing…";
+            return d.phase ? d.phase + " " + Math.round(d.percent) + "%" : Translation.tr("Finishing…");
         if (d.state === "error")
-            return "Failed";
+            return Translation.tr("Failed");
         return Math.round(d.percent) + "%";
     }
 
@@ -75,8 +75,8 @@ ColumnLayout {
         background: root.title?.banner ?? ""
         description: root.title?.description ?? ""
         rating: root.title?.rating ?? ""
-        facts: [root.title?.format === "MOVIE" ? "Movie" : "Anime", String(root.title?.year ?? ""),
-            root.title?.episodes > 0 ? root.title.episodes + " episodes" : "", root.title?.runtime ?? ""]
+        facts: [root.title?.format === "MOVIE" ? Translation.tr("Movie") : Translation.tr("Anime"), String(root.title?.year ?? ""),
+            root.title?.episodes > 0 ? Translation.tr("%1 episodes").arg(root.title.episodes) : "", root.title?.runtime ?? ""]
             .concat((root.title?.genres ?? []).slice(0, 4))
         onBackRequested: AnimeBrowseService.back()
 
@@ -87,7 +87,7 @@ ColumnLayout {
                 const e = root.entry;
                 const n = root.target?.number ?? "";
                 const at = e && !e.watched && e.position > 5 ? " · " + root.clock(e.position) : "";
-                return (e?.watched ? "Next" : "Resume") + (n !== "" ? " Ep " + n : "") + at;
+                return (n !== "" ? Translation.tr("%1 Ep %2").arg(e?.watched ? Translation.tr("Next") : Translation.tr("Resume")).arg(n) : e?.watched ? Translation.tr("Next") : Translation.tr("Resume")) + at;
             }
             variant: "filled"
             onClicked: AnimeBrowseService.play(root.target)
@@ -95,7 +95,7 @@ ColumnLayout {
         ClockButton {
             visible: root.local !== null
             symbol: "video_library"
-            label: "In your library"
+            label: Translation.tr("In your library")
             variant: "tonal"
             onClicked: root.localRequested(root.local.id)
         }
@@ -103,21 +103,21 @@ ColumnLayout {
             visible: AnimeBrowseService.episodes.length > 0
             symbol: "download"
             label: root.watchedCount > 0 && root.watchedCount < AnimeBrowseService.episodes.length
-                ? "Download remaining" : "Download season"
+                ? Translation.tr("Download remaining") : Translation.tr("Download season")
             variant: "tonal"
             onClicked: AnimeBrowseService.downloadSeason(root.watchedCount > 0)
         }
         ClockButton {
             visible: root.anyDownloading || AnimeBrowseService.batchActive
             symbol: "close"
-            label: "Cancel downloads"
+            label: Translation.tr("Cancel downloads")
             variant: "text"
             onClicked: AnimeBrowseService.cancelDownloads()
         }
         ClockButton {
             visible: String(root.title?.trailer ?? "") !== ""
             symbol: "smart_display"
-            label: "Trailer"
+            label: Translation.tr("Trailer")
             variant: "tonal"
             onClicked: Qt.openUrlExternally("https://www.youtube.com/watch?v=" + root.title.trailer)
         }
@@ -127,11 +127,11 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.topMargin: 4
         rows: [
-            { "k": "Studio", "v": (root.title?.studios ?? []).join(", ") },
-            { "k": "Status", "v": root.title?.status ?? "" },
-            { "k": "Season", "v": [root.title?.season, root.title?.year].filter(x => x).join(" ") },
-            { "k": "Source", "v": root.title?.source ?? "" },
-            { "k": "Episodes", "v": root.title?.episodes > 0 ? String(root.title.episodes) : "" }
+            { "k": Translation.tr("Studio"), "v": (root.title?.studios ?? []).join(", ") },
+            { "k": Translation.tr("Status"), "v": root.title?.status ?? "" },
+            { "k": Translation.tr("Season"), "v": [root.title?.season, root.title?.year].filter(x => x).join(" ") },
+            { "k": Translation.tr("Source"), "v": root.title?.source ?? "" },
+            { "k": Translation.tr("Episodes"), "v": root.title?.episodes > 0 ? String(root.title.episodes) : "" }
         ]
     }
 
@@ -141,12 +141,12 @@ ColumnLayout {
         spacing: 6
 
         StyledText {
-            text: "Download quality"
+            text: Translation.tr("Download quality")
             color: Appearance.colors.colSubtext
             font.pixelSize: Appearance.font.pixelSize.smaller
         }
         Repeater {
-            model: [{ "v": "1080", "t": "1080p" }, { "v": "720", "t": "720p · smaller" }, { "v": "480", "t": "480p" }]
+            model: [{ "v": "1080", "t": Translation.tr("1080p") }, { "v": "720", "t": Translation.tr("720p · smaller") }, { "v": "480", "t": Translation.tr("480p") }]
             ClockButton {
                 required property var modelData
                 label: modelData.t
@@ -174,13 +174,13 @@ ColumnLayout {
         StyledText {
             Layout.fillWidth: true
             elide: Text.ElideRight
-            text: "Source: " + (AnimeBrowseService.chosen?.title ?? "")
+            text: Translation.tr("Source: %1").arg(AnimeBrowseService.chosen?.title ?? "")
             color: Appearance.colors.colSubtext
             font.pixelSize: Appearance.font.pixelSize.smaller
         }
         ClockButton {
             visible: AnimeBrowseService.candidates.length > 1
-            label: root.showCandidates ? "Hide" : "Wrong show?"
+            label: root.showCandidates ? Translation.tr("Hide") : Translation.tr("Wrong show?")
             variant: "text"
             onClicked: root.showCandidates = !root.showCandidates
         }
@@ -211,7 +211,7 @@ ColumnLayout {
 
     StyledText {
         visible: AnimeBrowseService.matching || (AnimeBrowseService.chosen !== null && AnimeBrowseService.episodesBusy)
-        text: AnimeBrowseService.matching ? "Finding this anime on the provider…" : "Loading episodes…"
+        text: AnimeBrowseService.matching ? Translation.tr("Finding this anime on the provider…") : Translation.tr("Loading episodes…")
         color: Appearance.colors.colSubtext
     }
 
@@ -219,7 +219,7 @@ ColumnLayout {
         visible: !AnimeBrowseService.matching && AnimeBrowseService.chosen === null
         Layout.fillWidth: true
         wrapMode: Text.Wrap
-        text: "Couldn't find this anime on the provider."
+        text: Translation.tr("Couldn't find this anime on the provider.")
         color: Appearance.colors.colSubtext
     }
 
@@ -279,7 +279,7 @@ ColumnLayout {
                             StyledText {
                                 Layout.fillWidth: true
                                 elide: Text.ElideRight
-                                text: ep.modelData.title || "Episode " + ep.modelData.number
+                                text: ep.modelData.title || Translation.tr("Episode %1").arg(ep.modelData.number)
                                 color: ep.watchState?.watched ? Appearance.colors.colSubtext : Appearance.colors.colOnLayer0
                             }
                             Rectangle {
@@ -291,7 +291,7 @@ ColumnLayout {
                                 StyledText {
                                     id: upText
                                     anchors.centerIn: parent
-                                    text: ep.partial ? "RESUME" : "UP NEXT"
+                                    text: ep.partial ? Translation.tr("RESUME") : Translation.tr("UP NEXT")
                                     color: Appearance.colors.colOnPrimary
                                     font.pixelSize: Appearance.font.pixelSize.smallest
                                     font.weight: Font.Bold
@@ -314,7 +314,7 @@ ColumnLayout {
                     }
                     StyledText {
                         visible: ep.partial
-                        text: "Left at " + root.clock(ep.watchState?.position ?? 0)
+                        text: Translation.tr("Left at %1").arg(root.clock(ep.watchState?.position ?? 0))
                         color: Appearance.colors.colPrimary
                         font.pixelSize: Appearance.font.pixelSize.smaller
                     }
@@ -329,7 +329,7 @@ ColumnLayout {
                         variant: "text"
                         symbol: !ep.dl ? "download" : ep.dl.state === "done" ? "download_done"
                             : ep.dl.state === "error" ? "refresh" : "downloading"
-                        label: ep.dl?.state === "error" ? "Retry download" : ep.dl ? root.dlLabel(ep.dl) : "Download this episode"
+                        label: ep.dl?.state === "error" ? Translation.tr("Retry download") : ep.dl ? root.dlLabel(ep.dl) : Translation.tr("Download this episode")
                         enabled: !ep.dl || ep.dl.state === "error"
                         onClicked: AnimeBrowseService.downloadEpisode(ep.modelData)
                     }

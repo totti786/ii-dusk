@@ -8,6 +8,7 @@ import Quickshell
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.ii.clock.components
+import qs.services
 
 /// Pick any installed app to open the selection with, and optionally make it the default.
 FmDialog {
@@ -22,7 +23,7 @@ FmDialog {
 
     signal chosen(string appId, bool makeDefault)
 
-    title: qsTr("Open “%1” with").arg(root.fileName)
+    title: Translation.tr("Open “%1” with").arg(root.fileName)
     cardWidth: 480
 
     Component.onCompleted: {
@@ -39,7 +40,7 @@ FmDialog {
     FmField {
         id: search
         Layout.fillWidth: true
-        placeholder: qsTr("Search apps")
+        placeholder: Translation.tr("Search apps")
         onEdited: root.filter = text
     }
     ListView {
@@ -84,10 +85,10 @@ FmDialog {
         }
     }
     FmChip {
-        text: qsTr("Always use for this type (%1)").arg(root.mime)
+        text: Translation.tr("Always use for this type (%1)").arg(root.mime)
         checked: root.makeDefault
         onClicked: root.makeDefault = !root.makeDefault
     }
 
-    actions: [FmButton { text: qsTr("Cancel"); onClicked: root.close() }]
+    actions: [FmButton { text: Translation.tr("Cancel"); onClicked: root.close() }]
 }

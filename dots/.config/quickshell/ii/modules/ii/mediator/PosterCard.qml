@@ -33,16 +33,16 @@ Item {
             return String(t.statusText ?? "");
         if (t.lib === "movies" || t.episodes === 0) {
             if (t.next?.reason === "resume")
-                return "Resume";
-            return t.watched >= t.total && t.total > 0 ? "Watched" : "Movie";
+                return Translation.tr("Resume");
+            return t.watched >= t.total && t.total > 0 ? Translation.tr("Watched") : Translation.tr("Movie");
         }
         if (t.watched >= t.total && t.total > 0)
-            return "Watched";
+            return Translation.tr("Watched");
         if (t.next?.reason === "resume")
-            return `Resume ${t.next.code}`;
+            return Translation.tr("Resume %1").arg(t.next.code);
         if (t.watched > 0)
-            return `Next ${t.next?.code ?? ""}`;
-        return `${t.episodes} episode${t.episodes === 1 ? "" : "s"}`;
+            return Translation.tr("Next %1").arg(t.next?.code ?? "");
+        return (t.episodes === 1 ? Translation.tr("%1 episode") : Translation.tr("%1 episodes")).arg(t.episodes);
     }
 
     Rectangle {

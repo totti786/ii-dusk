@@ -55,10 +55,10 @@ Item {
             return "";
         const target = StremioService.resumeTarget(entry);
         if (!target)
-            return "Watched";
+            return Translation.tr("Watched");
         const tag = entry.watched ? (target.number ?? "") : (entry.episode_number ?? "");
         const at = !entry.watched && entry.position > 5 ? " · " + root.clock(entry.position) : "";
-        return "Resume" + (tag ? " " + tag : "") + at;
+        return (tag ? Translation.tr("Resume %1").arg(tag) : Translation.tr("Resume")) + at;
     }
 
     readonly property var entry: root.title ? StremioService.historyFor(root.title) : null
@@ -68,9 +68,9 @@ Item {
         if (!d)
             return "";
         if (d.progress >= 1)
-            return "Downloaded";
-        return d.state.startsWith("paused") || d.state.startsWith("stopped") ? "Paused " + Math.round(d.progress * 100) + "%"
-            : "Downloading " + Math.round(d.progress * 100) + "%";
+            return Translation.tr("Downloaded");
+        return d.state.startsWith("paused") || d.state.startsWith("stopped") ? Translation.tr("Paused %1%").arg(Math.round(d.progress * 100))
+            : Translation.tr("Downloading %1%").arg(Math.round(d.progress * 100));
     }
 
     Component.onCompleted: {
@@ -415,7 +415,7 @@ Item {
                 background: f?.background ?? ""
                 description: f?.description ?? ""
                 rating: f?.rating ?? ""
-                facts: [f?.type === "series" ? "Series" : "Movie", f?.year, f?.runtime]
+                facts: [f?.type === "series" ? Translation.tr("Series") : Translation.tr("Movie"), f?.year, f?.runtime]
                     .concat((f?.genres ?? []).slice(0, 3))
                 dots: root.featured.length
                 dotIndex: root.featuredIndex
@@ -424,7 +424,7 @@ Item {
 
                 ClockButton {
                     symbol: "play_arrow"
-                    label: "Open"
+                    label: Translation.tr("Open")
                     variant: "filled"
                     onClicked: StremioService.openTitle(billboard.f)
                 }
@@ -433,7 +433,7 @@ Item {
                         ? MediatorService.ownedFor([billboard.f.name], billboard.f.year) : null
                     visible: local !== null
                     symbol: "video_library"
-                    label: "In your library"
+                    label: Translation.tr("In your library")
                     variant: "tonal"
                     onClicked: root.localRequested(local.id)
                 }
@@ -470,7 +470,7 @@ Item {
                 spacing: 6
 
                 Repeater {
-                    model: [{ "v": "popular", "t": "Popular" }, { "v": "top", "t": "Top rated" }, { "v": "year", "t": "By year" }]
+                    model: [{ "v": "popular", "t": Translation.tr("Popular") }, { "v": "top", "t": Translation.tr("Top rated") }, { "v": "year", "t": Translation.tr("By year") }]
                     FilterChip {
                         required property var modelData
                         label: modelData.t
@@ -506,7 +506,7 @@ Item {
 
                         FilterChip {
                             visible: StremioService.sort !== "year"
-                            label: "All"
+                            label: Translation.tr("All")
                             selected: StremioService.genre === ""
                             onClicked: StremioService.browse(StremioService.kind, StremioService.sort, "")
                         }
@@ -552,7 +552,7 @@ Item {
                         poster: modelData.poster
                         name: modelData.name
                         rating: modelData.rating
-                        subtitle: [modelData.type === "series" ? "Series" : "Movie", modelData.year]
+                        subtitle: [modelData.type === "series" ? Translation.tr("Series") : Translation.tr("Movie"), modelData.year]
                             .filter(x => x).join(" · ")
                         onActivated: StremioService.openTitle(modelData)
                     }
@@ -564,7 +564,7 @@ Item {
                     && StremioService.moreAvailable && !StremioService.searching
                 Layout.alignment: Qt.AlignHCenter
                 symbol: StremioService.loadingMore ? "hourglass_top" : "expand_more"
-                label: StremioService.loadingMore ? "Loading…" : "Load more"
+                label: StremioService.loadingMore ? Translation.tr("Loading…") : Translation.tr("Load more")
                 variant: "tonal"
                 enabled: !StremioService.loadingMore
                 onClicked: StremioService.more()
@@ -581,7 +581,7 @@ Item {
                 background: root.title?.background ?? ""
                 description: root.title?.description ?? ""
                 rating: root.title?.rating ?? ""
-                facts: [root.title?.type === "series" ? "Series" : "Movie", root.title?.year, root.title?.runtime]
+                facts: [root.title?.type === "series" ? Translation.tr("Series") : Translation.tr("Movie"), root.title?.year, root.title?.runtime]
                     .concat((root.title?.genres ?? []).slice(0, 4))
                 onBackRequested: StremioService.back()
 
@@ -590,7 +590,7 @@ Item {
                         ? MediatorService.ownedFor([root.title?.name], root.title?.year) : null
                     visible: local !== null
                     symbol: "video_library"
-                    label: "In your library"
+                    label: Translation.tr("In your library")
                     variant: "tonal"
                     onClicked: root.localRequested(local.id)
                 }
@@ -606,7 +606,7 @@ Item {
                     visible: root.view === "title" && root.title?.type !== "series"
                         && !(root.entry !== null && StremioService.resumeTarget(root.entry) !== null)
                     symbol: "play_arrow"
-                    label: "Play"
+                    label: Translation.tr("Play")
                     variant: "filled"
                     enabled: !StremioService.starting
                     onClicked: StremioService.playEpisode(String(root.title.id))
@@ -615,7 +615,7 @@ Item {
                     visible: root.view === "title" && root.title?.type === "series" && root.episodes.length > 0
                         && !(root.entry !== null && StremioService.resumeTarget(root.entry) !== null)
                     symbol: "play_arrow"
-                    label: "Play S" + (root.title?.videos?.find(v => v.season > 0)?.season ?? 1) + "E1"
+                    label: Translation.tr("Play S%1E1").arg(root.title?.videos?.find(v => v.season > 0)?.season ?? 1)
                     variant: "filled"
                     enabled: !StremioService.starting
                     onClicked: StremioService.playEpisode((root.title.videos.find(v => v.season > 0) ?? root.episodes[0]).id)
@@ -623,21 +623,21 @@ Item {
                 ClockButton {
                     visible: root.view === "title" && root.title?.type !== "series"
                     symbol: "list"
-                    label: "Choose stream"
+                    label: Translation.tr("Choose stream")
                     variant: "tonal"
                     onClicked: StremioService.loadStreams(root.title.id, root.title.name)
                 }
                 ClockButton {
                     visible: root.view === "title" && root.title?.type === "series" && root.episodes.length > 0
                     symbol: "download"
-                    label: "Download season " + root.season
+                    label: Translation.tr("Download season %1").arg(root.season)
                     variant: "tonal"
                     onClicked: StremioService.downloadSeason(root.season)
                 }
                 ClockButton {
                     visible: root.view === "title" && root.title?.type !== "series"
                     symbol: root.movieDownload ? (root.movieDownload.progress >= 1 ? "download_done" : "downloading") : "download"
-                    label: root.movieDownload ? root.dlLabel(root.movieDownload) : "Download"
+                    label: root.movieDownload ? root.dlLabel(root.movieDownload) : Translation.tr("Download")
                     variant: "tonal"
                     enabled: !root.movieDownload
                     onClicked: StremioService.downloadBest(String(root.title.id))
@@ -645,7 +645,7 @@ Item {
                 ClockButton {
                     visible: root.view === "title" && (root.title?.trailer ?? "") !== ""
                     symbol: "smart_display"
-                    label: "Trailer"
+                    label: Translation.tr("Trailer")
                     variant: "tonal"
                     onClicked: Qt.openUrlExternally("https://www.youtube.com/watch?v=" + root.title.trailer)
                 }
@@ -657,12 +657,12 @@ Item {
                 Layout.fillWidth: true
                 Layout.topMargin: 4
                 rows: [
-                    { "k": "Director", "v": (root.title?.director ?? []).join(", ") },
-                    { "k": "Writer", "v": (root.title?.writer ?? []).join(", ") },
-                    { "k": "Released", "v": root.title?.released ?? "" },
-                    { "k": "Country", "v": root.title?.country ?? "" },
-                    { "k": "Status", "v": root.title?.status ?? "" },
-                    { "k": "Awards", "v": root.title?.awards ?? "" }
+                    { "k": Translation.tr("Director"), "v": (root.title?.director ?? []).join(", ") },
+                    { "k": Translation.tr("Writer"), "v": (root.title?.writer ?? []).join(", ") },
+                    { "k": Translation.tr("Released"), "v": root.title?.released ?? "" },
+                    { "k": Translation.tr("Country"), "v": root.title?.country ?? "" },
+                    { "k": Translation.tr("Status"), "v": root.title?.status ?? "" },
+                    { "k": Translation.tr("Awards"), "v": root.title?.awards ?? "" }
                 ]
             }
 
@@ -683,7 +683,7 @@ Item {
 
                     FilterChip {
                         required property int modelData
-                        label: "Season " + modelData
+                        label: Translation.tr("Season %1").arg(modelData)
                         selected: root.season === modelData
                         onClicked: root.season = modelData
                     }
@@ -696,8 +696,8 @@ Item {
                 text: {
                     const total = root.episodes.length;
                     const seen = root.episodes.filter(e => StremioService.episodeState(root.title, e.id)?.watched).length;
-                    return `Season ${root.season} · ${total} episodes` + (seen > 0 ? ` · ${seen} watched` : "")
-                        + "   ↑↓ choose · Enter play · Ctrl+Enter pick stream";
+                    return Translation.tr("Season %1 · %2 episodes").arg(root.season).arg(total) + (seen > 0 ? " · " + Translation.tr("%1 watched").arg(seen) : "")
+                        + "   " + Translation.tr("↑↓ choose · Enter play · Ctrl+Enter pick stream");
                 }
                 color: Appearance.colors.colSubtext
                 font.pixelSize: Appearance.font.pixelSize.smaller
@@ -785,7 +785,7 @@ Item {
                                     StyledText {
                                         id: upText
                                         anchors.centerIn: parent
-                                        text: ep.partial ? "RESUME" : "UP NEXT"
+                                        text: ep.partial ? Translation.tr("RESUME") : Translation.tr("UP NEXT")
                                         color: Appearance.colors.colOnPrimary
                                         font.pixelSize: Appearance.font.pixelSize.smallest
                                         font.weight: Font.Bold
@@ -822,13 +822,13 @@ Item {
                                     StyledText {
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
-                                        text: `${ep.modelData.episode}. ` + (ep.modelData.title || "Episode " + ep.modelData.episode)
+                                        text: `${ep.modelData.episode}. ` + (ep.modelData.title || Translation.tr("Episode %1").arg(ep.modelData.episode))
                                         color: Appearance.colors.colOnLayer0
                                         font.weight: Font.Medium
                                     }
                                     StyledText {
                                         visible: ep.partial
-                                        text: "Left at " + root.clock(ep.watchState?.position ?? 0)
+                                        text: Translation.tr("Left at %1").arg(root.clock(ep.watchState?.position ?? 0))
                                         color: Appearance.colors.colPrimary
                                         font.pixelSize: Appearance.font.pixelSize.smaller
                                     }
@@ -839,7 +839,7 @@ Item {
                                         font.pixelSize: Appearance.font.pixelSize.smaller
                                     }
                                     StyledText {
-                                        text: ep.unreleased ? "Airs " + ep.modelData.released : ep.modelData.released
+                                        text: ep.unreleased ? Translation.tr("Airs %1").arg(ep.modelData.released) : ep.modelData.released
                                         color: Appearance.colors.colSubtext
                                         font.pixelSize: Appearance.font.pixelSize.smaller
                                     }
@@ -860,7 +860,7 @@ Item {
                                 iconOnly: true
                                 variant: "text"
                                 symbol: "list"
-                                label: "Choose a stream"
+                                label: Translation.tr("Choose a stream")
                                 onClicked: StremioService.loadStreams(ep.modelData.id,
                                     "S" + ep.modelData.season + "E" + ep.modelData.episode)
                             }
@@ -868,7 +868,7 @@ Item {
                                 iconOnly: true
                                 variant: "text"
                                 symbol: ep.dl ? (ep.dl.progress >= 1 ? "download_done" : "downloading") : "download"
-                                label: ep.dl ? root.dlLabel(ep.dl) : "Download this episode"
+                                label: ep.dl ? root.dlLabel(ep.dl) : Translation.tr("Download this episode")
                                 enabled: !ep.dl
                                 onClicked: StremioService.downloadBest(String(ep.modelData.id))
                             }
@@ -895,21 +895,21 @@ Item {
                     iconOnly: true
                     variant: "tonal"
                     symbol: "arrow_back"
-                    label: "Back (Esc)"
+                    label: Translation.tr("Back (Esc)")
                     onClicked: StremioService.back()
                 }
                 StyledText {
                     Layout.fillWidth: true
                     elide: Text.ElideRight
-                    text: StremioService.busy ? "Looking for streams for " + StremioService.pickedLabel + "…"
-                        : "Streams for " + StremioService.pickedLabel
+                    text: StremioService.busy ? Translation.tr("Looking for streams for %1…").arg(StremioService.pickedLabel)
+                        : Translation.tr("Streams for %1").arg(StremioService.pickedLabel)
                     color: Appearance.colors.colOnLayer0
                     font.pixelSize: Appearance.font.pixelSize.larger
                     font.weight: Font.Medium
                 }
                 FilterChip {
                     visible: StremioService.qualityOptions.length > 1
-                    label: "All"
+                    label: Translation.tr("All")
                     selected: StremioService.streamFilter === "all"
                     onClicked: StremioService.streamFilter = "all"
                 }
@@ -949,7 +949,7 @@ Item {
             StyledText {
                 visible: root.view === "streams" && !StremioService.busy && StremioService.streamRows.length === 0
                 Layout.fillWidth: true
-                text: "No streams found for " + StremioService.pickedLabel + ". Try another quality, or check the sources in Settings."
+                text: Translation.tr("No streams found for %1. Try another quality, or check the sources in Settings.").arg(StremioService.pickedLabel)
                 color: Appearance.colors.colSubtext
                 wrapMode: Text.Wrap
             }
@@ -968,14 +968,14 @@ Item {
                 }
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
-                    text: StremioService.searching ? "Nothing found for that search" : "Couldn't load the catalog"
+                    text: StremioService.searching ? Translation.tr("Nothing found for that search") : Translation.tr("Couldn't load the catalog")
                     color: Appearance.colors.colOnLayer0
                     font.pixelSize: Appearance.font.pixelSize.larger
                 }
                 ClockButton {
                     Layout.alignment: Qt.AlignHCenter
                     symbol: "refresh"
-                    label: StremioService.searching ? "Back to browsing" : "Try again"
+                    label: StremioService.searching ? Translation.tr("Back to browsing") : Translation.tr("Try again")
                     variant: "tonal"
                     onClicked: StremioService.top(StremioService.kind)
                 }
@@ -986,7 +986,7 @@ Item {
                 visible: root.view === "title" && items.length > 0
                 Layout.fillWidth: true
                 Layout.topMargin: 8
-                heading: root.title?.type === "series" ? "More series like this" : "More movies like this"
+                heading: root.title?.type === "series" ? Translation.tr("More series like this") : Translation.tr("More movies like this")
                 items: StremioService.similar
                 cursor: root.shelfRow === 0 ? root.shelfCursor : -1
                 onActivated: item => StremioService.openTitle(item)
@@ -996,7 +996,7 @@ Item {
                 id: shelf2
                 visible: root.view === "title" && items.length > 0
                 Layout.fillWidth: true
-                heading: `Top rated ${String((root.title?.genres ?? [])[0] ?? "").toLowerCase()} ${root.title?.type === "series" ? "series" : "movies"}`
+                heading: Translation.tr("Top rated %1 %2").arg(String((root.title?.genres ?? [])[0] ?? "").toLowerCase()).arg(root.title?.type === "series" ? Translation.tr("series") : Translation.tr("movies"))
                 items: StremioService.topRated
                 cursor: root.shelfRow === 1 ? root.shelfCursor : -1
                 onActivated: item => StremioService.openTitle(item)

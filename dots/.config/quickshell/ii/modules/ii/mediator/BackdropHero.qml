@@ -154,7 +154,7 @@ Item {
             }
             StyledText {
                 anchors.verticalCenter: parent.verticalCenter
-                text: "Back"
+                text: Translation.tr("Back")
                 color: Appearance.colors.colOnLayer0
                 font.pixelSize: Appearance.font.pixelSize.small
             }

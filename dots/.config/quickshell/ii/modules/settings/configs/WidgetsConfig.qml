@@ -1213,7 +1213,7 @@ Item {
                             }
 
                             StyledToolTip {
-                                text: modelData.tooltip
+                                text: Translation.tr(modelData.tooltip)
                                 visible: lockBtnMouse.containsMouse
                             }
                         }

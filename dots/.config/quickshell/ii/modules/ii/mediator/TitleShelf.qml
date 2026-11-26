@@ -11,7 +11,7 @@ import qs.modules.common.widgets
 ColumnLayout {
     id: root
 
-    property string heading: "More like this"
+    property string heading: Translation.tr("More like this")
     property var items: []
     property int cursor: -1
 

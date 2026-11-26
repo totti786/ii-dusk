@@ -48,16 +48,16 @@ ColumnLayout {
 
     function tag(state): string {
         const n = String(state?.episode_number ?? "");
-        return n === "" ? "" : (/^S\d+E\d+$/.test(n) ? n : "Ep " + n);
+        return n === "" ? "" : (/^S\d+E\d+$/.test(n) ? n : Translation.tr("Ep %1").arg(n));
     }
 
     function subtitle(state): string {
         if (state.watched) {
             const next = root.nextOf(state);
-            return next ? "Next " + root.tag({ "episode_number": next.number }) : "Finished";
+            return next ? Translation.tr("Next %1").arg(root.tag({ "episode_number": next.number })) : Translation.tr("Finished");
         }
         const at = Number(state.position) > 5 ? " · " + root.clock(state.position) : "";
-        return (root.tag(state) !== "" ? "Resume " + root.tag(state) : "Resume") + at;
+        return (root.tag(state) !== "" ? Translation.tr("Resume %1").arg(root.tag(state)) : Translation.tr("Resume")) + at;
     }
 
     function isLive(state): bool {
@@ -78,16 +78,16 @@ ColumnLayout {
 
     function chipText(e): string {
         if (root.isLive(e))
-            return MediatorService.nativeLoading ? "Opening" : MediatorService.nativePaused ? "Paused" : "Playing";
+            return MediatorService.nativeLoading ? Translation.tr("Opening") : MediatorService.nativePaused ? Translation.tr("Paused") : Translation.tr("Playing");
         if (e.watched)
-            return root.nextOf(e) ? "Up next" : "Finished";
-        return root.tag(e) || (String(e.show_id).includes(":movie:") ? "Movie" : "Episode");
+            return root.nextOf(e) ? Translation.tr("Up next") : Translation.tr("Finished");
+        return root.tag(e) || (String(e.show_id).includes(":movie:") ? Translation.tr("Movie") : Translation.tr("Episode"));
     }
 
     function lineOf(e): string {
         if (e.watched) {
             const next = root.nextOf(e);
-            return next ? root.tag({ "episode_number": next.number }) + (next.title ? " · " + next.title : "") : "You're all caught up";
+            return next ? root.tag({ "episode_number": next.number }) + (next.title ? " · " + next.title : "") : Translation.tr("You're all caught up");
         }
         const t = String(e.episode_title ?? "");
         return root.tag(e) !== "" ? root.tag(e) + (t !== "" ? " · " + t : "") : t;
@@ -95,12 +95,12 @@ ColumnLayout {
 
     function actionLabel(e): string {
         if (root.isLive(e))
-            return MediatorService.nativePaused ? "Resume" : "Pause";
+            return MediatorService.nativePaused ? Translation.tr("Resume") : Translation.tr("Pause");
         if (root.isFinished(e))
-            return "Clear";
+            return Translation.tr("Clear");
         if (e.watched)
-            return "Play " + root.tag({ "episode_number": root.nextOf(e).number });
-        return Number(e.position) > 5 ? "Resume " + root.clock(e.position) : "Play";
+            return Translation.tr("Play %1").arg(root.tag({ "episode_number": root.nextOf(e).number }));
+        return Number(e.position) > 5 ? Translation.tr("Resume %1").arg(root.clock(e.position)) : Translation.tr("Play");
     }
 
     onEntriesChanged: MediatorService.warmImages(root.entries.map(e => e.poster))
@@ -158,14 +158,14 @@ ColumnLayout {
         if (e?.watched || !(Number(e?.duration) > 0))
             return "";
         const m = Math.max(1, Math.round((Number(e.duration) - Number(e.position)) / 60));
-        return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m left` : `${m} min left`;
+        return m >= 60 ? Translation.tr("%1h %2m left").arg(Math.floor(m / 60)).arg(m % 60) : Translation.tr("%1 min left").arg(m);
     }
 
     RowLayout {
         Layout.fillWidth: true
         spacing: 10
         StyledText {
-            text: "Continue watching"
+            text: Translation.tr("Continue watching")
             color: Appearance.colors.colOnLayer0
             font.pixelSize: Appearance.font.pixelSize.larger
             font.weight: Font.DemiBold
@@ -203,7 +203,7 @@ ColumnLayout {
                 }
                 StyledText {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: `Clear ${root.finishedIds.length} finished`
+                    text: Translation.tr("Clear %1 finished").arg(root.finishedIds.length)
                     color: Appearance.colors.colSubtext
                     font.pixelSize: Appearance.font.pixelSize.smaller
                 }
@@ -324,7 +324,7 @@ ColumnLayout {
                     }
                     StyledToolTip {
                         extraVisibleCondition: xArea.containsMouse
-                        text: "Remove from Continue watching"
+                        text: Translation.tr("Remove from Continue watching")
                     }
                 }
             }

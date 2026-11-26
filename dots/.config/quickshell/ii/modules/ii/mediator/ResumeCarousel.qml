@@ -48,6 +48,13 @@ Item {
         root.lastCurrent = root.current;
     }
 
+    // A list that changes length breaks the running total above (it counts modulo the old
+    // length), which left the caption naming one title and another in the middle.
+    onCountChanged: {
+        root.target = root.current;
+        root.lastCurrent = root.current;
+    }
+
     // The animated position the cards are laid out against
     property real pos: root.target
     Behavior on pos {
@@ -187,10 +194,10 @@ Item {
                 const src = root.chosen.source === "jellyfin" ? "Jellyfin · " : "";
                 const code = src + (n.code ? n.code + " · " : "");
                 if (n.reason === "resume")
-                    return code + "Resume at " + MediatorService.clock(n.position);
+                    return code + Translation.tr("Resume at %1").arg(MediatorService.clock(n.position));
                 if (n.reason === "next")
-                    return code + "Up next";
-                return code + "Play";
+                    return code + Translation.tr("Up next");
+                return code + Translation.tr("Play");
             }
         }
     }
