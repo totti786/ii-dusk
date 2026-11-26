@@ -274,8 +274,10 @@ Singleton {
     property bool criticalArmed: true
     property bool chargedArmed: true
 
-    function notify(title, body, urgency, extraHints) {
-        const args = ["notify-send", title, body, "-a", "Shell",
+    // `icon` is a Material Symbol name. Without it the popup guesses one from English words in the
+    // title, so a translated title falls back to the chat bubble.
+    function notify(title, body, icon, urgency, extraHints) {
+        const args = ["notify-send", title, body, "-a", "Shell", "-i", icon,
             "--hint=int:transient:1", "--hint=boolean:suppress-sound:true"];
         if (urgency) args.push("-u", urgency);
         for (let i = 0; i < (extraHints?.length ?? 0); ++i) args.push(extraHints[i]);
@@ -322,7 +324,7 @@ Singleton {
 
     function warnLow() {
         root.notify(Translation.tr("Low battery"), Translation.tr("Consider plugging in your device"),
-            "critical");
+            "battery_alert", "critical");
         SoundService.playEvent("battery", ["battery-low", "dialog-warning"]);
     }
 
@@ -330,7 +332,7 @@ Singleton {
         const body = opts.automaticSuspend
             ? Translation.tr("Please charge!\nAutomatic suspend triggers at %1%").arg(opts.suspend)
             : Translation.tr("Please charge!");
-        root.notify(Translation.tr("Critically low battery"), body, "critical");
+        root.notify(Translation.tr("Critically low battery"), body, "battery_alert", "critical");
         SoundService.playEvent("battery", ["battery-caution", "suspend-error", "dialog-error"]);
     }
 
@@ -343,24 +345,24 @@ Singleton {
         if (root.chargeLimitIsHeld()) {
             root.chargedArmed = false;
             root.announceCharged(Translation.tr("Charged to %1%").arg(root.chargeLimit),
-                Translation.tr("The charge limit is holding it here — the charger can stay in."));
+                Translation.tr("The charge limit is holding it here — the charger can stay in."), "battery_charging_full");
             return;
         }
         if (root.isFullyCharged || level >= 100) {
             root.chargedArmed = false;
             root.announceCharged(Translation.tr("Battery full"),
-                Translation.tr("You can unplug the charger."));
+                Translation.tr("You can unplug the charger."), "battery_full");
             return;
         }
         if (opts.full <= 100 && level >= opts.full) {
             root.chargedArmed = false;
             root.announceCharged(Translation.tr("Battery at %1%").arg(level),
-                Translation.tr("Consider unplugging the charger."));
+                Translation.tr("Consider unplugging the charger."), "battery_charging_full");
         }
     }
 
-    function announceCharged(title, body) {
-        root.notify(title, body);
+    function announceCharged(title, body, icon) {
+        root.notify(title, body, icon);
         SoundService.playEvent("battery", ["battery-full", "complete", "dialog-information"]);
     }
 
@@ -411,7 +413,7 @@ Singleton {
         suspendCountdownTimer.restart();
         root.notify(Translation.tr("Battery critically low"),
             Translation.tr("Suspending in %1 s. Plug in to cancel.").arg(root.suspendWarningSeconds),
-            "critical", ["-t", String(root.suspendWarningSeconds * 1000),
+            "battery_alert", "critical", ["-t", String(root.suspendWarningSeconds * 1000),
                 "--hint=string:x-qs-notif:battery-suspend-warn"]);
         SoundService.playEvent("battery", ["battery-caution", "dialog-warning"]);
     }
