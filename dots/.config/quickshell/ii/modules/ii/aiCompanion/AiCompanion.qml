@@ -321,15 +321,39 @@ Scope {
                 StyledToolTip { text: Translation.tr("Allow") }
             }
         }
+        // One clock for everything that moves here. This window covers the screen, so every
+        // frame it commits is composited across all of it: separate timers made the orb,
+        // the kitten and the small orbs each commit their own.
+        Timer {
+            id: frames
+            readonly property var wanted: [core.frameInterval, kitten.frameInterval, satelliteLayer.frameInterval].filter(ms => ms > 0)
+            property double last: 0
+            interval: wanted.length > 0 ? Math.min(...wanted) : 83
+            repeat: true
+            running: overlay.visible && wanted.length > 0
+            onRunningChanged: last = Date.now()
+            onTriggered: {
+                const now = Date.now();
+                const seconds = Math.min(.25, (now - last) / 1000);
+                last = now;
+                core.tick(seconds);
+                kitten.tick(seconds);
+                satelliteLayer.tick(seconds);
+            }
+        }
         // Small orbs: a fixed pool of slots, so each has a stable input region.
         Item {
             id: satelliteLayer
             anchors.fill: parent
             property real clock: 0
-            Timer {
-                interval: 50; repeat: true
-                running: root.satellitesShown && root.satellites.ids.length > 0 && !root.ui.reducedMotion
-                onTriggered: satelliteLayer.clock += .05
+            readonly property int frameInterval: root.satellitesShown && root.satellites.ids.length > 0 && !root.ui.reducedMotion ? 83 : 0
+            property real unpainted: 0
+            function tick(seconds) {
+                if (frameInterval === 0) return;
+                unpainted += seconds;
+                if (unpainted * 1000 < frameInterval - 8) return;
+                clock += unpainted;
+                unpainted = 0;
             }
             component Slot: CompanionSatellite {
                 id: slot
@@ -358,7 +382,8 @@ Scope {
         CompanionKitten {
             id: kitten
             readonly property bool shown: Config.options.ai.voice.kitten !== false && !root.ui.docked && !root.ui.dragging && !dockFade.running
-            visible: shown
+            // Hidden with the window (locked, or picking a screen region), not just unseen.
+            visible: shown && overlay.visible
             side: root.centerX > root.bounds.width - 140 ? -1 : 1
             hidden: root.ui.approvalNeeded
             // Steps clear of the buttons while they are fanned out.
@@ -428,6 +453,7 @@ Scope {
                     return {x: dx / len * k, y: dy / len * k};
                 }
                 ambientMotion: overlay.visible && !root.ui.docked
+                driven: true
                 opacity: kitten.orbHidden ? 0 : 1
                 scale: kitten.orbHidden ? .12 : 1
                 Behavior on opacity { enabled: !root.ui.reducedMotion; NumberAnimation { duration: 260 } }

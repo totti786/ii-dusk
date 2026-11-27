@@ -91,10 +91,18 @@ Item {
         root.gazeY = dy / len * k;
     }
 
+    // `visible` says nothing about the window: a hidden or locked-away one still counts.
     readonly property bool watching: root.live && root.visible && root.still
-    onWatchingChanged: watching ? CursorGaze.watch() : CursorGaze.unwatch()
-    Component.onCompleted: if (watching) CursorGaze.watch()
-    Component.onDestruction: if (watching) CursorGaze.unwatch()
+        && (root.QsWindow.window?.visible ?? true)
+    property bool counted: false
+    function syncWatch() {
+        if (root.counted === root.watching) return;
+        root.counted = root.watching;
+        if (root.counted) CursorGaze.watch(); else CursorGaze.unwatch();
+    }
+    onWatchingChanged: root.syncWatch()
+    Component.onCompleted: root.syncWatch()
+    Component.onDestruction: if (root.counted) CursorGaze.unwatch()
 
     Connections {
         target: CursorGaze

@@ -543,6 +543,7 @@ Singleton {
         // The idle dim scrim's 50% black sits above every ignore_alpha, so the
         // quickshell.* rule above would blur the screen behind it (with xray: down
         // to the bare wallpaper) instead of just darkening it.
+        script += "hl.layer_rule({ name = 'ii:appearance:ai-companion', match = { namespace = '^quickshell:aiCompanion$' }, blur = false, blur_popups = false }) ";
         script += "hl.layer_rule({ name = 'ii:appearance:idle-dim', match = { namespace = '^quickshell:idleDim$' }, blur = false }) ";
         // See backgroundWidgetsRules. Re-declared on every change; rules.lua keeps them off
         // until the shell has pushed these.

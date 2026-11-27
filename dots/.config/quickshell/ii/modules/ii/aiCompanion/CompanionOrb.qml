@@ -50,6 +50,15 @@ Item {
     readonly property color highlight: Appearance.colors.colTertiary
     readonly property bool animated: !!(visible && !AiCompanionUi.reducedMotion
         && !AiCompanionUi.dragging && (root.ambientMotion || AiCompanionUi.voice.active || root.hovered))
+    /** Set by a window that moves several things from one clock; it then calls `tick`. */
+    property bool driven: false
+    /** Milliseconds between frames it wants, 0 when it is still. */
+    readonly property int frameInterval: !root.animated ? 0 : AiCompanionUi.voice.active || root.hovered ? 16 : 83
+    function tick(seconds) {
+        if (!root.animated) return;
+        root.phaseClock += Math.min(.1, seconds);
+        field.requestPaint();
+    }
     implicitWidth: 56
     implicitHeight: 56
     scale: AiCompanionUi.controlPressed && !AiCompanionUi.dragging ? .96 : 1
@@ -61,15 +70,14 @@ Item {
     onHighlightChanged: field.requestPaint()
     Timer {
         property double lastFrame: 0
-        interval: AiCompanionUi.voice.active || root.hovered ? 16 : 50
+        interval: Math.max(16, root.frameInterval)
         repeat: true
-        running: root.animated
+        running: root.animated && !root.driven
         onRunningChanged: lastFrame = Date.now()
         onTriggered: {
             const now = Date.now();
-            root.phaseClock += Math.min(.08, (now-lastFrame)/1000);
+            root.tick((now-lastFrame)/1000);
             lastFrame = now;
-            field.requestPaint();
         }
     }
     Canvas {

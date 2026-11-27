@@ -1027,8 +1027,17 @@ Item {
         target: CursorGaze
         function onMovesChanged() { if (root.deepSleep && root.sleeping) root.wakeUp(); }
     }
-    Component.onCompleted: CursorGaze.watch()
-    Component.onDestruction: { CursorGaze.unwatch(); if (root.laserOn) CursorGaze.unwatch(); }
+    // The pointer matters only while the kitten is out (for its eyes, and for dozing off).
+    readonly property bool watching: root.visible && !root.hidden && !root.reduced
+    property bool counted: false
+    function syncWatch() {
+        if (root.counted === root.watching) return;
+        root.counted = root.watching;
+        if (root.counted) CursorGaze.watch(); else CursorGaze.unwatch();
+    }
+    onWatchingChanged: root.syncWatch()
+    Component.onCompleted: root.syncWatch()
+    Component.onDestruction: { if (root.counted) CursorGaze.unwatch(); if (root.laserOn) CursorGaze.unwatch(); }
     // Other parts of the shell ask for a trick by name (the voice orb: "good kitty").
     Connections {
         target: AiCompanionUi
@@ -1346,10 +1355,20 @@ Item {
             ctx.globalAlpha = 1;
         }
     }
-    Timer {
-        interval: 50; repeat: true
-        running: root.visible && !root.hidden && !root.reduced
-        onTriggered: root.time += .05
+    /** Milliseconds between frames it wants, 0 when nothing moves. Quick only for quick
+     *  things: a purr or a spin; the breath and the tail's sway need very few. */
+    readonly property int frameInterval: !root.visible || root.hidden || root.reduced ? 0
+        : root.purr > .05 || root.chasing || root.flyOn || root.zooming ? 33
+        : root.musicOn || root.carry !== "" || root.walking ? 50
+        : root.sleeping ? 166 : 83
+    property real unpainted: 0
+    /** Called by the window's clock, which may run faster than the kitten needs. */
+    function tick(seconds) {
+        if (root.frameInterval === 0) return;
+        root.unpainted += Math.min(.25, seconds);
+        if (root.unpainted * 1000 < root.frameInterval - 8) return;
+        root.time += root.unpainted;
+        root.unpainted = 0;
     }
 
     AiCreature {
