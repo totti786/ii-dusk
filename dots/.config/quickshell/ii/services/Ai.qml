@@ -2836,7 +2836,8 @@ Singleton {
     // ── Telling someone it finished ───────────────────────────────────────
     /** Whether a chat surface is on screen, wherever it is. */
     readonly property bool chatOnScreen: GlobalStates.sidebarLeftOpen || GlobalStates.overviewOpen
-        || (Persistent.states.aiCompanion.visible && Persistent.states.aiCompanion.expanded && !GlobalStates.screenLocked)
+        || (Config.options.ai.voice.orbEnabled !== false && Persistent.states.aiCompanion.visible
+            && Persistent.states.aiCompanion.expanded && !GlobalStates.screenLocked)
 
     /**
      * A desktop notification when an answer lands.

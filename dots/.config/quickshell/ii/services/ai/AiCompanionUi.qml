@@ -16,6 +16,15 @@ Singleton {
     id: root
     readonly property var saved: Persistent.states.aiCompanion
     readonly property var voice: Ai.companionVoice
+    // The Settings switch. Hiding the orb is separate (`saved.visible`), so switching it back on
+    // restores whatever was there before.
+    readonly property bool orbEnabled: Config.options.ai.voice.orbEnabled !== false
+    onOrbEnabledChanged: {
+        if (root.orbEnabled) return;
+        root.dragging = false;
+        root.controlPressed = false;
+        root.fileHover = false;
+    }
     readonly property bool reducedMotion: Appearance.reducedMotion || Config.options.sidebar.ai.reducedMotion
     readonly property string phase: voice.state === "idle" && Ai.speechService.speaking ? Ai.speechService.phase : voice.state
     readonly property real level: Ai.speechService.speaking ? Ai.speechService.level : voice.level
@@ -143,7 +152,7 @@ Singleton {
     /** Ask the kitten to do something by name (sleep, toy, trick, pet, laser...). */
     signal kittenRequest(string name)
     function kittenPlay(name): bool {
-        if (!root.saved.visible || root.docked) return false;
+        if (!root.orbEnabled || !root.saved.visible || root.docked) return false;
         root.kittenRequest(String(name));
         return true;
     }
@@ -192,12 +201,17 @@ Singleton {
         root.dockTarget = {monitor: monitor, x: x, y: y, width: width, height: height};
     }
     function show(): void {
+        if (!root.orbEnabled) return;
         root.saved.visible = true;
         if (!root.saved.monitor) root.saved.monitor = Hyprland.focusedMonitor?.name ?? Quickshell.screens[0]?.name ?? "";
         Ai.voiceService.ensureDetected();
     }
     function hide(): void { root.voice.stop(); root.dragging = false; root.controlPressed = false; root.saved.visible = false; }
-    function toggle(): void { root.show(); root.voice.toggle(); }
+    function toggle(): void {
+        if (!root.orbEnabled) return;
+        root.show();
+        root.voice.toggle();
+    }
     readonly property bool canAttachScreen: Config.options.ai.voice.screen === true && Ai.enabled
         && Ai.currentModelSupportsVision && !Ai.isGenerating && !GlobalStates.screenLocked
     function attachScreen(): void {
@@ -207,7 +221,7 @@ Singleton {
     }
     function transcript(): void { Ai.surfaceRouter.open({surface: "sidebar", focusIntent: "composer"}); }
     function dock(): bool {
-        if (!root.canDock) return false;
+        if (!root.orbEnabled || !root.canDock) return false;
         root.docking();
         root.saved.docked = true;
         root.saved.visible = true;
@@ -230,7 +244,7 @@ Singleton {
      * Coordinates are the screen's own.
      */
     function summon(screen, x, y): bool {
-        if (!screen || !root.saved.visible || root.dragging) return false;
+        if (!root.orbEnabled || !screen || !root.saved.visible || root.dragging) return false;
         const b = root.screenBounds(screen);
         if (root.docked) {
             const target = root.dockTarget;
@@ -243,6 +257,7 @@ Singleton {
         return true;
     }
     function undock(): void {
+        if (!root.orbEnabled) return;
         const target = root.dockTarget;
         if (target) root.place(target.x + target.width/2, target.y + target.height + 100, root.screenAt(target.x, target.y));
         root.saved.docked = false;

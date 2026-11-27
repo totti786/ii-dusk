@@ -103,8 +103,22 @@ Scope {
         root.submissionId = "";
         root.runId = "";
     }
+    // The Settings switch for the orb as a whole.
+    readonly property bool orbEnabled: Config.options.ai.voice.orbEnabled !== false
+    onOrbEnabledChanged: {
+        if (root.orbEnabled) return;
+        root.stop();
+        root.agentQueue = [];
+        voiceAgent.running = false;
+        // Forget the session list too: switching back on must not announce what changed meanwhile.
+        sessionProc.running = false;
+        sessionSpeakTimer.stop();
+        root.sessionAlertQueue = [];
+        root.sessionStates = ({});
+        root.sessionBaseline = false;
+    }
     function start(hold = false) {
-        if (GlobalStates.screenLocked) return;
+        if (!root.orbEnabled || GlobalStates.screenLocked) return;
         if (Ai.isGenerating && root.runId.length === 0) {
             root.fail("The assistant is already working. Open the sidebar to see its progress.");
             return;
@@ -148,7 +162,7 @@ Scope {
     }
 
     function holdStart() {
-        if (root.holdHeld || GlobalStates.screenLocked) return;
+        if (!root.orbEnabled || root.holdHeld || GlobalStates.screenLocked) return;
         // Push to talk interrupts: whatever the orb is saying or working on stops, and it listens.
         if (root.active || capture.running || Ai.speechService.speaking) root.stop();
         else if (Ai.isGenerating) return;
@@ -210,6 +224,7 @@ Scope {
     }
 
     function ask(text) {
+        if (!root.orbEnabled) return;
         if (AiCompanionUi.approval !== null) {
             const pending = AiCompanionUi.approval;
             const about = AiCompanionUi.describe(pending);
@@ -457,7 +472,7 @@ Scope {
     /** Whether a typed message should take the same route as speech. */
     function canRouteTyped(text) {
         const settings = Config.options.ai.voice;
-        return settings.typedRouting === true && !root.pinnedChatModel && root.agentUseful && Ai.enabled
+        return root.orbEnabled && settings.typedRouting === true && !root.pinnedChatModel && root.agentUseful && Ai.enabled
             && !root.active && root.fastId.length === 0 && !root.typed
             && Ai.attachments.length === 0 && !Ai.attachmentWorkPending && !Ai.isGenerating
             && String(text ?? "").trim().length > 0 && String(text).trim().length < 2000
@@ -811,7 +826,7 @@ Scope {
     property var sessionAlertQueue: []
     property Timer sessionPoll: Timer {
         interval: 7000; repeat: true; triggeredOnStart: true
-        running: Config.options.ai.voice.sessionAlerts !== false
+        running: root.orbEnabled && Config.options.ai.voice.sessionAlerts !== false
         onTriggered: if (!sessionProc.running) sessionProc.running = true
     }
     property Process sessionProc: Process {
@@ -820,7 +835,7 @@ Scope {
             onStreamFinished: {
                 let list = [];
                 try { list = JSON.parse(text); } catch (e) { return; }
-                root.noteSessions(list);
+                if (root.orbEnabled) root.noteSessions(list);
             }
         }
     }
@@ -1137,7 +1152,7 @@ Scope {
     // systemd. The script only starts what is not running, so this also revives a crashed one.
     // The Kokoro model is ~440 MiB of resident and swapped memory, so it is held only while the orb
     // can be heard: a hidden orb stops it after a grace period instead of paying for it all day.
-    readonly property bool voiceWanted: AiCompanionUi.saved.visible || root.active || Ai.speechService.speaking
+    readonly property bool voiceWanted: (root.orbEnabled && AiCompanionUi.saved.visible) || root.active || Ai.speechService.speaking
     Timer {
         interval: 60000; repeat: true; triggeredOnStart: true
         running: root.voiceWanted
@@ -1154,7 +1169,7 @@ Scope {
     // The detector owns the microphone only while the orb is idle; a session, the lock screen,
     // or the dictation key stops it so one thing owns the microphone at a time. A hidden orb
     // stops it too: closed means the microphone is off, not silently listening.
-    readonly property bool wakeWanted: (Config.options.ai.voice.wakeWord ?? false)
+    readonly property bool wakeWanted: root.orbEnabled && (Config.options.ai.voice.wakeWord ?? false)
         && !root.active && root.phase === "idle" && !GlobalStates.screenLocked
         && !Ai.speechService.speaking && Ai.voiceService.state === "idle"
         && !DictationService.recording

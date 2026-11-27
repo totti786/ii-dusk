@@ -18,7 +18,7 @@ QtObject {
     id: root
 
     readonly property var settings: Config.options.ai.voice
-    readonly property bool enabled: root.settings.satellites !== false
+    readonly property bool enabled: root.settings.orbEnabled !== false && root.settings.satellites !== false
     readonly property int maxCount: 5
     property int tick: 0
     property var ids: []

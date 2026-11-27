@@ -89,7 +89,7 @@ Scope {
         name: "aiCompanionHold"
         description: "Hold to talk to the voice companion"
         onPressed: {
-            if (GlobalStates.screenLocked) return;
+            if (!root.ui.orbEnabled || GlobalStates.screenLocked) return;
             root.ui.show();
             root.voice.holdStart();
         }
@@ -130,6 +130,12 @@ Scope {
             if (wanted !== undefined) Config.options.policies.ai = wanted;
             return Ai.onlineAllowed ? "on" : Ai.localOnly ? "local" : "off";
         }
+        /** The orb as a whole: "on" or "off"; empty reports it. Same switch as the Voice orb settings. */
+        function orb(mode: string): string {
+            const wanted = {on: true, off: false}[String(mode).trim().toLowerCase()];
+            if (wanted !== undefined) Config.options.ai.voice.orbEnabled = wanted;
+            return root.ui.orbEnabled ? "on" : "off";
+        }
         function approve(): bool { return root.ui.answerApproval(true); }
         function deny(): bool { return root.ui.answerApproval(false); }
         function dock(): bool { return root.ui.dock(); }
@@ -140,7 +146,7 @@ Scope {
         }
         function kitten(name: string): string { return kitten.play(name); }
         function status(): string {
-            return JSON.stringify({visible: root.saved.visible, docked: root.ui.docked, canDock: root.ui.canDock,
+            return JSON.stringify({enabled: root.ui.orbEnabled, visible: root.saved.visible, docked: root.ui.docked, canDock: root.ui.canDock,
                 dragging: root.ui.dragging, nearDock: root.ui.nearDock, dockTarget: root.ui.dockTarget,
                 timings: root.voice.timings, attachments: root.ui.attachmentCount, fileHover: root.ui.fileHover,
                 approval: root.ui.approvalNeeded ? root.ui.describe(root.ui.approval) : null,
@@ -177,7 +183,7 @@ Scope {
         anchors { top: true; bottom: true; left: true; right: true }
         // Up for an approval too, so a request is answerable even while the orb is docked
         // in the island: the window shows just the card then, not the orb.
-        visible: Persistent.ready && root.saved.visible && (!root.ui.docked || root.ui.dragging || dockFade.running || root.ui.approvalNeeded)
+        visible: Persistent.ready && root.ui.orbEnabled && root.saved.visible && (!root.ui.docked || root.ui.dragging || dockFade.running || root.ui.approvalNeeded)
             && !GlobalStates.screenLocked && !GlobalStates.regionSelectorOpen
         onVisibleChanged: {
             root.motionReady = false;

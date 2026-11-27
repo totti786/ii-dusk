@@ -4,6 +4,7 @@ import qs.services.ai
 
 ContinuousSource {
     activityId: "companion"
-    condition: AiCompanionUi.saved.visible && (AiCompanionUi.docked || (AiCompanionUi.dragging && AiCompanionUi.canDock))
+    condition: AiCompanionUi.orbEnabled && AiCompanionUi.saved.visible
+        && (AiCompanionUi.docked || (AiCompanionUi.dragging && AiCompanionUi.canDock))
     payload: ({phase: AiCompanionUi.phase})
 }

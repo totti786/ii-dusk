@@ -22729,5 +22729,8 @@
   "Allow automatic screen capture": "السماح بالتقاط الشاشة تلقائياً",
   "When you ask about your screen, the orb captures the focused monitor and sends it to Claude without showing it to you first. The chat notes each time. Needs quick answers with Claude, and never runs in Local only or on the lock screen.": "عندما تسأل عن شاشتك، تلتقط الكرة صورة للشاشة النشطة وترسلها إلى Claude دون أن تعرضها عليك أولاً. تُسجَّل كل مرة في المحادثة. يتطلب الإجابات السريعة عبر Claude، ولا يعمل أبداً في وضع «محلي فقط» أو على شاشة القفل.",
   "Looked at your screen": "نظرت إلى شاشتك",
-  "To let me look, switch on Allow automatic screen capture in the Voice orb settings, or use Attach screen region.": "لكي أتمكن من النظر، فعّل «السماح بالتقاط الشاشة تلقائياً» في إعدادات الكرة الصوتية، أو استخدم «إرفاق منطقة من الشاشة»."
+  "To let me look, switch on Allow automatic screen capture in the Voice orb settings, or use Attach screen region.": "لكي أتمكن من النظر، فعّل «السماح بالتقاط الشاشة تلقائياً» في إعدادات الكرة الصوتية، أو استخدم «إرفاق منطقة من الشاشة».",
+  "The orb": "الكرة",
+  "Enable the orb": "تفعيل الكرة",
+  "Off removes the orb, its kitten and its island bubble, ignores its shortcuts and wake word, and stops coding session alerts. Typed messages go to the sidebar's chat model.": "عند الإيقاف تختفي الكرة وقطتها وفقاعتها في الجزيرة، وتُتجاهل اختصاراتها وكلمة التنبيه، وتتوقف تنبيهات جلسات البرمجة. وتذهب الرسائل المكتوبة إلى نموذج المحادثة في الشريط الجانبي."
 }

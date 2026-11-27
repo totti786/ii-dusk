@@ -103,6 +103,27 @@ class VoiceTurnBoundaries(unittest.TestCase):
         self.assertNotIn("[[LOOK]]", voice_agent.system_prompt("en", False))
         self.assertNotIn("[[LOOK]]", voice_agent.system_prompt("en"))
 
+    def test_switching_the_orb_off_closes_every_way_in(self):
+        root = Path(__file__).resolve().parents[3]
+        voice = (root / "services/ai/AiCompanionVoiceService.qml").read_text()
+        ui = (root / "services/ai/AiCompanionUi.qml").read_text()
+        window = (root / "modules/ii/aiCompanion/AiCompanion.qml").read_text()
+        source = (root / "modules/ii/dynamicIsland/core/sources/CompanionSource.qml").read_text()
+        for entry in ("function start(hold = false) {\n        if (!root.orbEnabled",
+                      "if (!root.orbEnabled || root.holdHeld",
+                      "function ask(text) {\n        if (!root.orbEnabled) return;",
+                      "return root.orbEnabled && settings.typedRouting",
+                      "running: root.orbEnabled && Config.options.ai.voice.sessionAlerts",
+                      "wakeWanted: root.orbEnabled &&",
+                      "(root.orbEnabled && AiCompanionUi.saved.visible)",
+                      "voiceAgent.running = false"):
+            self.assertIn(entry, voice)
+        for name in ("show", "toggle", "undock"):
+            self.assertRegex(ui, r"function %s\(\): void \{\s*if \(!root\.orbEnabled\) return;" % name)
+        self.assertIn("root.ui.orbEnabled && root.saved.visible", window)
+        self.assertIn("if (!root.ui.orbEnabled || GlobalStates.screenLocked) return;", window)
+        self.assertIn("AiCompanionUi.orbEnabled &&", source)
+
     def test_signed_in_auto_mode_preserves_sensitive_approvals(self):
         for name in ("browser_call", "desktop_capture", "desktop_input", "speak_text"):
             self.assertEqual(opencode_bridge.tool_effect(name, auto=True, config_writes=True), "ask")

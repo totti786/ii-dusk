@@ -3524,6 +3524,9 @@ Singleton {
                     // land on "error" until the user follows the Settings
                     // guide and turns this on themselves.
                     property bool enabled: false
+                    // The orb as a whole. Off removes it from the desktop and the island, ignores
+                    // its shortcut and wake word, and stops everything it runs in the background.
+                    property bool orbEnabled: true
                     // The voice orb's warm Claude session (scripts/ai/voice_agent.py): it
                     // answers chat itself and hands anything bigger to the full agent.
                     // Say the trigger word to start a voice turn without clicking. A small resident

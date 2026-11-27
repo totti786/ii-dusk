@@ -237,6 +237,12 @@ never in Local only or Off, and nothing is captured while the screen is locked. 
 in the warm session until that ends; switching the setting off ends it. When off, the quick
 model has no screenshot access.
 
+**Enable the orb** (`ai.voice.orbEnabled`, on by default; `qs -c ii ipc call companion orb
+on|off`). Off removes the orb, kitten, satellites and island bubble, ignores the shortcuts,
+IPC talk/ask, desktop double-click and wake word, ends the warm voice agent, stops coding
+session alerts and typed routing, and lets the local voice model be unloaded. Hiding the orb
+is separate and is remembered across the switch.
+
 **Moods.** `AiCompanionUi.mood` picks one word for the creature: forced (IPC), the voice
 session's (`delighted` after an action, `curious` while looking), `startled` on a new
 notification (not while Do Not Disturb), `worried` at 15% battery or less and not charging,

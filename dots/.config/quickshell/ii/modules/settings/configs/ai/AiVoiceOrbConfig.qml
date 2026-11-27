@@ -165,6 +165,25 @@ Item {
         }
 
         ContentSection {
+            icon: "power_settings_new"
+            title: Translation.tr("The orb")
+
+            ConfigSwitch {
+                buttonIcon: "graphic_eq"
+                text: Translation.tr("Enable the orb")
+                checked: Config.options.ai.voice.orbEnabled
+                onCheckedChanged: Config.options.ai.voice.orbEnabled = checked
+            }
+            StyledText {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                text: Translation.tr("Off removes the orb, its kitten and its island bubble, ignores its shortcuts and wake word, and stops coding session alerts. Typed messages go to the sidebar's chat model.")
+            }
+        }
+
+        ContentSection {
             icon: "cloud_off"
             title: Translation.tr("Remote AI")
 

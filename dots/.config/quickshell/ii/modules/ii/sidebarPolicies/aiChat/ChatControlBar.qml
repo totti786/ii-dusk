@@ -145,7 +145,7 @@ Item {
 
     // With typed routing on, which model answers depends on the message, so the chip says so
     // instead of naming the chat model, which only serves attachments, commands and the like.
-    readonly property bool routed: Config.options.ai.voice.typedRouting === true && !Ai.companionVoice.pinnedChatModel && Ai.companionVoice.agentUseful && Ai.enabled
+    readonly property bool routed: Config.options.ai.voice.orbEnabled !== false && Config.options.ai.voice.typedRouting === true && !Ai.companionVoice.pinnedChatModel && Ai.companionVoice.agentUseful && Ai.enabled
     function modelTitle(id): string { return Ai.catalog.models[id]?.title ?? String(id ?? ""); }
     function modelChipTooltip(): string {
         if (root.routed) {
@@ -1071,6 +1071,7 @@ Item {
 
         ToolButton {
             chipKey: "companion"
+            visible: Config.options.ai.voice.orbEnabled !== false
         }
 
         ToolButton {
