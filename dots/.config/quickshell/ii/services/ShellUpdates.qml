@@ -21,7 +21,7 @@ Singleton {
     readonly property string stateDir: FileUtils.trimFileProtocol(Directories.home + "/.config/quickshell/ii")
 
     property string activeRemote: ""
-    property string activeBranch: "main"
+    property string activeBranch: "dev"
     property string activeFork: "dusk"
     property string activeCommit: ""
     property string remoteCommit: ""
@@ -273,8 +273,9 @@ Singleton {
             onStreamFinished: {
                 const parts = text.split("---");
                 root.activeRemote = (parts[0] ?? "").trim();
-                root.activeBranch = (parts[1] ?? "").trim() || "main";
                 root.activeFork = (parts[2] ?? "").trim() || "dusk";
+                // Only ii-dusk defaults to dev; the other forks default to main.
+                root.activeBranch = (parts[1] ?? "").trim() || (["dusk", "mine"].includes(root.activeFork) ? "dev" : "main");
                 root.activeCommit = (parts[3] ?? "").trim();
 
                 if (!root._probeAfterState) return;

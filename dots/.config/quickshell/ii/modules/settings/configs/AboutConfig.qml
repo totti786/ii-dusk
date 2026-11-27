@@ -97,6 +97,12 @@ Item {
     readonly property bool onOwnFork: ShellUpdates.activeFork === "dusk" || ShellUpdates.activeFork === "mine"
     readonly property bool onP3drovfx: ShellUpdates.activeFork === "p3drovfx"
     readonly property bool onKnownFork: root.onOwnFork || root.onP3drovfx
+    // On ii-dusk `dev` is the default and `main` only mirrors it for older installs.
+    readonly property string channelLabel: root.onOwnFork
+        ? (ShellUpdates.activeBranch === "dev" ? Translation.tr("Default")
+            : ShellUpdates.activeBranch === "main" ? Translation.tr("Mirror of dev") : ShellUpdates.activeBranch)
+        : (ShellUpdates.activeBranch === "main" ? Translation.tr("Stable") : Translation.tr("New features"))
+    readonly property bool onPrimaryChannel: ShellUpdates.activeBranch === (root.onOwnFork ? "dev" : "main")
     readonly property string shortCommit: ShellUpdates.activeCommit.substring(0, 7)
     readonly property string repoUrl: {
         const slug = ShellUpdates.githubSlug(ShellUpdates.activeRemote);
@@ -469,15 +475,15 @@ Item {
                                     implicitWidth: channelText.implicitWidth + 16
                                     implicitHeight: channelText.implicitHeight + 6
                                     radius: Appearance.rounding.full
-                                    color: ShellUpdates.activeBranch === "main" ? Appearance.colors.colPrimaryContainer : Appearance.colors.colTertiaryContainer
+                                    color: root.onPrimaryChannel ? Appearance.colors.colPrimaryContainer : Appearance.colors.colTertiaryContainer
 
                                     StyledText {
                                         id: channelText
                                         anchors.centerIn: parent
-                                        text: ShellUpdates.activeBranch === "main" ? Translation.tr("Stable") : Translation.tr("New features")
+                                        text: root.channelLabel
                                         font.pixelSize: Appearance.font.pixelSize.smaller
                                         font.weight: Font.DemiBold
-                                        color: ShellUpdates.activeBranch === "main" ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnTertiaryContainer
+                                        color: root.onPrimaryChannel ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnTertiaryContainer
                                     }
                                 }
                             }
@@ -884,29 +890,30 @@ Item {
             ContentSubsection {
                 title: Translation.tr("Branch")
                 icon: "call_split"
-                tooltip: Translation.tr("main is what has been tested. dev only exists on II-P3DROVFX, where features land first.")
+                tooltip: root.onOwnFork
+                    ? Translation.tr("dev is the default. main is a copy of it, kept for older installs.")
+                    : Translation.tr("main is what has been tested; dev gets features as they land.")
 
                 ConfigSelectionArray {
+                    readonly property var mainOption: ({
+                        "displayName": Translation.tr("main") + " · " + (root.onOwnFork ? Translation.tr("mirror of dev") : Translation.tr("stable")),
+                        "icon": root.onOwnFork ? "content_copy" : "verified",
+                        "value": "main",
+                        "enabled": root.onKnownFork
+                    })
+                    readonly property var devOption: ({
+                        "displayName": Translation.tr("dev") + " · " + (root.onOwnFork ? Translation.tr("default") : Translation.tr("new features")),
+                        "icon": root.onOwnFork ? "verified" : "science",
+                        "value": "dev",
+                        "enabled": root.onKnownFork
+                    })
                     currentValue: root.onKnownFork ? ShellUpdates.activeBranch : null
                     onSelected: newValue => {
                         if (newValue === ShellUpdates.activeBranch)
                             return;
                         root.confirm("branch", newValue, newValue);
                     }
-                    options: [
-                        {
-                            "displayName": Translation.tr("main") + " · " + Translation.tr("stable"),
-                            "icon": "verified",
-                            "value": "main",
-                            "enabled": root.onKnownFork
-                        },
-                        {
-                            "displayName": Translation.tr("dev") + " · " + Translation.tr("new features"),
-                            "icon": "science",
-                            "value": "dev",
-                            "enabled": root.onP3drovfx
-                        }
-                    ]
+                    options: root.onOwnFork ? [devOption, mainOption] : [mainOption, devOption]
                 }
             }
 
