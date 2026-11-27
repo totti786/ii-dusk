@@ -597,6 +597,20 @@ Item {
                     : Translation.tr("Plain questions go to this model with a short-answer prompt, usually 2 to 5 s. Anything that sounds like desktop work, and anything it cannot answer, goes to the desktop-tasks model.")
             }
             ConfigSwitch {
+                buttonIcon: "visibility"
+                text: Translation.tr("Allow automatic screen capture")
+                enabled: Config.options.ai.voice.fastPath
+                checked: Config.options.ai.voice.autoScreen
+                onCheckedChanged: Config.options.ai.voice.autoScreen = checked
+            }
+            StyledText {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                color: Appearance.colors.colSubtext
+                font.pixelSize: Appearance.font.pixelSize.smaller
+                text: Translation.tr("When you ask about your screen, the orb captures the focused monitor and sends it to Claude without showing it to you first. The chat notes each time. Needs quick answers with Claude, and never runs in Local only or on the lock screen.")
+            }
+            ConfigSwitch {
                 buttonIcon: "screenshot_monitor"
                 text: Translation.tr("Show Attach screen region on the orb")
                 checked: Config.options.ai.voice.screen

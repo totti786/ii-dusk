@@ -22725,5 +22725,9 @@
   "Text Cleanup": "تنقيح النص",
   "VAD": "رصد الكلام",
   "Meeting": "الاجتماعات",
-  "More in this section (%1)": "المزيد في هذا القسم (%1)"
+  "More in this section (%1)": "المزيد في هذا القسم (%1)",
+  "Allow automatic screen capture": "السماح بالتقاط الشاشة تلقائياً",
+  "When you ask about your screen, the orb captures the focused monitor and sends it to Claude without showing it to you first. The chat notes each time. Needs quick answers with Claude, and never runs in Local only or on the lock screen.": "عندما تسأل عن شاشتك، تلتقط الكرة صورة للشاشة النشطة وترسلها إلى Claude دون أن تعرضها عليك أولاً. تُسجَّل كل مرة في المحادثة. يتطلب الإجابات السريعة عبر Claude، ولا يعمل أبداً في وضع «محلي فقط» أو على شاشة القفل.",
+  "Looked at your screen": "نظرت إلى شاشتك",
+  "To let me look, switch on Allow automatic screen capture in the Voice orb settings, or use Attach screen region.": "لكي أتمكن من النظر، فعّل «السماح بالتقاط الشاشة تلقائياً» في إعدادات الكرة الصوتية، أو استخدم «إرفاق منطقة من الشاشة»."
 }

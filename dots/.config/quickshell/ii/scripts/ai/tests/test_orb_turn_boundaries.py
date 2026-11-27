@@ -55,6 +55,54 @@ class VoiceTurnBoundaries(unittest.TestCase):
         stop.assert_called_once()
         self.assertEqual(emit.call_args.args[0]["event"], "error")
 
+    def look(self, setting, turn_flag, replies=("look", None), cancelled=lambda: False):
+        """Ask a question whose model answers by asking to see the screen."""
+        self.model.configure({"screen": setting})
+        with mock.patch.object(self.model, "start"), mock.patch.object(self.model, "stop"), \
+                mock.patch.object(self.model, "send") as send, \
+                mock.patch.object(self.model, "turn", side_effect=list(replies)), \
+                mock.patch.object(voice_agent, "capture_screen", return_value="cGljdHVyZQ==") as capture, \
+                mock.patch.object(voice_agent, "emit") as emit:
+            self.model.ask("a", "what is on my screen", cancelled, screen=turn_flag, session="chat")
+        return capture, send, [call.args[0]["event"] for call in emit.call_args_list]
+
+    def test_screen_is_captured_only_when_setting_and_turn_both_allow_it(self):
+        for setting, turn_flag in ((False, False), (False, True), (True, False)):
+            with self.subTest(setting=setting, turn=turn_flag):
+                self.model = voice_agent.Model()
+                capture, send, events = self.look(setting, turn_flag)
+                capture.assert_not_called()
+                self.assertEqual(send.call_count, 1)
+                self.assertEqual(events, ["look-required"])
+
+    def test_allowed_look_sends_one_screenshot(self):
+        capture, send, events = self.look(True, True)
+        capture.assert_called_once()
+        self.assertEqual(events, ["looking"])
+        self.assertEqual(send.call_args.args[0][0]["source"]["data"], "cGljdHVyZQ==")
+
+    def test_a_second_look_in_one_turn_is_not_followed(self):
+        capture, send, events = self.look(True, True, replies=("look", "look"))
+        capture.assert_called_once()
+        self.assertEqual(events, ["looking", "done"])
+
+    def test_nothing_is_captured_without_being_asked_for(self):
+        capture, _, events = self.look(True, True, replies=(None,))
+        capture.assert_not_called()
+        self.assertEqual(events, [])
+
+    def test_changing_the_screen_setting_drops_the_conversation(self):
+        with mock.patch.object(self.model, "stop") as stop:
+            self.model.configure({"screen": True})
+            self.model.configure({"screen": True})
+            self.model.configure({"screen": False})
+        self.assertEqual(stop.call_count, 2)
+
+    def test_prompt_follows_the_setting(self):
+        self.assertIn("[[LOOK]]", voice_agent.system_prompt("en", True))
+        self.assertNotIn("[[LOOK]]", voice_agent.system_prompt("en", False))
+        self.assertNotIn("[[LOOK]]", voice_agent.system_prompt("en"))
+
     def test_signed_in_auto_mode_preserves_sensitive_approvals(self):
         for name in ("browser_call", "desktop_capture", "desktop_input", "speak_text"):
             self.assertEqual(opencode_bridge.tool_effect(name, auto=True, config_writes=True), "ask")

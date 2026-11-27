@@ -3571,9 +3571,11 @@ Singleton {
                     // What reads your speech: "auto" follows the dictation engine (Hex when that is the dictation
                     // engine and English is selected, else Whisper), or force "hex" / "whisper".
                     property string sttEngine: "auto"
-                    // May the orb look at the screen when asked "what is on my screen".
-                    // One capture, sent only for that turn.
+                    // Show "Attach screen region" on the orb.
                     property bool screen: true
+                    // May the orb capture the focused monitor itself when asked about the screen.
+                    // The image goes to Claude unseen, so it stays off until the user switches it on.
+                    property bool autoScreen: false
                     // Local voice (Kokoro) speed, 1 = normal, and the pause between sentences in ms.
                     // The helper trims Kokoro's own sentence padding, so this pause is the whole gap.
                     property real speechSpeed: 1.25

@@ -17004,5 +17004,9 @@
     "Text Cleanup": "Text Cleanup",
     "VAD": "VAD",
     "Meeting": "Meeting",
-    "More in this section (%1)": "More in this section (%1)"
+    "More in this section (%1)": "More in this section (%1)",
+    "Allow automatic screen capture": "Allow automatic screen capture",
+    "When you ask about your screen, the orb captures the focused monitor and sends it to Claude without showing it to you first. The chat notes each time. Needs quick answers with Claude, and never runs in Local only or on the lock screen.": "When you ask about your screen, the orb captures the focused monitor and sends it to Claude without showing it to you first. The chat notes each time. Needs quick answers with Claude, and never runs in Local only or on the lock screen.",
+    "Looked at your screen": "Looked at your screen",
+    "To let me look, switch on Allow automatic screen capture in the Voice orb settings, or use Attach screen region.": "To let me look, switch on Allow automatic screen capture in the Voice orb settings, or use Attach screen region."
 }

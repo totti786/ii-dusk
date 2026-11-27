@@ -226,8 +226,16 @@ in the chat as `(Set volume to 26%)` so later Codex turns know.
 **Attach screen region.** Choose a window or drag a rectangle from the orb's screen button.
 The image appears in the chat draft, where you can review it and the selected model before
 sending. The screenshot is scoped to that turn. The quick model receives battery or volume
-information when relevant and has no screenshot access. Settings → AI Assistant → Voice orb
-shows the latest turn receipt and can clear local, prompt-free timing history.
+information when relevant. Settings → AI Assistant → Voice orb shows the latest turn receipt
+and can clear local, prompt-free timing history.
+
+**Allow automatic screen capture** (`ai.voice.autoScreen`, off by default, protected from the
+assistant). When on, a question about the screen makes the quick model reply `[[LOOK]]`; the
+agent captures the focused monitor once (grim, JPEG, scaled) and sends it to Claude with no
+preview. The chat records "(Looked at your screen)". It needs quick answers with Claude, so
+never in Local only or Off, and nothing is captured while the screen is locked. The image stays
+in the warm session until that ends; switching the setting off ends it. When off, the quick
+model has no screenshot access.
 
 **Moods.** `AiCompanionUi.mood` picks one word for the creature: forced (IPC), the voice
 session's (`delighted` after an action, `curious` while looking), `startled` on a new

@@ -317,6 +317,11 @@ Scope {
     property int fastSent: 0
     property bool fastWhole: false
     property var fastNotes: []
+    property bool fastLooked: false   // this quick turn sent a screenshot to the model
+    // What the chat records beside a quick reply: that the screen was looked at, and what was done.
+    function turnMarks(notes) {
+        return (root.fastLooked ? [Translation.tr("Looked at your screen")] : []).concat(notes);
+    }
     property bool agentReady: false
     // A message typed in the sidebar, routed like a spoken one (instant rules, then the warm
     // quick-answer session, then the desktop-tasks model) but answered in text, never aloud.
@@ -330,6 +335,9 @@ Scope {
     // "Local only" and "Off" both rule it out, along with the screenshot it can be sent.
     readonly property bool quickReady: Config.options.ai.voice.fastPath === true && Ai.onlineAllowed && root.quickIsClaude
         && root.claudeState !== "missing" && root.claudeState !== "signedOut"
+    // The quick model may capture the screen when asked about it. Off until the user switches it on (the
+    // agent cannot: ai.* settings are protected), and only while the remote model itself may be used.
+    readonly property bool autoScreen: Config.options.ai.voice.autoScreen === true && root.quickReady
     // Whether anything in the agent can still help: the instant rules need no model at all.
     readonly property bool agentUseful: root.quickReady || Config.options.ai.voice.rules !== false
     Connections {
@@ -374,13 +382,13 @@ Scope {
     readonly property string agentModel: root.quickIsClaude ? root.quickValue.replace(/^claude:/, "") : "haiku"
     readonly property string agentLanguage: String(Config.options.ai.voice.language ?? "en")
     readonly property bool localRulesEnabled: Config.options.ai.voice.rules !== false
-    readonly property string agentSettings: JSON.stringify([root.agentModel, root.agentLanguage, root.localRulesEnabled])
+    readonly property string agentSettings: JSON.stringify([root.agentModel, root.agentLanguage, root.localRulesEnabled, root.autoScreen])
     onAgentSettingsChanged: {
         if (root.fastId.length > 0) root.stop();
         root.resetAgent();
     }
     readonly property string rulesConfig: JSON.stringify({op: "config", model: root.agentModel,
-        language: root.agentLanguage, rulesEnabled: root.localRulesEnabled,
+        language: root.agentLanguage, rulesEnabled: root.localRulesEnabled, screen: root.autoScreen,
         rulesOff: Array.from(Config.options.ai.voice.rulesOff ?? []),
         custom: Array.from(Config.options.ai.voice.customRules ?? []),
         learned: Array.from(Config.options.ai.voice.learnedRules ?? []),
@@ -467,7 +475,9 @@ Scope {
     }
     /** The typed turn is over: put it in the chat, with what was done, and let the orb rest. */
     function typedFinish(question, answer, notes, rule) {
-        const done = notes.length > 0 ? "(" + notes.join("; ") + ")" : "";
+        const marks = root.turnMarks(notes);
+        root.fastLooked = false;
+        const done = marks.length > 0 ? "(" + marks.join("; ") + ")" : "";
         const reply = done.length > 0 && answer.length > 0 ? done + "\n\n" + answer : done + answer;
         const inChat = root.fastSessionId === Ai.sessions.currentId;
         root.releaseQuickTurn();
@@ -514,12 +524,14 @@ Scope {
         root.fastSent = 0;
         root.fastWhole = false;
         root.fastNotes = [];
+        root.fastLooked = false;
         const remoteContext = root.quickReady ? actions.contextForModel(text) : "";
         root.sharedContextFields = remoteContext ? remoteContext.split("\n").map(line => line.split(":")[0]) : [];
         root.sendAgent({op: "ask", id: id, text: text,
                         context: root.localRulesEnabled ? actions.snapshot() : "",
                         remoteContext: remoteContext, quick: root.quickReady,
                         via: root.typed ? "typed" : "spoken", session: root.fastSessionId,
+                        screen: root.autoScreen && !GlobalStates.screenLocked,
                         target: actions.focusedWindowId()});
         quickDeadline.restart();
         return true;
@@ -609,11 +621,13 @@ Scope {
         if (event.rule && !chime) root.fastBuffer = String(event.text ?? "");
         root.drainSpeech(true);
         if (event.rule) root.route = "rule";
-        else if (root.mood === "curious") root.route = "look";
+        else if (root.fastLooked) root.route = "look";
         root.timings = Object.assign({}, root.timings, {
             generationMs: Date.now() - root.generationStarted, firstTokenMs: event.firstTokenMs ?? 0});
         const answer = String(event.text ?? "").trim();
         const notes = root.fastNotes;
+        const marks = root.turnMarks(notes);
+        root.fastLooked = false;
         // The model turned a sentence no rule knew into actions that all ran: let the agent weigh remembering it.
         if (!event.rule && root.chosenAllRan && root.chosenActions.length > 0 && Config.options.ai.voice.learn !== false)
             root.sendAgent({op: "learn", text: root.fastText, actions: root.chosenActions});
@@ -624,10 +638,10 @@ Scope {
         root.releaseQuickTurn();
         root.fastNotes = [];
         if (root.mood === "curious") root.mood = "";
-        if (inChat && (answer.length > 0 || notes.length > 0)) {
+        if (inChat && (answer.length > 0 || marks.length > 0)) {
             // The exchange belongs in the chat the sidebar shows, and in what the full
             // agent reads as history on the next tool turn, including what was done.
-            const done = notes.length > 0 ? "(" + notes.join("; ") + ")" : "";
+            const done = marks.length > 0 ? "(" + marks.join("; ") + ")" : "";
             if (!alreadyPosted) Ai.addMessage(root.fastText, "user");
             Ai.addMessage(done.length > 0 && answer.length > 0 ? done + "\n\n" + answer : done + answer,
                           "assistant", {"model": root.fastModelId()});
@@ -767,8 +781,14 @@ Scope {
                     root.drainSpeech(false);
                 } else if (event.event === "done") root.fastDone(event);
                 else if (event.event === "action") root.fastAction(event);
+                else if (event.event === "looking") {
+                    root.fastLooked = true;
+                    root.sharedContextFields = root.sharedContextFields.concat(["screenshot"]);
+                    root.setMood("curious", 40000);
+                    quickDeadline.restart();
+                }
                 else if (event.event === "look-required") {
-                    const reply = Translation.tr("Use Attach screen region to choose what to share.");
+                    const reply = Translation.tr("To let me look, switch on Allow automatic screen capture in the Voice orb settings, or use Attach screen region.");
                     root.fastBuffer = reply;
                     root.fastDone({text: reply});
                 }
