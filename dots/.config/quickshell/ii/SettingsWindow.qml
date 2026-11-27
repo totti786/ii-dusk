@@ -790,7 +790,7 @@ FloatingWindow {
 
         let totalWidgets = 0;
         for (let s of result) {
-            totalWidgets += s.items.length + (s.landmarks?.length ?? 0) + (s.components?.length ?? 0) + (s.page ? 1 : 0);
+            totalWidgets += s.items.length + (s.more ?? 0) + (s.landmarks?.length ?? 0) + (s.components?.length ?? 0) + (s.page ? 1 : 0);
             for (let sub of s.subsections) {
                 totalWidgets += sub.items.length;
             }
@@ -881,9 +881,9 @@ FloatingWindow {
 
                 onTextChanged: text => {
                     root.typedSearch = text;
-                    // Index while the query is being typed: the index is
-                    // dropped whenever Settings closes, and rebuilding it on
-                    // Enter added its whole cost to the first search.
+                    // Index while the first query is being typed: the index
+                    // lives until Settings closes, and starting it on Enter
+                    // added its whole cost to the first search.
                     if (text !== "") {
                         SearchRegistry.ensureIndexing();
                         liveSearchTimer.restart();
@@ -898,7 +898,7 @@ FloatingWindow {
                         root.activeSearchQuery = "";
                         root.resultsCount = 0;
                         root.lastSearchIndex = -1;
-                        SearchRegistry.clearIndex();
+                        SearchRegistry.resetQuery();
                     }
                 }
 
@@ -1134,7 +1134,7 @@ FloatingWindow {
                                 root.activeSearchQuery = "";
                                 root.resultsCount = 0;
                                 root.lastSearchIndex = -1;
-                                SearchRegistry.clearIndex();
+                                SearchRegistry.resetQuery();
                             }
                             root.ensurePageReady();
                         }

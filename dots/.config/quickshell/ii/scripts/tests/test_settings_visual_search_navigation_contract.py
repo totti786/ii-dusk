@@ -8,8 +8,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "ai"))
+sys.path.insert(0, str(ROOT / "scripts" / "settings"))
 
 import ai_settings_index  # noqa: E402
+import search_index  # noqa: E402
 
 
 SEARCH_REGISTRY = (ROOT / "services" / "SearchRegistry.qml").read_text(encoding="utf-8")
@@ -28,7 +30,6 @@ def between(source: str, start: str, end: str) -> str:
 
 class VisualSearchContracts(unittest.TestCase):
     def test_only_compact_semantic_controls_are_cloned(self):
-        widget_list = between(SEARCH_REGISTRY, "let types = [", "];\n        for (let t")
         for wanted in (
             "ConfigSwitch",
             "ConfigSpinBox",
@@ -39,7 +40,7 @@ class VisualSearchContracts(unittest.TestCase):
             "ConfigLightDarkToggle",
             "ConfigSubpageRow",
         ):
-            self.assertIn(f'"{wanted}"', widget_list)
+            self.assertIn(wanted, search_index.CONTROL_TYPES)
 
         for forbidden in (
             "NoticeBox",
@@ -51,7 +52,7 @@ class VisualSearchContracts(unittest.TestCase):
             "RippleButtonWithIcon",
             "ConfigListView",
         ):
-            self.assertNotIn(f'"{forbidden}"', widget_list)
+            self.assertNotIn(forbidden, search_index.CONTROL_TYPES)
 
     def test_sections_without_renderable_controls_are_rejected(self):
         ranking = between(SEARCH_REGISTRY, "function getDynamicSearchResults", "function getResultsRanked")
@@ -60,10 +61,13 @@ class VisualSearchContracts(unittest.TestCase):
         self.assertNotIn("sectionTitleScore > 0 || searchStringScore > 0", ranking)
 
     def test_page_local_id_dependencies_are_not_cloned(self):
-        extraction = between(SEARCH_REGISTRY, "function extractDeclaredIds", "function indexQmlFile")
-        self.assertIn("function usesExternalId", extraction)
-        self.assertIn("if (usesExternalId(b.inner, fileScopedIds))", extraction)
-        self.assertIn("const fileScopedIds = extractDeclaredIds(qmlText);", SEARCH_REGISTRY)
+        page = (
+            'ContentPage { id: page\n ContentSection { title: Translation.tr("One")\n'
+            ' ConfigSwitch { text: Translation.tr("Local"); id: own; checked: own.down }\n'
+            ' ConfigSwitch { text: Translation.tr("Outside"); checked: page.value }\n'
+            ' ConfigSwitch { text: Translation.tr("Prose id"); description: "the page" }\n } }')
+        [section] = search_index.index_file(page, "Page.qml", "p", "")
+        self.assertEqual([i["text"] for i in section["items"]], ["Local", "Prose id"])
 
     def test_multi_word_queries_require_every_token(self):
         scorer = between(SEARCH_REGISTRY, "function getMatchScore", "function getDynamicSearchResults")

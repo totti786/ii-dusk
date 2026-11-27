@@ -1,6 +1,6 @@
-// End-to-end Settings search over the real page files, using SearchRegistry's
-// own functions (lifted out of the QML) and the landmark crawl. Each query must
-// find what a user sees on the page.
+// End-to-end Settings search over the real page files: the index search_index.py
+// builds, searched by SearchRegistry's own functions (lifted out of the QML).
+// Each query must find what a user sees on the page.
 // Run: node scripts/tests/settings_search_e2e_test.mjs [query ...]
 import fs from "node:fs";
 import path from "node:path";
@@ -22,59 +22,65 @@ function liftFunction(src, name) {
     return src.substring(start, end + 6).replace(/\((\w+):\s*\w+\)/, "($1)");
 }
 
-const names = ["extractImports", "extractDeclaredIds", "executableSource", "usesExternalId",
-    "extractWidgetsWithOffset", "indexQmlFile", "extractBlocks", "getBlockSource", "extractProperty",
-    "normalize", "tokenize", "queryWords", "textRecord", "vocabulary", "synonymsOf", "editDistanceWithin",
-    "wordHits", "prepareQuery", "registerSection", "getMatchScore", "itemMatchScore", "groupScore", "matchPages",
-    "getDynamicSearchResults", "sharesToken", "matchLandmarks", "assignLandmarkComponents"];
+const names = ["loadIndex", "failIndexing", "addPageWords", "registerSection", "addWords", "post", "prepareEntry",
+    "prepareSlice", "applyPresetName", "normalize", "queryWords", "textRecord", "vocabulary", "prefixRange",
+    "synonymsOf", "editDistanceWithin", "wordHits", "candidates", "prepareQuery", "getMatchScore", "itemMatchScore",
+    "groupScore", "matchPages", "getDynamicSearchResults", "resultIdentity", "mergeResults", "withoutRepeats",
+    "limitControls", "matchEntries", "sharesToken", "matchLandmarks", "assignLandmarkComponents"];
+const properties = ["maxComponentsPerQuery", "maxLandmarksPerGroup", "maxControlsPerCard", "maxPartialResults",
+    "wordBreak", "wordJoint", "beyondAscii", "unspaced", "phraseAliases"];
+const liftProperty = name => {
+    const m = registryQml.match(new RegExp(`\\n    readonly property \\w+ ${name}: (\\[\\n[\\s\\S]*?\\n    \\]|.*)`));
+    assert.ok(m, "property not found: " + name);
+    return `${name}: ${m[1]}`;
+};
 const registrySrc = fs.readFileSync(ROOT + "modules/common/SettingsPageRegistry.qml", "utf8");
 const pages = vm.runInNewContext("(" + registrySrc.split("readonly property var pages:")[1].split(/\n    \]\n/)[0] + "])");
 
-const ctx = {
-    Translation: { tr: s => s },
-    SettingsPageRegistry: { pages, pageById: id => pages.find(p => p.id === id) },
-    pageFile: { files: [], currentIndex: 0 },
-    console,
-};
-vm.createContext(ctx);
-vm.runInContext(`var root = { sections: [], fileSources: {}, fileImportsBySource: {}, landmarks: [],
-    _memoQuery: "", _memoResults: null, maxLandmarksPerGroup: 6,
-    _textCache: {}, _vocabulary: null, _wordHits: {}, _synonymIndex: null,
-    landmarkBlocks: {}, maxComponentsPerQuery: 3 };
-    ${names.map(n => liftFunction(registryQml, n)).join("\n")}
-    Object.assign(root, { ${names.join(", ")} });
-    var sections = root.sections;`, ctx);
-
-// Sections, exactly as startIndexing() lists the files.
-let files = [];
-for (const p of pages) {
-    if (p.searchable === false) continue;
-    if (p.searchComponent !== false) files.push([ROOT + p.component, p.id, ""]);
-    for (const sub of p.subPages ?? []) files.push([CONFIGS + sub, p.id, sub]);
-    for (const src of p.searchSources ?? []) files.push([CONFIGS + src, p.id, p.searchSubPages?.[src] ?? ""]);
-}
-ctx.pageFile.files = files.map(f => f[0]);
-files.forEach(([file, id, sub], i) => {
-    ctx.pageFile.currentIndex = i;
-    if (fs.existsSync(file)) ctx.indexQmlFile(fs.readFileSync(file, "utf8"), id, sub);
-});
-
-// Landmarks, from the same script the shell runs.
+// The index, from the same script the shell runs.
 const pagesArg = JSON.stringify(pages.map(p => ({ id: p.id, component: p.component, subPages: p.subPages ?? [],
-    searchSources: p.searchSources ?? [], searchSubPages: p.searchSubPages ?? {}, searchable: p.searchable !== false })));
+    searchSources: p.searchSources ?? [], searchSubPages: p.searchSubPages ?? {},
+    searchComponent: p.searchComponent !== false, searchable: p.searchable !== false })));
 const t0 = Date.now();
-const crawled = JSON.parse(execFileSync("python3", [ROOT + "scripts/settings/search_landmarks.py", ROOT, pagesArg], { encoding: "utf8", maxBuffer: 64 << 20 }));
-const crawlMs = Date.now() - t0;
-for (const l of crawled.landmarks) ctx.root.landmarks.push({ ...l, block: l.block ?? "", text: l.key });
-Object.assign(ctx.root.landmarkBlocks, crawled.blocks);
-// Sub-pages found by their opener, as indexDiscoveredSubPages() reads them.
-for (const { pageId, subPage } of crawled.subPages) {
-    ctx.pageFile.files.push(CONFIGS + subPage);
-    ctx.pageFile.currentIndex = ctx.pageFile.files.length - 1;
-    ctx.indexQmlFile(fs.readFileSync(CONFIGS + subPage, "utf8"), pageId, subPage);
+const indexText = execFileSync("python3", [ROOT + "scripts/settings/search_index.py", ROOT, pagesArg], { encoding: "utf8", maxBuffer: 64 << 20 });
+const buildMs = Date.now() - t0;
+
+// A SearchRegistry with the index loaded, as the shell has it in `language`.
+function registry(language) {
+    const strings = language ? JSON.parse(fs.readFileSync(ROOT + `translations/${language}.json`, "utf8")) : {};
+    const family = { current: "ii" };
+    const ctx = {
+        Translation: { tr: s => Object.hasOwn(strings, s) ? strings[s].replace(/\/\*keep\*\/$/, "").trim() : s },
+        SettingsPageRegistry: {
+            pages,
+            pageById: id => pages.find(p => p.id === id),
+            availableForFamily: (page, current) => !page?.families || page.families.includes(current),
+        },
+        PanelFamily: family,
+        indexWatchdog: { stop() {} },
+        prepareTimer: { restart() {} },
+        console,
+    };
+    vm.createContext(ctx);
+    vm.runInContext(`var root = { sections: [], landmarks: [], fileImportsBySource: {}, landmarkBlocks: {},
+        presetNames: [], indexing: true, indexed: false, indexReady() {},
+        _memoQuery: "", _memoResults: null, _textCache: Object.create(null), _postings: Object.create(null),
+        _prepared: 0, _words: Object.create(null), _vocabulary: null, _wordHits: Object.create(null), _synonymIndex: null,
+        ${properties.map(liftProperty).join(",\n")} };
+        ${names.map(n => liftFunction(registryQml, n)).join("\n")}
+        Object.assign(root, { ${names.join(", ")} });`, ctx);
+    ctx.root.loadIndex(indexText);
+    ctx.root.prepareSlice(Infinity);
+    assert.ok(ctx.root.indexed, "the index did not finish loading");
+    return { ctx, family };
 }
 
-const search = q => { ctx.root._memoResults = null; return JSON.parse(JSON.stringify(ctx.getDynamicSearchResults(q))); };
+const { ctx, family } = registry();
+const crawled = JSON.parse(indexText);
+const discovered = [...new Set(crawled.sections.map(s => s.subPage))];
+
+const searchIn = ({ ctx }, q) => { ctx.root._memoResults = null; return JSON.parse(JSON.stringify(ctx.getDynamicSearchResults(q))); };
+const search = q => searchIn({ ctx }, q);
 const labels = r => r.landmarks ? [...r.landmarks, ...r.coveredLandmarks].map(l => l.text) : [r.title, ...r.subsections.map(s => s.title)];
 const blockType = id => ctx.root.landmarkBlocks[id]?.type;
 function show(q) {
@@ -110,6 +116,8 @@ for (const [q, pageId, label] of expectTop) {
 let checked = 0, missed = [];
 for (const page of pages) {
     const own = ctx.root.landmarks.filter(l => l.pageId === page.id && !l.subPage).slice(0, 15);
+    // Each page is searched from a panel family that has it.
+    family.current = page.families?.[0] ?? "ii";
     for (const l of own) {
         const res = search(l.text);
         checked++;
@@ -119,6 +127,7 @@ for (const page of pages) {
         if (!hit) missed.push(`${page.id}: ${l.text}`);
     }
 }
+family.current = "ii";
 assert.deepEqual(missed, [], "headings not findable");
 
 // Cloned controls still come first for their own label.
@@ -164,7 +173,15 @@ for (const [q, pageId, text] of [
     ["wifi", "network", "wi-fi"],
     ["autohide", "bar", "auto-hide"],
     ["lockscreen", "lockScreen", null],
-    ["time zone", "languageTime", "timezone"],
+    // Written as two words, found where the page writes one. ("time zone" has
+    // nothing to find: the only timezone text is in widgets/CoreTimeDateConfig.qml,
+    // which no page opens.)
+    ["work space", "workspaces", "workspace"],
+    // No page says it this way, or no single control holds every word.
+    ["border radius", "dock", "corner radius"],
+    ["keyboard shortcuts", "launcher", "keybinds"],
+    ["screen timeout", "power", "turn the screen off"],
+    ["gemini api key", "aiAssistant", "api key"],
     ["sleep", "power", "suspend"],
     ["dnd", "notifications", "do not disturb"],
     ["hotkeys", "launcher", "keybinds"],
@@ -177,9 +194,9 @@ for (const [q, pageId, text] of [
     ["matugen icon pack", "interfaceFonts", null],
 ]) assert.ok(found(q, pageId, text), `"${q}" misses ${pageId}${text ? ": " + text : ""}`);
 // Editors that need their opener's target are never a place to land.
-assert.ok(!crawled.subPages.some(s => /(Editor|Picker)(Page)?\.qml$/.test(s.subPage)), "an editor was indexed as a sub-page");
+assert.ok(!discovered.some(s => /(Editor|Picker)(Page)?\.qml$/.test(s)), "an editor was indexed as a sub-page");
 for (const [q, pageId] of [["network", "network"], ["dock", "dock"], ["notif", "notifications"],
-        ["notifcations", "notifications"], ["netw", "network"], ["lock scr", "lockScreen"]]) {
+        ["notifcations", "notifications"], ["netw", "network"], ["lock scr", "lockScreen"], ["lockscreen", "lockScreen"]]) {
     const top = search(q)[0];
     assert.ok(top?.page && top.pageId === pageId, `"${q}" top is not the ${pageId} page: ${top?.pageId}`);
 }
@@ -191,5 +208,66 @@ assert.equal(search("a").length, 0, "one letter finds nothing");
 for (const r of search("on")) if (r.landmarks) assert.ok(r.landmarks.length <= 6);
 assert.equal(search("zzqxv").length, 0);
 
-console.log(`ok: ${ctx.root.sections.length} sections, ${ctx.root.landmarks.length} landmarks (crawl ${crawlMs} ms), ${checked} headings round-tripped`);
+// Scoring only the entries that can match changes no result: compare with scoring
+// all, in English and in a translated interface asked in either language.
+let compared = 0;
+function filteringKeeps(reg, words) {
+    const candidates = reg.ctx.root.candidates;
+    const total = reg.ctx.root.sections.length + reg.ctx.root.landmarks.length;
+    const everything = tokens => new Array(total).fill(tokens.length);
+    for (const word of words)
+        for (let n = 2; n <= word.length; n += word.length > 20 ? 5 : 1) {
+            const q = word.substring(0, n);
+            const filtered = searchIn(reg, q);
+            reg.ctx.root.candidates = reg.ctx.candidates = everything;
+            const all = searchIn(reg, q);
+            reg.ctx.root.candidates = reg.ctx.candidates = candidates;
+            assert.deepEqual(filtered, all, `candidate filtering changes "${q}"`);
+            compared++;
+        }
+}
+// Fixed queries, and every so many headings and labels as queries of their own.
+const queriesFor = ({ ctx }, extra) => [...extra,
+    ...ctx.root.landmarks.filter((l, i) => i % 41 === 0).flatMap(l => [l.text, l.key]),
+    ...ctx.root.sections.filter((s, i) => i % 7 === 0).flatMap(s => s.items.slice(0, 1)
+        .flatMap(i => [`${s.title} ${i.text}`, `${s.titleKey} ${i.key}`]))].map(q => q.toLowerCase());
+filteringKeeps({ ctx }, [...new Set(queriesFor({ ctx }, ["dock", "lock screen", "wifi", "keyboard shortcuts", "wi-fi",
+    "work space", "lockscreen", "show", "on", "do not disturb", "dnd", "notifcations", "transparancy", "bar position",
+    "night light", "border radius", "gemini api key", "autohide", "click to focus", "icon pack", "hotkeys", "sleep",
+    "wallpaper engine"]))]);
+
+// A section drawn by a page and again by its sub-page is listed once.
+for (const q of ["night light", "dark mode"]) {
+    const titles = search(q).filter(r => !r.page && !r.landmarks).map(r => r.pageId + "|" + r.title);
+    assert.equal(new Set(titles).size, titles.length, `"${q}" repeats a section: ${titles}`);
+}
+// A heading brings at most a card's worth of its controls, and counts the rest.
+const many = search("show");
+for (const r of many.filter(r => !r.page && !r.landmarks))
+    assert.ok(r.items.length + r.subsections.reduce((n, s) => n + s.items.length, 0) <= 8, `${r.title} is not capped`);
+assert.ok(many.some(r => r.more > 0), "nothing was capped for a broad query");
+// Pages the panel family has no surface for are not offered.
+assert.ok(!search("dock").some(r => r.pageId === "tablet" || r.pageId === "lite"), "ii offers tablet settings");
+family.current = "tablet";
+assert.ok(search("dock").some(r => r.pageId === "tablet"));
+assert.ok(!search("dock").some(r => r.pageId === "dock"), "tablet offers the ii dock");
+family.current = "ii";
+
+// Arabic: the translated words find the setting, typed with or without the
+// article and its hamzas, and the English words still do.
+const arabic = registry("ar_SY");
+const tr = arabic.ctx.Translation.tr;
+for (const [q, pageId] of [[tr("Corner radius"), "dock"], [tr("Lock Screen"), "lockScreen"], [tr("Night Light"), "colors"],
+        [tr("Show seconds on a clock"), "languageTime"], ["night light", "colors"], ["الاضاءه الليليه", "colors"],
+        ["اضاءه ليليه", "colors"], ["corner radius", "dock"]])
+    assert.ok(searchIn(arabic, q).some(r => r.pageId === pageId), `ar_SY "${q}" misses ${pageId}`);
+assert.equal(searchIn(arabic, tr("Lock Screen"))[0].pageId, "lockScreen");
+// Every section title in English, which is where a label may have no translation.
+filteringKeeps(arabic, [...new Set(queriesFor(arabic, ["dock", "night light", "lock screen",
+    ...arabic.ctx.root.sections.filter((s, i) => i % 3 === 0).map(s => s.titleKey.toLowerCase())]))]);
+// Scripts without Latin letters, or without spaces, are words too.
+assert.deepEqual([...ctx.root.queryWords("Яркость экрана")], ["яркость", "экрана"]);
+assert.ok(ctx.root.textRecord("显示时钟秒数").tokens.some(t => t.startsWith("时钟")));
+
+console.log(`ok: ${ctx.root.sections.length} sections, ${ctx.root.landmarks.length} landmarks (index ${buildMs} ms), ${checked} headings round-tripped, ${compared} queries unchanged by filtering`);
 ["color scheme", "theme", "lock screen", "dock", "keyboard"].forEach(show);

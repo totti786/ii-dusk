@@ -12,16 +12,14 @@ component they instantiate (ColorsThemesConfig -> ColorsPalettePane -> ...). Thi
 out of process: scanning ~270 files in the shell's JS engine held its UI thread for
 seconds.
 
-Usage: search_landmarks.py <shell root> '<pages JSON: [{id, component, subPages}]>'
-Prints {"landmarks": [{pageId, subPage, key, subPageTitle}]}; keys are untranslated.
+``search_index.py`` runs the crawl, as part of the whole search index.
 """
 
 from __future__ import annotations
 
-import json
+import functools
 import os
 import re
-import sys
 from pathlib import Path
 
 CONFIGS = "modules/settings/configs/"
@@ -53,6 +51,7 @@ def blank(s: str, fill: str = " ") -> str:
     return "\n".join(fill * len(part) for part in s.split("\n"))
 
 
+@functools.cache
 def strip_comments(text: str) -> str:
     """Comments carry quotes and braces that are not code ("the user's ...").
     Blanked to the same length, so offsets still point into the original text."""
@@ -526,19 +525,3 @@ def crawl(shell_root: str, pages: list[dict], blocks: dict | None = None,
         sub = lm["subPage"]
         lm["subPageTitle"] = (titles.get(os.path.normpath(configs + sub)) or fallback_title(sub)) if sub else ""
     return landmarks
-
-
-def main(argv: list[str]) -> int:
-    if len(argv) != 3:
-        print(__doc__, file=sys.stderr)
-        return 2
-    pages = [p for p in json.loads(argv[2]) if p.get("searchable") is not False]
-    blocks: dict = {}
-    discovered: list[dict] = []
-    landmarks = crawl(argv[1], pages, blocks, discovered)
-    json.dump({"landmarks": landmarks, "blocks": blocks, "subPages": discovered}, sys.stdout, ensure_ascii=False)
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main(sys.argv))

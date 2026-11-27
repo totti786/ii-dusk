@@ -164,7 +164,7 @@ def _matching_end(text: str, start: int, opening: str = "{", closing: str = "}")
 
 
 def extract_blocks(text: str, component: str) -> list[dict[str, Any]]:
-    """Port of SearchRegistry.extractBlocks, with comment-aware balancing."""
+    """Like search_index.extract_blocks, with comment-aware balancing."""
     results: list[dict[str, Any]] = []
     pattern = re.compile(rf"(?<![A-Za-z0-9_]){re.escape(component)}\s*{{")
     for match in pattern.finditer(text):

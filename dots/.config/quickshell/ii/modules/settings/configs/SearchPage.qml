@@ -9,11 +9,13 @@ ContentPage {
 
     property string queryString: SearchRegistry.query
     property var results: []
-    // Sections are live QML compiled from source, so a broad query ("show":
-    // 69 sections, 156 controls) blocked the window for ~1 s when built in one
-    // pass. They are built best-first in slices of at most `buildBudgetMs`,
-    // letting frames render between slices.
+    // Sections are live QML compiled from source: building every match of a
+    // broad query ("show": 130 cards) blocked the window for most of a second
+    // and held on to a few hundred MB. Cards are built best-first, only down to
+    // a screen below what is visible, in slices of at most `buildBudgetMs` with
+    // a frame rendered between slices; scrolling builds the next ones.
     readonly property int buildBudgetMs: 12
+    readonly property real lookahead: Math.max(searchPageRoot.height, 480)
     // One slot per result, in rank order, and the slots by result key. Results
     // follow typing, and one more letter mostly re-ranks the same cards: a
     // slot whose result is still there is moved, not compiled again.
@@ -22,7 +24,19 @@ ContentPage {
 
     onQueryStringChanged: {
         results = SearchRegistry.getDynamicSearchResults(queryString);
+        // A new query is read from its best match down.
+        searchPageRoot.contentY = 0;
         buildResults();
+    }
+
+    onHeightChanged: buildSliceTimer.restart()
+
+    Connections {
+        target: searchPageRoot.flickable
+        function onContentYChanged() {
+            if (!buildSliceTimer.running)
+                buildSliceTimer.restart();
+        }
     }
 
     ColumnLayout {
@@ -82,7 +96,9 @@ ContentPage {
 
     Timer {
         id: buildSliceTimer
-        interval: 1
+        // One slice per frame: the layout has settled the height of what the
+        // last slice built before this one measures it.
+        interval: 16
         onTriggered: searchPageRoot.buildSlice()
     }
 
@@ -93,7 +109,7 @@ ContentPage {
         if (r.landmarks)
             return base + "L|" + (r.components || []).join(",") + "|" + r.landmarks.map(l => l.text).join(",");
         return base + "S|" + r.items.map(i => i.sourceStart).join(",") + "|"
-            + r.subsections.map(s => s.title + ":" + s.items.map(i => i.sourceStart).join(",")).join(";");
+            + r.subsections.map(s => s.title + ":" + s.items.map(i => i.sourceStart).join(",")).join(";") + "|" + r.more;
     }
 
     function buildResults() {
@@ -123,23 +139,38 @@ ContentPage {
 
         // Let deferred destroy() calls finish before compiling new results;
         // otherwise both queries coexist at peak memory.
-        if (next.some(slot => !slot.built))
+        if (nextSlot())
             buildSliceTimer.restart();
+    }
+
+    // The first card still to build, or null when what is built already reaches a
+    // screen below the visible part (only the cards above it count).
+    function nextSlot() {
+        const limit = searchPageRoot.contentY + searchPageRoot.height + searchPageRoot.lookahead;
+        let filled = 0;
+        for (let i = 0; i < slots.length; i++) {
+            const slot = slots[i];
+            if (!slot.built)
+                return { slot: slot, index: i };
+            filled += slot.implicitHeight + dynamicContainer.spacing;
+            if (filled >= limit)
+                break;
+        }
+        return null;
     }
 
     function buildSlice() {
         const deadline = Date.now() + buildBudgetMs;
-        for (let i = 0; i < slots.length; i++) {
-            const slot = slots[i];
-            if (slot.built)
-                continue;
-            buildSection(slot.result, i, slot);
-            slot.built = true;
-            if (Date.now() >= deadline)
-                break;
+        let next = nextSlot();
+        while (next) {
+            buildSection(next.slot.result, next.index, next.slot);
+            next.slot.built = true;
+            if (Date.now() >= deadline) {
+                buildSliceTimer.restart();
+                return;
+            }
+            next = nextSlot();
         }
-        if (slots.some(slot => !slot.built))
-            buildSliceTimer.restart();
     }
 
     // Headings of redesigned pages (hero cards, panes, chips) are not
@@ -236,7 +267,7 @@ ContentPage {
         }
         let qmlStr = section.fileImports + "\n";
         qmlStr += "import QtQuick; import QtQuick.Layouts; import qs.modules.common.widgets; import qs.services; import qs.modules.common; \n";
-        qmlStr += "ContentSection { searchResult: true; title: \"" + section.title.replace(/"/g, '\\"') + "\"; icon: \"" + section.icon + "\"; pageId: \"" + (section.pageId ? section.pageId.replace(/"/g, '\\"') : "") + "\"; subPage: \"" + (section.subPage ? section.subPage.replace(/"/g, '\\"') : "") + "\"; Layout.fillWidth: true; \n";
+        qmlStr += "ContentSection { id: __searchSection; searchResult: true; title: \"" + section.title.replace(/"/g, '\\"') + "\"; icon: \"" + section.icon + "\"; pageId: \"" + (section.pageId ? section.pageId.replace(/"/g, '\\"') : "") + "\"; subPage: \"" + (section.subPage ? section.subPage.replace(/"/g, '\\"') : "") + "\"; Layout.fillWidth: true; \n";
 
         for (let j = 0; j < section.items.length; j++) {
             qmlStr += SearchRegistry.getBlockSource(section.items[j]) + "\n";
@@ -250,6 +281,10 @@ ContentPage {
             }
             qmlStr += "}\n";
         }
+
+        if (section.more > 0)
+            qmlStr += "ConfigSubpageRow { title: Translation.tr(\"More in this section (%1)\").arg(" + section.more
+                + "); onOpenSubPage: __searchSection.navigateToLandmark(__searchSection.title) }\n";
 
         qmlStr += "}";
 
