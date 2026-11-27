@@ -262,7 +262,8 @@ Singleton {
             "icon": "mic",
             "component": "modules/settings/configs/DictationConfig.qml",
             "subPages": [],
-            "aliases": ["Speech to text", "Voice typing", "Voxtype", "Whisper", "Transcription", "Dictate"]
+            "searchSources": ["dictation/HexSections.qml", "dictation/VoxtypeSections.qml"],
+            "aliases": ["Speech to text", "Voice typing", "Voxtype", "Whisper", "Transcription", "Dictate", "Hex", "Parakeet", "Vocabulary", "Microphone"]
         },
         {
             "id": "cheatSheet",

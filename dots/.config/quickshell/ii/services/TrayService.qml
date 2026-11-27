@@ -14,11 +14,26 @@ Singleton {
     // SystemTray.items is populated asynchronously. Copy its values whenever the
     // ObjectModel changes, so the filtered properties receive a new JS array and
     // cannot remain bound to a stale in-place list.
-    property var allItems: []
+    property var rawItems: []
+    /** Every item the user has not hidden. */
+    readonly property var allItems: root.rawItems.filter(item => item && !root.isHidden(item))
 
     function refreshItems() {
         const values = SystemTray.items.values;
-        root.allItems = values ? values.slice() : [];
+        root.rawItems = values ? values.slice() : [];
+    }
+
+    /** Takes a live item or its id; a hidden item shows in no tray. */
+    function isHidden(itemOrId) {
+        const hidden = Config.options.tray.hiddenItems || [];
+        if (typeof itemOrId === "string") return hidden.includes(itemOrId);
+        return hidden.includes(root.getItemKey(itemOrId)) || hidden.includes(itemOrId.id);
+    }
+
+    function setHidden(id, hidden) {
+        if (hidden === root.isHidden(id)) return;
+        const others = (Config.options.tray.hiddenItems || []).filter(entry => entry !== id);
+        Config.options.tray.hiddenItems = hidden ? others.concat([id]) : others;
     }
 
     Connections {

@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
+import qs.services
 
 /// Tray icons, left click activates, middle click is the secondary action, right click opens the menu.
 Row {
@@ -14,7 +15,7 @@ Row {
     spacing: 8
 
     Repeater {
-        model: SystemTray.items
+        model: TrayService.allItems
         delegate: MouseArea {
             id: slot
             required property SystemTrayItem modelData

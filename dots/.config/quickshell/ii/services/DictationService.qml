@@ -8,12 +8,14 @@ import Quickshell.Hyprland
 import qs.modules.common
 import qs.modules.common.functions
 import qs.services
+import "../modules/settings/configs/dictation/voxtypeSchema.js" as VoxSchema
 
 /**
  * Speech typed straight into whatever window has focus, through voxtype or Hex.
  *
  * Two engines sit behind the same keys, bar indicator and notch: `engine` picks Voxtype (a
- * daemon the shell owns) or Hex (~/hex, which keeps itself running and pastes the text itself;
+ * daemon the shell owns) or Hex (its own app, which pastes the text itself and keeps its own
+ * settings, see `HexSettings`;
  * the shell only starts it, sends `hex dictation start|stop|toggle|cancel` and follows the
  * state events it appends to its live log). Everything below that says voxtype is the
  * Voxtype half.
@@ -56,42 +58,19 @@ Singleton {
     readonly property string engine: Config.options?.dictation?.engine ?? "hex"
     /** Minutes without use after which Hex is quit (0 keeps it running). */
     readonly property int hexIdleMinutes: Config.options?.dictation?.hexIdleMinutes ?? 10
-    /** "fast" or "accurate" — a size/latency choice, not a language one. */
-    readonly property string quality: Config.options?.dictation?.quality ?? "fast"
-    /** "auto", a single code ("fr"), or several comma-separated ("en,fr"). */
-    readonly property string language: Config.options?.dictation?.language ?? "en"
-    readonly property bool translateToEnglish: Config.options?.dictation?.translateToEnglish ?? false
-    readonly property string outputMode: Config.options?.dictation?.outputMode ?? "type"
-    readonly property bool pauseMedia: Config.options?.dictation?.pauseMedia ?? true
-    readonly property bool soundFeedback: Config.options?.dictation?.soundFeedback ?? false
+    /** The most recording either engine does in one go. */
     readonly property int maxDurationSecs: Config.options?.dictation?.maxDurationSecs ?? 60
-    readonly property int typeDelayMs: Config.options?.dictation?.typeDelayMs ?? 5
-    readonly property bool notifyOnTranscription: Config.options?.dictation?.notifyOnTranscription ?? true
-    /** 0 asks for a sensible default; anything else is passed through as-is. */
-    readonly property int threads: Config.options?.dictation?.threads ?? 0
-    /** Overrides the built-in per-language punctuation sample when set. */
-    readonly property string punctuationHint: Config.options?.dictation?.punctuationHint ?? ""
+    /** Voxtype loads its model when a recording starts instead of holding it. */
+    readonly property bool voxtypeOnDemand: Config.options?.dictation?.voxtypeOnDemand ?? true
+    readonly property bool voxtypeTrayIcon: Config.options?.dictation?.voxtypeTrayIcon ?? false
 
     // ── Models ────────────────────────────────────────────────────────────
-    /**
-     * Whisper ships an English-only variant of the small models and a
-     * multilingual one under the same size, so the language picked above — not
-     * a separate "multilingual" switch — decides which file the quality choice
-     * actually needs. `large-v3-turbo` is multilingual to begin with, which is
-     * why the accurate preset needs no such split.
-     */
-    readonly property bool englishOnly: root.language === "en"
-    readonly property string requiredModel: {
-        if (root.quality === "accurate")
-            return "large-v3-turbo";
-        return root.englishOnly ? "base.en" : "base";
-    }
-    readonly property string requiredModelSize: root.quality === "accurate" ? "1.6 GB" : "142 MB"
-    readonly property string qualityLabel: root.quality === "accurate"
-        ? Translation.tr("Whisper — Accurate")
-        : Translation.tr("Whisper — Fast")
+    /** The model Voxtype's config selects; empty until its settings are read. */
+    readonly property string requiredModel: VoxtypeSettings.model
+    /** Short name of what Voxtype transcribes with. */
+    readonly property string modelLabel: VoxtypeSettings.engine === "whisper"
+        ? `Whisper · ${root.requiredModel}` : root.requiredModel
 
-    property var installedModels: []
     /**
      * Models whose download was cut short. `voxtype setup --download` skips any
      * model file that merely exists — it prints "Model ready" and returns — so a
@@ -99,11 +78,16 @@ Singleton {
      * inside the daemon at load time. These are therefore not installed.
      */
     property var incompleteModels: []
-    readonly property bool modelReady: root.installedModels.indexOf(root.requiredModel) !== -1
+    // A custom model given by path is Voxtype's to check, and so is everything on
+    // a Voxtype too old to list its settings.
+    readonly property bool modelReady: VoxtypeSettings.unsupported
+        || (VoxtypeSettings.loaded && (root.requiredModel.startsWith("/")
+            || root.modelInstalled(VoxtypeSettings.engine, root.requiredModel)))
     readonly property bool requiredModelIncomplete: root.incompleteModels.indexOf(root.requiredModel) !== -1
 
-    function modelInstalled(model: string): bool {
-        return root.installedModels.indexOf(model) !== -1;
+    function modelInstalled(engine: string, name: string): bool {
+        return root.incompleteModels.indexOf(name) === -1
+            && VoxtypeSettings.models.some(model => model.engine === engine && model.name === name && model.installed);
     }
 
     // ── Performance ───────────────────────────────────────────────────────
@@ -112,46 +96,8 @@ Singleton {
     /** A GPU build is installed and could be switched to, but is not active. */
     property bool gpuAvailable: false
     property int cpuCount: 4
+    property bool cpuCounted: false
     readonly property bool onGpu: root.backend.indexOf("GPU") === 0
-
-    /**
-     * Whisper leaves this at `min(cores, 4)`, which on an eight-core machine
-     * spends half of it idling through a transcription the user is waiting on.
-     * One core is kept back so the rest of the session stays responsive.
-     */
-    readonly property int effectiveThreads: root.threads > 0
-        ? root.threads
-        : Math.max(2, root.cpuCount - 1)
-
-    /**
-     * Whisper punctuates in the style of the text it is primed with, and its
-     * multilingual models are noticeably worse at commas and accents outside
-     * English without that nudge. Each sample is a short, ordinary sentence
-     * carrying the punctuation the language actually uses — nothing topical,
-     * so it cannot drag the transcription towards a subject.
-     */
-    readonly property var punctuationSamples: ({
-        "fr": "Bonjour, voici un exemple : des virgules, des points, et des questions ?",
-        "es": "Hola, aquí va un ejemplo: comas, puntos, y preguntas. ¿Verdad?",
-        "de": "Guten Tag, hier ein Beispiel: Kommas, Punkte, und Fragen?",
-        "it": "Buongiorno, ecco un esempio: virgole, punti, e domande?",
-        "pt": "Olá, aqui está um exemplo: vírgulas, pontos, e perguntas?",
-        "nl": "Goedendag, hier een voorbeeld: komma's, punten, en vragen?",
-        "pl": "Dzień dobry, oto przykład: przecinki, kropki, i pytania?",
-        "ru": "Здравствуйте, вот пример: запятые, точки и вопросы?",
-        "ca": "Bon dia, aquí teniu un exemple: comes, punts, i preguntes?",
-        "sv": "God dag, här är ett exempel: kommatecken, punkter, och frågor?",
-        "en": "Hello, here is an example: commas, periods, and questions?"
-    })
-
-    readonly property string effectiveHint: {
-        if (root.punctuationHint.length > 0)
-            return root.punctuationHint;
-        // Auto-detection has no language to prime for, and priming with the
-        // wrong one costs accuracy, so it deliberately gets no sample.
-        const primary = root.language.split(",")[0].trim();
-        return root.punctuationSamples[primary] ?? "";
-    }
 
     /**
      * Switches voxtype to its Vulkan build, which is a root-owned symlink swap —
@@ -196,12 +142,14 @@ Singleton {
         if (!root.binaryChecked)
             return Translation.tr("Looking for the dictation engine…");
         if (root.useHex)
-            return !root.hexInstalled ? Translation.tr("Hex was not found (expected at ~/hex).")
+            return !root.hexInstalled ? Translation.tr("Hex was not found on this system.")
                 : !root.enabled ? Translation.tr("Dictation is turned off.") : "";
         if (!root.installed)
             return Translation.tr("Voxtype is not installed.");
         if (!root.enabled)
             return Translation.tr("Dictation is turned off.");
+        if (!VoxtypeSettings.loaded && !VoxtypeSettings.unsupported)
+            return VoxtypeSettings.error.length > 0 ? VoxtypeSettings.error : Translation.tr("Looking for the dictation engine…");
         if (root.requiredModelIncomplete)
             return Translation.tr("The %1 speech model is still downloading.").arg(root.requiredModel);
         if (!root.modelReady)
@@ -250,6 +198,8 @@ Singleton {
     onStateChanged: {
         if (root.state === "idle" || root.state === "stopped") {
             root.dictationFinished();
+            if (root.restartWanted)
+                root.requestRestart();
             // A recording was running when the engine or the feature was turned off: stop
             // Hex once the turn is done instead of leaving it resident.
             if (root.hexQuitPending && !root.busy) {
@@ -390,9 +340,13 @@ Singleton {
     }
 
     /** Short label for the language in use, for the bar and the popup. */
-    readonly property string languageBadge: root.useHex ? "EN" : root.language === "auto"
+    readonly property string languageBadge: root.useHex ? String(HexSettings.get("transcription.language") ?? "en").toUpperCase()
+        : root.voxtypeLanguage === "auto"
         ? Translation.tr("AUTO")
-        : root.language.split(",")[0].trim().toUpperCase()
+        : root.voxtypeLanguage.split(",")[0].trim().toUpperCase()
+    readonly property string voxtypeLanguage: String(VoxtypeSettings.get(`${VoxtypeSettings.engine}.language`) ?? "auto")
+    /** Whether finished text only reaches the clipboard. */
+    readonly property bool copiesOnly: !root.useHex && VoxtypeSettings.get("output.mode") === "clipboard"
 
     property double lastErrorNotifiedAt: 0
     function reportError(message: string): void {
@@ -412,43 +366,57 @@ Singleton {
         root.binaryChecked = false;
         binaryCheckProc.running = true;
         modelListProc.running = true;
+        VoxtypeSettings.refresh();
         externalDaemonProc.running = true;
         backendCheckProc.running = true;
     }
 
+    /** True while the shell itself is rewriting voxtype's config. */
+    readonly property bool configWriting: configProc.running
+
     /**
-     * Pushes the shell's settings into voxtype's own config file and restarts
-     * the daemon so they take effect. Debounced by the caller: every switch on
-     * the settings page lands here, and a restart per keystroke in the language
-     * field would make the page feel like it was fighting back.
+     * Writes the keys the shell depends on into voxtype's config file: the
+     * compositor owns the hotkey, the shell draws the indicator and reads the
+     * state file, and the recording cap is shared with Hex. Everything else is
+     * voxtype's, edited through `VoxtypeSettings`.
+     *
+     * The first time, the choices the shell used to keep itself are written too,
+     * which also gives a new install pasting, a language and a punctuation sample.
      */
     function applySettings() {
         if (!root.installed)
             return;
-        configProc.command = ["python3", root.configScript, "set",
-            "state_file=auto",
-            "hotkey.enabled=false",
-            "osd.enabled=false",
-            `whisper.model=${root.requiredModel}`,
-            `whisper.language=${root.language.indexOf(",") === -1 ? root.language : `[${root.language}]`}`,
-            `whisper.threads=${root.effectiveThreads}`,
-            `whisper.initial_prompt=${root.effectiveHint}`,
-            `whisper.translate=${root.translateToEnglish ? "true" : "false"}`,
-            `output.mode=${root.outputMode}`,
-            `output.type_delay_ms=${root.typeDelayMs}`,
-            // Paste mode puts the transcription on the clipboard to paste it.
-            // Off by default in voxtype, which means dictating quietly destroys
-            // whatever the user had copied.
-            "output.restore_clipboard=true",
-            `output.notification.on_transcription=${root.notifyOnTranscription ? "true" : "false"}`,
-            // Start and stop already have the bar pill and the notch; a
-            // notification for each as well would be three announcements of the
-            // same thing.
-            "output.notification.on_recording_start=false",
-            "output.notification.on_recording_stop=false",
-            `audio.max_duration_secs=${root.maxDurationSecs}`,
-            `audio.pause_media=${root.pauseMedia ? "true" : "false"}`,
-            `audio.feedback.enabled=${root.soundFeedback ? "true" : "false"}`];
+        const options = Config.options.dictation;
+        // One writer at a time, and the first write needs the core count.
+        if (configProc.running || VoxtypeSettings.writing || (!options.voxtypeSeeded && !root.cpuCounted)) {
+            applyTimer.restart();
+            return;
+        }
+        const pairs = ["state_file=auto", "hotkey.enabled=false", "osd.enabled=false",
+            `audio.max_duration_secs=${root.maxDurationSecs}`];
+        configProc.seeding = !options.voxtypeSeeded;
+        if (configProc.seeding) {
+            const language = options.language;
+            const model = options.quality === "accurate" ? "large-v3-turbo" : language === "en" ? "base.en" : "base";
+            pairs.push(`whisper.model=${model}`,
+                `whisper.language=${language.indexOf(",") === -1 ? language : `[${language}]`}`,
+                // Whisper uses four threads however many there are; one core is kept back.
+                `whisper.threads=${options.threads > 0 ? options.threads : Math.max(2, root.cpuCount - 1)}`,
+                `whisper.initial_prompt=${options.punctuationHint || VoxSchema.sampleFor(language)}`,
+                `whisper.translate=${options.translateToEnglish}`,
+                `output.mode=${options.outputMode}`,
+                `output.type_delay_ms=${options.typeDelayMs}`,
+                // Paste mode goes through the clipboard; without this, dictating
+                // destroys whatever the user had copied.
+                "output.restore_clipboard=true",
+                `output.notification.on_transcription=${options.notifyOnTranscription}`,
+                // The bar and the notch already announce start and stop.
+                "output.notification.on_recording_start=false",
+                "output.notification.on_recording_stop=false",
+                `audio.pause_media=${options.pauseMedia}`,
+                `audio.feedback.enabled=${options.soundFeedback}`);
+        }
+        configProc.command = ["python3", root.configScript, "set"].concat(pairs);
         configProc.running = true;
     }
 
@@ -458,29 +426,23 @@ Singleton {
         applyTimer.restart();
     }
 
-    /**
-     * The shell settings Hex actually has. `hex settings apply -` writes settings.json
-     * directly while Hex is stopped and goes through the running instance otherwise, so
-     * this starts no daemon. Voxtype-only knobs (language, output mode, threads) are not
-     * written here; the microphone is always released between dictations, which is what
-     * keeps an idle Hex from holding it.
-     */
-    function applyHexSettings() {
-        if (!root.useHex || !root.hexInstalled || !Config.ready)
-            return;
-        const body = JSON.stringify({
-            "recording_audio_behavior": root.pauseMedia ? "pause_media" : "do_nothing",
-            "sound_effects": root.soundFeedback === true,
-            "release_microphone_while_idle": true
-        });
-        Quickshell.execDetached(["bash", "-c",
-            "printf '%s' \"$1\" | hex settings apply - >/dev/null 2>&1", "--", body]);
+    /** Restarts the daemon once changes have settled and no dictation is running. */
+    property bool restartWanted: false
+    function requestRestart() {
+        restartRequestTimer.restart();
     }
 
     Timer {
-        id: hexApplyTimer
-        interval: 400
-        onTriggered: root.applyHexSettings()
+        id: restartRequestTimer
+        interval: 700
+        onTriggered: {
+            if (root.busy && !root.useHex) {
+                root.restartWanted = true;
+                return;
+            }
+            root.restartWanted = false;
+            root.restartDaemon();
+        }
     }
 
     /** Restarts our own daemon; a foreign systemd one is left for systemd to manage. */
@@ -489,8 +451,11 @@ Singleton {
             Quickshell.execDetached(["systemctl", "--user", "restart", "voxtype.service"]);
             return;
         }
-        if (!daemonProc.running)
+        // One that gave up on a bad setting has to be started again.
+        if (!daemonProc.running) {
+            daemonRestartTimer.restart();
             return;
+        }
         daemonProc.restarting = true;
         daemonProc.running = false;
     }
@@ -502,24 +467,25 @@ Singleton {
 
     /**
      * Runs the download outside the shell's process tree, on purpose. A model is
-     * up to 1.6 GB, and a `Process` owned by the shell dies with the next config
+     * up to 2 GB, and a `Process` owned by the shell dies with the next config
      * reload — which used to abandon the download half-written. Detached, the
      * transfer finishes regardless, and the marker file it leaves behind is what
      * this service watches; a reload simply reconnects to the progress.
      */
-    function downloadModel(model: string) {
+    function downloadModel(engine: string, model: string, downloadArg: string) {
         if (root.downloadingModel.length > 0)
             return;
         root.lastError = "";
         root.downloadProgress = 0;
         root.downloadingModel = model;
-        Quickshell.execDetached(["bash", "-c", root.downloadScript, "--", root.stateDir, model]);
+        Quickshell.execDetached(["bash", "-c", root.downloadScript, "--", root.stateDir, model,
+            downloadArg, VoxSchema.modelFile(engine, model)]);
         downloadWatchTimer.restart();
     }
 
     readonly property string downloadScript: [
         "set -u",
-        "state=\"$1\"; model=\"$2\"",
+        "state=\"$1\"; model=\"$2\"; arg=\"$3\"; file=\"$4\"",
         "models=\"${XDG_DATA_HOME:-$HOME/.local/share}/voxtype/models\"",
         "mkdir -p \"$state\"",
         "rm -f \"$state/failed-$model\" \"$state/log-$model\"",
@@ -527,21 +493,25 @@ Singleton {
         // Any leftover file has to go first: voxtype reports an existing one as
         // "Model ready" and downloads nothing, so a retry after a failure would
         // otherwise keep the broken file forever.
-        "rm -f \"$models/ggml-$model.bin\"",
-        "if voxtype setup --download --model \"$model\" --no-post-install > \"$state/log-$model\" 2>&1; then",
+        "[ -n \"$file\" ] && rm -f \"$models/$file\"",
+        "if voxtype setup --download --model \"$arg\" --no-post-install --progress-format json > \"$state/log-$model\" 2>&1; then",
         "    rm -f \"$state/incomplete-$model\"",
         "else",
-        "    rm -f \"$models/ggml-$model.bin\" \"$state/incomplete-$model\"",
+        "    [ -n \"$file\" ] && rm -f \"$models/$file\"",
+        "    rm -f \"$state/incomplete-$model\"",
         "    : > \"$state/failed-$model\"",
         "fi"
     ].join("\n")
 
-    function removeModel(model: string) {
+    function removeModel(engine: string, model: string) {
+        const file = VoxSchema.modelFile(engine, model);
+        if (file.length === 0)
+            return;
         const dataHome = Quickshell.env("XDG_DATA_HOME");
         const base = (dataHome && dataHome.length > 0) ? dataHome : `${Quickshell.env("HOME")}/.local/share`;
         removeProc.command = ["bash", "-c",
-            "rm -f \"$1/voxtype/models/ggml-$3.bin\" \"$2/incomplete-$3\" \"$2/log-$3\" \"$2/failed-$3\"",
-            "--", base, root.stateDir, model];
+            "rm -f -- \"$1/voxtype/models/$4\" \"$2/incomplete-$3\" \"$2/log-$3\" \"$2/failed-$3\"",
+            "--", base, root.stateDir, model, file];
         removeProc.running = true;
     }
 
@@ -586,6 +556,7 @@ Singleton {
                 const cores = parseInt(lines[0]);
                 if (!isNaN(cores) && cores > 0)
                     root.cpuCount = cores;
+                root.cpuCounted = true;
                 root.backend = lines[1] ?? "";
                 root.gpuAvailable = lines.indexOf("gpu-available") !== -1;
             }
@@ -622,28 +593,16 @@ Singleton {
         onExited: exitCode => root.externalDaemon = (exitCode === 0)
     }
 
-    /**
-     * Which models are on disk, and which are only partly there. `voxtype setup
-     * model --list` prints a human table, so the file names are read directly
-     * instead — one less output format to track across voxtype releases.
-     */
+    /** Downloads left unfinished; what is installed comes from voxtype itself. */
     Process {
         id: modelListProc
         command: ["bash", "-c",
-            "state=\"$1\"; dir=\"${XDG_DATA_HOME:-$HOME/.local/share}/voxtype/models\"; " +
-            "if [ -d \"$dir\" ]; then for f in \"$dir\"/ggml-*.bin; do [ -e \"$f\" ] || continue; " +
-            "b=$(basename \"$f\"); b=${b#ggml-}; echo \"ok:${b%.bin}\"; done; fi; " +
-            "if [ -d \"$state\" ]; then for f in \"$state\"/incomplete-*; do [ -e \"$f\" ] || continue; " +
-            "b=$(basename \"$f\"); echo \"partial:${b#incomplete-}\"; done; fi",
+            "for f in \"$1\"/incomplete-*; do [ -e \"$f\" ] || continue; b=$(basename \"$f\"); echo \"${b#incomplete-}\"; done",
             "--", root.stateDir]
         stdout: StdioCollector {
             onStreamFinished: {
-                const lines = text.trim().split("\n").map(line => line.trim()).filter(line => line.length > 0);
-                const partial = lines.filter(line => line.indexOf("partial:") === 0).map(line => line.substring(8));
+                const partial = text.trim().split("\n").map(line => line.trim()).filter(line => line.length > 0);
                 root.incompleteModels = partial;
-                root.installedModels = lines.filter(line => line.indexOf("ok:") === 0)
-                    .map(line => line.substring(3))
-                    .filter(model => partial.indexOf(model) === -1);
                 // A download still running from before this shell reloaded:
                 // pick it back up rather than leaving the page on "Download".
                 if (partial.length > 0 && root.downloadingModel.length === 0) {
@@ -660,9 +619,11 @@ Singleton {
         property bool restarting: false
         running: Config.ready && !root.useHex && root.enabled && root.installed && root.modelReady
             && root.configApplied && !root.externalDaemon
-        // The model loads when a recording starts, while the audio is already being
-        // captured, instead of holding ~60 MB of RAM and ~150 MB of VRAM all session.
-        command: ProcUtils.pdeath(["voxtype", "--on-demand-loading", "daemon"])
+        // On demand, the model loads when a recording starts, while the audio is
+        // already being captured, instead of holding ~60 MB of RAM and ~150 MB of
+        // VRAM all session.
+        command: ProcUtils.pdeath(["voxtype"].concat(root.voxtypeOnDemand ? ["--on-demand-loading"] : [],
+            [`--tray=${root.voxtypeTrayIcon}`, "daemon"]))
         stderr: SplitParser {
             onRead: data => {
                 // voxtype logs to stderr; only the failures are worth keeping.
@@ -845,9 +806,6 @@ Singleton {
             }
             if (root.hexState === "stopped")
                 root.hexState = "idle";
-            // A change made while Hex was down was written straight to settings.json; apply it
-            // through the now-running instance too, so the daemon and the file agree.
-            root.applyHexSettings();
             if ((action === "start" || action === "toggle") && root.available && root.useHex) {
                 if (root.voiceCaptureBusy())
                     root.reportError(Translation.tr("The AI assistant is using the microphone. Stop it to start dictation."));
@@ -863,6 +821,7 @@ Singleton {
         id: idleQuitTimer
         interval: Math.max(1, root.hexIdleMinutes) * 60000
         running: root.useHex && root.enabled && root.hexIdleMinutes > 0 && root.state === "idle" && !root.hexStarting
+            && HexSettings.installingModel.length === 0
         onTriggered: {
             if (root.busy || root.hexStarting)
                 return;
@@ -955,6 +914,7 @@ Singleton {
 
     Process {
         id: configProc
+        property bool seeding: false
         stdout: StdioCollector {}
         stderr: SplitParser {
             onRead: data => {
@@ -964,34 +924,30 @@ Singleton {
             }
         }
         onExited: exitCode => {
+            Qt.callLater(() => VoxtypeSettings.flush());
             if (exitCode !== 0)
                 return;
+            if (configProc.seeding)
+                Config.options.dictation.voxtypeSeeded = true;
+            VoxtypeSettings.refresh();
             if (!root.configApplied) {
                 // First write of the session: the binding above starts the
                 // daemon on its own, so restarting here would only fight it.
                 root.configApplied = true;
                 return;
             }
-            root.restartDaemon();
+            root.requestRestart();
         }
     }
 
     Connections {
         target: Config.options?.dictation ?? null
         enabled: target !== null
-        function onQualityChanged() { root.scheduleApply(); }
-        function onLanguageChanged() { root.scheduleApply(); }
-        function onTranslateToEnglishChanged() { root.scheduleApply(); }
-        function onOutputModeChanged() { root.scheduleApply(); }
-        function onPauseMediaChanged() { root.scheduleApply(); hexApplyTimer.restart(); }
-        function onSoundFeedbackChanged() { root.scheduleApply(); hexApplyTimer.restart(); }
         function onMaxDurationSecsChanged() { root.scheduleApply(); }
-        function onThreadsChanged() { root.scheduleApply(); }
-        function onTypeDelayMsChanged() { root.scheduleApply(); }
-        function onNotifyOnTranscriptionChanged() { root.scheduleApply(); }
-        function onPunctuationHintChanged() { root.scheduleApply(); }
+        // Flags on the daemon's command line.
+        function onVoxtypeOnDemandChanged() { root.requestRestart(); }
+        function onVoxtypeTrayIconChanged() { root.requestRestart(); }
         function onEngineChanged() {
-            hexApplyTimer.restart();
             // One engine at a time: leaving Hex for Voxtype stops the Hex daemon instead of
             // leaving it resident. The Voxtype daemon's own binding starts and stops it.
             if (!root.useHex)
@@ -1000,7 +956,6 @@ Singleton {
         function onEnabledChanged() {
             if (Config.options.dictation.enabled) {
                 root.scheduleApply();
-                hexApplyTimer.restart();
             } else {
                 root.cancelPendingStart();
                 // Nothing to dictate with: do not leave Hex resident while the feature is off.
@@ -1031,9 +986,7 @@ Singleton {
 
     /**
      * Prints the download's state on the first line and its latest percentage on
-     * the second. The percentage comes out of the log the download writes: curl
-     * puts its progress bar on stderr, carriage-returned rather than newlined,
-     * which is why the log is folded before the last reading is picked out.
+     * the second, taken from the progress events the download logs.
      */
     readonly property string downloadWatchScript: [
         "set -u",
@@ -1041,7 +994,7 @@ Singleton {
         "if [ -f \"$state/failed-$model\" ]; then echo failed",
         "elif [ -f \"$state/incomplete-$model\" ]; then echo running",
         "else echo done; fi",
-        "tr '\\r' '\\n' < \"$state/log-$model\" 2>/dev/null | grep -o '[0-9][0-9.]*%' | tail -1"
+        "grep -o '\"pct\":[0-9.]*' \"$state/log-$model\" 2>/dev/null | tail -1 | cut -d: -f2"
     ].join("\n")
 
     Process {
@@ -1050,7 +1003,7 @@ Singleton {
             onStreamFinished: {
                 const lines = text.trim().split("\n");
                 const status = (lines[0] ?? "").trim();
-                const percent = parseFloat((lines[1] ?? "").replace("%", ""));
+                const percent = parseFloat(lines[1] ?? "");
                 if (!isNaN(percent))
                     root.downloadProgress = Math.max(0, Math.min(100, percent)) / 100;
                 if (status === "running")
@@ -1063,16 +1016,17 @@ Singleton {
                     root.lastError = Translation.tr("Downloading the %1 model failed. See the log for what voxtype said.").arg(model);
                 Quickshell.execDetached(["rm", "-f", `${root.stateDir}/failed-${model}`, `${root.stateDir}/log-${model}`]);
                 modelListProc.running = true;
-                // A finished download also repoints voxtype's config at whatever
-                // was fetched, so the shell's own choice is written back over it.
-                root.scheduleApply();
+                VoxtypeSettings.refresh();
             }
         }
     }
 
     Process {
         id: removeProc
-        onExited: modelListProc.running = true
+        onExited: {
+            modelListProc.running = true;
+            VoxtypeSettings.refresh();
+        }
     }
 
     // ── Keybind ───────────────────────────────────────────────────────────

@@ -340,7 +340,7 @@ MouseArea {
                         return DictationService.available
                             ? Translation.tr("Click to start dictating")
                             : Translation.tr("Not ready — see Settings");
-                    return Config.options.dictation.outputMode === "clipboard"
+                    return DictationService.copiesOnly
                         ? Translation.tr("Click to stop and copy text")
                         : Translation.tr("Click to stop and insert text");
                 }
@@ -459,7 +459,7 @@ MouseArea {
                     visible: indicator.recording
                     buttonRadius: Appearance.rounding.full
                     materialIcon: "keyboard_tab"
-                    mainText: Config.options.dictation.outputMode === "clipboard"
+                    mainText: DictationService.copiesOnly
                         ? Translation.tr("Stop & copy")
                         : Translation.tr("Stop & insert")
                     colBackground: Appearance.colors.colPrimary

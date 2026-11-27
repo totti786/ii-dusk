@@ -55,6 +55,7 @@ import qs.modules.settings.configs.background
 import qs.modules.settings.configs.cheatsheet
 import qs.modules.settings.configs.contextMenus
 import qs.modules.settings.configs.devices
+import qs.modules.settings.configs.dictation
 import qs.modules.settings.configs.dock
 import qs.modules.settings.configs.dockUtilities
 import qs.modules.settings.configs.hyprland

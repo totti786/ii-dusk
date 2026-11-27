@@ -187,7 +187,7 @@ Item {
                 StyledText {
                     Layout.fillWidth: true
                     text: root.transcribing
-                        ? DictationService.qualityLabel
+                        ? DictationService.useHex ? "Hex" : DictationService.modelLabel
                         : Translation.tr("Types into the focused window")
                     elide: Text.ElideRight
                     font.pixelSize: Appearance.font.pixelSize.smaller

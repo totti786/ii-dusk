@@ -7113,36 +7113,30 @@ Singleton {
                 // Minutes of silence after which the shell quits Hex (it starts again on the
                 // next press). 0 keeps it running.
                 property int hexIdleMinutes: 10
-                // "fast" (base, 142 MB) or "accurate" (large-v3-turbo, 1.6 GB).
-                // A size/latency choice; the language below picks the variant.
+                // The longest single recording, for both engines.
+                property int maxDurationSecs: 60
+                // Voxtype loads its model per recording rather than holding it.
+                property bool voxtypeOnDemand: true
+                // Voxtype's own tray icon; the shell already shows dictation.
+                property bool voxtypeTrayIcon: false
+                // Voxtype's settings live in its own config file. These are only
+                // written into it the first time, then `voxtypeSeeded` is set.
+                property bool voxtypeSeeded: false
+                // "fast" (base) or "accurate" (large-v3-turbo).
                 property string quality: "fast"
-                // "auto" to let Whisper detect it, a single code ("fr"), or
-                // several comma-separated ("en,fr") to detect within that set.
+                // "auto", a single code ("fr"), or several comma-separated ("en,fr").
                 property string language: "en"
                 property bool translateToEnglish: false
-                // "paste" (clipboard + Ctrl+V), "type" (synthesised keystrokes),
-                // or "clipboard" (copy only). Paste is the default because
-                // typing races the receiving app and loses characters in
-                // plenty of them; pasting arrives in one piece.
+                // "paste" (clipboard + Ctrl+V), "type" or "clipboard". Paste is the
+                // default because typing loses characters in plenty of apps.
                 property string outputMode: "paste"
                 property bool pauseMedia: true
                 property bool soundFeedback: false
-                property int maxDurationSecs: 60
-                // CPU threads for transcription. 0 leaves it to the shell,
-                // which keeps one core free; Whisper's own default is four
-                // regardless of how many the machine has.
+                // 0 keeps one core free.
                 property int threads: 0
-                // Primes Whisper with a punctuated sample so it punctuates in
-                // kind. Empty picks one to match the language.
+                // Empty picks a punctuated sample to match the language.
                 property string punctuationHint: ""
-                // Milliseconds between synthesised keystrokes. Voxtype types
-                // with no gap by default, which silently loses characters in
-                // plenty of apps — the words arrive one letter short.
                 property int typeDelayMs: 5
-                // Voxtype's own notification carrying the finished text. Worth
-                // keeping on: with the text pasted into another window, this is
-                // the only place it can be read back if it landed somewhere
-                // unexpected.
                 property bool notifyOnTranscription: true
                 property bool showIndicator: true
                 // Keeps the microphone in the bar while idle, as a click target
@@ -8386,6 +8380,7 @@ Singleton {
                 property bool invertPinnedItems: false // Makes the below a whitelist for the tray and blacklist for the pinned area
                 property list<var> pinnedItems: ["Fcitx"]
                 property bool filterPassive: false
+                property list<var> hiddenItems: [] // Item ids that are not shown anywhere
             }
 
 
