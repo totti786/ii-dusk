@@ -189,7 +189,10 @@ Scope {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
         // Keep the native pointer grab alive until release. The island owns
-        // its own grab when pulling a bubble out; that preview stays passthrough.
+        // its own grab when pulling a bubble out; that preview stays passthrough
+        // for a mouse. A touch drag takes input anyway: a second finger or a palm
+        // landing on another app takes the dragging finger's lift with it, and the
+        // orb stays stuck. The finger already down keeps its own surface.
         // The orb's own hit area is a rectangle bound to where the orb is going, not
         // the item: a region that follows the item only refreshes when the item's
         // own geometry changes, so after the orb was moved by a summon (not a drag,
@@ -197,7 +200,7 @@ Scope {
         mask: root.ui.dragging ? dragMask : orbMask
         Region {
             id: dragMask
-            item: root.ui.dragging ? (root.ui.dragFromIsland ? null : fullWindow) : null
+            item: root.ui.dragging && (!root.ui.dragFromIsland || root.ui.dragTouch) ? fullWindow : null
         }
         Region {
             id: orbMask

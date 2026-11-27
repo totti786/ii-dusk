@@ -11,7 +11,7 @@ CompanionPointer {
     property bool fromIsland: false
     property string monitorName: String(grip.QsWindow.window?.screen?.name ?? "")
     onPressedChanged: AiCompanionUi.controlPressed = pressed
-    onDragStarted: (pointer, center) => AiCompanionUi.beginDrag(pointer.x, pointer.y, center.x, center.y, monitorName, fromIsland)
+    onDragStarted: (pointer, center, touch) => AiCompanionUi.beginDrag(pointer.x, pointer.y, center.x, center.y, monitorName, fromIsland, touch)
     onDragMoved: pointer => AiCompanionUi.moveDrag(pointer.x, pointer.y)
     onDragFinished: AiCompanionUi.finishDrag()
     onDragCancelled: AiCompanionUi.cancelDrag()

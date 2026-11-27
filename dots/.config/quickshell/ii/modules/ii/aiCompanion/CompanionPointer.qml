@@ -11,7 +11,8 @@ Item {
     property point centerPoint
     property bool didDrag: false
     signal activated(bool rightButton)
-    signal dragStarted(point pointer, point center)
+    /** `touch`: a finger is dragging, not a mouse. */
+    signal dragStarted(point pointer, point center, bool touch)
     signal dragMoved(point pointer)
     signal dragFinished()
     signal dragCancelled()
@@ -42,7 +43,8 @@ Item {
         onActiveChanged: {
             if (active) {
                 root.didDrag = true;
-                root.dragStarted(root.pressPoint, root.centerPoint);
+                root.dragStarted(root.pressPoint, root.centerPoint,
+                    centroid.device?.type === PointerDevice.TouchScreen);
                 root.dragMoved(root.globalPoint(centroid.scenePosition));
             } else root.dragFinished();
         }
@@ -51,4 +53,6 @@ Item {
         }
         onCanceled: root.dragCancelled()
     }
+    // An item destroyed mid-drag never hears the release, which would leave the drag on.
+    Component.onDestruction: if (drag.active) root.dragFinished()
 }

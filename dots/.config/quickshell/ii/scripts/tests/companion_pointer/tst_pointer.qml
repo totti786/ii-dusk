@@ -9,6 +9,13 @@ Item {
     property point centre
     property bool dragging: false
     property int taps: 0
+    property bool touched: false
+    property int finished: 0
+    Loader {
+        id: passing
+        x: 500; y: 200; width: 76; height: 76
+        sourceComponent: Companion.CompanionPointer { onDragFinished: scene.finished++ }
+    }
     Rectangle {
         id: moving
         x: 200; y: 200; width: 76; height: 76
@@ -16,7 +23,7 @@ Item {
             id: pointer
             anchors.fill: parent
             onActivated: scene.taps++
-            onDragStarted: (p, c) => { scene.origin = p; scene.centre = c; scene.dragging = true; }
+            onDragStarted: (p, c, touch) => { scene.origin = p; scene.centre = c; scene.dragging = true; scene.touched = touch; }
             onDragMoved: p => {
                 moving.width = 76;
                 moving.x = scene.centre.x + p.x-scene.origin.x - scene.mapToGlobal(0,0).x - 38;
@@ -28,7 +35,32 @@ Item {
     TestCase {
         name: "CompanionPointer"
         when: windowShown
-        function init() { moving.x=200; moving.y=200; moving.width=76; scene.dragging=false; scene.taps=0; }
+        function init() { moving.x=200; moving.y=200; moving.width=76; scene.dragging=false; scene.taps=0; scene.finished=0; passing.active=true; }
+        function test_touch_drag_is_told_apart_from_a_mouse_drag() {
+            const finger = touchEvent(scene);
+            finger.press(1, scene, 238, 238).commit(); wait(20);
+            finger.move(1, scene, 268, 268).commit(); wait(20);
+            finger.move(1, scene, 288, 278).commit(); wait(20);
+            verify(scene.dragging);
+            verify(scene.touched);
+            finger.release(1, scene, 288, 278).commit(); wait(20);
+            verify(!scene.dragging);
+            mousePress(scene, 288, 278);
+            mouseMove(scene, 318, 298, 20);
+            verify(scene.dragging);
+            verify(!scene.touched);
+            mouseRelease(scene, 318, 298);
+        }
+        function test_destroyed_mid_drag_still_finishes() {
+            mousePress(scene, 538, 238);
+            mouseMove(scene, 578, 258, 20);
+            mouseMove(scene, 598, 268, 20);
+            compare(scene.finished, 0);
+            passing.active = false;
+            tryCompare(scene, "finished", 1);
+            mouseRelease(scene, 598, 268);
+            compare(scene.finished, 1);
+        }
         function test_moving_parent_does_not_feed_back_into_drag() {
             mousePress(scene, 238, 238);
             mouseMove(scene, 258, 258, 20);

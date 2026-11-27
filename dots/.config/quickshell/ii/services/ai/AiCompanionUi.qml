@@ -160,6 +160,7 @@ Singleton {
     }
     property bool dragging: false
     property bool dragFromIsland: false
+    property bool dragTouch: false
     property bool controlPressed: false
     property string dragMonitor: ""
     property real dragX: 0
@@ -247,20 +248,31 @@ Singleton {
         root.saved.docked = false;
         root.show();
     }
-    function beginDrag(x, y, centerX, centerY, monitor, fromIsland): void {
+    function beginDrag(x, y, centerX, centerY, monitor, fromIsland, touch): void {
         root.pointerX = x; root.pointerY = y;
         root.startX = centerX; root.startY = centerY;
         root.dragX = centerX; root.dragY = centerY;
         root.dragMonitor = monitor;
         root.dragFromIsland = fromIsland;
         root.dragDockTarget = root.dockTarget;
+        root.dragTouch = touch === true;
         root.dragging = true;
+        if (root.dragTouch) lostTouch.restart();
     }
     function moveDrag(x, y): void {
         if (!root.dragging) return;
         root.dragX = root.startX + x-root.pointerX;
         root.dragY = root.startY + y-root.pointerY;
         root.dragMonitor = root.screenAt(root.dragX, root.dragY)?.name ?? root.dragMonitor;
+        if (root.dragTouch) lostTouch.restart();
+    }
+    // A backstop for a touch lift that never arrives. A finger that is really down keeps
+    // jittering, so a touch drag that has gone silent is over: the orb drops where it was.
+    Timer {
+        id: lostTouch
+        interval: 6000
+        running: false
+        onTriggered: if (root.dragTouch) root.finishDrag()
     }
     function finishDrag(): void {
         if (!root.dragging) return;
