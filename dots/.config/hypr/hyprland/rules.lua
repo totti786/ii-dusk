@@ -489,7 +489,7 @@ hl.layer_rule({ match = { namespace = "gtk4-layer-shell" }, no_anim = true })
 -- event with an is_empty check is the replacement.
 hl.on("workspace.created", function(ws)
     if ws and ws.is_empty and ws.name == "special:drop" then
-        hl.exec_cmd("alacritty --class Alacritty-drop")
+        hl.exec_cmd("~/.config/hypr/hyprland/scripts/terminal.sh --class Alacritty-drop")
     end
 end)
 

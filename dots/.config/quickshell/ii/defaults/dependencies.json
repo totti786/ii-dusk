@@ -12,6 +12,13 @@
     "version": 1,
     "features": [
         {
+            "id": "terminal",
+            "tier": "required",
+            "label": "Terminal",
+            "description": "Alacritty, the terminal the shell and its shortcuts open. kitty is used when it is missing.",
+            "packages": [{ "name": "alacritty", "bin": "alacritty" }]
+        },
+        {
             "id": "which",
             "tier": "required",
             "label": "which",

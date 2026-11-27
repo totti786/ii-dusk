@@ -674,7 +674,7 @@ end
 local qsConfig = "ii"
 local qs = "qs -c " .. qsConfig
 local mainMod = "SUPER"
-local terminal = "alacritty"
+local terminal = "~/.config/hypr/hyprland/scripts/terminal.sh"
 
 
 ---------------

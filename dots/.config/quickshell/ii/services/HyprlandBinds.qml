@@ -484,7 +484,7 @@ Singleton {
      */
     readonly property var essentials: [
         { "id": "terminal", "icon": "terminal", "label": Translation.tr("Open a terminal"),
-          "test": /exec_cmd\(\s*terminal\b|\b(kitty|foot|alacritty|wezterm|konsole|ghostty|kgx|xterm)\b/ },
+          "test": /exec_cmd\(\s*terminal\b|\b(kitty|foot|alacritty|wezterm|konsole|ghostty|kgx|xterm)\b|\bterminal\.sh\b/ },
         { "id": "session", "icon": "power_settings_new", "label": Translation.tr("Reach the session menu"),
           "test": /quickshell:sessionToggle|wlogout|systemctl poweroff|loginctl (poweroff|terminate)/ }
     ]

@@ -77,6 +77,9 @@
 # feature, are only ever installed through `deps`; `deps --remove` uninstalls
 # only what `deps` itself installed, recorded in ~/.local/state/ii-dusk.
 #
+# `install` also makes Alacritty the terminal, in place of the base's kitty: it
+# is one of the core packages, and kitty is the fallback when it is missing.
+#
 # On Arch, `install` selects the AUR quickshell-dusk-git package: the base
 # installer builds its own pinned quickshell. The Dusk fork adds startup
 # optimizations. Selection happens before config deployment and asks unless -y.
@@ -3329,6 +3332,8 @@ apply_config() {
     fi
 
     handle_base_config "$verb" "$prev_fork" "$fork"
+    # While the shell is down, so it cannot write its config over this.
+    [[ "$verb" != "install" ]] || set_default_terminal "$TARGET_DIR"
 
     start_quickshell
 
@@ -3351,6 +3356,89 @@ apply_config() {
     ui_result ok "$verb complete $G_SEP $(ui_elapsed)" \
         "$summary" \
         "$(tilde "$TARGET_DIR")"
+    return 0
+}
+
+# set_default_terminal <ii dir> — what `install` runs after the deployment.
+#
+# Alacritty is the fork's terminal and kitty the fallback. The base installer
+# names kitty in the shell's config, fuzzel and KDE, so those move over. Only the
+# values the base or the fork ships are replaced: a terminal you picked stays.
+set_default_terminal() {
+    local ii_dir="$1" term=""
+    if have alacritty; then
+        term=alacritty
+    elif have kitty; then
+        term=kitty
+    else
+        ui_warn "Neither alacritty nor kitty is installed: $CLI_NAME deps add terminal"
+        return 0
+    fi
+    have python3 || return 0
+    local changed
+    changed="$(python3 - "$term" "$BASE_CONFIG_FILE" "$XDG_CONFIG_HOME" "$ii_dir/modules/common/Config.qml" 2>>"$LOG_FILE" <<'PY'
+import json, os, re, sys
+from pathlib import Path
+
+term, config, config_home, schema = sys.argv[1], Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4])
+password = "alacritty --hold -e passwd" if term == "alacritty" else "kitty --hold -e passwd"
+# What each key holds when nobody chose it: the base installer's value, the fork's.
+shipped = {
+    "terminal": ({"kitty -1", "alacritty"}, term),
+    "changePassword": ({"kitty -1 --hold=yes fish -i -c 'passwd'", "alacritty --hold -e passwd"}, password),
+    "update": ({"kitty -1 --hold=yes fish -i -c 'pkexec pacman -Syu'"}, "qs -c ii ipc call packages open ''"),
+}
+
+
+def write(path, text):
+    # Through a symlink to the file it names, and never half written.
+    path = Path(os.path.realpath(path))
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(text, encoding="utf-8")
+    if path.exists():
+        os.chmod(tmp, path.stat().st_mode & 0o7777)
+    os.replace(tmp, path)
+
+
+if config.exists():
+    data = json.loads(config.read_text(encoding="utf-8"))
+    apps = data.get("apps")
+    moved = False
+    if isinstance(apps, dict):
+        for key, (old, new) in shipped.items():
+            if apps.get(key) in old and apps[key] != new:
+                apps[key] = new
+                moved = True
+    if moved:
+        write(config, json.dumps(data, indent=4, ensure_ascii=False) + "\n")
+        print("config.json")
+elif term != "alacritty":
+    # The shell's own defaults say Alacritty. Stamped with the schema version, so
+    # a file this short is not taken for an old one and migrated.
+    found = re.search(r"currentConfigVersion\s*:\s*(\d+)", schema.read_text(encoding="utf-8"))
+    if found:
+        config.parent.mkdir(parents=True, exist_ok=True)
+        data = {"configVersion": int(found.group(1)), "apps": {"terminal": term, "changePassword": password}}
+        write(config, json.dumps(data, indent=4) + "\n")
+        print("config.json")
+
+if term == "alacritty":
+    for name, old, new in (("fuzzel/fuzzel.ini", "terminal=kitty -1", "terminal=alacritty -e"),
+                           ("kdeglobals", "TerminalApplication=kitty -1", "TerminalApplication=alacritty")):
+        path = config_home / name
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        replaced = re.sub("(?m)^" + re.escape(old) + "$", new, text)
+        if replaced != text:
+            write(path, replaced)
+            print(name)
+PY
+    )" || {
+        ui_warn "Could not set the default terminal — see $(tilde "$LOG_FILE")."
+        return 0
+    }
+    ui_ok "Terminal" "$term$([[ -z "$changed" ]] || printf ' %s %s' "$G_ARROW" "${changed//$'\n'/, }")"
     return 0
 }
 

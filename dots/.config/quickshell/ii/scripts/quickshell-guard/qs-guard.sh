@@ -110,6 +110,8 @@ open_terminal() {
     local term=""
     have jq && term="$(jq -r '.apps.terminal // empty' "$config" 2>/dev/null)"
     [[ -n "$term" ]] || term="alacritty"
+    # Alacritty is the default and kitty the fallback.
+    [[ "$term" != alacritty ]] || have alacritty || ! have kitty || term="kitty"
     local cmd
     read -ra cmd <<<"$term"
     if (($# > 0)); then
