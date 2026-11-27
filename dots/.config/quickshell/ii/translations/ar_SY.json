@@ -22558,5 +22558,7 @@
   "Open in browser (http://localhost:%1)": "فتح في المتصفح (http://localhost:%1)",
   "Open http://localhost:%1 in browser": "فتح http://localhost:%1 في المتصفح",
   "Manage actions": "إدارة الإجراءات",
-  "RAM: %1": "الذاكرة: %1"
+  "RAM: %1": "الذاكرة: %1",
+  "Display the bar on only one chosen monitor instead of all monitors. Rendering the bar on multiple monitors duplicates all widgets and consumes significantly more RAM.": "عرض الشريط على شاشة واحدة مختارة بدل كل الشاشات. رسم الشريط على عدة شاشات يكرّر كل الودجات ويستهلك ذاكرة أكبر بكثير.",
+  "The monitor the dock lives on. Showing on all monitors duplicates the dock window and increases RAM usage.": "الشاشة التي يعيش عليها الرصيف. إظهاره على كل الشاشات يكرّر نافذة الرصيف ويزيد استهلاك الذاكرة."
 }

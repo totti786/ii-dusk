@@ -272,14 +272,20 @@ class SourceCoverageTest(unittest.TestCase):
 
     def test_every_source_is_wired_into_the_set(self):
         wiring = (self.CORE / "sources/IslandSources.qml").read_text(encoding="utf-8")
-        listed = wiring.split("readonly property list<QtObject> all: [", 1)[1].split("]", 1)[0]
+        listed = wiring.split("readonly property var all: [", 1)[1].split("]", 1)[0]
         for activity_id, filename in self.sources.items():
             type_name = filename[:-4]
-            self.assertIn(type_name, wiring, f"{type_name} is never instantiated")
-            prop = re.search(rf"readonly property {type_name} (\w+):", wiring)
-            self.assertIsNotNone(prop, f"{type_name} has no named property")
-            self.assertIn(prop.group(1), listed,
-                          f"{type_name} is instantiated but missing from `all`")
+            eager = re.search(rf"readonly property {type_name} (\w+):", wiring)
+            if eager:
+                name = eager.group(1)
+            else:
+                loader = re.search(rf'id: (\w+Loader); [^\n]*fileName: "{filename}"', wiring)
+                self.assertIsNotNone(loader, f"{type_name} is never loaded")
+                prop = re.search(rf"readonly property var (\w+): {loader.group(1)}\.item", wiring)
+                self.assertIsNotNone(prop, f"{type_name} has no named property")
+                name = prop.group(1)
+            self.assertRegex(listed, rf"\b{name}\b",
+                             f"{type_name} is loaded but missing from `all`")
 
 
 class GatingTest(unittest.TestCase):

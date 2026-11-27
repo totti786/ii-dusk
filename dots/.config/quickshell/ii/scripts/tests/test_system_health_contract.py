@@ -31,7 +31,6 @@ CONFIG = read("modules/common/Config.qml")
 FAMILY = read("panelFamilies/IllogicalImpulseFamily.qml")
 ISLAND_REGISTRY = read("modules/ii/dynamicIsland/core/IslandRegistry.qml")
 ISLAND_SOURCES = read("modules/ii/dynamicIsland/core/sources/IslandSources.qml")
-DEFERRED_ISLAND_SOURCES = read("modules/ii/dynamicIsland/core/sources/DeferredIslandSources.qml")
 HELPERS = read("scripts/rust-helpers.sh")
 
 HEALTH_TOOLS = (
@@ -97,8 +96,8 @@ class WiringTests(unittest.TestCase):
 
     def test_island_activity_can_be_turned_off(self):
         self.assertIn('id: "health",', ISLAND_REGISTRY)
-        self.assertIn("readonly property HealthSource health: HealthSource {}", DEFERRED_ISLAND_SOURCES)
-        self.assertIn("readonly property var health: optional.item ? optional.item.health : null", ISLAND_SOURCES)
+        self.assertIn('fileName: "HealthSource.qml"; deferred: true', ISLAND_SOURCES)
+        self.assertIn("readonly property var health: healthLoader.item", ISLAND_SOURCES)
         self.assertIn("property bool disableHealth: false", CONFIG)
         self.assertRegex(CONFIG, r"property JsonObject health: JsonObject \{\s*property bool enable: true\s*\}")
 
