@@ -748,7 +748,9 @@ Item {
         gap: bubble.gap
         surfaceColor: bubble.surfaceColor
         shadowEnabled: bubble.shadowEnabled
-        cutAtEdge: bubble.anchorBubble === null && bubble.cutAtEdge
+        // Only the island is drawn over the shapes hanging off it. A parent bubble sits
+        // under its child, so a neck tucked inside its edge would paint over its glance.
+        cutAtEdge: bubble.anchorBubble !== null || bubble.cutAtEdge
     }
 
     // The glance itself, fading in once the bubble has mostly left.
