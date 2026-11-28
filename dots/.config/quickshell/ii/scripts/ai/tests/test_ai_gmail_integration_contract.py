@@ -145,15 +145,13 @@ class QmlLoadabilityTests(unittest.TestCase):
     of them load the file as QML.
     """
 
-    def test_globalstates_and_persistent_are_actually_importable(self):
-        # GlobalStates and Persistent live in the root `qs` module; the file
-        # used `qs.modules.common` and `qs.services` only, so both types were
-        # unresolved the moment `openInClient()` touched them. The failure
-        # mode was not a lint warning: it was "Type AiGmailIntegration
-        # unavailable" at runtime.
+    def test_globalstates_is_actually_importable(self):
+        # GlobalStates lives in the root `qs` module; the file used
+        # `qs.modules.common` and `qs.services` only, so it was unresolved the
+        # moment `openInClient()` touched it. The failure mode was not a lint
+        # warning: it was "Type AiGmailIntegration unavailable" at runtime.
         self.assertIn("import qs\n", ADAPTER)
-        self.assertIn("GlobalStates.cheatsheetOpen", ADAPTER)
-        self.assertIn("Persistent.states.cheatsheet.tabIndex", ADAPTER)
+        self.assertIn('GlobalStates.openEmailApp("")', ADAPTER)
 
     def test_the_request_component_is_a_named_property(self):
         # QtObject has no default property. A bare `Component { id:
