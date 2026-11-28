@@ -574,7 +574,7 @@ fi`]
                 visible: Config.options.iiTools.callAudio.enable && IiLinkService.hasPeers && PhoneCallService.phoneBluetooth === null
                 symbol: "bluetooth_searching"
                 title: Translation.tr("Pair the phone over Bluetooth for call audio")
-                description: Translation.tr("Pair \"%1\" with this PC in Bluetooth settings; ii tools connects it only during calls.").arg(IiLinkService.peers[0]?.name ?? "")
+                description: Translation.tr("Pair \"%1\" with this PC in Bluetooth settings; ii tools connects it only during calls.").arg(IiLinkService.primaryPeer?.name ?? "")
             }
 
             AppToggleRow {

@@ -711,6 +711,36 @@ Singleton {
     readonly property var connectedList: Object.values(root.connections)
     readonly property bool phoneConnected: root.connectedList.length > 0
 
+    /**
+     * The phone "the phone" means: the one connected right now, otherwise the one seen most
+     * recently. The list carries no order of its own - a re-pair appends a new entry and
+     * leaves the old one first, because the helper knows a device only by the id it minted -
+     * so trusting the first entry named a phone that was not there: the sidebar showed "No
+     * device connected" while the phone was connected, and the gallery, camera and mic
+     * opened on the stale one.
+     */
+    readonly property var primaryPeer: {
+        const live = Object.keys(root.connections ?? {});
+        if (live.length > 0) {
+            // Most recently connected first.
+            live.sort((a, b) => Number(root.connections[b]?.since ?? 0) - Number(root.connections[a]?.since ?? 0));
+            const conn = root.connections[live[0]];
+            const peer = root.peers.find(p => p.id === live[0]);
+            if (peer)
+                return peer;
+            // Connected but no entry on disk: the connection is the better truth.
+            return { id: live[0], name: String(conn?.name ?? ""), model: String(conn?.model ?? ""),
+                pairedAt: 0, lastSeen: Number(conn?.since ?? 0) };
+        }
+        let best = null;
+        for (const p of root.peers) {
+            if (best === null || Number(p.lastSeen ?? 0) > Number(best.lastSeen ?? 0))
+                best = p;
+        }
+        return best;
+    }
+    readonly property string primaryDev: String(root.primaryPeer?.id ?? "")
+
     // ── Actions a phone can ask for ─────────────────────────────────────
     /// The whole catalog. A phone sees (and can run) only those whose integration is on.
     /// `toggle` actions have a state the phone shows and keeps in step (`state`).
@@ -3898,7 +3928,7 @@ Singleton {
     }
 
     function activeLauncherIconDir(): string {
-        const dev = root.usageDev || root.launcherIconDev || String(root.peers[0]?.id ?? "");
+        const dev = root.usageDev || root.launcherIconDev || root.primaryDev;
         return dev !== "" ? root.launcherIconDir(dev) : "";
     }
 
@@ -4029,9 +4059,11 @@ Singleton {
 
     /// The paired phone, as KdeConnectService's devices look; null when none.
     readonly property var phoneDevice: {
-        if (!root.enabled || root.peers.length === 0)
+        if (!root.enabled)
             return null;
-        const peer = root.peers[0];
+        const peer = root.primaryPeer;
+        if (!peer)
+            return null;
         const conn = root.connections[peer.id] ?? null;
         const caps = root.phoneCaps[peer.id] ?? [];
         const st = root.phoneStatus;
@@ -4172,7 +4204,7 @@ Singleton {
     /// The screenshot preview's "Save to phone gallery": shown when sending is by hand.
     readonly property bool canSaveShotToPhone: root.enabled && root.shotsEnabled && !root.shotsAutoToPhone && root.hasPeers && root.phoneTakesShots
     /// The phone it goes to, by name, for the button and the message.
-    readonly property string shotPhoneName: root.connections[root.shotDev]?.name || (root.peers[0]?.name ?? "")
+    readonly property string shotPhoneName: root.connections[root.shotDev]?.name || (root.primaryPeer?.name ?? "")
 
     /**
      * From the preview: the image as shown (cropped like the preview when it has a region),
@@ -5555,6 +5587,8 @@ Singleton {
                 binary: root.binaryPresent,
                 peers: root.peers,
                 connected: root.connectedList,
+                // The phone the shell acts on, and what it names for itself.
+                primary: root.primaryDev,
                 pairing: root.pairing ? root.pairing.url : null,
                 notifications: root.linkNotifications.length,
                 lives: root.linkLives.length,

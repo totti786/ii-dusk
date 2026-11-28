@@ -29,7 +29,7 @@ Singleton {
         const active = String(KdeConnectService.activeDeviceId ?? "");
         if (active.startsWith("iitools:"))
             return active.slice(8);
-        return String(IiLinkService.peers[0]?.id ?? "");
+        return String(IiLinkService.primaryDev);
     }
     readonly property bool connected: root.activeDev !== ""
         && IiLinkService.connections[root.activeDev] !== undefined
