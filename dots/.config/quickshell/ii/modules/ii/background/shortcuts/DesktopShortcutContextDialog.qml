@@ -111,9 +111,16 @@ ItemContextDialog {
         const target = root.entry.path;
         if (!target || !root.editorCommand)
             return;
+        // Scribe, the default, is not packaged: where it is missing the next
+        // installed editor takes the path. A command the user typed runs as is.
         Quickshell.execDetached(["bash", "-c",
-            `p=$(readlink -f -- "$1") || p="$1"; exec ${root.editorCommand} "$p"`,
-            "_", target]);
+            `p=$(readlink -f -- "$1") || p="$1"
+             if [ "$2" = scribe ] && ! command -v scribe >/dev/null 2>&1; then
+                 for e in geany kate gnome-text-editor; do command -v "$e" >/dev/null 2>&1 && exec "$e" "$p"; done
+                 exec xdg-open "$p"
+             fi
+             exec ${root.editorCommand} "$p"`,
+            "_", target, root.editorCommand]);
         root.dismiss();
     }
 

@@ -310,7 +310,7 @@
             "id": "dictation",
             "tier": "optional",
             "label": "Dictation",
-            "description": "Push-to-talk dictation through voxtype (or Hex, which is not packaged and needs no entry here).",
+            "description": "Push-to-talk dictation through voxtype (or Hex, if you install it yourself).",
             "packages": [{ "arch": "voxtype-bin", "aur": true, "fedora": null, "bin": "voxtype" }]
         },
         {
@@ -587,6 +587,101 @@
             "packages": [
                 { "name": "aria2", "bin": "aria2c" }
             ]
+        },
+        {
+            "id": "text-editor",
+            "tier": "optional",
+            "label": "Text editor",
+            "description": "The editor behind the desktop menu's \"Open in editor\" when Scribe is not installed.",
+            "packages": [{ "name": "geany", "bin": ["scribe", "geany", "kate", "gnome-text-editor"] }]
+        },
+        {
+            "id": "remote-folders",
+            "tier": "optional",
+            "label": "Phone storage",
+            "description": "Browsing a phone's storage in Files over sshfs.",
+            "packages": [{ "name": "sshfs", "bin": "sshfs", "fedora": "fuse-sshfs" }]
+        },
+        {
+            "id": "jxl",
+            "tier": "optional",
+            "label": "JPEG XL wallpapers",
+            "description": "Previews and wallpaper colours for .jxl pictures.",
+            "packages": [{ "name": "libjxl", "bin": "djxl", "fedora": "libjxl-utils" }]
+        },
+        {
+            "id": "icon-rendering",
+            "tier": "optional",
+            "label": "Icon rendering",
+            "description": "Rendering SVG icons: recoloured icon themes, phone app icons and QR codes.",
+            "packages": [
+                { "name": "librsvg", "bin": "rsvg-convert", "fedora": "librsvg2-tools" },
+                { "name": "resvg", "bin": "resvg", "fedora": null }
+            ]
+        },
+        {
+            "id": "app-theming",
+            "tier": "optional",
+            "label": "App theming",
+            "description": "Passing the icon theme, cursor and colours on to running GTK, Qt and X11 apps.",
+            "packages": [
+                { "name": "xsettingsd", "bin": "xsettingsd" },
+                { "name": "xorg-xrdb", "bin": "xrdb", "fedora": "xrdb" },
+                { "name": "kconfig", "bin": "kwriteconfig6", "fedora": "kf6-kconfig" },
+                { "name": "gtk-update-icon-cache", "bin": "gtk-update-icon-cache" }
+            ]
+        },
+        {
+            "id": "file-pickers",
+            "tier": "optional",
+            "label": "File pickers",
+            "description": "File selection dialogs used where kdialog is missing.",
+            "packages": [
+                { "name": "zenity", "bin": "zenity" },
+                { "name": "yad", "bin": "yad" }
+            ]
+        },
+        {
+            "id": "phone-discovery",
+            "tier": "optional",
+            "label": "Wireless debugging discovery",
+            "description": "Finding a phone's wireless debugging port on the network.",
+            "packages": [{ "name": "avahi", "bin": "avahi-browse", "fedora": "avahi-tools" }]
+        },
+        {
+            "id": "gpu-screen-recorder",
+            "tier": "optional",
+            "label": "GPU screen recorder",
+            "description": "The hardware-encoding screen recorder, as an alternative to wf-recorder.",
+            "packages": [{ "name": "gpu-screen-recorder", "bin": "gpu-screen-recorder", "fedora": null }]
+        },
+        {
+            "id": "torrents",
+            "tier": "optional",
+            "label": "Torrents",
+            "description": "Torrent downloads, run through qBittorrent without its window.",
+            "packages": [{ "name": "qbittorrent-nox", "bin": "qbittorrent-nox" }]
+        },
+        {
+            "id": "game-overlay",
+            "tier": "optional",
+            "label": "Game overlay",
+            "description": "Frame rate limits and performance figures in games through MangoHud.",
+            "packages": [{ "name": "mangohud", "bin": "mangohud" }]
+        },
+        {
+            "id": "speech-phonemes",
+            "tier": "optional",
+            "label": "Local voice",
+            "description": "Pronunciation data for the local speech voice.",
+            "packages": [{ "name": "espeak-ng", "bin": "espeak-ng" }]
+        },
+        {
+            "id": "image-viewer-open",
+            "tier": "optional",
+            "label": "Open in image viewer",
+            "description": "The image viewer's button that hands a picture to Loupe.",
+            "packages": [{ "name": "loupe", "bin": "loupe" }]
         }
     ]
 }
