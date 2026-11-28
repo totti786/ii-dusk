@@ -1086,7 +1086,9 @@ def resolve_photo_assets(merged, preset, current, presets_dir=None, preset_name=
         for conf in widgets.values():
             if not isinstance(conf, dict):
                 continue
-            asset = conf.get('asset')
+            # The id only means something inside a preset; the shell's config has
+            # no such key and warns about it. Export assigns it again.
+            asset = conf.pop('asset', None)
             if isinstance(asset, str) and asset in files:
                 conf['imagePath'] = files[asset]
             else:

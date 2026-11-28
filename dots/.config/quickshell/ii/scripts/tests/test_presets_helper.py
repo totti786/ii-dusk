@@ -2103,6 +2103,18 @@ class TestDesktopPhotoWidgetsPresetExport(unittest.TestCase):
         self.assertEqual(resolved_path, bundled_photo)
         self.assertTrue(os.path.isfile(resolved_path))
 
+    def test_merged_widget_settings_drop_the_preset_asset_id(self):
+        bundled_photo = os.path.join(self.presets_dir, "AlienTheme_photo0.png")
+        with open(bundled_photo, "wb") as f:
+            f.write(b"ALIEN_PHOTO")
+        preset = {"background": {"widgets": {
+            "photo_1x1": {"imagePath": "/author/disk/old.png", "asset": "photo0"},
+        }}}
+        merged = copy.deepcopy(preset)
+        presets_helper.resolve_photo_assets(merged, preset, {}, self.presets_dir, "AlienTheme")
+
+        self.assertEqual(merged["background"]["widgets"]["photo_1x1"], {"imagePath": bundled_photo})
+
     def test_full_roundtrip_save_export_import_merge(self):
         # 1. Author config has a photo widget
         author_config = {
