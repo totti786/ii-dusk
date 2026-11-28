@@ -208,6 +208,91 @@ ContentPage {
     }
 
     ContentSection {
+        title: Translation.tr("Shell apps")
+        icon: "apps"
+
+        HyprToggle {
+            readonly property string emailBindId: HyprlandBinds.bindId(["SUPER", "ALT"], "M")
+            readonly property var emailBindRow: HyprlandBinds.effective.find(row => row.kind === "bind"
+                && String(row.action ?? "").includes("quickshell:emailOpen")) ?? null
+            readonly property string activeKeyLabel: {
+                if (!emailBindRow)
+                    return "Super + Alt + M";
+                const mods = Array.from(emailBindRow.mods ?? []).map(m => m.charAt(0) + m.slice(1).toLowerCase());
+                return mods.concat([String(emailBindRow.key ?? "").toUpperCase()]).filter(Boolean).join(" + ");
+            }
+
+            buttonIcon: "mail"
+            text: Translation.tr("Open Email shortcut")
+            alwaysExplain: true
+            badgeText: emailBindRow ? activeKeyLabel : ""
+            textOn: Translation.tr("Bound to %1 in custom/keybinds.lua. Click Apply in the corner to save.").arg(activeKeyLabel)
+            textOff: Translation.tr("One-click bind for Super + Alt + M to open the standalone Email app.")
+            switchOn: emailBindRow !== null
+            onRequested: wanted => {
+                if (wanted) {
+                    HyprlandBinds.saveBind(
+                        emailBindId,
+                        "SUPER + ALT + M",
+                        HyprlandBinds.buildAction("global", "quickshell:emailOpen"),
+                        { description: "Shell: Open Email" }
+                    );
+                } else {
+                    const existing = emailBindRow;
+                    if (!existing)
+                        return;
+                    const id = existing.id || HyprlandBinds.bindId(existing.mods ?? [], existing.key ?? "");
+                    if (HyprlandBinds.managedBind(id)) {
+                        HyprlandBinds.removeBind(id);
+                    } else {
+                        HyprlandBinds.releaseOnly(id, HyprlandBinds.comboSource(existing.mods ?? [], existing.key ?? ""));
+                    }
+                }
+            }
+        }
+
+        HyprToggle {
+            readonly property string calendarBindId: HyprlandBinds.bindId(["SUPER", "ALT"], "C")
+            readonly property var calendarBindRow: HyprlandBinds.effective.find(row => row.kind === "bind"
+                && String(row.action ?? "").includes("quickshell:calendarOpen")) ?? null
+            readonly property string activeKeyLabel: {
+                if (!calendarBindRow)
+                    return "Super + Alt + C";
+                const mods = Array.from(calendarBindRow.mods ?? []).map(m => m.charAt(0) + m.slice(1).toLowerCase());
+                return mods.concat([String(calendarBindRow.key ?? "").toUpperCase()]).filter(Boolean).join(" + ");
+            }
+
+            buttonIcon: "calendar_month"
+            text: Translation.tr("Open Calendar shortcut")
+            alwaysExplain: true
+            badgeText: calendarBindRow ? activeKeyLabel : ""
+            textOn: Translation.tr("Bound to %1 in custom/keybinds.lua. Click Apply in the corner to save.").arg(activeKeyLabel)
+            textOff: Translation.tr("One-click bind for Super + Alt + C to open the standalone Calendar app.")
+            switchOn: calendarBindRow !== null
+            onRequested: wanted => {
+                if (wanted) {
+                    HyprlandBinds.saveBind(
+                        calendarBindId,
+                        "SUPER + ALT + C",
+                        HyprlandBinds.buildAction("global", "quickshell:calendarOpen"),
+                        { description: "Shell: Open Calendar" }
+                    );
+                } else {
+                    const existing = calendarBindRow;
+                    if (!existing)
+                        return;
+                    const id = existing.id || HyprlandBinds.bindId(existing.mods ?? [], existing.key ?? "");
+                    if (HyprlandBinds.managedBind(id)) {
+                        HyprlandBinds.removeBind(id);
+                    } else {
+                        HyprlandBinds.releaseOnly(id, HyprlandBinds.comboSource(existing.mods ?? [], existing.key ?? ""));
+                    }
+                }
+            }
+        }
+    }
+
+    ContentSection {
         title: Translation.tr("Add")
         icon: "add"
 

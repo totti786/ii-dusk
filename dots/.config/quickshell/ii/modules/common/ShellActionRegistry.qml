@@ -58,7 +58,9 @@ Singleton {
             health: ["health", "system health", "smart", "disk", "temperature", "sensors", "battery health", "journal", "failed services"],
             mediaControls: ["media controls", "player"], barToggle: ["bar", "barra"],
             hubMode: ["hub mode", "dock", "display", "relogio", "clock", "ambient"],
-            liveDraw: ["draw", "desenhar", "desenho", "sketch", "pen", "caneta", "stylus", "annotate", "anotar"]
+            liveDraw: ["draw", "desenhar", "desenho", "sketch", "pen", "caneta", "stylus", "annotate", "anotar"],
+            email: ["email", "e-mail", "gmail", "mail", "inbox", "correio"],
+            calendar: ["calendar", "calendario", "calendário", "timetable", "agenda", "schedule", "events", "eventos", "horario", "horário"]
         };
         return base.concat(extras[action.id] ?? []);
     }
@@ -74,6 +76,8 @@ Singleton {
         { id: "quickshare", name: "Quick Share", icon: "send_to_mobile", category: "shell", searchable: true, enabled: () => true },
         { id: "syncplay", name: "Syncplay", icon: "group", category: "shell", searchable: true, enabled: () => true },
         { id: "easyEffects", name: "EasyEffects", icon: "graphic_eq", category: "shell", searchable: true, enabled: () => Config.options.easyEffects?.appEnable ?? true },
+        { id: "email", name: "Email", icon: "mail", category: "shell", searchable: true, enabled: () => Config.options.emailApp?.enable ?? true },
+        { id: "calendar", name: "Calendar", icon: "calendar_month", category: "shell", searchable: true, enabled: () => Config.options.calendarApp?.enable ?? true },
         { id: "music", name: "Music", icon: "library_music", category: "shell", searchable: true, enabled: () => true },
         { id: "monitor", name: "Monitor", icon: "monitoring", category: "shell", searchable: true, enabled: () => true },
         { id: "downloads", name: "Downloads", icon: "download", category: "shell", searchable: true, enabled: () => true },
@@ -101,7 +105,7 @@ Singleton {
     ]
 
     /// The shell's own windowed apps. Search lists them as apps rather than as actions.
-    readonly property var appIds: ["notes", "clock", "panadoro", "weather", "soundscapes", "qanun", "calculator", "quickshare", "syncplay", "easyEffects", "usage", "modes", "downloads", "mixer", "packages", "anki", "books", "mediator", "bluetoothManager", "patchbay", "torrents", "diwan", "quran", "music", "monitor", "audioRecorder", "camera", "imageViewer", "audioPlayer", "fileManager", "wikipedia", "youtube", "discordoVoice", "health"]
+    readonly property var appIds: ["notes", "clock", "panadoro", "weather", "soundscapes", "qanun", "calculator", "quickshare", "syncplay", "easyEffects", "usage", "modes", "downloads", "mixer", "packages", "anki", "books", "mediator", "bluetoothManager", "patchbay", "torrents", "diwan", "quran", "music", "monitor", "audioRecorder", "camera", "imageViewer", "audioPlayer", "fileManager", "wikipedia", "youtube", "discordoVoice", "health", "email", "calendar"]
 
     readonly property var actions: TouchGestureActionRegistry.actions.concat(root.extraActions).map(action => Object.assign({}, action, {
         keywords: action.keywords ?? root.keywordsFor(action),
@@ -252,6 +256,14 @@ Singleton {
         }
         if (actionId === "easyEffects") {
             GlobalStates.openEasyEffectsApp("");
+            return;
+        }
+        if (actionId === "email") {
+            GlobalStates.openEmailApp("");
+            return;
+        }
+        if (actionId === "calendar") {
+            GlobalStates.openCalendarApp("");
             return;
         }
         // Opening from search must not close an app that is already open behind it; the

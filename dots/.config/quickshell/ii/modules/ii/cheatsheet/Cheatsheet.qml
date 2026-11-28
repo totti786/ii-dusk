@@ -8,7 +8,6 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
-import "timetable"
 import "settings"
 
 Scope {
@@ -17,16 +16,8 @@ Scope {
     // FileView notification. The durable value is still written to Persistent;
     // these scalars disappear with the shell and do not retain page trees.
     property int sessionTab: -1
-    property string sessionTimetableMode: ""
     property var tabButtonList: {
         let list = [];
-        if (Config.options.cheatsheet.enableTimetable) {
-            list.push({
-                "id": "timetable",
-                "icon": "calendar_month",
-                "name": Translation.tr("Timetable")
-            });
-        }
         list.push({
             "id": "keybinds",
             "icon": "keyboard",
@@ -72,13 +63,6 @@ Scope {
                 "id": "football",
                 "icon": "sports_soccer",
                 "name": Translation.tr("Football")
-            });
-        }
-        if (Config.options.cheatsheet.enableGmail) {
-            list.push({
-                "id": "email",
-                "icon": "mail",
-                "name": Translation.tr("Email")
             });
         }
         if (Config.options.cheatsheet.enableGithub) {
@@ -134,10 +118,6 @@ Scope {
                 root.requestClose();
             }
         }
-
-        function onTimetableNavigationRequestChanged() {
-            root.openTimetableNavigation();
-        }
     }
 
     property bool activeState: false
@@ -151,7 +131,6 @@ Scope {
             // value again so external open requests (Gmail, Welcome, etc.) can
             // choose a different page while the window is hidden.
             root.sessionTab = -1;
-            root.sessionTimetableMode = "";
         }
     }
     function prepareCache() {
@@ -199,20 +178,6 @@ Scope {
         }
     }
 
-    function openTimetableNavigation() {
-        const timetableIndex = root.tabButtonList.findIndex(tab => tab.id === "timetable");
-        if (timetableIndex < 0)
-            return;
-        root.sessionTab = timetableIndex;
-        root.sessionTimetableMode = "month";
-        if (Persistent.states.cheatsheet.tabIndex !== timetableIndex)
-            Persistent.states.cheatsheet.tabIndex = timetableIndex;
-        if (cheatsheetLoader.item && typeof cheatsheetLoader.item.selectTab === "function")
-            cheatsheetLoader.item.selectTab(timetableIndex);
-        Persistent.states.cheatsheet.timetableView = "month";
-        root.requestOpen();
-    }
-
     RetainedLoader {
         id: cheatsheetLoader
         // Keep the window chrome and only the last selected tab.
@@ -233,7 +198,6 @@ Scope {
             readonly property string currentTabId: root.tabButtonList[cheatsheetRoot.selectedTab]?.id ?? ""
             readonly property var settingsPages: ({
                 "keybinds": "settings/KeybindsSettings.qml",
-                "timetable": "settings/TimetableSettings.qml",
                 "aminoAcids": "settings/AminoAcidsSettings.qml",
                 "commands": "settings/CommandsSettings.qml"
             })
@@ -477,31 +441,6 @@ Scope {
                                 event.accepted = true;
                                 return;
                             }
-                            if (timetableViewSwitch.visible && event.key === Qt.Key_V && !event.isAutoRepeat) {
-                                timetableViewSwitch.cycleMode();
-                                event.accepted = true;
-                                return;
-                            }
-                        }
-
-                        if (timetableViewSwitch.visible && (event.modifiers === (Qt.ControlModifier | Qt.ShiftModifier)) && !event.isAutoRepeat) {
-                            if (event.key === Qt.Key_D || event.key === Qt.Key_1) {
-                                timetableViewSwitch.modeRequested("day");
-                                event.accepted = true;
-                                return;
-                            } else if (event.key === Qt.Key_3 || event.key === Qt.Key_2) {
-                                timetableViewSwitch.modeRequested("threeDay");
-                                event.accepted = true;
-                                return;
-                            } else if (event.key === Qt.Key_W || event.key === Qt.Key_3) {
-                                timetableViewSwitch.modeRequested("week");
-                                event.accepted = true;
-                                return;
-                            } else if (event.key === Qt.Key_M || event.key === Qt.Key_4) {
-                                timetableViewSwitch.modeRequested("month");
-                                event.accepted = true;
-                                return;
-                            }
                         }
 
                         if (event.key === Qt.Key_Escape) {
@@ -584,8 +523,7 @@ Scope {
                         }
                     }
 
-                    // The current tab's own settings (Keybinds, Timetable, Amino
-                    // acids, Commands).
+                    // The current tab's own settings (Keybinds, Amino acids, Commands).
                     AppSettingsButton {
                         id: settingsButton
                         open: cheatsheetRoot.settingsTab.length > 0
@@ -597,34 +535,6 @@ Scope {
                             rightMargin: 8
                         }
                         onClicked: cheatsheetRoot.toggleSettings()
-                    }
-
-                    // Left counterpart of the close button: only the timetable tab
-                    // has two shapes to choose between, so it only appears there.
-                    TimetableViewSwitch {
-                        id: timetableViewSwitch
-                        sessionMode: root.sessionTimetableMode
-                        showShortcutHints: cheatsheetBackground.ctrlPressed
-                        onModeRequested: mode => {
-                            root.sessionTimetableMode = mode;
-                            Persistent.states.cheatsheet.timetableView = mode;
-                            if (swipeView.currentItem?.item && typeof swipeView.currentItem.item.setMode === "function") {
-                                swipeView.currentItem.item.setMode(mode);
-                            }
-                        }
-                        visible: Boolean(root.tabButtonList[swipeView.currentIndex] && root.tabButtonList[swipeView.currentIndex].icon === "calendar_month")
-                        enabled: cheatsheetRoot.settingsTab.length === 0
-                        animateIn: timetableViewSwitch.visible && cheatsheetRoot.settingsTab.length === 0
-                        compact: cheatsheetBackground.width < 1100
-                        // Anchored to the column (a sibling) rather than the tab
-                        // bar itself: an anchor may only target a parent or a
-                        // sibling, and the tab bar is a grandchild.
-                        anchors {
-                            left: parent.left
-                            leftMargin: 20
-                            top: cheatsheetColumnLayout.top
-                            topMargin: Math.max(0, (topToolbar.height - timetableViewSwitch.height) / 2)
-                        }
                     }
 
                     // The current tab's settings over its page, below the tab bar.
@@ -830,13 +740,6 @@ Scope {
 
                                     Binding {
                                         target: tabDelegate.item
-                                        property: "sessionMode"
-                                        value: root.sessionTimetableMode
-                                        when: tabDelegate.status === Loader.Ready && tabDelegate.item.hasOwnProperty("sessionMode")
-                                    }
-
-                                    Binding {
-                                        target: tabDelegate.item
                                         property: "showShortcutHints"
                                         value: cheatsheetBackground.ctrlPressed
                                         when: tabDelegate.status === Loader.Ready && tabDelegate.item.hasOwnProperty("showShortcutHints")
@@ -844,8 +747,6 @@ Scope {
 
                                     source: {
                                         switch (modelData.icon) {
-                                        case "calendar_month":
-                                            return "CheatsheetTimetable.qml";
                                         case "keyboard":
                                             return "CheatsheetKeybinds.qml";
                                         case "apps":
@@ -858,8 +759,6 @@ Scope {
                                             return "commands/CheatsheetCommands.qml";
                                         case "dashboard":
                                             return "CheatsheetWorkspaces.qml";
-                                        case "mail":
-                                            return "CheatsheetEmail.qml";
                                         case "code_blocks":
                                             return "github/CheatsheetGithub.qml";
                                         case "sports_soccer":

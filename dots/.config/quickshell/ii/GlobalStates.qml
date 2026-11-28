@@ -488,6 +488,61 @@ Singleton {
         root.healthAppOpen = true;
     }
 
+    /// Standalone Email app (apps/email.qml). Runs in its own qs -p process so closing it
+    /// returns 100% of its memory to the OS; reuses the running instance via IPC when open.
+    function openEmailApp(tab = "", composeTo = "", composeSubject = ""): void {
+        if (!(Config.options?.emailApp?.enable ?? true))
+            return;
+        const entry = Quickshell.shellPath("apps/email.qml");
+        const cleanTab = String(tab ?? "").trim();
+        const cleanTo = String(composeTo ?? "").trim();
+        const cleanSubject = String(composeSubject ?? "").trim();
+        const floating = Config.options?.emailApp?.openFloating ?? true;
+        const launchScript = floating
+            ? "hyprctl dispatch \"hl.dsp.exec_cmd(\\\"[float; center] env II_EMAIL_INITIAL_TAB=$TAB qs -p $ENTRY\\\")\" 2>/dev/null | grep -qi '^ok' || hyprctl dispatch exec \"[float; center] env II_EMAIL_INITIAL_TAB=$TAB qs -p $ENTRY\" 2>/dev/null | grep -qi '^ok' || II_EMAIL_INITIAL_TAB=\"$TAB\" setsid -f qs -p \"$ENTRY\" >/dev/null 2>&1 </dev/null"
+            : "II_EMAIL_INITIAL_TAB=\"$TAB\" setsid -f qs -p \"$ENTRY\" >/dev/null 2>&1 </dev/null";
+        if (cleanTo.length > 0 || cleanSubject.length > 0) {
+            Quickshell.execDetached([
+                "bash", "-c",
+                "ENTRY=\"$1\"; TAB=compose; qs -p \"$ENTRY\" ipc call email compose \"$2\" \"$3\" >/dev/null 2>&1 || { " + launchScript + "; }",
+                "--", entry, cleanTo, cleanSubject
+            ]);
+            return;
+        }
+        Quickshell.execDetached([
+            "bash", "-c",
+            "ENTRY=\"$1\"; TAB=\"$2\"; qs -p \"$ENTRY\" ipc call email open \"$TAB\" >/dev/null 2>&1 || { " + launchScript + "; }",
+            "--", entry, cleanTab
+        ]);
+    }
+
+    /// Standalone Calendar app (apps/calendar.qml). Runs in its own qs -p process so closing it
+    /// returns 100% of its memory to the OS; reuses the running instance via IPC when open.
+    function openCalendarApp(dateStr = "", mode = ""): void {
+        if (!(Config.options?.calendarApp?.enable ?? true))
+            return;
+        const entry = Quickshell.shellPath("apps/calendar.qml");
+        const cleanDate = String(dateStr ?? "").trim();
+        const cleanMode = String(mode ?? "").trim();
+        const floating = Config.options?.calendarApp?.openFloating ?? true;
+        const launchScript = floating
+            ? "hyprctl dispatch \"hl.dsp.exec_cmd(\\\"[float; center] env II_CALENDAR_INITIAL_DATE=$DATE II_CALENDAR_INITIAL_MODE=$MODE qs -p $ENTRY\\\")\" 2>/dev/null | grep -qi '^ok' || hyprctl dispatch exec \"[float; center] env II_CALENDAR_INITIAL_DATE=$DATE II_CALENDAR_INITIAL_MODE=$MODE qs -p $ENTRY\" 2>/dev/null | grep -qi '^ok' || II_CALENDAR_INITIAL_DATE=\"$DATE\" II_CALENDAR_INITIAL_MODE=\"$MODE\" setsid -f qs -p \"$ENTRY\" >/dev/null 2>&1 </dev/null"
+            : "II_CALENDAR_INITIAL_DATE=\"$DATE\" II_CALENDAR_INITIAL_MODE=\"$MODE\" setsid -f qs -p \"$ENTRY\" >/dev/null 2>&1 </dev/null";
+        if (cleanDate.length > 0) {
+            Quickshell.execDetached([
+                "bash", "-c",
+                "ENTRY=\"$1\"; DATE=\"$2\"; MODE=\"$3\"; qs -p \"$ENTRY\" ipc call calendar openDate \"$DATE\" >/dev/null 2>&1 || { " + launchScript + "; }",
+                "--", entry, cleanDate, cleanMode
+            ]);
+            return;
+        }
+        Quickshell.execDetached([
+            "bash", "-c",
+            "ENTRY=\"$1\"; DATE=\"\"; MODE=\"$2\"; qs -p \"$ENTRY\" ipc call calendar open \"$MODE\" >/dev/null 2>&1 || { " + launchScript + "; }",
+            "--", entry, cleanMode
+        ]);
+    }
+
     property bool mediaControlsOpen: false
     property bool mediaControlsPinned: false
     // Names of screens showing the Always On Display (the OLED saver). Read by the desktop
@@ -591,9 +646,18 @@ Singleton {
     }
 
     function openTimetableAt(dateValue): void {
-        const text = String(dateValue ?? "").trim();
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(text))
+        let text = "";
+        if (dateValue instanceof Date && !isNaN(dateValue.getTime()))
+            text = Qt.formatDate(dateValue, "yyyy-MM-dd");
+        else
+            text = String(dateValue ?? "").trim();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+            if (PanelFamily.nativeAppWindows)
+                root.openTabletApp("timetable");
+            else
+                root.openCalendarApp("");
             return;
+        }
         const parts = text.split("-").map(Number);
         const date = new Date(parts[0], parts[1] - 1, parts[2]);
         if (Qt.formatDate(date, "yyyy-MM-dd") !== text)
@@ -603,7 +667,7 @@ Singleton {
         if (PanelFamily.nativeAppWindows)
             root.openTabletApp("timetable");
         else
-            root.cheatsheetOpen = true;
+            root.openCalendarApp(text, "month");
     }
 
     // Legacy Gnome-like window transition state.  These values intentionally
@@ -2515,6 +2579,14 @@ Singleton {
 
     function openCheatsheet(tabId) {
         const requestedTab = String(tabId ?? "").trim();
+        if (requestedTab === "email") {
+            root.openEmailApp("");
+            return;
+        }
+        if (requestedTab === "timetable" || requestedTab === "calendar") {
+            root.openCalendarApp("");
+            return;
+        }
         if (PanelFamily.nativeAppWindows) {
             root.openTabletApp(requestedTab.length > 0 ? requestedTab : "keybinds");
             return;
@@ -2592,6 +2664,38 @@ Singleton {
         function close(): void {
             root.closeCheatsheet();
         }
+    }
+
+    IpcHandler {
+        target: "email"
+
+        function open(): void {
+            root.openEmailApp("");
+        }
+
+        function openTab(tab: string): void {
+            root.openEmailApp(tab);
+        }
+
+        function compose(to: string, subject: string): void {
+            root.openEmailApp("compose", to, subject);
+        }
+
+        function quit(): void {
+            Quickshell.execDetached(["qs", "-p", Quickshell.shellPath("apps/email.qml"), "ipc", "call", "email", "quit"]);
+        }
+    }
+
+    GlobalShortcut {
+        name: "emailOpen"
+        description: "Opens the standalone Email app"
+        onPressed: root.openEmailApp("")
+    }
+
+    GlobalShortcut {
+        name: "calendarOpen"
+        description: "Opens the standalone Calendar app"
+        onPressed: root.openCalendarApp("")
     }
 
     IpcHandler {
