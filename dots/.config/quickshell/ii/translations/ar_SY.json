@@ -22733,5 +22733,8 @@
   "To let me look, switch on Allow automatic screen capture in the Voice orb settings, or use Attach screen region.": "لكي أتمكن من النظر، فعّل «السماح بالتقاط الشاشة تلقائياً» في إعدادات الكرة الصوتية، أو استخدم «إرفاق منطقة من الشاشة».",
   "The orb": "الكرة",
   "Enable the orb": "تفعيل الكرة",
-  "Off removes the orb, its kitten and its island bubble, ignores its shortcuts and wake word, and stops coding session alerts. Typed messages go to the sidebar's chat model.": "عند الإيقاف تختفي الكرة وقطتها وفقاعتها في الجزيرة، وتُتجاهل اختصاراتها وكلمة التنبيه، وتتوقف تنبيهات جلسات البرمجة. وتذهب الرسائل المكتوبة إلى نموذج المحادثة في الشريط الجانبي."
+  "Off removes the orb, its kitten and its island bubble, ignores its shortcuts and wake word, and stops coding session alerts. Typed messages go to the sidebar's chat model.": "عند الإيقاف تختفي الكرة وقطتها وفقاعتها في الجزيرة، وتُتجاهل اختصاراتها وكلمة التنبيه، وتتوقف تنبيهات جلسات البرمجة. وتذهب الرسائل المكتوبة إلى نموذج المحادثة في الشريط الجانبي.",
+  "On the island's battery banner, %1.": "في لافتة البطارية على الجزيرة، %1.",
+  "One notification per charge, whether it ends at 100 %, at the firmware charge limit, or at the level set above. With the Dynamic Island on, its battery banner says it in place of a desktop notification.": "إشعار واحد لكل شحنة، سواء انتهت عند 100 %، أو عند حد الشحن في البرنامج الثابت، أو عند المستوى المحدد أعلاه. ومع تفعيل الجزيرة الديناميكية، تعرضه لافتة البطارية فيها بدل إشعار سطح المكتب.",
+  "One notification per charge, whether it ends at 100 %, at the firmware charge limit, or at the level set below. With the Dynamic Island on, its battery banner says it in place of a desktop notification.": "إشعار واحد لكل شحنة، سواء انتهت عند 100 %، أو عند حد الشحن في البرنامج الثابت، أو عند المستوى المضبوط أدناه. ومع تفعيل الجزيرة الديناميكية، تعرضه لافتة البطارية فيها بدل إشعار سطح المكتب."
 }

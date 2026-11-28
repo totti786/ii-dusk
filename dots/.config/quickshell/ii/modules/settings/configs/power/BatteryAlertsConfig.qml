@@ -60,7 +60,7 @@ ContentPage {
             checked: Config.options.battery.notifyCharged ?? true
             onCheckedChanged: Config.options.battery.notifyCharged = checked
             StyledToolTip {
-                text: Translation.tr("One notification per charge, whether it ends at 100 %, at the firmware charge limit, or at the level set above.")
+                text: Translation.tr("One notification per charge, whether it ends at 100 %, at the firmware charge limit, or at the level set above. With the Dynamic Island on, its battery banner says it in place of a desktop notification.")
             }
         }
     }

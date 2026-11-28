@@ -22,10 +22,10 @@ TransientSource {
     readonly property bool available: Battery.available
     property var previousProfile: null
 
-    function announce(reason) {
+    function announce(reason): bool {
         if (!source.available)
-            return;
-        source.trigger({ reason: reason, pluggedIn: source.pluggedIn, percentage: Battery.percentage });
+            return false;
+        return source.trigger({ reason: reason, pluggedIn: source.pluggedIn, percentage: Battery.percentage });
     }
 
     onPluggedInChanged: {
@@ -37,8 +37,24 @@ TransientSource {
         target: Battery
         function onChargeStateChanged() {
             // Reaching full, or starting to charge, while on the charger.
-            if (Battery.isPluggedIn)
-                source.announce("chargeState");
+            if (!Battery.isPluggedIn)
+                return;
+            // The end of the charge comes in through `onChargedReached` below, which also decides
+            // whether the desktop notification is needed; announcing it here as well would spend
+            // the cooldown and leave that announcement refused as a duplicate.
+            if (Battery.isFullyCharged || Battery.chargeLimitReached)
+                return;
+            source.announce("chargeState");
+        }
+
+        /**
+         * The battery service hands the end of charging over instead of notifying: the banner is
+         * the announcement. Only a refusal - the quiet window after a boot, a reload or an unlock -
+         * sends it back to the desktop, so the event is never lost and never said twice.
+         */
+        function onChargedReached(title, body, icon) {
+            if (!source.announce("charged"))
+                Battery.notify(title, body, icon);
         }
     }
 

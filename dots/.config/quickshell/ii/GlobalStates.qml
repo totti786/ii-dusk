@@ -2829,6 +2829,8 @@ Singleton {
     property bool islandOwnsReminder: false
     /** Music recognition reports on the island instead of in notifications. */
     property bool islandOwnsSongRec: false
+    /** The charger finishing is the island's battery banner, not a desktop notification. */
+    property bool islandOwnsBattery: false
     /**
      * The island shows background jobs, so the shell's own long jobs (a media download,
      * a speed test) report there. Read before touching ProgressService, which would

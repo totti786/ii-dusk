@@ -1,5 +1,6 @@
 pragma Singleton
 
+import qs
 import qs.services
 import qs.modules.common
 import Quickshell
@@ -284,6 +285,24 @@ Singleton {
         Quickshell.execDetached(args);
     }
 
+    /**
+     * The island announces the end of charging with its own battery banner, so only one of the
+     * two says it: the banner while the island is there to be read, the desktop notification
+     * where it is not - the island off, or hidden under a fullscreen window.
+     */
+    readonly property bool islandAnnouncesCharged: GlobalStates.islandOwnsBattery
+        // The island's surface has to exist here at all: the Tablet shell keeps the config
+        // but draws no island, and its banner would never appear.
+        && StartupState.islandReady
+        && !Notifications.focusedWindowFullscreen
+
+    /**
+     * Offered to the island first; see BatterySource, which falls back to the desktop
+     * notification when the island refuses the banner (the quiet window after a boot, a reload
+     * or an unlock).
+     */
+    signal chargedReached(string title, string body, string icon)
+
     // Pure halves of the arm/fire decision, kept separate so the hysteresis can be checked without
     // waiting for a flat battery.
     function warningArmed(armed, threshold, level, unplugged): bool {
@@ -345,15 +364,25 @@ Singleton {
         if (root.chargeLimitIsHeld()) {
             root.chargedArmed = false;
             root.announceCharged(Translation.tr("Charged to %1%").arg(root.chargeLimit),
-                Translation.tr("The charge limit is holding it here — the charger can stay in."), "battery_charging_full");
+                Translation.tr("The charge limit is holding it here — the charger can stay in."), "battery_charging_full", true);
             return;
         }
-        if (root.isFullyCharged || level >= 100) {
+        if (root.isFullyCharged) {
+            root.chargedArmed = false;
+            root.announceCharged(Translation.tr("Battery full"),
+                Translation.tr("You can unplug the charger."), "battery_full", true);
+            return;
+        }
+        // A pack reporting 100 % while UPower still calls it Charging: the island's banner would
+        // read "Charging" there, so the advice to unplug has to be the notification's to give.
+        if (level >= 100) {
             root.chargedArmed = false;
             root.announceCharged(Translation.tr("Battery full"),
                 Translation.tr("You can unplug the charger."), "battery_full");
             return;
         }
+        // The soft reminder is a level, not the end of the charge: the island's banner would still
+        // read "Charging" there, so this one is always a notification.
         if (opts.full <= 100 && level >= opts.full) {
             root.chargedArmed = false;
             root.announceCharged(Translation.tr("Battery at %1%").arg(level),
@@ -361,8 +390,11 @@ Singleton {
         }
     }
 
-    function announceCharged(title, body, icon) {
-        root.notify(title, body, icon);
+    function announceCharged(title, body, icon, islandBanner = false) {
+        if (islandBanner && root.islandAnnouncesCharged)
+            root.chargedReached(title, body, icon);
+        else
+            root.notify(title, body, icon);
         SoundService.playEvent("battery", ["battery-full", "complete", "dialog-information"]);
     }
 

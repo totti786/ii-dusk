@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.functions
@@ -149,8 +150,11 @@ Item {
                     checked: Config.options.battery.notifyCharged ?? true
                     summary: {
                         const end = Battery.chargeLimitActive ? Translation.tr("at the %1 % limit").arg(Battery.chargeLimit) : Translation.tr("at 100 %");
-                        return checked ? Translation.tr("Notifies once per charge, %1.").arg(end)
-                                       : Translation.tr("Off. Charging ends quietly %1.").arg(end);
+                        if (!checked)
+                            return Translation.tr("Off. Charging ends quietly %1.").arg(end);
+                        return GlobalStates.islandOwnsBattery
+                            ? Translation.tr("On the island's battery banner, %1.").arg(end)
+                            : Translation.tr("Notifies once per charge, %1.").arg(end);
                     }
                     onToggled: value => Config.options.battery.notifyCharged = value
                 }

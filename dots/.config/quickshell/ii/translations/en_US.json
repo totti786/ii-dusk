@@ -17012,5 +17012,8 @@
     "To let me look, switch on Allow automatic screen capture in the Voice orb settings, or use Attach screen region.": "To let me look, switch on Allow automatic screen capture in the Voice orb settings, or use Attach screen region.",
     "The orb": "The orb",
     "Enable the orb": "Enable the orb",
-    "Off removes the orb, its kitten and its island bubble, ignores its shortcuts and wake word, and stops coding session alerts. Typed messages go to the sidebar's chat model.": "Off removes the orb, its kitten and its island bubble, ignores its shortcuts and wake word, and stops coding session alerts. Typed messages go to the sidebar's chat model."
+    "Off removes the orb, its kitten and its island bubble, ignores its shortcuts and wake word, and stops coding session alerts. Typed messages go to the sidebar's chat model.": "Off removes the orb, its kitten and its island bubble, ignores its shortcuts and wake word, and stops coding session alerts. Typed messages go to the sidebar's chat model.",
+  "On the island's battery banner, %1.": "On the island's battery banner, %1.",
+  "One notification per charge, whether it ends at 100 %, at the firmware charge limit, or at the level set above. With the Dynamic Island on, its battery banner says it in place of a desktop notification.": "One notification per charge, whether it ends at 100 %, at the firmware charge limit, or at the level set above. With the Dynamic Island on, its battery banner says it in place of a desktop notification.",
+  "One notification per charge, whether it ends at 100 %, at the firmware charge limit, or at the level set below. With the Dynamic Island on, its battery banner says it in place of a desktop notification.": "One notification per charge, whether it ends at 100 %, at the firmware charge limit, or at the level set below. With the Dynamic Island on, its battery banner says it in place of a desktop notification."
 }

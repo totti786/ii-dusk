@@ -362,6 +362,20 @@ Singleton {
         restoreMode: Binding.RestoreBindingOrValue
     }
 
+    /**
+     * The end of charging is announced by the island's own battery banner, so the desktop
+     * notification stands down (`Battery.announceCharged`). Whether the banner is where the
+     * user is looking - a fullscreen window hides the island - is the caller's to check.
+     */
+    readonly property bool ownsBattery: root.enabled && root.widgetEnabled("battery")
+
+    property Binding _batteryOwnership: Binding {
+        target: GlobalStates
+        property: "islandOwnsBattery"
+        value: root.ownsBattery
+        restoreMode: Binding.RestoreBindingOrValue
+    }
+
     readonly property bool ownsSongRec: root.enabled && root.widgetEnabled("songRec")
 
     property Binding _songRecOwnership: Binding {
