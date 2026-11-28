@@ -396,6 +396,9 @@ class Session:
                     if isinstance(v, (bool, int, float, str))}
         return dict(base, connected=connected, name=me.username or self.args.name, room=room,
                     users=users, features=features, sharedPlaylist=shared,
+                    # A failure is history once the client is logged in again; reporting it
+                    # beside a live room made the shell show an error that no longer applies.
+                    error="" if connected else self.last_error,
                     playlist={"items": items, "index": index, "missing": missing},
                     owner=getattr(self.args, "owner", "") or "",
                     canUndo=bool(self._can_undo(playlist, items)),
@@ -534,6 +537,11 @@ class Session:
                 client.identifyAsController(password)
         elif cmd == "refresh":
             client.getUserList()
+        elif cmd == "reconnect":
+            # Upstream's own retry path: stops and restarts the reconnect service, so a
+            # room that is not answering is retried now instead of waiting for the next
+            # automatic attempt. It re-logs in without leaving the room.
+            client.manualReconnect()
         else:
             return f"Unknown command: {cmd}"
         self.schedule_push()

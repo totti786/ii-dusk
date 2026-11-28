@@ -6,6 +6,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 
 import qs
+import qs.services
 import qs.modules.common
 
 /**
@@ -76,6 +77,22 @@ Scope {
 
         function toggle(): void {
             root.requestToggle();
+        }
+
+        /// What the room is attached to right now, as one JSON line, for `qs ipc call`.
+        function status(): string {
+            return JSON.stringify({
+                linked: SyncplayService.linked, connected: SyncplayService.connected,
+                room: SyncplayService.room, host: SyncplayService.host,
+                port: SyncplayService.port, name: SyncplayService.name,
+                users: SyncplayService.users.length, ready: SyncplayService.ready,
+                mediatorOwned: SyncplayService.mediatorOwned, error: SyncplayService.errorText
+            });
+        }
+
+        /// Same second look as the window's Recheck button.
+        function recheck(): void {
+            SyncplayService.recheck();
         }
     }
 }

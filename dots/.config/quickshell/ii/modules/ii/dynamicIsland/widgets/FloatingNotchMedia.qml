@@ -1360,10 +1360,11 @@ Item {
             }
 
             // A Syncplay room you are in: who is watching and whether everyone is ready.
-            // Opens the room window. Only there while connected.
+            // Opens the room window. Only on the card of the player the room plays in: a
+            // room left connected must not badge whatever else happens to be playing.
             RippleButton {
                 id: roomPill
-                visible: SyncplayService.connected
+                visible: SyncplayService.isRoomPlayer(root.player)
                 implicitHeight: 24
                 leftPadding: 8
                 rightPadding: 8

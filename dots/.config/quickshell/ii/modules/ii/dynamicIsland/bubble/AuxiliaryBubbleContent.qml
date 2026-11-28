@@ -245,8 +245,9 @@ Item {
             onPinnedChanged: if (media.pinned) LyricsService.initiliazeLyrics()
 
             // A Syncplay room you are in rides on this bubble: the count of people watching.
-            // Watching only attaches to a session that exists; it never starts one.
-            readonly property bool inRoom: SyncplayService.connected
+            // Watching only attaches to a session that exists; it never starts one. The badge
+            // belongs to the room's own player, not to whatever else this bubble is showing.
+            readonly property bool inRoom: SyncplayService.isRoomPlayer(MprisController.activePlayer)
             Component.onCompleted: {
                 if (media.pinned)
                     LyricsService.initiliazeLyrics();

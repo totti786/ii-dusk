@@ -50,6 +50,37 @@ Singleton {
     property var playlistMissing: []     // indexes this machine cannot find in its media folders
     property string owner: ""            // "mediator": Mediator's queue is the room's list
     readonly property bool mediatorOwned: root.owner === "mediator"
+
+    /**
+     * The player this room's playback happens in, as MPRIS names it. Watch Together plays
+     * in Mediator's own player (its mpv runs without the MPRIS plugin); a session started
+     * from the Syncplay app plays in the player Syncplay launched - mpv unless
+     * syncplay.ini names another one.
+     */
+    readonly property string roomPlayerName: {
+        if (root.mediatorOwned)
+            return "mediator";
+        const path = String(root.defaults?.player ?? "").trim();
+        const base = path.split("/").pop().split("\\").pop().replace(/\.exe$/i, "").toLowerCase();
+        return base !== "" ? base : "mpv";
+    }
+
+    /** Whether `player` is the one this room is playing in (not just any media that is up). */
+    function isRoomPlayer(player: var): bool {
+        if (!root.connected || !player)
+            return false;
+        const bus = String(player.dbusName ?? "").trim();
+        if (root.mediatorOwned)
+            return bus === "org.mpris.MediaPlayer2.mediator";
+        const want = root.roomPlayerName;
+        const identity = String(player.identity ?? "").trim().toLowerCase();
+        const desktop = String(player.desktopEntry ?? "").trim().toLowerCase().replace(/\.desktop$/, "");
+        const short = bus.replace(/^org\.mpris\.MediaPlayer2\./, "")
+            .replace(/\.instance[_0-9]+$/, "").toLowerCase();
+        return identity === want || desktop === want
+            || short === want || short.split(".")[0] === want;
+    }
+
     property bool sharedPlaylist: false
     property bool canUndo: false
     property var file: null              // { name, duration, size } of what this client plays
@@ -189,6 +220,60 @@ Singleton {
             sock.connected = true;
     }
 
+    /**
+     * A manual second look, for when the room looks stale or the server went quiet.
+     * Attached and connected: ask the session for a fresh snapshot and user list.
+     * Attached but logged out: make upstream retry the server now.
+     * Not attached at all: probe for the local session and attach if it is there.
+     *
+     * It answers afterwards (`recheckNote`), because a refresh of a healthy room changes
+     * nothing on screen and "nothing happened" is otherwise the honest impression.
+     */
+    function recheck(): void {
+        root.errorText = "";
+        root.recheckNote = "";
+        if (!root.linked) {
+            root.checked = false;
+            if (!statusProc.running)
+                statusProc.running = true;
+        } else if (root.connected) {
+            root.send({ cmd: "refresh" });
+            root.send({ cmd: "state" });
+        } else {
+            root.send({ cmd: "reconnect" });
+        }
+        recheckSettle.restart();
+    }
+
+    // The line the window shows after a recheck: what the session says once the refresh
+    // has had a moment to come back, then gone again after a few seconds.
+    property string recheckNote: ""
+    property bool recheckOk: false
+    Timer {
+        id: recheckSettle
+        interval: 1200
+        onTriggered: {
+            if (!root.linked) {
+                root.recheckOk = false;
+                root.recheckNote = Translation.tr("No Syncplay session is running");
+            } else if (root.connected) {
+                root.recheckOk = true;
+                root.recheckNote = root.room !== ""
+                    ? Translation.tr("Connected · %1").arg(root.room)
+                    : Translation.tr("Connected to %1").arg(root.host);
+            } else {
+                root.recheckOk = false;
+                root.recheckNote = Translation.tr("Still connecting to %1…").arg(root.host);
+            }
+            recheckClear.restart();
+        }
+    }
+    Timer {
+        id: recheckClear
+        interval: 4000
+        onTriggered: root.recheckNote = ""
+    }
+
     // ── State from the session ───────────────────────────────────────────────
     function applyState(s: var): void {
         root.connected = s.connected === true;
@@ -208,7 +293,10 @@ Singleton {
         root.controller = s.controller === true;
         root.controlledRoom = s.controlledRoom === true;
         root.motd = s.motd ?? "";
-        if (s.error && s.error.length > 0)
+        // The bridge keeps the last failure for as long as the process lives, so a session
+        // that reconnected would otherwise carry "Connection was closed cleanly" forever.
+        // Once logged in, the room is the truth; only report an error while it is not.
+        if (s.error && s.error.length > 0 && !root.connected)
             root.errorText = s.error;
         else if (root.connected)
             root.errorText = "";
@@ -262,6 +350,9 @@ Singleton {
                     sock.write(JSON.stringify(m) + "\n");
                 root.outbox = [];
                 sock.flush();
+                // Attaching is not the same as being up to date: take a snapshot now
+                // instead of waiting for the session's next push.
+                root.send({ cmd: "state" });
             } else {
                 // The session ended (Leave, or it died): nothing in the room is current any more.
                 root.resetState();
@@ -342,7 +433,9 @@ Singleton {
             root.checked = false;
             if (!statusProc.running)
                 statusProc.running = true;
-            if (GlobalStates.syncplayAppOpen && !root.defaultsLoaded && !defaultsProc.running)
+            // Read once: they name the player a room started here plays in, which the
+            // badge needs even for a session this shell did not start (reload, Mediator).
+            if (!root.defaultsLoaded && !defaultsProc.running)
                 defaultsProc.running = true;
             detachTimer.stop();
         } else {

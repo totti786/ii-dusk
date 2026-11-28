@@ -66,6 +66,15 @@ FloatingWindow {
                 visible: SyncplayService.linked
                 focusPolicy: Qt.NoFocus
                 variant: "text"
+                symbol: "sync"
+                label: Translation.tr("Recheck")
+                onClicked: SyncplayService.recheck()
+            }
+
+            ClockButton {
+                visible: SyncplayService.linked
+                focusPolicy: Qt.NoFocus
+                variant: "text"
                 symbol: "logout"
                 label: root.inRoom ? Translation.tr("Leave room") : Translation.tr("Cancel")
                 onClicked: SyncplayService.leave()
@@ -76,6 +85,30 @@ FloatingWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
             sourceComponent: root.inRoom ? roomView : connectView
+        }
+    }
+
+    // The answer to a Recheck, when the room itself looks the same either way.
+    Rectangle {
+        id: recheckToast
+        visible: SyncplayService.recheckNote !== ""
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: ClockStyle.gap * 2
+        z: 100
+        width: recheckToastText.implicitWidth + 28
+        height: recheckToastText.implicitHeight + 14
+        radius: Appearance.rounding.full
+        color: ClockStyle.colSurfaceHigh
+        border.width: 1
+        border.color: ClockStyle.colOutline
+
+        StyledText {
+            id: recheckToastText
+            anchors.centerIn: parent
+            text: SyncplayService.recheckNote
+            font.pixelSize: ClockStyle.textSmall
+            color: SyncplayService.recheckOk ? ClockStyle.colPrimary : ClockStyle.colError
         }
     }
 
