@@ -56,8 +56,8 @@ class BarSearchWidgetContractTest(unittest.TestCase):
         config = self.read("modules/common/Config.qml")
         page = self.read("modules/settings/configs/widgets/SearchBarWidgetConfig.qml")
 
-        self.assertIn('property string sizeMode: "compact"', config)
-        self.assertIn('property string colorMode: "tonal"', config)
+        self.assertIn('property string sizeMode: "balanced"', config)
+        self.assertIn('property string colorMode: "tertiary"', config)
         for value in ("compact", "balanced", "extended"):
             self.assertIn(f'value: "{value}"', page)
         for value in ("tonal", "vibrant", "neutral"):

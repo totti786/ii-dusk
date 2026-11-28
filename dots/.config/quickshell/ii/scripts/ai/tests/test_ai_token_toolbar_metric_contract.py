@@ -15,8 +15,8 @@ MESSAGE = (ROOT / "services" / "ai" / "AiMessageData.qml").read_text(encoding="u
 
 
 class TokenToolbarMetricTests(unittest.TestCase):
-    def test_config_defaults_to_accumulated_usage(self):
-        self.assertIn("property bool showTokensPerSecond: false", CONFIG)
+    def test_config_defaults_to_tokens_per_second(self):
+        self.assertIn("property bool showTokensPerSecond: true", CONFIG)
         self.assertIn("property bool showOpenRouterSessionCost: false", CONFIG)
 
     def test_advanced_config_exposes_the_persistent_toggle(self):

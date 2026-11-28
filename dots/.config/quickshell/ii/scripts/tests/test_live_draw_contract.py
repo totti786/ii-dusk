@@ -249,7 +249,7 @@ class LauncherTests(unittest.TestCase):
                          r'id: "liveDraw".*families: \["tablet", "ii"\]')
 
     def test_bar_option_exists(self):
-        self.assertIn("property bool showLiveDraw: true", read("modules/common/Config.qml"))
+        self.assertIn("property bool showLiveDraw: false", read("modules/common/Config.qml"))
         self.assertIn("showLiveDraw", read("modules/settings/configs/widgets/UtilButtonsConfig.qml"))
 
     def test_strings_are_translated(self):

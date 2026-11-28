@@ -59,9 +59,9 @@ class BarDateWidgetContractTest(unittest.TestCase):
         config = self.read("modules/common/Config.qml")
         page = self.read("modules/settings/configs/widgets/DateBarWidgetConfig.qml")
 
-        self.assertIn('property string expressiveVariant: "stack"', config)
+        self.assertIn('property string expressiveVariant: "badge"', config)
         self.assertIn('property string neuralVariant: "orbit"', config)
-        self.assertIn('property string colorMode: "tonal"', config)
+        self.assertIn('property string colorMode: "primaryContainer"', config)
 
         expressive = self.widget("ExpressiveDateWidget.qml")
         for value in ("stack", "badge", "ribbon"):

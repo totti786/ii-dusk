@@ -146,7 +146,12 @@ ii_gestures.defaults = {
     { fingers = 4, direction = "pinch", kind = "hyprland", action = "float" },
     { fingers = 3, direction = "horizontal", kind = "hyprland", action = "workspace" },
     { fingers = 3, direction = "up", kind = "lua", action = "scratchpadUp" },
-    { fingers = 3, direction = "down", kind = "lua", action = "scratchpadDown" }
+    { fingers = 3, direction = "down", kind = "lua", action = "scratchpadDown" },
+    { fingers = 3, direction = "down", kind = "hyprland", action = "close", mods = "SUPER" },
+    { fingers = 3, direction = "up", kind = "hyprland", action = "fullscreen", mods = "SUPER", scale = 1.5 },
+    { fingers = 3, direction = "pinchin", kind = "hyprland", action = "float" },
+    { fingers = 3, direction = "pinchout", kind = "hyprland", action = "fullscreen" },
+    { fingers = 3, direction = "swipe", kind = "hyprland", action = "move" }
 }
 
 local NATIVE_ACTIONS = {

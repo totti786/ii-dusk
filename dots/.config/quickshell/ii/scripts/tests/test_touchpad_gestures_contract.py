@@ -153,7 +153,8 @@ def write_snapshot(state_home, text):
 
 
 DEFAULT_REGISTRATION = ("4:swipe:string=move 4:pinch:string=float 3:horizontal:string=workspace "
-                        "3:up:function 3:down:function")
+                        "3:up:function 3:down:function 3:down:string=close 3:up:string=fullscreen "
+                        "3:pinchin:string=float 3:pinchout:string=fullscreen 3:swipe:string=move")
 
 
 @unittest.skipUnless(LUA, "no lua interpreter installed")
@@ -231,7 +232,7 @@ class TouchpadGestureDefaultsContracts(unittest.TestCase):
         qml_block = qml_block[qml_block.index("property list<var> bindings: ["):]
         qml_block = qml_block[:qml_block.index("]")]
         self.assertEqual(self.ENTRY.findall(lua_block), self.ENTRY.findall(qml_block))
-        self.assertEqual(len(self.ENTRY.findall(lua_block)), 5)
+        self.assertEqual(len(self.ENTRY.findall(lua_block)), 10)
 
     def test_gestures_are_registered_in_one_place(self):
         self.assertNotIn("hl.gesture(", GENERAL_LUA.read_text(encoding="utf-8"))

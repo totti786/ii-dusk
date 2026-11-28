@@ -332,7 +332,10 @@ QtObject {
             });
         }
 
-        Config.options.background.activeWidgets = migrated;
+        // With no legacy widget switched on there is nothing to carry over: a new
+        // install keeps the default widgets instead of an empty list.
+        if (migrated.length > 0)
+            Config.options.background.activeWidgets = migrated;
         Persistent.states.background.widgetsMigrated = true;
         console.log("[Background] Widget migration complete. Migrated widgets count: " + migrated.length);
     }

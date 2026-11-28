@@ -45,7 +45,7 @@ class BarRecordIndicatorContractTest(unittest.TestCase):
         settings_registry = self.read("modules/common/SettingsPageRegistry.qml")
         waffle = self.read("modules/settings/configs/widgets/BarWidgetsConfig.qml")
 
-        self.assertIn('property string recordIndicator: "expressive"', config)
+        self.assertIn('property string recordIndicator: "default"', config)
         self.assertIn('case "record_indicator":       return s.recordIndicator', style_registry)
         self.assertIn("widgets/RecordIndicatorConfig.qml", settings_registry)
         self.assertIn('root.openComponentPage("record_indicator")', waffle)

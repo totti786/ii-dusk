@@ -13,9 +13,9 @@ def read(path: str) -> str:
 
 
 class TabletAppDrawerOverviewContractTests(unittest.TestCase):
-    def test_config_option_is_opt_in(self):
+    def test_config_option_defaults_on(self):
         config = read("modules/common/Config.qml")
-        self.assertIn("property bool showWorkspacesOverview: false", config)
+        self.assertIn("property bool showWorkspacesOverview: true", config)
 
     def test_settings_page_exposes_toggle(self):
         settings = read("modules/settings/configs/widgets/TabletAppDrawerConfig.qml")

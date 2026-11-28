@@ -67,12 +67,12 @@ class TimetableLazyLoadingContractTests(unittest.TestCase):
         self.assertIn("SportsService.acquireTimetableSubscriber()", host)
         self.assertNotIn("Component.onCompleted: SportsService.acquireTimetableSubscriber()", host)
 
-    def test_timetable_sports_are_explicitly_opt_in(self) -> None:
+    def test_timetable_sports_are_a_visible_option(self) -> None:
         config = (ROOT / "modules" / "common" / "Config.qml").read_text(encoding="utf-8")
         settings = (ROOT / "modules" / "ii" / "cheatsheet" / "settings" / "TimetableSettings.qml").read_text(encoding="utf-8")
         host = (CHEATSHEET / "CheatsheetTimetable.qml").read_text(encoding="utf-8")
 
-        self.assertIn("property bool sportsEvents: false", config)
+        self.assertIn("property bool sportsEvents: true", config)
         self.assertIn('title: Translation.tr("Show sports events")', settings)
         self.assertIn("checked: root.timetable.sportsEvents", settings)
         self.assertIn("readonly property bool sportsRequested: Config.options.calendar.timetable.sportsEvents", host)
