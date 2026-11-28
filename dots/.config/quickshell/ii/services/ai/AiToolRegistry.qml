@@ -1423,7 +1423,7 @@ Singleton {
             version: 1,
             domain: "gmail",
             title: Translation.tr("Open Gmail in II"),
-            summary: Translation.tr("Opens the existing Gmail tab in Cheatsheet without changing the message."),
+            summary: Translation.tr("Opens the Email app without changing the message."),
             icon: "open_in_new",
             kind: "navigation",
             network: "never",
@@ -1434,7 +1434,7 @@ Singleton {
             timeoutMs: 3000,
             maxResultTokens: 120,
             idempotent: true,
-            description: "Open II's existing Gmail tab in Cheatsheet so the user can inspect the account. Pass a messageId or threadId when available for context. This only navigates the UI; it does not fetch a body or change message state.",
+            description: "Open II's Email app so the user can inspect the account. Pass a messageId or threadId when available for context. This only navigates the UI; it does not fetch a body or change message state.",
             parameters: {
                 type: "object",
                 properties: {

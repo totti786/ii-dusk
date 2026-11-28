@@ -8822,6 +8822,7 @@
   "Opens on %1 · %2": "يفتح على %1 · %2",
   "Opens showing": "يفتح عارضًا",
   "Opens the existing Gmail tab in Cheatsheet without changing the message.": "يفتح تبويب Gmail الموجود في دليل الاختصارات دون تغيير الرسالة.",
+  "Opens the Email app without changing the message.": "يفتح تطبيق البريد دون تغيير الرسالة.",
   "Opens the folder a file is in, in the file manager. Grants no extra reading.": "يفتح المجلد الذي فيه الملف في مدير الملفات. ولا يمنح قراءة إضافية.",
   "Operation": "العملية",
   "Opportunistic": "انتهازي",

@@ -12,7 +12,7 @@ import qs.services
  *
  * The helper owns the API shape and metadata-before-body rule. This object
  * owns only process correlation and the one safe navigation affordance that
- * opens II's existing Email tab without changing the email service models.
+ * opens II's Email app without changing the email service models.
  */
 QtObject {
     id: root
@@ -132,31 +132,13 @@ QtObject {
         return root.request("thread", key, callId, sessionId, args);
     }
 
-    function emailTabIndex(): int {
-        let index = 0;
-        if (Config.options.cheatsheet.enableTimetable)
-            index += 1;
-        index += 1;
-        if (Config.options.cheatsheet.enablePeriodicTable)
-            index += 1;
-        if (Config.options.cheatsheet.enableAminoAcids)
-            index += 1;
-        if (Config.options.cheatsheet.enableCommands)
-            index += 1;
-        if (Config.options.cheatsheet.enableWorkspaceProfiles)
-            index += 1;
-        return Config.options.cheatsheet.enableGmail ? index : -1;
-    }
-
     function openInClient(args): var {
-        const index = root.emailTabIndex();
-        if (index < 0)
-            return { status: "error", summary: "The Gmail tab is disabled in Cheatsheet", data: null, retryable: false };
-        Persistent.states.cheatsheet.tabIndex = index;
-        GlobalStates.cheatsheetOpen = true;
+        if (!(Config.options.emailApp?.enable ?? true))
+            return { status: "error", summary: "The Email app is disabled", data: null, retryable: false };
+        GlobalStates.openEmailApp("");
         return {
             status: "success",
-            summary: "Gmail tab opened",
+            summary: "Email app opened",
             data: {
                 opened: true,
                 messageId: String(args?.messageId ?? ""),
