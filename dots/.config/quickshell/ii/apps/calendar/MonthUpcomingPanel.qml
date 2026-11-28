@@ -262,7 +262,7 @@ Item {
 
                 StyledText {
                     Layout.fillWidth: true
-                    text: Qt.formatDate(root.todayDate, "dddd").toUpperCase()
+                    text: Translation.formatDate(root.todayDate, "dddd").toUpperCase()
                     font.pixelSize: Appearance.font.pixelSize.smaller
                     font.weight: Font.Bold
                     color: ColorUtils.applyAlpha(Appearance.colors.colOnPrimaryContainer, 0.75)
@@ -286,7 +286,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignBottom
                         Layout.bottomMargin: 8
-                        text: Qt.formatDate(root.todayDate, "MMMM yyyy")
+                        text: Translation.formatDate(root.todayDate, "MMMM yyyy")
                         font.pixelSize: Appearance.font.pixelSize.normal
                         font.weight: Font.DemiBold
                         color: ColorUtils.applyAlpha(Appearance.colors.colOnPrimaryContainer, 0.85)
@@ -505,10 +505,10 @@ Item {
                                     StyledText {
                                         Layout.fillWidth: true
                                         text: {
-                                            const time = eventButton.allDay ? Translation.tr("All day") : H.eventRangeText(rowItem.modelData.event, Config.options?.time.format);
+                                            const time = eventButton.allDay ? Translation.tr("All day") : Translation.dayMarks(H.eventRangeText(rowItem.modelData.event, Config.options?.time.format));
                                             if (rowItem.modelData.groupKey === "today" || rowItem.modelData.groupKey === "tomorrow")
                                                 return time;
-                                            return Qt.formatDate(rowItem.modelData.date, "ddd, d MMM") + " · " + time;
+                                            return Translation.formatDate(rowItem.modelData.date, "ddd, d MMM") + " · " + time;
                                         }
                                         font.pixelSize: Appearance.font.pixelSize.smallest
                                         font.weight: Font.Medium

@@ -25,6 +25,8 @@ import "./email/EmailIconRules.js" as IconRules
 ApplicationWindow {
     id: root
     visible: true
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     // Matches Cheatsheet's default screen-relative footprint (~95% x 80%, capped for ultrawide).
     width: Math.min(1820, Math.round((Screen.width || 1920) * 0.90))
     height: Math.min(960, Math.round((Screen.height || 1080) * 0.80))
@@ -177,13 +179,13 @@ ApplicationWindow {
 
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: 350
+                            duration: Appearance.dur(350)
                             easing.type: Easing.OutCubic
                         }
                     }
                     Behavior on scale {
                         NumberAnimation {
-                            duration: 350
+                            duration: Appearance.dur(350)
                             easing.type: Easing.OutCubic
                         }
                     }

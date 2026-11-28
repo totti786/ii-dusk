@@ -172,7 +172,7 @@ Item {
                 target: background
                 properties: "x,y"
                 to: 0
-                duration: 450
+                duration: Appearance.dur(450)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -180,7 +180,7 @@ Item {
                 target: background
                 property: "width"
                 to: root.width
-                duration: 450
+                duration: Appearance.dur(450)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -188,7 +188,7 @@ Item {
                 target: background
                 property: "height"
                 to: root.height
-                duration: 450
+                duration: Appearance.dur(450)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -196,14 +196,14 @@ Item {
                 target: contentCol
                 property: "opacity"
                 to: 1
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.OutCubic
             }
             NumberAnimation {
                 target: fabContainer
                 property: "opacity"
                 to: 1
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.OutCubic
             }
         }
@@ -250,7 +250,7 @@ Item {
                 target: background
                 properties: "x,y"
                 to: startX
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -258,7 +258,7 @@ Item {
                 target: background
                 property: "width"
                 to: startWidth
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -266,7 +266,7 @@ Item {
                 target: background
                 property: "height"
                 to: startHeight
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -275,14 +275,14 @@ Item {
                 target: contentCol
                 property: "opacity"
                 to: 0
-                duration: 250
+                duration: Appearance.dur(250)
                 easing.type: Easing.OutCubic
             }
             NumberAnimation {
                 target: fabContainer
                 property: "opacity"
                 to: 0
-                duration: 250
+                duration: Appearance.dur(250)
                 easing.type: Easing.OutCubic
             }
             // Global root fade out
@@ -290,7 +290,7 @@ Item {
                 target: root
                 property: "opacity"
                 to: 0
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.InOutQuad
             }
 
@@ -299,7 +299,7 @@ Item {
                 target: ghostIcon
                 property: "x"
                 to: cardIconX
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -307,7 +307,7 @@ Item {
                 target: ghostIcon
                 property: "y"
                 to: cardIconY
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -315,7 +315,7 @@ Item {
                 target: ghostIcon
                 property: "width"
                 to: cardIconW
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -323,7 +323,7 @@ Item {
                 target: ghostIcon
                 property: "height"
                 to: cardIconH
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -331,7 +331,7 @@ Item {
                 target: ghostIcon
                 property: "opacity"
                 to: 0
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.InCubic
             }
 
@@ -340,7 +340,7 @@ Item {
                 target: ghostSubject
                 property: "x"
                 to: cardSubjectX
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -348,7 +348,7 @@ Item {
                 target: ghostSubject
                 property: "y"
                 to: cardSubjectY
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -356,7 +356,7 @@ Item {
                 target: ghostSubject
                 property: "width"
                 to: cardSubjectW
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -364,7 +364,7 @@ Item {
                 target: ghostSubject
                 property: "height"
                 to: cardSubjectH
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -372,7 +372,7 @@ Item {
                 target: ghostSubject
                 property: "opacity"
                 to: 0
-                duration: 400
+                duration: Appearance.dur(400)
                 easing.type: Easing.InCubic
             }
         }
@@ -644,7 +644,7 @@ Item {
 
                                         SequentialAnimation on opacity {
                                             loops: Animation.Infinite
-                                            running: root.loadingBody
+                                            running: (root.loadingBody) && !Appearance.motionOff
                                             NumberAnimation { from: 0.3; to: 0.7; duration: 800; easing.type: Easing.InOutQuad }
                                             NumberAnimation { from: 0.7; to: 0.3; duration: 800; easing.type: Easing.InOutQuad }
                                         }
@@ -691,7 +691,7 @@ Item {
                                     clip: true
                                     Behavior on Layout.preferredHeight {
                                         NumberAnimation {
-                                            duration: 350
+                                            duration: Appearance.dur(350)
                                             easing.type: Easing.BezierSpline
                                             easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
                                         }
@@ -708,7 +708,7 @@ Item {
                                         color: Appearance.colors.colOnSurfaceVariant
                                         opacity: root.showQuoted ? 0.7 : 0
                                         Behavior on opacity {
-                                            NumberAnimation { duration: 250 }
+                                            NumberAnimation { duration: Appearance.dur(250) }
                                         }
                                     }
                                 }
@@ -940,7 +940,7 @@ Item {
                                 color: icsActionBtn.imported ? Appearance.m3colors.m3onSuccessContainer : (icsActionBtn.icsInfo ? Appearance.m3colors.m3onTertiaryContainer : Appearance.m3colors.m3onSurfaceVariant)
 
                                 RotationAnimation on rotation {
-                                    running: icsActionBtn.status === "downloading"
+                                    running: (icsActionBtn.status === "downloading") && !Appearance.motionOff
                                     from: 0
                                     to: 360
                                     duration: 1000
@@ -1050,7 +1050,7 @@ Item {
                                 color: downloadFab.status === "done" ? Appearance.m3colors.m3onSuccessContainer : Appearance.colors.colOnSecondaryContainer
 
                                 RotationAnimation on rotation {
-                                    running: downloadFab.status === "downloading"
+                                    running: (downloadFab.status === "downloading") && !Appearance.motionOff
                                     from: 0
                                     to: 360
                                     duration: 1000

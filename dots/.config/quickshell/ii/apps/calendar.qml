@@ -24,6 +24,8 @@ import "./calendar/settings"
 ApplicationWindow {
     id: root
     visible: true
+    contentItem.LayoutMirroring.enabled: Translation.isRtl
+    contentItem.LayoutMirroring.childrenInherit: true
     // Matches Cheatsheet's default screen-relative footprint (~90% x 80%, capped for ultrawide).
     width: Math.min(1820, Math.round((Screen.width || 1920) * 0.90))
     height: Math.min(960, Math.round((Screen.height || 1080) * 0.80))
@@ -397,7 +399,7 @@ ApplicationWindow {
                     clip: true
 
                     Behavior on height {
-                        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                        NumberAnimation { duration: Appearance.dur(250); easing.type: Easing.OutCubic }
                     }
 
                     RowLayout {

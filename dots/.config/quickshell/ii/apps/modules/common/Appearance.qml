@@ -59,8 +59,13 @@ Singleton {
             return 0;
         return Math.round(18 * rv / 24.0);
     }
-    readonly property real animMultiplier: Config.options?.appearance?.animationMultiplier ?? 1.0
-    readonly property bool reducedMotion: root.animMultiplier <= 0.25
+    // Reduce motion only: Lite and the power-saver profile are the shell's own state.
+    readonly property bool motionOff: Config.options?.appearance?.reduceMotion ?? false
+    readonly property real animMultiplier: root.motionOff ? 0.01 : (Config.options?.appearance?.animationMultiplier ?? 1.0)
+    function dur(ms: int): int {
+        return root.motionOff ? 0 : ms;
+    }
+    readonly property bool reducedMotion: root.motionOff || root.animMultiplier <= 0.25
 
     m3colors: QtObject {
         property bool darkmode: true

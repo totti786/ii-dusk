@@ -665,7 +665,7 @@ Item {
 
                     AnimatedStyledText {
                         Layout.fillWidth: true
-                        text: Qt.formatDate(root.viewAnchorDate, "MMMM")
+                        text: Translation.formatDate(root.viewAnchorDate, "MMMM")
                         font.family: Appearance.font.family.title
                         font.pixelSize: root.compactNav ? 26 : 32
                         font.weight: Font.Bold
@@ -1017,9 +1017,8 @@ Item {
                 Layout.preferredHeight: 26
 
                 // Locale short names ("Mon", "Seg"). Deliberately not tied to
-                // the waffles two-character tweak: that one belongs to the
-                // Windows-style shell, not to this calendar.
-                readonly property var labels: H.weekdayLabels(root.firstDayOfWeek, Config.options.calendar.locale, Locale.ShortFormat)
+                // a two-character weekday option.
+                readonly property var labels: H.weekdayLabels(root.firstDayOfWeek, Translation.calendarLocale(Config.options.calendar.locale), Locale.ShortFormat)
 
                 Repeater {
                     model: 7
@@ -1252,6 +1251,7 @@ Item {
             spacing: 6
 
             MaterialSymbol {
+                id: dragProxyIcon
                 anchors.verticalCenter: parent.verticalCenter
                 text: "drag_indicator"
                 iconSize: Appearance.font.pixelSize.small
@@ -1260,7 +1260,8 @@ Item {
 
             StyledText {
                 anchors.verticalCenter: parent.verticalCenter
-                width: Math.max(0, parent.width - x)
+                // Not from x: a mirrored Row moves it with this width and loops.
+                width: Math.max(0, parent.width - dragProxyIcon.width - parent.spacing)
                 text: root.dragEvent?.content ?? ""
                 font.pixelSize: Appearance.font.pixelSize.smaller
                 font.weight: Font.Bold

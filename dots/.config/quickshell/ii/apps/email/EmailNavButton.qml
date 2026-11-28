@@ -49,25 +49,25 @@ GroupButton {
 
         Behavior on topLeftRadius {
             NumberAnimation {
-                duration: 150
+                duration: Appearance.dur(150)
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on topRightRadius {
             NumberAnimation {
-                duration: 150
+                duration: Appearance.dur(150)
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on bottomLeftRadius {
             NumberAnimation {
-                duration: 150
+                duration: Appearance.dur(150)
                 easing.type: Easing.OutCubic
             }
         }
         Behavior on bottomRightRadius {
             NumberAnimation {
-                duration: 150
+                duration: Appearance.dur(150)
                 easing.type: Easing.OutCubic
             }
         }
@@ -123,7 +123,7 @@ GroupButton {
             target: ripple
             property: "opacity"
             to: 0
-            duration: 2400
+            duration: Appearance.dur(2400)
             easing.type: Easing.OutQuart
         }
 
@@ -157,7 +157,7 @@ GroupButton {
                 property: "rippleSize"
                 from: 0
                 to: rippleAnim.r * 2
-                duration: 1200
+                duration: Appearance.dur(1200)
                 easing.type: Easing.OutQuart
             }
         }

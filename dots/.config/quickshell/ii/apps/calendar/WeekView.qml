@@ -194,7 +194,7 @@ Item {
             const date = H.addDays(root.viewWeekStart, i);
             const games = root.sportsEnabled && Array.isArray(sportsGames) ? SportsService.gamesForDate(date) : [];
             result.push({
-                name: Qt.formatDate(date, "dddd"),
+                name: Translation.formatDate(date, "dddd"),
                 date: date,
                 events: calendarEvents?.[H.dayKeyOf(date)] ?? [],
                 sportsDate: date,
@@ -494,21 +494,21 @@ Item {
         const start = root.viewWeekStart;
         const end = root.viewWeekEnd;
         if (root.visibleDayCount === 1)
-            return Qt.formatDate(start, compact ? "d MMM yyyy" : "dddd, d MMMM yyyy");
+            return Translation.formatDate(start, compact ? "d MMM yyyy" : "dddd, d MMMM yyyy");
         const sameMonth = start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth();
         const sameYear = start.getFullYear() === end.getFullYear();
         if (compact) {
             if (sameMonth)
-                return String(start.getDate()) + " – " + Qt.formatDate(end, "d MMM");
+                return String(start.getDate()) + " – " + Translation.formatDate(end, "d MMM");
             if (sameYear)
-                return Qt.formatDate(start, "d MMM") + " – " + Qt.formatDate(end, "d MMM");
-            return Qt.formatDate(start, "d MMM yy") + " – " + Qt.formatDate(end, "d MMM yy");
+                return Translation.formatDate(start, "d MMM") + " – " + Translation.formatDate(end, "d MMM");
+            return Translation.formatDate(start, "d MMM yy") + " – " + Translation.formatDate(end, "d MMM yy");
         }
         if (sameMonth)
-            return String(start.getDate()) + " – " + Qt.formatDate(end, "d MMMM yyyy");
+            return String(start.getDate()) + " – " + Translation.formatDate(end, "d MMMM yyyy");
         if (sameYear)
-            return Qt.formatDate(start, "d MMMM") + " – " + Qt.formatDate(end, "d MMMM yyyy");
-        return Qt.formatDate(start, "d MMMM yyyy") + " – " + Qt.formatDate(end, "d MMMM yyyy");
+            return Translation.formatDate(start, "d MMMM") + " – " + Translation.formatDate(end, "d MMMM yyyy");
+        return Translation.formatDate(start, "d MMMM yyyy") + " – " + Translation.formatDate(end, "d MMMM yyyy");
     }
 
     function ensureDataForView() {

@@ -119,7 +119,7 @@ Row {
 
                         StyledText {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: Qt.formatDate(dayDelegate.sportsDate, "ddd").toUpperCase()
+                            text: Translation.formatDate(dayDelegate.sportsDate, "ddd").toUpperCase()
                             font.pixelSize: Appearance.font.pixelSize.smallest
                             font.weight: Font.Bold
                             color: Appearance.colors.colOnSurfaceVariant
@@ -203,7 +203,7 @@ Row {
 
                 StyledToolTip {
                     extraVisibleCondition: dayTitleButton.hovered
-                    text: Qt.formatDate(dayDelegate.sportsDate, "dddd, d MMMM")
+                    text: Translation.formatDate(dayDelegate.sportsDate, "dddd, d MMMM")
                 }
             }
 
@@ -253,7 +253,7 @@ Row {
 
                         StyledToolTip {
                             extraVisibleCondition: sportsDayChip.hovered
-                            text: Translation.tr("Sports") + " · " + Qt.formatDate(dayDelegate.sportsDate, "dddd, d MMMM")
+                            text: Translation.tr("Sports") + " · " + Translation.formatDate(dayDelegate.sportsDate, "dddd, d MMMM")
                         }
                     }
 

@@ -20,7 +20,8 @@ Rectangle {
 
     // Material 3 time chip
     Rectangle {
-        x: (timeColumnWidth / 2) - (width / 2)
+        // It sits over the time column, which is on the right in a mirrored layout.
+        x: (LayoutMirroring.enabled ? contentRowWidth - timeColumnWidth / 2 : timeColumnWidth / 2) - (width / 2)
         anchors.verticalCenter: parent.verticalCenter
         width: Math.min(timeText.implicitWidth + 20, timeColumnWidth - 4)
         height: 32

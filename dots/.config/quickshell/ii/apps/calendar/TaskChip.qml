@@ -110,7 +110,7 @@ Item {
     StyledToolTip {
         extraVisibleCondition: taskPointer.hovered
         text: root.overdue
-            ? Translation.tr("Overdue · %1").arg(Qt.formatDate(root.dueDate, Locale.ShortFormat))
+            ? Translation.tr("Overdue · %1").arg(Translation.formatDate(root.dueDate, Locale.ShortFormat))
             : root.titleText
     }
 

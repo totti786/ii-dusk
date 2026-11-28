@@ -103,8 +103,8 @@ Rectangle {
         text: {
             let title = eventData.content || qsTr("Event");
             let description = eventData.description || "";
-            let startStr = H.minutesToTimeStr(eventStartMinutes, Config.options?.time.format);
-            let endStr = H.minutesToTimeStr(eventEndMinutes, Config.options?.time.format);
+            let startStr = Translation.dayMarks(H.minutesToTimeStr(eventStartMinutes, Config.options?.time.format));
+            let endStr = Translation.dayMarks(H.minutesToTimeStr(eventEndMinutes, Config.options?.time.format));
             let range = startStr && endStr ? startStr + " - " + endStr : startStr || endStr;
             return range ? description ? "•  " + title + "\n•  " + range + "\n•  " + description : "•  " + title + "\n•  " + range : "•  " + title;
         }
@@ -238,7 +238,7 @@ Rectangle {
             StyledText {
                 id: nextTextCompact
                 anchors.centerIn: parent
-                text: "NEXT"
+                text: Translation.tr("NEXT")
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 font.weight: Font.Bold
                 color: eventBlock.color
@@ -258,7 +258,7 @@ Rectangle {
         StyledText {
             Layout.alignment: Qt.AlignVCenter
             visible: eventBlock.width >= 180 && eventBlock.height >= 30
-            text: H.minutesToTimeStr(eventBlock.eventStartMinutes, Config.options?.time.format) + " - " + H.minutesToTimeStr(eventBlock.eventEndMinutes, Config.options?.time.format)
+            text: Translation.dayMarks(H.minutesToTimeStr(eventBlock.eventStartMinutes, Config.options?.time.format)) + " - " + Translation.dayMarks(H.minutesToTimeStr(eventBlock.eventEndMinutes, Config.options?.time.format))
             font.pixelSize: Appearance.font.pixelSize.smallest
             font.weight: Font.Medium
             color: ColorUtils.getContrastingTextColor(eventBlock.color)
@@ -309,7 +309,7 @@ Rectangle {
                 StyledText {
                     id: nextText
                     anchors.centerIn: parent
-                    text: "NEXT"
+                    text: Translation.tr("NEXT")
                     font.pixelSize: Appearance.font.pixelSize.smallest
                     font.weight: Font.Bold
                     color: eventBlock.color
@@ -317,7 +317,7 @@ Rectangle {
             }
 
             StyledText {
-                text: H.minutesToTimeStr(eventBlock.eventStartMinutes, Config.options?.time.format) + " - " + H.minutesToTimeStr(eventBlock.eventEndMinutes, Config.options?.time.format)
+                text: Translation.dayMarks(H.minutesToTimeStr(eventBlock.eventStartMinutes, Config.options?.time.format)) + " - " + Translation.dayMarks(H.minutesToTimeStr(eventBlock.eventEndMinutes, Config.options?.time.format))
                 font.weight: Font.Medium
                 color: ColorUtils.getContrastingTextColor(eventBlock.color)
                 elide: Text.ElideRight

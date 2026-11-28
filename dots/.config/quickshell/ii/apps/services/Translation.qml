@@ -35,6 +35,14 @@ Singleton {
         }
     }
 
+    readonly property var rtlLanguages: ["ar", "he", "iw", "fa", "ur", "ps", "yi", "dv", "ckb", "ug", "sd"]
+    readonly property bool isRtl: {
+        const forced = Config.options?.language?.direction ?? "auto";
+        if (forced === "rtl") return true;
+        if (forced === "ltr") return false;
+        return root.rtlLanguages.includes(root.languageCode.split(/[_-]/)[0].toLowerCase());
+    }
+
     // Dates follow the interface language. English keeps the system's own date locale.
     readonly property bool isEnglish: root.languageCode.startsWith("en")
     readonly property bool isArabic: root.languageCode.startsWith("ar")

@@ -195,7 +195,7 @@ Item {
             const events = Array.isArray(groups[i]?.events) ? groups[i].events : [];
             for (let j = 0; j < Math.min(5, events.length); j++) {
                 const item = events[j] ?? ({});
-                const date = item.date ? Qt.formatDate(new Date(item.date), "d MMM yyyy") : "";
+                const date = item.date ? Translation.formatDate(new Date(item.date), "d MMM yyyy") : "";
                 const competitors = Array.isArray(item.competitors) ? item.competitors : [];
                 const matchup = competitors.map(value => {
                     const name = root.text(value?.team?.displayName || value?.team?.name);
@@ -334,7 +334,7 @@ Item {
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignHCenter
                         text: root.game?.state === "pre"
-                            ? Qt.formatTime(root.game?.startDate ?? new Date(), Config.options.time.format)
+                            ? Translation.formatDate(root.game?.startDate ?? new Date(), Config.options.time.format)
                             : `${root.text(root.game?.home?.score || "0")} – ${root.text(root.game?.away?.score || "0")}`
                         font.family: Appearance.font.family.numbers
                         font.pixelSize: Appearance.font.pixelSize.huge
@@ -373,8 +373,8 @@ Item {
             spacing: 6
 
             InfoChip { symbol: "trophy"; label: root.text(root.game?.league) }
-            InfoChip { symbol: "calendar_month"; label: Qt.formatDate(root.game?.startDate ?? new Date(), "ddd, d MMM yyyy") }
-            InfoChip { symbol: "schedule"; label: Qt.formatTime(root.game?.startDate ?? new Date(), Config.options.time.format) }
+            InfoChip { symbol: "calendar_month"; label: Translation.formatDate(root.game?.startDate ?? new Date(), "ddd, d MMM yyyy") }
+            InfoChip { symbol: "schedule"; label: Translation.formatDate(root.game?.startDate ?? new Date(), Config.options.time.format) }
             InfoChip { visible: root.game?.state === "in"; symbol: "sensors"; label: Translation.tr("Live") }
         }
 

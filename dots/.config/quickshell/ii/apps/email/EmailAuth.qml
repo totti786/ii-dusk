@@ -80,7 +80,7 @@ Item {
 
             property real _loadingRotation: 0
             NumberAnimation on _loadingRotation {
-                running: EmailService.authenticating
+                running: (EmailService.authenticating) && !Appearance.motionOff
                 from: 0
                 to: 360
                 duration: 2000
@@ -158,7 +158,7 @@ Item {
                     color: connectBtn.enabled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSurfaceVariant
                     
                     RotationAnimation on rotation {
-                        running: EmailService.authenticating
+                        running: (EmailService.authenticating) && !Appearance.motionOff
                         from: 0
                         to: 360
                         duration: 1000
@@ -336,7 +336,7 @@ Item {
                             color: EmailService.credentialsCheckFailed ? Appearance.colors.colOnError : Appearance.colors.colOnPrimary 
                             
                             RotationAnimation on rotation {
-                                running: EmailService.checkingCredentials
+                                running: (EmailService.checkingCredentials) && !Appearance.motionOff
                                 from: 0; to: 360; duration: 1000; loops: Animation.Infinite
                             }
                         }

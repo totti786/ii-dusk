@@ -103,7 +103,7 @@ Item {
                 target: background
                 property: "x"
                 to: 0
-                duration: 380
+                duration: Appearance.dur(380)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -111,7 +111,7 @@ Item {
                 target: background
                 property: "width"
                 to: root.width
-                duration: 380
+                duration: Appearance.dur(380)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -119,7 +119,7 @@ Item {
                 target: contentItem
                 property: "opacity"
                 to: 1
-                duration: 300
+                duration: Appearance.dur(300)
                 easing.type: Easing.OutCubic
             }
         }
@@ -142,7 +142,7 @@ Item {
                 target: background
                 property: "x"
                 to: root.width / 2
-                duration: 300
+                duration: Appearance.dur(300)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -150,7 +150,7 @@ Item {
                 target: background
                 property: "width"
                 to: root.width / 2
-                duration: 300
+                duration: Appearance.dur(300)
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
@@ -158,7 +158,7 @@ Item {
                 target: contentItem
                 property: "opacity"
                 to: 0
-                duration: 200
+                duration: Appearance.dur(200)
                 easing.type: Easing.InCubic
             }
         }
@@ -271,7 +271,7 @@ Item {
         opacity: root.isOpen ? 1 : 0
         Behavior on opacity {
             NumberAnimation {
-                duration: 250
+                duration: Appearance.dur(250)
             }
         }
 
@@ -415,6 +415,7 @@ Item {
 
                         TextInput {
                             id: toInput
+                            horizontalAlignment: LayoutMirroring.enabled && length === 0 ? TextInput.AlignLeft : undefined
                             anchors.fill: parent
                             anchors.leftMargin: 18
                             anchors.rightMargin: 18
@@ -425,6 +426,7 @@ Item {
                             clip: true
 
                             StyledText {
+                                width: parent.width
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: qsTr("Add recipients")
                                 color: Appearance.colors.colOnSurfaceVariant
@@ -480,6 +482,7 @@ Item {
 
                         TextInput {
                             id: subjectInput
+                            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                             anchors.fill: parent
                             anchors.leftMargin: 18
                             anchors.rightMargin: 18
@@ -490,6 +493,7 @@ Item {
                             clip: true
 
                             StyledText {
+                                width: parent.width
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: qsTr("Subject...")
                                 color: Appearance.colors.colOnSurfaceVariant
@@ -592,7 +596,7 @@ Item {
 
                                     Behavior on color {
                                         ColorAnimation {
-                                            duration: 150
+                                            duration: Appearance.dur(150)
                                             easing.type: Easing.OutCubic
                                         }
                                     }
@@ -905,32 +909,32 @@ Item {
                     target: feedbackToast
                     property: "yOffset"
                     to: 20
-                    duration: 300
+                    duration: Appearance.dur(300)
                     easing.type: Easing.OutBack
                 }
                 NumberAnimation {
                     target: feedbackToast
                     property: "opacity"
                     to: 1
-                    duration: 200
+                    duration: Appearance.dur(200)
                 }
             }
             PauseAnimation {
-                duration: 3000
+                duration: Appearance.dur(3000)
             }
             ParallelAnimation {
                 NumberAnimation {
                     target: feedbackToast
                     property: "yOffset"
                     to: -60
-                    duration: 300
+                    duration: Appearance.dur(300)
                     easing.type: Easing.InBack
                 }
                 NumberAnimation {
                     target: feedbackToast
                     property: "opacity"
                     to: 0
-                    duration: 200
+                    duration: Appearance.dur(200)
                 }
             }
         }
@@ -1159,7 +1163,7 @@ Item {
 
                             Behavior on color {
                                 ColorAnimation {
-                                    duration: 150
+                                    duration: Appearance.dur(150)
                                     easing.type: Easing.OutCubic
                                 }
                             }
@@ -1327,6 +1331,7 @@ Item {
                         border.width: textInput.activeFocus ? 2 : 1
                         TextInput {
                             id: textInput
+                            horizontalAlignment: LayoutMirroring.enabled ? TextInput.AlignLeft : undefined
                             anchors.fill: parent
                             anchors.leftMargin: 8
                             anchors.rightMargin: 8
@@ -1355,6 +1360,7 @@ Item {
                         border.width: urlInput.activeFocus ? 2 : 1
                         TextInput {
                             id: urlInput
+                            horizontalAlignment: LayoutMirroring.enabled && length === 0 ? TextInput.AlignLeft : undefined
                             anchors.fill: parent
                             anchors.leftMargin: 8
                             anchors.rightMargin: 8
